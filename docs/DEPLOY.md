@@ -88,7 +88,7 @@ Open http://127.0.0.1:3888
 | Workflow | Purpose |
 | --- | --- |
 | `.github/workflows/ci.yml` | `npm ci` + `npm run check` on push/PR |
-| `.github/workflows/deploy-ecs.yml` | Build image → ECR → force ECS deploy |
+| `.github/workflows/deploy-ecs.yml` | Manual: Actions → Deploy ECS → Run workflow |
 
 ### GitHub secrets for deploy
 
