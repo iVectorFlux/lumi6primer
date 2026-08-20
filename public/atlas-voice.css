@@ -1,0 +1,323 @@
+/* ATLAS Voice Teaching Interface Styles */
+
+/* Mic lives on the AI orb menu, not as a floating canvas button */
+#atlasVoiceToggle {
+  display: none !important;
+}
+
+#atlasVoiceToggle:hover {
+  transform: scale(1.08);
+  box-shadow: 0 6px 24px rgba(91, 79, 232, 0.55), 0 2px 8px rgba(0, 0, 0, 0.15), inset 0 1px 2px rgba(255, 255, 255, 0.4);
+}
+
+#atlasVoiceToggle:active {
+  transform: scale(0.95);
+}
+
+#atlasVoiceToggle svg {
+  width: 20px;
+  height: 20px;
+  fill: none;
+  stroke: #FFFFFF;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+/* Hide text label so it forms a clean circular orb */
+#atlasVoiceToggle #atlasVoiceLabel {
+  display: none !important;
+}
+
+/* Pulse animation when listening (Red Orb) */
+#atlasVoiceToggle.atlas-listening {
+  background: radial-gradient(circle at 35% 30%, #EF4444 0%, #DC2626 65%, #991B1B 100%);
+  box-shadow: 0 0 0 4px rgba(239, 68, 68, 0.3), 0 6px 24px rgba(220, 38, 38, 0.5);
+  animation: atlasVoiceOrbPulse 1.4s infinite alternate;
+}
+
+/* Wave animation when ATLAS is speaking (Purple Orb) */
+#atlasVoiceToggle.atlas-speaking {
+  background: radial-gradient(circle at 35% 30%, #A855F7 0%, #7C3AED 65%, #581C87 100%);
+  box-shadow: 0 0 0 4px rgba(168, 85, 247, 0.3), 0 6px 24px rgba(124, 58, 237, 0.5);
+  animation: atlasVoiceOrbPulse 1.4s infinite alternate;
+}
+
+@keyframes atlasVoiceOrbPulse {
+  0% { transform: scale(1); box-shadow: 0 0 0 2px rgba(91, 79, 232, 0.4), 0 4px 16px rgba(91, 79, 232, 0.4); }
+  100% { transform: scale(1.08); box-shadow: 0 0 0 8px rgba(91, 79, 232, 0.15), 0 8px 28px rgba(91, 79, 232, 0.6); }
+}
+
+/* Pulse animation when ATLAS is thinking/processing */
+#atlasVoiceToggle.atlas-processing {
+  background: linear-gradient(135deg, #4f46e5, #6366f1);
+  box-shadow: 0 0 0 0 rgba(99, 102, 241, 0.7);
+  animation: atlasThinkPulse 1.2s infinite;
+}
+
+@keyframes atlasMicPulse {
+  0% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.6); }
+  70% { box-shadow: 0 0 0 14px rgba(239, 68, 68, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); }
+}
+
+@keyframes atlasThinkPulse {
+  0% { box-shadow: 0 0 0 0 rgba(99, 102, 241, 0.6); }
+  70% { box-shadow: 0 0 0 14px rgba(99, 102, 241, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(99, 102, 241, 0); }
+}
+
+/* Kid-friendly voice bar */
+#atlasVoiceOverlay {
+  position: fixed;
+  top: 62px;
+  left: 50%;
+  transform: translateX(-50%) translateY(-10px);
+  z-index: 90;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  overflow: visible;
+  max-width: 720px;
+  width: min(720px, calc(100vw - 48px));
+  padding: 10px 12px 10px 14px;
+  color: #3b2064;
+  border: 2px solid rgba(255, 255, 255, 0.85);
+  border-radius: 999px;
+  background:
+    radial-gradient(circle at 12% 20%, rgba(255, 236, 153, 0.95) 0 28%, transparent 52%),
+    radial-gradient(circle at 88% 80%, rgba(167, 243, 208, 0.9) 0 24%, transparent 50%),
+    linear-gradient(135deg, #ffd6e8 0%, #e9d5ff 42%, #c7f0ff 100%);
+  box-shadow:
+    0 12px 32px rgba(91, 79, 232, 0.22),
+    inset 0 1px 0 rgba(255, 255, 255, 0.8);
+  font-family: "Patrick Hand", "Segoe Print", "Comic Sans MS", cursive;
+  font-size: 18px;
+  line-height: 1.25;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.25s ease, transform 0.25s ease;
+}
+
+#atlasVoiceOverlay.atlas-visible {
+  opacity: 1;
+  transform: translateX(-50%) translateY(0);
+  pointer-events: auto;
+}
+
+.atlas-kid-sparkle,
+.atlas-kid-orb {
+  flex-shrink: 0;
+  border-radius: 50%;
+}
+
+.atlas-kid-orb {
+  width: 34px;
+  height: 34px;
+  background:
+    radial-gradient(circle at 32% 28%, #fff 0 18%, transparent 42%),
+    radial-gradient(circle at 50% 50%, #a78bfa 0 55%, #7c3aed 100%);
+  box-shadow: 0 0 0 4px rgba(255, 255, 255, 0.45);
+  animation: atlasKidBob 1.4s ease-in-out infinite;
+}
+
+#atlasVoiceOverlay[data-mood="listening"] .atlas-kid-orb {
+  background:
+    radial-gradient(circle at 32% 28%, #fff 0 18%, transparent 42%),
+    radial-gradient(circle at 50% 50%, #fb7185 0 55%, #f43f5e 100%);
+  animation: atlasKidPulse 1s ease-in-out infinite;
+}
+
+#atlasVoiceOverlay[data-mood="teacher"] .atlas-kid-orb {
+  background:
+    radial-gradient(circle at 32% 28%, #fff 0 18%, transparent 42%),
+    radial-gradient(circle at 50% 50%, #c4b5fd 0 55%, #7c3aed 100%);
+}
+
+.atlas-kid-sparkle {
+  position: absolute;
+  left: 18px;
+  top: 6px;
+  width: 8px;
+  height: 8px;
+  background: #fff7ae;
+  transform: rotate(45deg);
+  animation: atlasKidTwinkle 1.6s ease-in-out infinite;
+}
+
+.atlas-kid-copy {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  min-width: 0;
+  flex: 1;
+}
+
+.atlas-kid-actions {
+  display: none;
+  flex-shrink: 0;
+  align-items: center;
+  gap: 6px;
+}
+
+#atlasVoiceOverlay.atlas-live .atlas-kid-actions {
+  display: flex;
+}
+
+.atlas-overlay-stop,
+.atlas-overlay-mute {
+  min-height: 32px;
+  padding: 6px 12px;
+  border: 0;
+  border-radius: 999px;
+  font: 700 12px/1 Inter, system-ui, sans-serif;
+  letter-spacing: 0.02em;
+  cursor: pointer;
+}
+
+.atlas-overlay-stop {
+  color: #ffffff;
+  background: #f43f5e;
+  box-shadow: 0 4px 0 #be123c;
+}
+
+.atlas-overlay-stop:hover {
+  background: #e11d48;
+}
+
+.atlas-overlay-mute {
+  color: #4c1d95;
+  background: rgba(255, 255, 255, 0.78);
+  box-shadow: 0 4px 0 rgba(91, 79, 232, 0.18);
+}
+
+.atlas-overlay-mute:hover,
+.atlas-overlay-mute.is-muted {
+  color: #ffffff;
+  background: #7c3aed;
+  box-shadow: 0 4px 0 #5b21b6;
+}
+
+.atlas-badge {
+  padding: 2px 8px;
+  width: fit-content;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.72);
+  color: #6d28d9;
+  font: 800 10px/1.2 Inter, system-ui, sans-serif;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.atlas-badge.student { color: #1d4ed8; }
+.atlas-badge.teacher { color: #6d28d9; }
+#atlasVoiceOverlay[data-mood="processing"] .atlas-kid-orb {
+  background:
+    radial-gradient(circle at 32% 28%, #fff 0 18%, transparent 42%),
+    radial-gradient(circle at 50% 50%, #818cf8 0 55%, #4f46e5 100%);
+  animation: atlasKidPulse 1s ease-in-out infinite;
+}
+.atlas-badge.processing { color: #4338ca; }
+.atlas-badge.error { color: #b91c1c; }
+
+.atlas-overlay-text {
+  color: #3b2064;
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+}
+
+@keyframes atlasKidBob {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-3px); }
+}
+
+@keyframes atlasKidPulse {
+  0%, 100% { transform: scale(1); box-shadow: 0 0 0 4px rgba(255, 255, 255, 0.45); }
+  50% { transform: scale(1.08); box-shadow: 0 0 0 8px rgba(251, 113, 133, 0.28); }
+}
+
+@keyframes atlasKidTwinkle {
+  0%, 100% { opacity: 0.35; transform: rotate(45deg) scale(0.8); }
+  50% { opacity: 1; transform: rotate(45deg) scale(1.15); }
+}
+
+/* Canvas Pro Theme Positioning & Style Override */
+body[data-theme="canvas-pro"] #atlasVoiceToggle {
+  position: fixed;
+  bottom: 24px;
+  left: 24px;
+  z-index: 9990;
+  background: #ffffff;
+  color: #0f172a;
+  border: 1px solid #cbd5e1;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.08);
+}
+
+body[data-theme="canvas-pro"] #atlasVoiceToggle:hover {
+  background: #f8fafc;
+  border-color: #2563eb;
+  color: #2563eb;
+}
+
+body[data-theme="canvas-pro"] #atlasVoiceToggle.atlas-listening {
+  background: #dc2626;
+  color: #ffffff;
+  border-color: #b91c1c;
+}
+
+body[data-theme="canvas-pro"] #atlasVoiceToggle.atlas-speaking {
+  background: #7c3aed;
+  color: #ffffff;
+  border-color: #6d28d9;
+}
+
+body[data-theme="canvas-pro"] #atlasVoiceToggle.atlas-processing {
+  background: #4f46e5;
+  color: #ffffff;
+  border-color: #4338ca;
+}
+
+body[data-theme="canvas-pro"] #atlasVoiceOverlay {
+  top: 64px;
+  bottom: auto;
+  left: 50%;
+  transform: translateX(-50%) translateY(-8px);
+}
+
+body[data-theme="canvas-pro"] #atlasVoiceOverlay.atlas-visible {
+  transform: translateX(-50%) translateY(0);
+}
+
+@media (max-width: 900px) {
+  #atlasVoiceOverlay,
+  body[data-theme="canvas-pro"] #atlasVoiceOverlay {
+    top: calc(8px + env(safe-area-inset-top) + var(--topbar-height, 48px));
+    left: 8px;
+    right: 8px;
+    width: auto;
+    max-width: none;
+    transform: none;
+    border-radius: 18px;
+    font-size: 16px;
+    gap: 8px;
+    padding: 8px 10px;
+  }
+
+  #atlasVoiceOverlay.atlas-visible,
+  body[data-theme="canvas-pro"] #atlasVoiceOverlay.atlas-visible {
+    transform: none;
+  }
+
+  .atlas-kid-actions {
+    flex-wrap: wrap;
+    justify-content: flex-end;
+  }
+}
+
+@media (max-width: 640px) {
+  #atlasVoiceOverlay {
+    font-size: 15px;
+  }
+}

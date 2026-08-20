@@ -1,0 +1,9 @@
+{
+  "appId": "ai.lumi6.mobile",
+  "appName": "Lumi6",
+  "webDir": "web",
+  "server": {
+    "allowNavigation": ["*"],
+    "cleartext": true
+  }
+}

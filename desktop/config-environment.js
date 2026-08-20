@@ -1,0 +1,20 @@
+"use strict";
+
+const DESKTOP_MANAGED_ENV = Object.freeze([
+  "AI_PROVIDER", "AI_API_FORMAT", "AI_API_KEY", "AI_API_URL", "AI_API_MODEL", "AI_EFFORT", "AI_TIMEOUT_SECONDS",
+  "AUTO_AI_DELAY_SECONDS", "HOST", "PORT", "LUMI6_AI_IMAGE_FORMAT", "LUMI6_DESKTOP_PROVIDER",
+  "LUMI6_KIMI_PRODUCT", "LUMI6_KIMI_REGION", "LUMI6_REQUEST_TRACE", "LUMI6_REQUEST_TRACE_LIMIT",
+  "KIMI_CLI_MODEL", "KIMI_CLI_PATH", "KIMI_CLI_TIMEOUT_SECONDS",
+  "LUMI6_PRIVATE_PLUGIN_DIR", "CODEX_CLI_MODEL", "CODEX_CLI_PATH", "CODEX_CLI_TIMEOUT_SECONDS",
+  "CLAUDE_CLI_MODEL", "CLAUDE_CLI_PATH", "CLAUDE_CLI_TIMEOUT_SECONDS",
+  "OPENAI_API_FORMAT", "OPENAI_API_KEY", "OPENAI_API_URL", "OPENAI_MODEL",
+]);
+
+function desktopConfigurationEnvironment(source, stateDir) {
+  const env = { ...(source || {}) };
+  for (const name of DESKTOP_MANAGED_ENV) delete env[name];
+  env.LUMI6_STATE_DIR = stateDir;
+  return env;
+}
+
+module.exports = { DESKTOP_MANAGED_ENV, desktopConfigurationEnvironment };
