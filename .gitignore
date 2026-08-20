@@ -2,6 +2,7 @@
 *.env
 .env.cli
 .env.*.local
+!.env.example
 node_modules/
 npm-debug.log*
 logs/
@@ -21,3 +22,14 @@ local/*
 public/plugins/private/
 tools/mobile/android/
 tools/mobile/ios/
+
+# Local / IDE
+.cursor/
+.vscode/
+*.pem
+*.p12
+
+# Deploy artifacts
+.vercel/
+.aws-sam/
+dist/

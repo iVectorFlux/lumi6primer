@@ -125,7 +125,9 @@ Do not put these in a public README, ticket, or screenshot:
 
 ## Go live
 
-Follow [docs/GO-LIVE.md](docs/GO-LIVE.md) before pointing a public domain at ECS.
+- [docs/DEPLOY.md](docs/DEPLOY.md) — Docker, ECS env vars, GitHub Actions  
+- [docs/VERCEL.md](docs/VERCEL.md) — Vercel is not for the full app (ECS instead)  
+- [docs/GO-LIVE.md](docs/GO-LIVE.md) — launch checklist  
 
 ## License
 
