@@ -22,7 +22,7 @@ Use this list before a public domain hits ECS. Check items in order. Do not skip
 ## 3. ECS
 
 - [ ] Node 20+ image, `npm start`, `HOST=0.0.0.0`, `PORT` matching the container
-- [ ] Health check: HTTP 200 on `/` or `landing.html` through the task port
+- [ ] Health check: HTTP 200 on `/health` through the task port
 - [ ] Desired count ≥ 2
 - [ ] CPU/memory enough for one image generate + TTS at once (start 1 vCPU / 2 GB, then watch)
 - [ ] Task role can write the graphics S3 bucket (when S3 is wired)

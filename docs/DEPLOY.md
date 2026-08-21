@@ -101,7 +101,7 @@ Open http://127.0.0.1:3888
 | `ECS_CLUSTER` | your Express cluster name |
 | `ECS_SERVICE` | your service name |
 
-Point the ECS task definition at `:latest` (or tag with the git SHA). Map container port **3888** to the load balancer. Health check: `GET /landing.html` → 200.
+Point the ECS task definition at `:latest` (or tag with the git SHA). Map container port **3888** to the load balancer. Health check: `GET /health` → 200.
 
 ### Supabase after deploy
 

@@ -1896,6 +1896,10 @@ const server = http.createServer(async (req, res) => {
     }
     return send(res,404,{error:"Not found"});
   }
+  if ((req.method === "GET" || req.method === "HEAD") && url.pathname === "/health") {
+    res.writeHead(200, { "Content-Type": "text/plain; charset=utf-8", "Cache-Control": "no-store" });
+    return res.end(req.method === "HEAD" ? "" : "ok");
+  }
   if (req.method === "GET" && url.pathname === "/api/config") return send(res, 200, { autoAiDelayMs: AUTO_AI_DELAY_MS, aiRequestTimeoutMs:AI_REQUEST_TIMEOUT_MS, aiProvider: AI_PROVIDER || "invalid", aiEffort:configuredUiEffort() });
   if (req.method === "GET" && url.pathname === "/api/config.js") {
     const config={autoAiDelayMs:AUTO_AI_DELAY_MS,aiRequestTimeoutMs:AI_REQUEST_TIMEOUT_MS,aiProvider:AI_PROVIDER||"invalid",aiEffort:configuredUiEffort(),supabaseUrl:process.env.SUPABASE_URL||process.env.NEXT_PUBLIC_SUPABASE_URL||null,supabaseAnonKey:process.env.SUPABASE_ANON_KEY||process.env.SUPABASE_KEY||process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY||null};
