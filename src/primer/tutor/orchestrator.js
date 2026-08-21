@@ -8,6 +8,7 @@ const ContextBuilder = require("./context-builder.js");
 const ResponsePolicy = require("./response-policy.js");
 const { understandLearner, historyFromTurns } = require("./understand.js");
 const { isWeakTopic, spokenCoversTopic, deniesTopic } = require("../topic.js");
+const { shouldGrade } = require("./kid-intent.js");
 const { parseProposal, modelText, looksLikeJsonBlob } = require("./proposal.js");
 const { lastQuestion, questionsMatch, preventRepeatQuestion } = require("./teaching-move.js");
 const { LearnerModel } = require("../learner/learner-model.js");
@@ -134,11 +135,14 @@ class LearningOrchestrator {
     const understanding = understandLearner(spokenText, {
       boardImage: input.boardImage,
       concept: state.currentConcept,
-      askedBackLast: Boolean(state.conversationState?.askedBackLast)
+      askedBackLast: Boolean(state.conversationState?.askedBackLast),
+      lastAskedToLook: Boolean(state.conversationState?.lastAskedToLook)
     });
     const plan = this.autopilot.plan(child, state, understanding);
     state.currentGoal = plan.goal;
-    if (plan.concept && !(understanding.askedToLook && !understanding.concept)) {
+    if (understanding.concept && !isWeakTopic(understanding.concept)) {
+      state.currentConcept = understanding.concept;
+    } else if (!state.currentConcept && plan.concept) {
       state.currentConcept = plan.concept;
     }
 
@@ -192,6 +196,20 @@ class LearningOrchestrator {
       askedToLook || speechMath.length > 0 || understanding.intent === "homework"
     );
     const mathFromTurn = await this._readBoardMath(spokenText, shouldReadBoard ? input.boardImage : null);
+    const grade = shouldGrade({
+      text: spokenText,
+      askedBackLast: Boolean(state.conversationState?.askedBackLast),
+      understanding
+    });
+    console.log("[PRIMER] kid-intent", {
+      said: String(spokenText || "").slice(0, 100),
+      intent: understanding.intent,
+      concept: understanding.concept,
+      held: state.currentConcept,
+      look: Boolean(understanding.askedToLook),
+      grade,
+      math: (mathFromTurn.facts || []).map((fact) => fact.text)
+    });
 
     const prompt = this.contextBuilder.build({
       state,
@@ -658,6 +676,7 @@ Return JSON only: {"spoken":"kid sentences here including the check question?"}`
     conv.consecutiveExplanations = decision.action === "explain"
       ? Number(conv.consecutiveExplanations || 0) + 1
       : 0;
+    conv.lastAskedToLook = Boolean(understanding.askedToLook) && !understanding.wantsDraw;
     state.conversationState = conv;
   }
 

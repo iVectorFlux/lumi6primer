@@ -25,7 +25,7 @@ class Autopilot {
     const named = String(understanding?.concept || "").trim();
     const weakName = /^(better|again|more|it better)$/i.test(named);
     const childNamedATopic = !weakName && named.length >= 3
-      && (understanding?.wantsExplain || ["explain", "question", "fact", "dont_understand"].includes(understanding?.intent));
+      && (understanding?.wantsExplain || ["explain", "question", "fact", "dont_understand", "homework"].includes(understanding?.intent));
 
     if (childNamedATopic) {
       return {
@@ -33,6 +33,15 @@ class Autopilot {
         goal: `Follow their question about ${named}.`,
         concept: named,
         reason: "named-topic"
+      };
+    }
+
+    if (state.currentConcept) {
+      return {
+        mode: state.mode,
+        goal: `Stay with ${state.currentConcept}.`,
+        concept: state.currentConcept,
+        reason: "hold-topic"
       };
     }
 

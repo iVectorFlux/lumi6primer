@@ -38,6 +38,8 @@ function sceneForTurn({ concept, childText }) {
   return normalize(concept || text).slice(0, 72);
 }
 
+const { isNewAsk } = require("../tutor/kid-intent.js");
+
 function shouldGenerateGraphic(input = {}) {
   const childText = String(input.childText || "");
   const lastScene = String(input.lastScene || "");
@@ -46,8 +48,8 @@ function shouldGenerateGraphic(input = {}) {
     childText
   });
 
-  if ((input.lookingAtBoard || input.junkSpeech || input.wantsWrite) && !input.wantsDraw) {
-    return { generate: false, scene: lastScene || scene, kind: "none", reason: input.lookingAtBoard ? "looking-at-board" : (input.wantsWrite ? "write" : "junk") };
+  if ((input.lookingAtBoard || input.junkSpeech || input.wantsWrite || input.intent === "homework") && !input.wantsDraw) {
+    return { generate: false, scene: lastScene || scene, kind: "none", reason: input.lookingAtBoard ? "looking-at-board" : (input.intent === "homework" ? "homework" : (input.wantsWrite ? "write" : "junk")) };
   }
   if (isPictureComment(childText) || isAck(childText)) {
     return { generate: false, scene: lastScene || scene, kind: "none", reason: "ack" };
@@ -58,7 +60,7 @@ function shouldGenerateGraphic(input = {}) {
   }
 
   const answering = Boolean(input.askedBackLast)
-    && !input.wantsExplain
+    && !isNewAsk(childText, input)
     && !input.wantsDraw
     && !isDetailAsk(childText);
   if (answering) {
@@ -70,7 +72,6 @@ function shouldGenerateGraphic(input = {}) {
     || input.wantsReason
     || input.intent === "explain"
     || input.intent === "question"
-    || input.decisionAction === "explain"
   );
   const topicChanged = Boolean(scene && lastScene && !scenesMatch(scene, lastScene));
   if (teachNow && (!lastScene || topicChanged)) {

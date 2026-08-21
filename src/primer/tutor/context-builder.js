@@ -73,6 +73,7 @@ TEACHING
 - If CURRENT CONCEPT is set, that is the topic. Never turn their apology, swear, or "I don't understand" into a new topic.
 - If they said they don't understand: keep the SAME concept. Explain it again with a simpler picture.
 - If they said the voice is missing: one short ack, then KEEP teaching the current concept.
+- If they asked a new how/why/what question: answer THAT question. Do not grade it. Never start with "Not yet", "Right", or "Almost" unless they were clearly answering your last check question.
 - If they answered your last question: say right / almost / not yet in one kid sentence. If they were close or right, TEACH THE NEXT STEP. Never ask the same check question again. Never ask them to name a term you just told them.
 - If they commented on the picture: one kind line, then continue the lesson. Do not quiz.
 - If they asked how/why: give the reason with a real-life example, then a new thinking question.
@@ -91,7 +92,8 @@ Return JSON:
       askedBackLast: Boolean(state?.conversationState?.askedBackLast),
       wantsExplain: understanding?.wantsExplain,
       wantsReason: understanding?.wantsReason,
-      intent: understanding?.intent
+      intent: understanding?.intent,
+      askedToLook: understanding?.askedToLook
     });
 
     const talkPrompt = `You are Lumi6 — a warm older sibling sitting with ${name} (age ${age || "about 10"}).
@@ -180,7 +182,8 @@ TEACH NOW: ${state.currentConcept || understanding?.concept || "what they just a
       askedBackLast,
       wantsExplain: understanding.wantsExplain,
       wantsReason: understanding.wantsReason,
-      intent: understanding.intent
+      intent: understanding.intent,
+      askedToLook: understanding.askedToLook
     });
     if (understanding.voiceIssue) {
       return `DIRECTIVE: They cannot hear the voice. One short ack, then KEEP teaching${topic || " whatever they asked"}. Do not restart. Do not ask what they want if a topic is already set.`;
@@ -192,7 +195,7 @@ TEACH NOW: ${state.currentConcept || understanding?.concept || "what they just a
       return `DIRECTIVE: They are talking about the picture, not answering a quiz. One kind line about the picture, then teach the NEXT step of the topic.${topic} Open how/why/what-happens-next question. Do not repeat "${lastCheck || "your last question"}".`;
     }
     if (extras.boardMath?.hasExact) {
-      return "DIRECTIVE: The exact arithmetic is already computed below. Teach THOSE numbers. Show the steps in kid words. Never guess a different answer. Then one thinking question.";
+      return "DIRECTIVE: The exact arithmetic is already computed below. Say the real total now. If they guessed a different number, say that guess is not right. Show the steps with THEIR numbers. Never invent a different answer.";
     }
     if (understanding.askedToLook && !understanding.wantsDraw) {
       return "DIRECTIVE: They want you to LOOK at their whiteboard. Explain the actual marks and diagram. Use THEIR numbers. Never teach them what to say. Never a generic apples/cookies story. Never 'Say, …'.";
@@ -203,8 +206,8 @@ TEACH NOW: ${state.currentConcept || understanding?.concept || "what they just a
     if (understanding.pushback) {
       return `DIRECTIVE: They are frustrated because you stalled. TEACH the idea now.${topic} One everyday example. No greeting. No "what part feels hardest" until you have explained.`;
     }
-    if (move === "answer" || (askedBackLast && !understanding.pushback && !understanding.wantsExplain && understanding.intent !== "question" && understanding.intent !== "explain")) {
-      return `DIRECTIVE: They tried to answer "${lastCheck || "your last question"}".${topic} In one kid sentence say if they are right, almost, or not yet. If close or right, name the idea once and teach the NEXT step. If wrong, give one real-life hint. Then a NEW open question (how/why/what happens next). NEVER ask the same question again. NEVER ask "what is this called".`;
+    if (move === "answer") {
+      return `DIRECTIVE: They tried to answer "${lastCheck || "your last question"}".${topic} In one kid sentence say if they are right, almost, or not yet. If close or right, name the idea once and teach the NEXT step. If wrong, give one real-life hint. Then a NEW open question (how/why/what happens next). NEVER ask the same question again. NEVER ask "what is this called". NEVER start with "not yet" unless they actually tried to answer your last question.`;
     }
     if (understanding.wantsDraw && understanding.wantsExplain) {
       return `DIRECTIVE: Explain one idea in kid speech. Mention what the picture will show.${topic} Do not copy their words.`;

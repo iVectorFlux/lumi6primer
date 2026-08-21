@@ -2,6 +2,8 @@
 
 const { topicFromText, isWeakTopic } = require("../topic.js");
 const { isPictureComment } = require("./teaching-move.js");
+const boardMath = require("../tools/board-math.js");
+const { explicitTopicSwitch } = require("./kid-intent.js");
 
 const FACT = /^(what is|what's|who (is|was|invented)|when (was|did)|where is|how (tall|old|high|long|many)|capital of)\b/i;
 
@@ -24,14 +26,21 @@ function understandLearner(raw, extras = {}) {
   const text = String(raw || "").trim();
   const t = text.toLowerCase();
   const boardImage = extras.boardImage || null;
-  const askedToLook = refersToBoard(text);
+  const spokenFacts = boardMath.extractFacts(text);
+  const mathTopic = spokenFacts[0]
+    ? `${spokenFacts[0].a} ${spokenFacts[0].op === "*" ? "×" : spokenFacts[0].op === "/" ? "÷" : spokenFacts[0].op === "-" ? "−" : spokenFacts[0].op} ${spokenFacts[0].b}`.trim()
+    : "";
+  const askedToLookDirect = refersToBoard(text);
   const voiceIssue = isVoiceIssue(text);
 
   const drawAsk = /\b((can you |could you |please )?(draw|sketch|illustrate)\b|\b(make|show) (me )?(a )?(diagram|picture)|\bdiagram of\b|\bpicture of\b)/.test(t);
   const drawFollowThrough = /\b(i thought you were drawing|you (said|promised) (you('d| would) )?draw|still no diagram|draw (it|that|something|a ))\b/.test(t);
   const wantsDraw = (drawAsk || drawFollowThrough) && !/\blook at\b/.test(t);
+  const boardFollowUp = /^(can you |could you |please )?(tell me|say it|what is it|what('?s| is) the answer|is (that|it|this) (right|correct)|is it correct)[\s.!?]*$/i.test(text)
+    || /\b(is (that|it|this) (right|correct)|is it correct|what('?s| is) the answer)\b/i.test(t);
+  const askedToLook = askedToLookDirect || (Boolean(extras.lastAskedToLook) && boardFollowUp && !wantsDraw);
   const wantsWrite = /\b((can you |could you |please )?(write|put|fill in)\b|\bwrite (the )?(answer|number|it|seven|\d+)\b)/.test(t);
-  const wantsExplain = /\b(explain|teach me about|teach me|tell me about|tell me|i want to learn|help me understand|break it down|how can i learn|learn about|curious about|difference between)\b/.test(t)
+  const wantsExplain = /\b(explain|teach me about|teach me|tell me about|i want to learn|help me understand|break it down|how can i learn|learn about|curious about|difference between)\b/.test(t)
     || /\b(can you |could you |please )?(teach|explain)\b/.test(t);
   const wantsReason = /\b(how is that possible|how is that|how does that|why is that|why does that|how can that)\b/.test(t)
     || /^(how|why)\b/.test(t);
@@ -50,7 +59,7 @@ function understandLearner(raw, extras = {}) {
     intent = "dont_understand";
   } else if (wantsExplain || /\b(let's learn|what should i learn|start (a )?lesson)\b/.test(t)) {
     intent = wantsExplain ? "explain" : "goal";
-  } else if (/\b(homework|this problem|check my work|i got stuck on)\b/.test(t) || (askedToLook && /\b(solve|equals|=)\b/.test(t))) {
+  } else if (/\b(homework|this problem|check my work|i got stuck on)\b/.test(t) || (askedToLook && /\b(solve|equals|=|correct|right)\b/.test(t)) || spokenFacts.length > 0) {
     intent = "homework";
   } else if (askedToLook || /\b(i drew|look at my drawing|what did i draw)\b/.test(t)) {
     intent = "drawing";
@@ -58,7 +67,7 @@ function understandLearner(raw, extras = {}) {
     intent = "attempt";
   } else if (isPictureComment(text)) {
     intent = "chat";
-  } else if (extras.askedBackLast && text.length < 48 && !wantsExplain && !askedToLook) {
+  } else if (extras.askedBackLast && text.length < 48 && !wantsExplain && !askedToLook && !wantsReason && !/^(what|why|how|who|when|where)\b/i.test(t)) {
     intent = "attempt";
   } else if (/\b(let me try|i think (it'?s|the answer)|maybe it'?s|maybe it is|try again)\b/.test(t) && !wantsExplain) {
     intent = /\btry again|instead\b/.test(t) ? "revision" : "attempt";
@@ -79,7 +88,17 @@ function understandLearner(raw, extras = {}) {
   // words in it must never become the new topic. Only an explicit ask can switch.
   const complaining = pushback || confusion || voiceIssue || intent === "dont_understand";
   const namedTopic = Boolean(guessed) && !isWeakTopic(guessed)
-    && !(complaining && Boolean(prior) && !wantsExplain);
+    && !(complaining && Boolean(prior) && !wantsExplain)
+    && (
+      !prior
+      || Boolean(mathTopic)
+      || wantsExplain
+      || wantsReason
+      || intent === "question"
+      || intent === "homework"
+      || askedToLook
+      || explicitTopicSwitch(text)
+    );
   const keepPrior = Boolean(prior) && !greeting && !namedTopic && !askedToLook && (
     (wantsDraw && !wantsExplain)
     || wantsWrite
@@ -90,9 +109,11 @@ function understandLearner(raw, extras = {}) {
     || intent === "dont_understand"
     || bareTeach
   );
-  const concept = namedTopic
-    ? guessed
-    : (askedToLook ? (guessed || "") : (keepPrior ? prior : (guessed || prior)));
+  const concept = mathTopic
+    ? mathTopic
+    : namedTopic
+      ? guessed
+      : (askedToLook ? (guessed || prior) : (keepPrior ? prior : (guessed || prior)));
 
   return {
     raw: text,

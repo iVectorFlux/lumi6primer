@@ -119,25 +119,51 @@ function extractFromWords(text, facts) {
 
 function extractFromLine(line, facts) {
   const trimmed = String(line || "").replace(/=\s*[?]?\s*$/, "").trim();
-  if (!trimmed || trimmed.length > 64) return;
-  const normalized = normalizeExpr(trimmed);
-  if (isSafeExpr(normalized)) {
-    const opCount = (normalized.match(/[+\-*/]/g) || []).length;
-    const value = evalSafe(normalized);
-    if (value != null && opCount >= 1) {
-      if (opCount === 1) {
-        const m = trimmed.match(/(\d+(?:\.\d+)?)\s*([+\-−–—×xX*÷/])\s*(\d+(?:\.\d+)?)/);
-        if (m) addFact(facts, makeFact(m[1], m[2], m[3], trimmed));
-      } else {
-        addFact(facts, makeChainFact(trimmed, value, trimmed));
+  if (!trimmed) return;
+  // A whole sentence can still contain a sum. Only try to evaluate the whole
+  // string when it is a short expression, not a chat message.
+  if (trimmed.length <= 64) {
+    const normalized = normalizeExpr(trimmed);
+    if (isSafeExpr(normalized)) {
+      const opCount = (normalized.match(/[+\-*/]/g) || []).length;
+      const value = evalSafe(normalized);
+      if (value != null && opCount >= 1) {
+        if (opCount === 1) {
+          const m = trimmed.match(/(\d+(?:\.\d+)?)\s*([+\-−–—×xX*÷/])\s*(\d+(?:\.\d+)?)/);
+          if (m) addFact(facts, makeFact(m[1], m[2], m[3], trimmed));
+        } else {
+          addFact(facts, makeChainFact(trimmed, value, trimmed));
+        }
+        pruneOverlappingFacts(facts);
+        return;
       }
-      return;
     }
   }
   const re = /(\d+(?:\.\d+)?)\s*([+\-−–—×xX*÷/])\s*(\d+(?:\.\d+)?)/g;
   let match;
   while ((match = re.exec(trimmed))) {
     addFact(facts, makeFact(match[1], match[2], match[3], match[0]));
+  }
+  pruneOverlappingFacts(facts);
+}
+
+// Handwriting "11 + 2" is often also read as "1 + 2". Keep the longer numbers.
+function pruneOverlappingFacts(facts) {
+  for (let i = facts.length - 1; i >= 0; i -= 1) {
+    const fact = facts[i];
+    if (!fact || fact.chain) continue;
+    const swallowed = facts.some((other, j) => {
+      if (j === i || !other || other.chain || other.op !== fact.op) return false;
+      const a = String(fact.a);
+      const b = String(fact.b);
+      const oa = String(other.a);
+      const ob = String(other.b);
+      return (oa.length > a.length && oa.endsWith(a) && ob === b)
+        || (ob.length > b.length && ob.endsWith(b) && oa === a)
+        || (oa.length >= a.length && ob.length >= b.length && oa.endsWith(a) && ob.endsWith(b)
+          && (oa.length > a.length || ob.length > b.length));
+    });
+    if (swallowed) facts.splice(i, 1);
   }
 }
 

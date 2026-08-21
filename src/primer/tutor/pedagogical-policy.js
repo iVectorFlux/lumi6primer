@@ -1,6 +1,7 @@
 "use strict";
 
 const { ROLES, ACTIONS } = require("../constants.js");
+const { isNewAsk } = require("./kid-intent.js");
 
 const QUIZ_ACTIONS = new Set(["quiz", "exercise", "drill", "reward", "test"]);
 
@@ -155,18 +156,14 @@ class PedagogicalPolicy {
       reasons.push("board work should be read and taught with exact arithmetic");
       return "explain";
     }
-    const newAsk = Boolean(
-      understanding?.wantsExplain
-      || understanding?.wantsReason
-      || understanding?.intent === "explain"
-      || understanding?.intent === "question"
-      || understanding?.intent === "fact"
-    );
+    if (understanding?.intent === "homework" || isNewAsk(understanding?.raw, understanding)) {
+      reasons.push("a new ask or a sum is taught, not graded");
+      return "explain";
+    }
     const askedBackLast = Boolean(state?.conversationState?.askedBackLast);
     if (
       askedBackLast
       && !understanding?.pushback
-      && !newAsk
       && understanding?.intent !== "meta"
       && understanding?.intent !== "goal"
       && understanding?.intent !== "voice"

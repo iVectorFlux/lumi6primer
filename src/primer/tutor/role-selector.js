@@ -1,6 +1,7 @@
 "use strict";
 
 const { ROLES, ROLE_PURPOSE } = require("../constants.js");
+const { isNewAsk } = require("./kid-intent.js");
 
 /**
  * Five locked roles. Thinking Partner replaces "Roommate" in the child-facing architecture.
@@ -57,15 +58,10 @@ class RoleSelector {
     if (understanding?.pushback) return "explain";
     if (understanding?.voiceIssue && understanding?.concept) return "explain";
     if (understanding?.wantsExplain || intent === "explain") return "explain";
-    const newAsk = Boolean(
-      understanding?.wantsExplain
-      || understanding?.wantsReason
-      || intent === "explain"
-      || intent === "question"
-      || intent === "fact"
-    );
     if (understanding?.askedToLook && !understanding?.wantsDraw) return "explain";
-    if (askedBackLast && !understanding?.pushback && !newAsk && intent !== "meta" && intent !== "goal" && intent !== "dont_understand" && intent !== "voice") {
+    if (intent === "homework") return "explain";
+    if (askedBackLast && !understanding?.pushback && !isNewAsk(understanding?.raw, understanding)
+      && intent !== "meta" && intent !== "goal" && intent !== "dont_understand" && intent !== "voice") {
       return "diagnose";
     }
     if (intent === "dont_understand") return "reinterpret";

@@ -69,12 +69,15 @@ function advanceQuestion() {
   return "What do you think happens next, and why?";
 }
 
-function classifyReply({ childText, askedBackLast, wantsExplain, wantsReason, intent } = {}) {
+const { isNewAsk, shouldGrade } = require("./kid-intent.js");
+
+function classifyReply({ childText, askedBackLast, wantsExplain, wantsReason, intent, askedToLook } = {}) {
   const text = String(childText || "").trim();
   if (isPictureComment(text)) return "picture_comment";
-  if (wantsExplain || intent === "explain") return "new_lesson";
-  if (wantsReason || (isDetailAsk(text) && text.length >= 18)) return "go_deeper";
-  if (askedBackLast && (isAck(text) || text.length < 90) && intent !== "question") return "answer";
+  const understanding = { raw: text, wantsExplain, wantsReason, intent, askedToLook };
+  if (isNewAsk(text, understanding) || wantsExplain || intent === "explain") return "new_lesson";
+  if (wantsReason || intent === "question" || (isDetailAsk(text) && text.length >= 18)) return "go_deeper";
+  if (shouldGrade({ text, askedBackLast, understanding })) return "answer";
   return "continue";
 }
 
