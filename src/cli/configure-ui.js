@@ -276,8 +276,8 @@ async function configureSettings(ui, configuration, options) {
     traceLimit = cleanText(await ui.input("Maximum retained request records", cleanText(env.LUMI6_REQUEST_TRACE_LIMIT) || "100", numberValidator("Retention", 1, 1000, true))),
     currentHost = cleanText(env.HOST) || "0.0.0.0",
     hostChoice = await ui.select("Listening interface", uniqueChoices([
-      { name:"All network interfaces (LAN access)", value:"0.0.0.0", description:"Reach Lumi6 from this computer and the local network." },
-      { name:"This computer only", value:"127.0.0.1", description:"Only local browser connections are accepted." },
+      { name:"All interfaces (needed behind a load balancer)", value:"0.0.0.0", description:"Accept connections from the host and from a reverse proxy." },
+      { name:"Loopback only", value:"127.0.0.1", description:"Only local browser connections are accepted." },
       ...(!["0.0.0.0","127.0.0.1"].includes(currentHost) ? [{ name:`Current custom interface: ${currentHost}`, value:currentHost }] : []),
       { name:"Enter an interface manually…", value:"__manual__" },
     ]), currentHost),

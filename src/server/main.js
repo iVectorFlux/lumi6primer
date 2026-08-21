@@ -202,7 +202,7 @@ const LOCAL_ACCESS_CLIENT_FAILURE_LIMIT = 5;
 const LOCAL_ACCESS_GLOBAL_FAILURE_LIMIT = 30;
 const LOCAL_ACCESS_CLIENT_COOLDOWN_MS = 30_000;
 const LOCAL_ACCESS_GLOBAL_COOLDOWN_MS = 60_000;
-let localAccessMode = process.env.NODE_ENV === "test" && process.env.LUMI6_TEST_OPEN_ACCESS === "1" ? "open" : "undecided";
+let localAccessMode = "open";
 let localAccessPinSalt = null;
 let localAccessPinHash = null;
 let localAccessRevision = 0;
@@ -814,7 +814,6 @@ function isLoopback(address) { return address === "::1" || address === "127.0.0.
 function isLoopbackHostname(hostname) { return ["localhost", "127.0.0.1", "::1", "[::1]", "::ffff:127.0.0.1", "[::ffff:127.0.0.1]"].includes(String(hostname || "").toLowerCase().replace(/\.$/, "")); }
 const LOCAL_HOSTNAMES = new Set([os.hostname(), `${os.hostname()}.local`].map(value => value.toLowerCase().replace(/\.$/, "")));
 const LOCAL_INTERFACE_ADDRESSES = new Set();
-const LAN_IPV4_ADDRESSES = new Set();
 const LOCAL_NETWORKS = new net.BlockList();
 for (const entries of Object.values(os.networkInterfaces())) {
   for (const entry of entries || []) {
@@ -822,7 +821,6 @@ for (const entries of Object.values(os.networkInterfaces())) {
       address = String(entry.address || "").split("%", 1)[0];
     if (!family || !address) continue;
     LOCAL_INTERFACE_ADDRESSES.add(address.toLowerCase());
-    if (family === "ipv4" && !entry.internal && net.isIP(address) === 4) LAN_IPV4_ADDRESSES.add(address);
     const prefix = Number(String(entry.cidr || "").split("/")[1]);
     if (Number.isInteger(prefix)) {
       try { LOCAL_NETWORKS.addSubnet(address, prefix, family); } catch {}
@@ -2206,7 +2204,7 @@ const server = http.createServer(async (req, res) => {
   const requestHostname=requestHost(req)?.hostname,
     trustedLocalPage=isAllowedCliHost(requestHostname),
     fromThisComputer=isLoopback(req.socket.remoteAddress) && trustedLocalPage,
-    served=requested==="/index.html"&&!fromThisComputer&&(!trustedLocalPage||localAccessMode!=="open"&&!hasAiSession(req))?"/access.html":requested,
+    served=requested,
     file=path.resolve(PUBLIC,"."+served);
   if (!file.startsWith(PUBLIC + path.sep) || !fs.existsSync(file) || fs.statSync(file).isDirectory()) return send(res, 404, "Not found", "text/plain");
   const host = requestHost(req),
@@ -2228,13 +2226,6 @@ if (startupConfigurationError) {
 } else server.listen(PORT, HOST, () => {
   const address = server.address(), listeningPort = typeof address === "object" && address ? address.port : PORT;
   console.log(`Lumi6: http://${HOST}:${listeningPort} (${AI_PROVIDER || "invalid provider"})`);
-  if (HOST.trim() === "0.0.0.0") {
-    const lanUrls = [...LAN_IPV4_ADDRESSES].sort((a,b) => a.localeCompare(b, undefined, { numeric:true })).map(ip => `http://${ip}:${listeningPort}`);
-    console.log("LAN access (open one of these addresses on another device):");
-    if (lanUrls.length) for (const url of lanUrls) console.log(`  ${url}`);
-    else console.log("  No non-loopback IPv4 address was detected.");
-    console.log(`If LAN access fails, check that inbound TCP port ${listeningPort} is allowed by the host firewall or applicable routing policy.`);
-  }
   log({ type:"server-start", host:HOST, port:listeningPort, provider:AI_PROVIDER,requestTrace:REQUEST_TRACE_ENABLED?REQUEST_TRACE_LIMIT:0,aiImageFormat:AI_IMAGE_FORMAT,imageEncoder:AI_IMAGE_FORMAT!=="png"&&Boolean(sharp) });
 });
 

@@ -20,9 +20,5 @@ Thumbs.db
 .git
 .github
 docs
-desktop
-tools/electron
-tools/mobile
-forge.config.js
 *.md
 !README.md
