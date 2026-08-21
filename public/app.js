@@ -763,6 +763,7 @@ User writes "Show air quality for Tokyo", names a place, and points to an empty 
       snapshotLocation: initialSnapshotLocation,
       currentSnapshotId: null,
       currentSnapshotName: "",
+      lessonTitle: "",
       currentSnapshotLocation: null,
       restoreGeneration: 0,
       recognitionGeneration: 0,
@@ -2961,11 +2962,13 @@ User writes "Show air quality for Tokyo", names a place, and points to an empty 
     setStatusKey("imageMerged");
     return true;
   }
-  function importedImagePlacement(naturalW, naturalH) {
+  function importedImagePlacement(naturalW, naturalH, fit = {}) {
+    const board = fit.board || 0.72,
+      screen = fit.screen || 0.52;
     const visible = viewportRect() || { x:0, y:0, w:SIZE, h:SIZE },
       rect = view.getBoundingClientRect(),
-      maxW = Math.max(80, Math.min(6000, visible.w * 0.72, Math.max(240, rect.width * 0.52) / state.scale)),
-      maxH = Math.max(80, Math.min(6000, visible.h * 0.72, Math.max(200, rect.height * 0.52) / state.scale)),
+      maxW = Math.max(80, Math.min(6000, visible.w * board, Math.max(240, rect.width * screen) / state.scale)),
+      maxH = Math.max(80, Math.min(6000, visible.h * board, Math.max(200, rect.height * screen) / state.scale)),
       scale = Math.min(maxW / naturalW, maxH / naturalH),
       w = Math.max(80, naturalW * scale),
       h = Math.max(80, naturalH * scale),
@@ -5963,7 +5966,7 @@ User writes "Show air quality for Tokyo", names a place, and points to an empty 
     if (snapshotSaveInProgress) return;
     const overwriteId = state.currentSnapshotLocation === state.snapshotLocation ? state.currentSnapshotId : null,
       requestedName = document.querySelector("#historyName")?.value.trim(),
-      name = requestedName || (overwriteId ? state.currentSnapshotName : "");
+      name = requestedName || (overwriteId ? state.currentSnapshotName : lessonBoardName());
     setHistorySaveBusy(true);
     showHistoryNoticeKey("snapshotSaving", "busy", 0);
     try {
@@ -6301,7 +6304,7 @@ User writes "Show air quality for Tokyo", names a place, and points to an empty 
       item = {
         id,
         createdAt,
-        name: requestedName || (overwriteId ? (existing ? existing.name : state.currentSnapshotName) : ""),
+        name: requestedName || (overwriteId ? (existing ? existing.name : state.currentSnapshotName) : lessonBoardName()),
         theme: state.theme,
         view: { scale: state.scale, panX: state.panX, panY: state.panY },
         tileCount: tileEntries.length,
@@ -6405,6 +6408,7 @@ User writes "Show air quality for Tokyo", names a place, and points to an empty 
     }
     state.currentSnapshotId = item.id;
     state.currentSnapshotName = snapshotName(item);
+    state.lessonTitle = item.name || "";
     state.currentSnapshotLocation = location;
     render();
     closeHistoryPanel();
@@ -6490,6 +6494,7 @@ User writes "Show air quality for Tokyo", names a place, and points to an empty 
     state.historyBefore.clear();
     state.currentSnapshotId = null;
     state.currentSnapshotName = "";
+    state.lessonTitle = "";
     state.currentSnapshotLocation = null;
     state.viewInitialized = false;
     state.aiDraftReturnMode = null;
@@ -6511,7 +6516,7 @@ User writes "Show air quality for Tokyo", names a place, and points to an empty 
       return;
     }
     const dialog = document.querySelector("#newCanvasDialog");
-    document.querySelector("#newSnapshotName").value = "";
+    document.querySelector("#newSnapshotName").value = lessonBoardName();
     setNewCanvasDialogBusy(false);
     updateNewCanvasDialog();
     if (!dialog.open) dialog.showModal();
@@ -6531,6 +6536,24 @@ User writes "Show air quality for Tokyo", names a place, and points to an empty 
     } catch (error) {
       setStatus(`${t("snapshotError")}${error.message}`);
       setNewCanvasDialogBusy(false);
+    }
+  }
+  // A board saved from a lesson should be findable by what it taught, not by
+  // the minute it was saved.
+  function lessonBoardName() {
+    const raw = String(state.lessonTitle || "").replace(/\s+/g, " ").trim().replace(/[.,;:!?]+$/, "");
+    if (raw.length < 3) return "";
+    const clipped = raw.length <= 42 ? raw : `${raw.slice(0, 42).replace(/\s+\S*$/, "")}…`;
+    return clipped.charAt(0).toUpperCase() + clipped.slice(1);
+  }
+  function noteLessonTitle(title) {
+    const next = String(title || "").replace(/\s+/g, " ").trim();
+    if (!next || next.length < 3) return;
+    if (/^(picture|lesson picture|board)$/i.test(next)) return;
+    if (!state.lessonTitle) state.lessonTitle = next;
+    const label = document.querySelector("#currentDocName");
+    if (label && (!label.textContent || /^untitled$/i.test(label.textContent.trim()))) {
+      label.textContent = lessonBoardName() || label.textContent;
     }
   }
   function snapshotName(item) {
@@ -11320,7 +11343,7 @@ User writes "Show air quality for Tokyo", names a place, and points to an empty 
     for (let i = keep.length - 1; i >= 0; i -= 1) {
       const img = keep[i];
       const aspect = (img.naturalW || img.w) / Math.max(img.naturalH || img.h, 1);
-      img.w = Math.max(220, newPlace.w * 0.38);
+      img.w = Math.max(160, newPlace.w * 0.38);
       img.h = img.w / Math.max(aspect, 0.2);
       img.x = x - img.w;
       img.y = newPlace.y + Math.max(0, newPlace.h - img.h) * 0.58;
@@ -11337,7 +11360,9 @@ User writes "Show air quality for Tokyo", names a place, and points to an empty 
     const naturalW = canvas.width;
     const naturalH = canvas.height;
     canvas.width = canvas.height = 1;
-    const place = importedImagePlacement(naturalW, naturalH);
+    // Lesson pictures sit at a middle size so the earlier ones stay visible
+    // beside them instead of filling the whole board.
+    const place = importedImagePlacement(naturalW, naturalH, { board: 0.46, screen: 0.34 });
     const item = imageRecord({
       id: `image-${state.nextImageId++}`,
       ...place,
@@ -11347,6 +11372,7 @@ User writes "Show air quality for Tokyo", names a place, and points to an empty 
       naturalH,
       sourceName: `atlas-lesson:${cmd.title || "Lesson picture"}`
     });
+    noteLessonTitle(cmd.title);
     if (!item) return null;
     if (state.pending) acceptPending({ restoreMode: false });
     recordImagesBefore();

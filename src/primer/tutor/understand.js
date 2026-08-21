@@ -35,7 +35,7 @@ function understandLearner(raw, extras = {}) {
     || /\b(can you |could you |please )?(teach|explain)\b/.test(t);
   const wantsReason = /\b(how is that possible|how is that|how does that|why is that|why does that|how can that)\b/.test(t)
     || /^(how|why)\b/.test(t);
-  const pushback = /\b(come on|i asked you|just explain|answer me|what are you asking|you're not answering|stop asking|i want you to explain|not what real teaching|just writing|only text|the hell|what the hell|wtf|are you talking about)\b/i.test(t);
+  const pushback = /\b(come on|i asked you|just explain|answer me|what are you asking|you're not answering|stop asking|i want you to explain|not what real teaching|just writing|only text|the hell|what the hell|wtf|are you talking about|who asked|i did not ask|i didn't ask|i never asked)\b/i.test(t);
   const meta = !voiceIssue && /\b(what can you help|what do you do|who are you|how does this work|what are you for)\b/.test(t);
   const confused = /\b(i don't understand|i do not understand|don't understand|dont understand|huh\??$|i'm confused|i am confused|that doesn't make sense|what do you mean)\b/i.test(t);
 
@@ -75,7 +75,11 @@ function understandLearner(raw, extras = {}) {
   const prior = String(extras.concept || "").trim();
   const greeting = /^(hi|hello|hey|how are you)\b/i.test(t) && text.length < 48 && !wantsExplain;
   const bareTeach = /^(can you |could you |please )?(teach|explain)( me)?[\s.!?]*$/i.test(t);
-  const namedTopic = Boolean(guessed) && !isWeakTopic(guessed);
+  // A complaint ("what the hell is this") is about the current lesson, so the
+  // words in it must never become the new topic. Only an explicit ask can switch.
+  const complaining = pushback || confusion || voiceIssue || intent === "dont_understand";
+  const namedTopic = Boolean(guessed) && !isWeakTopic(guessed)
+    && !(complaining && Boolean(prior) && !wantsExplain);
   const keepPrior = Boolean(prior) && !greeting && !namedTopic && !askedToLook && (
     (wantsDraw && !wantsExplain)
     || wantsWrite

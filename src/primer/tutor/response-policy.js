@@ -10,9 +10,13 @@ const CANNED = /here'?s a situation where|the everyday assumption|a relationship
 const STALL = /let's take .+ slowly|what part feels hardest|i'm here\. what do you want to figure out|hey\. what do you want to learn\?|let's look at .+ with a simple example|hmm,? let me think about that differently|tell me more about what you're trying to understand/i;
 const PHRASE_COACH = /^(say[,:]?\s*["“]|try saying|you can also say|a better way to (ask|say)|you could say)/i;
 
+// Apologising for a mix-up and then teaching the mixed-up topic anyway is a
+// failed turn, not a recovery. Regenerate instead of speaking it.
+const WRONG_TOPIC_APOLOGY = /\bi (?:messed up|mixed (?:it|them|that) up|got (?:it|them|that) mixed up|talked about the wrong|answered the wrong|explained the wrong|said the wrong)\b|\byou did not ask about\b|\bthat was the wrong (?:topic|thing|answer)\b/i;
+
 function isCannedSpeech(text) {
   const t = String(text || "");
-  return CANNED.test(t) || STALL.test(t);
+  return CANNED.test(t) || STALL.test(t) || WRONG_TOPIC_APOLOGY.test(t);
 }
 
 class ResponsePolicy {

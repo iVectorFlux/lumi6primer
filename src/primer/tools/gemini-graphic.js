@@ -5,6 +5,15 @@ const crypto = require("crypto");
 const graphics = new Map();
 let geminiSkipUntil = 0;
 
+// A model that answers "does not exist" will never start existing mid-process,
+// so retrying it just adds its whole timeout to every picture the child waits for.
+const retiredModels = new Set();
+let lastGoodLabel = "";
+
+function isRetiredError(err) {
+  return /\b404\b|does not exist|is not found|not supported for predict|invalid_val/i.test(String(err?.message || ""));
+}
+
 function geminiKey() {
   return String(process.env.GEMINI_API_KEY || process.env.GOOGLE_API_KEY || "").trim();
 }
@@ -218,12 +227,11 @@ async function requestOpenAIModel(model, prompt, timeoutMs) {
   const key = openaiKey();
   if (!key.startsWith("sk-")) throw new Error("OpenAI image is not configured.");
   const gpt = /gpt-image/i.test(model);
-  const dallE2 = /dall-e-2/i.test(model);
   const body = {
     model,
     prompt,
     n: 1,
-    size: dallE2 ? "512x512" : gpt ? "1536x1024" : "1792x1024"
+    size: gpt ? "1536x1024" : "1792x1024"
   };
   if (gpt) body.quality = "low";
   const result = await fetchJson("https://api.openai.com/v1/images/generations", {
@@ -237,8 +245,9 @@ async function requestOpenAIModel(model, prompt, timeoutMs) {
   if (!result.ok) {
     throw new Error(`OpenAI ${model} ${result.status}: ${String(result.text || "").slice(0, 160)}`);
   }
-  const item = result.json?.data?.[0] || {};
-  if (item.b64_json) return { mime: "image/png", b64: item.b64_json, model };
+  const item = result.json?.data?.[0] || result.json?.output?.[0] || {};
+  const inline = item.b64_json || item.image_base64 || item.b64 || result.json?.b64_json || "";
+  if (inline) return { mime: "image/png", b64: inline, model };
   if (item.url) {
     const controller = new AbortController();
     const timer = setTimeout(() => controller.abort(), 8000);
@@ -251,7 +260,8 @@ async function requestOpenAIModel(model, prompt, timeoutMs) {
       clearTimeout(timer);
     }
   }
-  throw new Error(`OpenAI ${model} returned no image payload`);
+  const shape = Object.keys(item).join(",") || Object.keys(result.json || {}).join(",") || "empty";
+  throw new Error(`OpenAI ${model} returned no image payload (fields: ${shape})`);
 }
 
 async function tryOne(label, fn) {
@@ -259,10 +269,16 @@ async function tryOne(label, fn) {
   try {
     const image = await fn();
     console.log(`[PRIMER] graphic ok via ${image.model || label} in ${Date.now() - started}ms`);
+    lastGoodLabel = label;
     return image;
   } catch (err) {
     console.warn(`[PRIMER] graphic failed (${label}):`, sanitizeErr(err));
     if (label.startsWith("gemini")) noteGeminiFailure(err);
+    if (isRetiredError(err)) {
+      retiredModels.add(label);
+      console.warn(`[PRIMER] dropping ${label} for this process — the API says it does not exist`);
+    }
+    if (lastGoodLabel === label) lastGoodLabel = "";
     return null;
   }
 }
@@ -271,27 +287,26 @@ async function generate(input = {}) {
   if (!isConfigured()) return null;
   const prompt = kidPrompt(input);
 
-  const openaiFirst = [
-    ["openai:gpt-image-1-mini", () => requestOpenAIModel("gpt-image-1-mini", prompt, 18000)],
-    ["openai:dall-e-2", () => requestOpenAIModel("dall-e-2", prompt, 12000)]
-  ];
-  const google = [];
-  if (geminiKey().length > 20) {
-    google.push(["imagen-fast", () => requestImagenFast(prompt, 12000)]);
-    if (geminiFlashAllowed()) {
-      google.push(["gemini-2.5-flash-image", () => requestGeminiFlash("gemini-2.5-flash-image", prompt, 10000)]);
+  const attempts = [];
+  if (geminiKey().length > 20 && geminiFlashAllowed()) {
+    const flash = String(process.env.GEMINI_IMAGE_MODEL || "gemini-2.5-flash-image").trim();
+    attempts.push([`gemini:${flash}`, () => requestGeminiFlash(flash, prompt, 12000)]);
+  }
+  if (openaiKey().startsWith("sk-")) {
+    const preferred = String(process.env.OPENAI_IMAGE_MODEL || "gpt-image-2").trim();
+    for (const model of [...new Set([preferred, "gpt-image-1.5", "gpt-image-1", "gpt-image-1-mini"])]) {
+      attempts.push([`openai:${model}`, () => requestOpenAIModel(model, prompt, 26000)]);
     }
   }
-  const openaiLast = [
-    ["openai:dall-e-3", () => requestOpenAIModel("dall-e-3", prompt, 22000)],
-    ["openai:gpt-image-1", () => requestOpenAIModel("gpt-image-1", prompt, 22000)]
-  ];
+  if (geminiKey().length > 20) {
+    attempts.push(["imagen-fast", () => requestImagenFast(prompt, 14000)]);
+  }
 
-  const attempts = openaiKey().startsWith("sk-")
-    ? [...openaiFirst, ...google, ...openaiLast]
-    : [...google];
+  const live = attempts.filter(([label]) => !retiredModels.has(label));
+  // The model that worked last time goes first, so a good run stays a one-call run.
+  live.sort((a, b) => (b[0] === lastGoodLabel ? 1 : 0) - (a[0] === lastGoodLabel ? 1 : 0));
 
-  for (const [label, fn] of attempts) {
+  for (const [label, fn] of live) {
     const image = await tryOne(label, fn);
     if (image?.b64) return photoCommand(input, image, image.model || label);
   }

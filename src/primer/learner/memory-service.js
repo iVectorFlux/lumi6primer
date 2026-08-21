@@ -9,15 +9,28 @@ class MemoryService {
   async retrieve(childId, { concept, intent } = {}) {
     if (!this.childModel || !childId) return [];
     const events = await this.childModel.getRecentEvents(childId, 12);
+    const current = String(concept || "").trim().toLowerCase();
     const scored = events.map((event) => {
+      const topic = String(event.topic || "").trim().toLowerCase();
       let score = 1;
-      if (concept && String(event.topic || "").toLowerCase() === String(concept).toLowerCase()) score += 3;
+      if (current && topic === current) score += 3;
       if (intent && event.event_type === intent) score += 1;
       if (event.significance === "high") score += 2;
-      return { score, text: this._format(event), event };
+      // An unrelated old topic in the prompt reads as a suggestion, and the model
+      // has taught that old topic instead of the one the child just asked for.
+      const unrelated = Boolean(current) && Boolean(topic) && topic !== current && !this._related(topic, current);
+      return { score, unrelated, text: this._format(event) };
     });
-    scored.sort((a, b) => b.score - a.score);
-    return scored.slice(0, this.maxSnippets).map((item) => item.text);
+    const pool = scored.filter((item) => !item.unrelated);
+    pool.sort((a, b) => b.score - a.score);
+    return pool.slice(0, this.maxSnippets).map((item) => item.text);
+  }
+
+  _related(topicA, topicB) {
+    const words = (text) => new Set(String(text).split(/\s+/).filter((w) => w.length > 3));
+    const a = words(topicA);
+    for (const word of words(topicB)) if (a.has(word)) return true;
+    return false;
   }
 
   async remember(childId, sessionId, evidence, { concept, phase, role } = {}) {

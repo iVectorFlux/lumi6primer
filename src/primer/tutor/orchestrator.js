@@ -7,7 +7,7 @@ const RoleSelector = require("./role-selector.js");
 const ContextBuilder = require("./context-builder.js");
 const ResponsePolicy = require("./response-policy.js");
 const { understandLearner, historyFromTurns } = require("./understand.js");
-const { isWeakTopic, spokenCoversTopic } = require("../topic.js");
+const { isWeakTopic, spokenCoversTopic, deniesTopic } = require("../topic.js");
 const { parseProposal, modelText, looksLikeJsonBlob } = require("./proposal.js");
 const { lastQuestion, questionsMatch, preventRepeatQuestion } = require("./teaching-move.js");
 const { LearnerModel } = require("../learner/learner-model.js");
@@ -214,8 +214,19 @@ class LearningOrchestrator {
     state.learningPhase = decision.phase;
     state.selectedTools = decision.tools;
     const named = String(proposal?.interpretation?.concept || "").trim();
+    // While the child is complaining or lost, the lesson topic is settled. Letting
+    // the model rename it here is how a relativity lesson became a water cycle one.
+    const topicLocked = Boolean(state.currentConcept)
+      && (understanding.pushback || understanding.confusion || understanding.voiceIssue)
+      && !understanding.wantsExplain;
+    // The topic has to come from the child. When the model invents one it is
+    // usually a word lifted out of our own prompt scaffolding, not the lesson.
+    const childWords = `${understanding.raw || ""} ${state.currentConcept || ""}`;
+    const fromChild = spokenCoversTopic(childWords, named);
     if (
       named
+      && !topicLocked
+      && fromChild
       && named.length >= 3
       && named.length <= 48
       && !isWeakTopic(named)
@@ -229,13 +240,24 @@ class LearningOrchestrator {
 
     const proposalSpoken = String(decision.proposedSpoken || proposal.spoken || "").trim();
     const topicNow = understanding.concept || state.currentConcept;
-    const offTopic = !askedToLook && Boolean(topicNow) && !isWeakTopic(topicNow) && !spokenCoversTopic(proposalSpoken, topicNow);
-    if (!askedToLook && (!proposalSpoken || looksLikeJsonBlob(proposalSpoken) || ResponsePolicy.isCannedSpeech(proposalSpoken) || offTopic)) {
-      const retry = await this._proposeSimple(understanding, null);
-      if (retry?.spoken) {
-        proposal.spoken = retry.spoken;
-        decision.proposedSpoken = retry.spoken;
-      }
+    const topicUsable = Boolean(topicNow) && !isWeakTopic(topicNow);
+    const offTopic = !askedToLook && topicUsable
+      && (!spokenCoversTopic(proposalSpoken, topicNow) || deniesTopic(proposalSpoken, topicNow));
+    // A good lesson does not have to repeat the topic word, so never naming it
+    // only earns a second attempt. Disowning the topic makes the answer unusable.
+    const unusable = (text) => !text || looksLikeJsonBlob(text) || ResponsePolicy.isCannedSpeech(text)
+      || (topicUsable && deniesTopic(text, topicNow));
+    const skipsTopic = (text) => topicUsable && !spokenCoversTopic(text, topicNow);
+    if (!askedToLook && (unusable(proposalSpoken) || skipsTopic(proposalSpoken))) {
+      // The fast model just drifted, so the second attempt goes to the stronger one.
+      const retry = await this._proposeSimple(understanding, null, { avoidGroq: offTopic });
+      const retrySpoken = String(retry?.spoken || "").trim();
+      let chosen = "";
+      if (!unusable(retrySpoken) && !skipsTopic(retrySpoken)) chosen = retrySpoken;
+      else if (!unusable(proposalSpoken)) chosen = proposalSpoken;
+      else if (!unusable(retrySpoken)) chosen = retrySpoken;
+      proposal.spoken = chosen;
+      decision.proposedSpoken = chosen;
     }
 
     let spoken = this.responsePolicy.apply(
@@ -300,7 +322,9 @@ class LearningOrchestrator {
         });
         if (photo?.href) {
           photo.keepOthers = true;
-          photo.archivePrevious = graphicPlan.kind === "detail";
+          // Every new picture pushes the earlier ones aside. Without this an
+          // overview picture landed on top of the one already on the board.
+          photo.archivePrevious = true;
           commands = [photo];
         } else {
           console.warn("[PRIMER] Graphic produced no image for", graphicTitle, "— trying sketch fallback");
@@ -491,6 +515,10 @@ class LearningOrchestrator {
   async _proposeTalk(prompt, useVision, boardImage, options = {}) {
     const timeoutMs = useVision ? 14000 : 8000;
     const userText = prompt.userBlock || prompt.studentQuery || "";
+    if (process.env.LUMI6_DEBUG_PROMPT === "1") {
+      console.log("[PRIMER] --- talk prompt ---\n", prompt.talkPrompt || prompt.systemPrompt);
+      console.log("[PRIMER] --- user block ---\n", userText);
+    }
     if (!useVision && groqTalk.isConfigured()) {
       try {
         const groq = await groqTalk.complete({
@@ -560,19 +588,21 @@ Use 6 to 10 parts. Types: circle, box, ellipse, arrow, line, beam, person, text.
     }
   }
 
-  async _proposeSimple(understanding, boardImage) {
+  async _proposeSimple(understanding, boardImage, options = {}) {
     const topic = String(understanding?.concept || "").trim() || "what they just asked";
     const raw = String(understanding?.raw || "").trim();
     const systemPrompt = `You are a patient older sibling teaching a 10-year-old.
 Teach "${topic}" right now. The child said: "${raw}".
-If they asked for that topic, stay on it. Do not switch to a random object, gadget, or hearing test.
+Every sentence must be about "${topic}". Never name or teach a different subject, even to apologise for one.
+Do not say you messed up, mixed things up, or talked about the wrong thing. Just teach "${topic}".
+Do not switch to a random object, gadget, toast, or hearing test.
 3 short spoken sentences plus one open thinking question (how/why/what happens next) about THIS topic, in the SAME spoken text.
 Use an everyday example that belongs to the topic. Short words. No markdown. No stock lecture.
 Never ask "what is this called" or "what is the name of this process".
 Never return JSON keys inside spoken.
 Return JSON only: {"spoken":"kid sentences here including the check question?"}`;
     const userText = `${systemPrompt}\n\nChild said: "${raw}"\nTeach: ${topic}`;
-    if (groqTalk.isConfigured()) {
+    if (!options.avoidGroq && groqTalk.isConfigured()) {
       try {
         const groq = await groqTalk.complete({ systemPrompt, userText, timeoutMs: 7000 });
         const parsed = parseProposal(groq.content);
