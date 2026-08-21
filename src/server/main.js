@@ -1811,88 +1811,8 @@ const server = http.createServer(async (req, res) => {
     const handled = await atlasRoutes(req, res, url, { teachingLoop: serverTeachingLoop });
     if (handled) return;
   }
-  if (req.method === "GET" && url.pathname === "/api/local-access/status") {
-    const accessError=localAccessRequestError(req);
-    if(accessError)return send(res,403,{error:accessError});
-    const status=localAccessStatus(req);
-    return status.mode==="open"?localAccessResponse(req,res,200,status):send(res,200,status);
-  }
-  if (url.pathname.startsWith("/api/local-access/")) {
-    const accessError=localAccessRequestError(req,true);
-    if(accessError)return send(res,403,{error:accessError});
-    if(req.method!=="POST")return send(res,405,{error:"Method Not Allowed"});
-    if(!isJsonRequest(req))return send(res,415,{error:"Use application/json for this request."});
-    try {
-      if(url.pathname==="/api/local-access/setup-pin") {
-        if(localAccessMode!=="undecided"&&!hasAiSession(req))return send(res,409,{error:"Unlock Lumi6 before changing its access mode."});
-        if(localAccessDecisionPending)return send(res,409,{error:"Local access is already being configured. Refresh this page."});
-        localAccessDecisionPending=true;
-        const accessRevision=localAccessRevision;
-        try {
-          const body=await readJson(req,4096),pin=String(body?.pin||""),confirmation=String(body?.confirmation||"");
-          if(!LOCAL_ACCESS_PIN_PATTERN.test(pin)||pin!==confirmation)return send(res,400,{error:"Enter a valid six-digit security code."});
-          const salt=crypto.randomBytes(16),hash=await deriveLocalAccessPin(pin,salt);
-          if(accessRevision!==localAccessRevision)return send(res,409,{error:"Local access was already configured. Refresh this page."});
-          localAccessPinSalt=salt;
-          localAccessPinHash=hash;
-          localAccessMode="pin";
-          localAccessRevision++;
-          localAccessGlobalFailures=[];
-          localAccessGlobalBlockedUntil=0;
-          localAccessClientFailures.clear();
-          return localAccessResponse(req,res,200,{...localAccessStatus(req),unlocked:true,cooldownSeconds:0});
-        } finally { localAccessDecisionPending=false; }
-      }
-      if(url.pathname==="/api/local-access/open") {
-        if(localAccessMode!=="undecided"&&!hasAiSession(req))return send(res,409,{error:"Unlock Lumi6 before changing its access mode."});
-        if(localAccessDecisionPending)return send(res,409,{error:"Local access is already being configured. Refresh this page."});
-        localAccessDecisionPending=true;
-        const accessRevision=localAccessRevision;
-        try {
-          const body=await readJson(req,4096);
-          if(body?.acknowledgeRisk!==true)return send(res,400,{error:"Confirm the local-network access risk before continuing."});
-          if(accessRevision!==localAccessRevision)return send(res,409,{error:"Local access was already configured. Refresh this page."});
-          localAccessMode="open";
-          localAccessPinSalt=null;
-          localAccessPinHash=null;
-          localAccessRevision++;
-          localAccessGlobalFailures=[];
-          localAccessGlobalBlockedUntil=0;
-          localAccessClientFailures.clear();
-          return localAccessResponse(req,res,200,localAccessStatus(req));
-        } finally { localAccessDecisionPending=false; }
-      }
-      if(url.pathname==="/api/local-access/unlock") {
-        if(localAccessMode==="open")return localAccessResponse(req,res,200,localAccessStatus(req));
-        if(localAccessMode!=="pin"||!localAccessPinSalt||!localAccessPinHash)return send(res,409,{error:"Choose how this Lumi6 server should be protected first."});
-        const cooldown=localAccessCooldown(req);
-        if(cooldown)return send(res,429,{error:"Too many attempts. Try again shortly.",cooldownSeconds:cooldown});
-        const body=await readJson(req,4096),pin=String(body?.pin||"");
-        const accessRevision=localAccessRevision,pinSalt=localAccessPinSalt,pinHash=localAccessPinHash;
-        if(localAccessMode!=="pin"||!Buffer.isBuffer(pinSalt)||!Buffer.isBuffer(pinHash))return send(res,409,{error:"Local access changed. Refresh this page."});
-        let valid=false;
-        if(LOCAL_ACCESS_PIN_PATTERN.test(pin)) {
-          const clientKey=localAccessClientKey(req);
-          if(localAccessVerificationClients.has(clientKey)||localAccessVerificationCount>=4)return send(res,429,{error:"Another security-code check is already running. Try again shortly.",cooldownSeconds:1});
-          localAccessVerificationClients.add(clientKey);
-          localAccessVerificationCount++;
-          let actual;
-          try { actual=await deriveLocalAccessPin(pin,pinSalt); }
-          finally { localAccessVerificationClients.delete(clientKey);localAccessVerificationCount=Math.max(0,localAccessVerificationCount-1); }
-          if(accessRevision!==localAccessRevision||pinSalt!==localAccessPinSalt||pinHash!==localAccessPinHash)return send(res,409,{error:"Local access changed. Refresh this page."});
-          valid=actual.length===pinHash.length&&crypto.timingSafeEqual(actual,pinHash);
-        }
-        if(!valid) {
-          const wait=registerLocalAccessFailure(req);
-          return send(res,wait?429:401,{error:wait?"Too many attempts. Try again shortly.":"That security code is not correct.",cooldownSeconds:wait});
-        }
-        clearLocalAccessFailures(req);
-        return localAccessResponse(req,res,200,{...localAccessStatus(req),unlocked:true,cooldownSeconds:0});
-      }
-    } catch(error) {
-      return send(res,400,{error:error.message||"Could not update local access."});
-    }
-    return send(res,404,{error:"Not found"});
+  if (url.pathname === "/api/local-access/status" || url.pathname.startsWith("/api/local-access/")) {
+    return send(res, 200, { mode: "open", unlocked: true, setupRequired: false, cooldownSeconds: 0 });
   }
   if ((req.method === "GET" || req.method === "HEAD") && url.pathname === "/health") {
     res.writeHead(200, { "Content-Type": "text/plain; charset=utf-8", "Cache-Control": "no-store" });
@@ -2201,6 +2121,10 @@ const server = http.createServer(async (req, res) => {
   if (req.method !== "GET" && req.method !== "HEAD") return send(res, 405, "Method Not Allowed", "text/plain");
   let requested;
   try { requested = url.pathname === "/" ? "/landing.html" : decodeURIComponent(url.pathname); } catch { return send(res, 400, "Bad Request", "text/plain; charset=utf-8"); }
+  if (requested === "/access.html" || requested === "/access.js" || requested === "/access.css") {
+    res.writeHead(302, { Location: "/landing.html", "Cache-Control": "no-store" });
+    return res.end();
+  }
   const requestHostname=requestHost(req)?.hostname,
     trustedLocalPage=isAllowedCliHost(requestHostname),
     fromThisComputer=isLoopback(req.socket.remoteAddress) && trustedLocalPage,

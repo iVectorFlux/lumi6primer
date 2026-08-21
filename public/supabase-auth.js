@@ -250,12 +250,14 @@
       const submitButton = e.target.querySelector("button[type='submit']");
       if (submitButton) submitButton.disabled = true;
 
+      let navigating = false;
       try {
         const { error } = await this.supabase.auth.signInWithPassword({ email, password });
         if (error) throw error;
 
         this.showNotice("Signed in.", "success");
         if (this.isLandingPage()) {
+          navigating = true;
           window.location.replace("index.html");
           return;
         }
@@ -263,7 +265,7 @@
       } catch (err) {
         this.showNotice(err.message || "Could not sign in.", "error");
       } finally {
-        if (submitButton && !this.isLandingPage()) submitButton.disabled = false;
+        if (submitButton && !navigating) submitButton.disabled = false;
       }
     }
 
