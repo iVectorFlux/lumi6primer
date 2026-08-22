@@ -148,6 +148,9 @@
       const lastTeacher = document.querySelector("#atlasMessages .atlas-msg.teacher:last-of-type");
       if (lastTeacher) lastTeacher.dataset.image = photo.href;
     }
+    if (typeof window.syncTalkModeFeed === "function") {
+      window.syncTalkModeFeed();
+    }
     const hasImage = Boolean(photo);
     if (window.Lumi6CanvasAdapter) {
       window.Lumi6CanvasAdapter.renderAtlasCommands(commands).then(() => {
@@ -422,6 +425,7 @@
       this.elements.messagesList.appendChild(msgDiv);
       this.scrollToBottom();
       if (typeof window.Lumi6Lesson?.record === "function") window.Lumi6Lesson.record(role, text);
+      if (typeof window.syncTalkModeFeed === "function") window.syncTalkModeFeed();
       return msgDiv;
     }
 
@@ -464,6 +468,16 @@
 
     scrollToBottom() {
       this.elements.messagesList.scrollTop = this.elements.messagesList.scrollHeight;
+    }
+
+    /**
+     * Programmatic message sending for Talk Mode.
+     */
+    async sendMessage(explicitText) {
+      if (explicitText && typeof explicitText === "string") {
+        if (this.elements.inputField) this.elements.inputField.value = explicitText;
+      }
+      return this.handleSendMessage();
     }
 
     /**

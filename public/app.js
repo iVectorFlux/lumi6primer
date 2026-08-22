@@ -11889,6 +11889,7 @@ User writes "Show air quality for Tokyo", names a place, and points to an empty 
       state.panY = rect.height / 2 - drawCenterY * state.scale;
 
       render();
+      syncTalkModeFeed();
 
       return { success: true, count: items.length + diagramCount + imageCount };
       } finally {
@@ -11896,6 +11897,178 @@ User writes "Show air quality for Tokyo", names a place, and points to an empty 
       }
     }
   };
+
+  // ── 7. DRAW MODE & TALK MODE INTERACTIVE CONTROLLER ─────────────
+  let currentAppViewMode = "draw";
+
+  function escapeHtml(str) {
+    return String(str || "")
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;")
+      .replace(/'/g, "&#039;");
+  }
+
+  function formatCleanLessonTitle(raw) {
+    if (!raw || raw === "Untitled") return "Science Discovery";
+    return String(raw)
+      .replace(/^[#\s*_-]+|[#\s*_-]+$/g, "")
+      .replace(/^[Aa]n?\s+/, "")
+      .trim();
+  }
+
+  function setAppViewMode(mode) {
+    currentAppViewMode = mode === "talk" ? "talk" : "draw";
+    const drawBtn = document.querySelector("#modeDrawBtn");
+    const talkBtn = document.querySelector("#modeTalkBtn");
+    const canvasWorkspace = document.querySelector(".canvas-workspace");
+    const talkWorkspace = document.querySelector("#talkModeWorkspace");
+
+    if (drawBtn) {
+      drawBtn.classList.toggle("active", currentAppViewMode === "draw");
+      drawBtn.setAttribute("aria-selected", String(currentAppViewMode === "draw"));
+    }
+    if (talkBtn) {
+      talkBtn.classList.toggle("active", currentAppViewMode === "talk");
+      talkBtn.setAttribute("aria-selected", String(currentAppViewMode === "talk"));
+    }
+
+    if (canvasWorkspace) canvasWorkspace.hidden = currentAppViewMode === "talk";
+    if (talkWorkspace) talkWorkspace.hidden = currentAppViewMode !== "talk";
+
+    if (currentAppViewMode === "talk") {
+      syncTalkModeFeed();
+      const scrollArea = document.querySelector("#talkScrollArea");
+      if (scrollArea) scrollArea.scrollTop = scrollArea.scrollHeight;
+    } else {
+      render();
+    }
+  }
+
+  function syncTalkModeFeed() {
+    const feed = document.querySelector("#talkFeed");
+    const heroTitle = document.querySelector("#talkHeroTitle");
+    if (!feed) return;
+
+    const titleText = formatCleanLessonTitle(state.lessonTitle || document.querySelector("#currentDocName")?.textContent);
+    if (heroTitle && titleText) {
+      heroTitle.textContent = titleText;
+    }
+
+    const turns = typeof window.Lumi6Lesson?.turns === "function"
+      ? window.Lumi6Lesson.turns()
+      : [];
+
+    if (!turns.length) {
+      feed.innerHTML = `
+        <article class="talk-turn-card">
+          <div class="talk-lumi6-box">
+            <div class="talk-lumi6-header">
+              <div class="talk-lumi6-avatar">✨</div>
+              <span class="talk-lumi6-name">Lumi6</span>
+              <span class="talk-topic-pill">Ready to Explore</span>
+            </div>
+            <div class="talk-explanation-body">
+              <p>Welcome! Tap <strong>Talk</strong> below or type a question to explore any topic step by step.</p>
+            </div>
+          </div>
+        </article>
+      `;
+      return;
+    }
+
+    const pairs = [];
+    let current = null;
+    for (const turn of turns) {
+      if (turn.role === "student") {
+        if (current) pairs.push(current);
+        current = { asked: turn.text, explanation: [], image: turn.image || "", question: "" };
+      } else {
+        if (!current) current = { asked: "", explanation: [], image: turn.image || "", question: "" };
+        const cleanSpoken = String(turn.text || "").replace(/^([Hh]ey|[Hh]ello|[Hh]i),?[^.!?]*[.!?]\s*/g, "").trim();
+        const sentences = cleanSpoken.split(/(?<=[.!?])\s+/).map(s => s.trim()).filter(Boolean);
+        const q = sentences.find(s => s.endsWith("?") || /^(what|how|why|can you|where|do you think)\b/i.test(s));
+        const bodySentences = sentences.filter(s => s !== q);
+        if (bodySentences.length) current.explanation.push(bodySentences.join(" "));
+        if (q) current.question = q;
+        if (turn.image) current.image = turn.image;
+      }
+    }
+    if (current) pairs.push(current);
+
+    feed.innerHTML = pairs.map(step => `
+      <article class="talk-turn-card">
+        ${step.asked ? `
+          <div class="talk-child-prompt">
+            <span class="talk-child-badge">You asked</span>
+            <p class="talk-child-text">${escapeHtml(step.asked)}</p>
+          </div>
+        ` : ""}
+        <div class="talk-lumi6-box">
+          <div class="talk-lumi6-header">
+            <div class="talk-lumi6-avatar">✨</div>
+            <span class="talk-lumi6-name">Lumi6</span>
+            <span class="talk-topic-pill">${escapeHtml(titleText)}</span>
+          </div>
+          ${step.explanation.length ? `
+            <div class="talk-explanation-body">
+              ${step.explanation.map(p => `<p>${escapeHtml(p)}</p>`).join("")}
+            </div>
+          ` : ""}
+          ${step.image ? `
+            <div class="talk-image-wrapper">
+              <img src="${escapeHtml(step.image)}" alt="Lesson illustration" class="talk-lesson-image" loading="lazy">
+              <figcaption class="talk-image-caption">${escapeHtml(titleText)}</figcaption>
+            </div>
+          ` : ""}
+          ${step.question ? `
+            <div class="talk-question-capsule">
+              <div class="talk-question-icon">?</div>
+              <div class="talk-question-content">
+                <span class="talk-question-tag">Think About It</span>
+                <p class="talk-question-text">${escapeHtml(step.question)}</p>
+              </div>
+            </div>
+          ` : ""}
+        </div>
+      </article>
+    `).join("");
+
+    const scrollArea = document.querySelector("#talkScrollArea");
+    if (scrollArea) scrollArea.scrollTop = scrollArea.scrollHeight;
+  }
+
+  window.syncTalkModeFeed = syncTalkModeFeed;
+  window.setAppViewMode = setAppViewMode;
+
+  document.querySelector("#modeDrawBtn")?.addEventListener("click", () => setAppViewMode("draw"));
+  document.querySelector("#modeTalkBtn")?.addEventListener("click", () => setAppViewMode("talk"));
+
+  document.querySelector("#talkModeMicBtn")?.addEventListener("click", () => {
+    if (window.atlasVoice && typeof window.atlasVoice.handleMicButtonClick === "function") {
+      window.atlasVoice.handleMicButtonClick();
+    } else {
+      invokeAIAction("voice");
+    }
+  });
+
+  document.querySelector("#talkModeForm")?.addEventListener("submit", (e) => {
+    e.preventDefault();
+    const input = document.querySelector("#talkModeTextInput");
+    const val = input?.value?.trim();
+    if (!val) return;
+    input.value = "";
+    if (window.atlasChat && typeof window.atlasChat.sendMessage === "function") {
+      window.atlasChat.sendMessage(val);
+    } else {
+      const chatInput = document.querySelector("#atlasChatInput");
+      if (chatInput) {
+        chatInput.value = val;
+        document.querySelector("#atlasChatForm")?.dispatchEvent(new Event("submit", { cancelable: true, bubbles: true }));
+      }
+    }
+  });
 
   if (document.fonts?.load) {
     document.fonts.load('72px "Patrick Hand"').then(() => requestRender()).catch(() => {});

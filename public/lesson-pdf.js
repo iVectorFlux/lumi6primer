@@ -455,6 +455,6 @@
     }
   }
 
-  window.Lumi6Lesson = { record, attachImage, turns: () => turns.slice() };
+  window.Lumi6Lesson = { record, attachImage, turns: turnsFromChat };
   window.exportLessonPdf = exportLessonPdf;
 })();
