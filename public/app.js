@@ -8036,13 +8036,16 @@ User writes "Show air quality for Tokyo", names a place, and points to an empty 
       .map((c) => {
         c = { ...c };
         if (c.tool === "write_text") {
-          if (!n(c.x) || !n(c.y) || typeof c.text !== "string" || !Number.isFinite(c.maxWidth)) return null;
+          if (typeof c.text !== "string" || !c.text.trim()) return null;
+          if (!n(c.x)) c.x = 600;
+          if (!n(c.y)) c.y = 600;
+          if (!Number.isFinite(c.maxWidth)) c.maxWidth = 2600;
           c.text = c.text.slice(0, AI_TEXT_MAX_LENGTH);
           c.fontSize = matchedTextFontSize(c.fontSize, c.text);
           c.maxWidth = Math.max(c.fontSize, Math.min(SIZE - c.x, c.maxWidth));
           c.lineHeight = Math.max(1, Math.min(2.2, +c.lineHeight || 1.35));
-          c.color = aiColor;
-          if (c.maxWidth < c.fontSize) return null;
+          c.color = c.color || aiColor;
+          if (c.maxWidth < c.fontSize) c.maxWidth = c.fontSize * 10;
           c.y = Math.min(c.y, Math.max(0, SIZE - c.fontSize * c.lineHeight * 2));
         }
         if (c.tool === "draw_formula") {
@@ -11675,6 +11678,29 @@ User writes "Show air quality for Tokyo", names a place, and points to an empty 
       const rect = view.getBoundingClientRect();
       const canvasCenterX = Math.round((rect.width / 2 - state.panX) / state.scale);
       const canvasCenterY = Math.round((rect.height / 2 - state.panY) / state.scale);
+
+      if (!lastPlaced && primitiveCmds.length) {
+        let noteY = Math.max(100, Math.round(canvasCenterY - 300));
+        for (const cmd of primitiveCmds) {
+          if (!Number.isFinite(cmd.maxWidth)) cmd.maxWidth = Math.min(3200, Math.max(1400, Math.round((rect.width * 0.85) / Math.max(state.scale, 0.2))));
+          if (!Number.isFinite(cmd.x)) {
+            cmd.x = isMobile
+              ? Math.max(40, Math.round(canvasCenterX - cmd.maxWidth / 2))
+              : Math.max(60, Math.round(canvasCenterX - cmd.maxWidth - 120));
+          }
+          if (!Number.isFinite(cmd.y)) {
+            cmd.y = noteY;
+            if (cmd.tool === "write_text") {
+              const charsPerLine = Math.max(24, Math.floor(cmd.maxWidth / Math.max(36, (cmd.fontSize || 135) * 0.52)));
+              const lines = Math.max(1, Math.ceil(String(cmd.text || "").length / charsPerLine));
+              noteY += Math.round((cmd.fontSize || 135) * (cmd.lineHeight || 1.35) * lines + 56);
+            } else {
+              noteY += Math.round((cmd.fontSize || 150) * 2.4);
+            }
+          }
+        }
+      }
+
       const GAP = 250;
       const meta = { requestId: `atlas_${Date.now()}` };
       const items = [];

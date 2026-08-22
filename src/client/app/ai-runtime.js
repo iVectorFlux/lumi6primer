@@ -665,13 +665,16 @@
       .map((c) => {
         c = { ...c };
         if (c.tool === "write_text") {
-          if (!n(c.x) || !n(c.y) || typeof c.text !== "string" || !Number.isFinite(c.maxWidth)) return null;
+          if (typeof c.text !== "string" || !c.text.trim()) return null;
+          if (!n(c.x)) c.x = 600;
+          if (!n(c.y)) c.y = 600;
+          if (!Number.isFinite(c.maxWidth)) c.maxWidth = 2600;
           c.text = c.text.slice(0, AI_TEXT_MAX_LENGTH);
           c.fontSize = matchedTextFontSize(c.fontSize, c.text);
           c.maxWidth = Math.max(c.fontSize, Math.min(SIZE - c.x, c.maxWidth));
           c.lineHeight = Math.max(1, Math.min(2.2, +c.lineHeight || 1.35));
-          c.color = aiColor;
-          if (c.maxWidth < c.fontSize) return null;
+          c.color = c.color || aiColor;
+          if (c.maxWidth < c.fontSize) c.maxWidth = c.fontSize * 10;
           c.y = Math.min(c.y, Math.max(0, SIZE - c.fontSize * c.lineHeight * 2));
         }
         if (c.tool === "draw_formula") {

@@ -130,21 +130,21 @@
       ? msg.visualPlan.commands
       : (Array.isArray(msg?.canvasActions) ? msg.canvasActions : []);
     if (!commands.length) return false;
-    const photo = commands.find((cmd) => cmd && cmd.tool === "place_photo" && cmd.href);
+    const photo = commands.find((cmd) => cmd && (cmd.tool === "place_photo" || cmd.tool === "svg_picture") && (cmd.href || cmd.svg));
     if (photo?.href) {
       window.Lumi6Lesson?.attachImage(photo.href);
       const lastTeacher = document.querySelector("#atlasMessages .atlas-msg.teacher:last-of-type");
       if (lastTeacher) lastTeacher.dataset.image = photo.href;
     }
-    const isPlaceholder = Boolean(msg?.placeholder || commands.some((cmd) => cmd && cmd.placeholder));
+    const hasImage = Boolean(photo);
     if (window.Lumi6CanvasAdapter) {
       window.Lumi6CanvasAdapter.renderAtlasCommands(commands).then(() => {
-        if (!isPlaceholder) hideAtlasGraphicLoader();
+        if (hasImage) hideAtlasGraphicLoader();
       }).catch((err) => {
         console.warn("[PRIMER] canvas render failed:", err);
-        if (!isPlaceholder) hideAtlasGraphicLoader();
+        if (hasImage) hideAtlasGraphicLoader();
       });
-    } else if (!isPlaceholder) {
+    } else if (hasImage) {
       hideAtlasGraphicLoader();
     }
     return true;

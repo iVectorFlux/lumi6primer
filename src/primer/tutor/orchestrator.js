@@ -64,6 +64,8 @@ function extractHandwrittenNotes({ concept, spoken, childText } = {}) {
   return {
     tool: "write_text",
     text: lines.join("\n"),
+    x: 600,
+    y: 600,
     fontSize: 135,
     color: "#2e1065",
     maxWidth: 2400,
