@@ -2440,6 +2440,8 @@ User writes "Show air quality for Tokyo", names a place, and points to an empty 
   }
   function openRadialMenu() {
     clearTimeout(state.radialCloseTimer);
+    const penTray = document.querySelector("#penTray");
+    if (penTray) penTray.hidden = true;
     embodiment.classList.add("menu-open");
     aiOrb.setAttribute("aria-expanded", "true");
     aiRadial.setAttribute("aria-hidden", "false");
@@ -9373,11 +9375,7 @@ User writes "Show air quality for Tokyo", names a place, and points to an empty 
   function commitPendingItem(item) {
     const box = pendingItemBounds(item);
     if (item.erase) eraseWithMask(item.image, box.x, box.y, box.w, box.h);
-    else if (item.isTextBoxRecord) {
-      // Native state.textBoxes record; skip tile ink blitting to prevent text duplication
-      return;
-    }
-    else if (item.textCommand) blitClipped(item.image, item.x, item.y, (item.image.logicalWidth || item.image.width) * item.scaleX, (item.image.logicalHeight || item.image.height) * item.scaleY, box.w, box.h);
+    else if (item.textCommand || item.isTextBoxRecord) blitClipped(item.image, item.x, item.y, (item.image.logicalWidth || item.image.width) * item.scaleX, (item.image.logicalHeight || item.image.height) * item.scaleY, box.w, box.h);
     else if (item.animationScene) addAnimation(item.animationScene, box, item.animationPlayback);
     else blitSized(item.image, box.x, box.y, (item.image.logicalWidth || item.image.width) * item.scaleX, (item.image.logicalHeight || item.image.height) * item.scaleY);
   }
@@ -10475,15 +10473,39 @@ User writes "Show air quality for Tokyo", names a place, and points to an empty 
     });
   }
   document.querySelectorAll("[data-mode]").forEach((button) => {
-    button.onclick = () => {
+    const handleModeSwitch = (event) => {
+      if (event) {
+        event.stopPropagation();
+        if (event.type === "pointerdown" && event.pointerType === "mouse" && event.button !== 0) return;
+      }
       if (button.dataset.mode === "pen" && state.mode === "pen") {
         const penTray = document.querySelector("#penTray");
-        if (penTray) penTray.hidden = !penTray.hidden;
+        if (penTray) {
+          penTray.hidden = !penTray.hidden;
+          if (!penTray.hidden) closeRadialMenu();
+        }
         return;
       }
+      const penTray = document.querySelector("#penTray");
+      if (penTray && button.dataset.mode !== "pen") penTray.hidden = true;
       setCanvasMode(button.dataset.mode);
     };
+
+    button.addEventListener("pointerdown", handleModeSwitch);
+    button.addEventListener("click", (e) => e.stopPropagation());
   });
+
+  const bottomToolbarEl = document.querySelector(".bottom-toolbar");
+  if (bottomToolbarEl) {
+    bottomToolbarEl.addEventListener("pointerdown", (e) => e.stopPropagation());
+    bottomToolbarEl.addEventListener("touchstart", (e) => e.stopPropagation(), { passive: true });
+  }
+
+  const penTrayEl = document.querySelector("#penTray");
+  if (penTrayEl) {
+    penTrayEl.addEventListener("pointerdown", (e) => e.stopPropagation());
+    penTrayEl.addEventListener("touchstart", (e) => e.stopPropagation(), { passive: true });
+  }
   [selectionTypesetButton, selectionDeleteButton, selectionCancelButton].filter(Boolean).forEach((button) => {
     button.addEventListener("pointerdown", (event) => event.stopPropagation());
     button.addEventListener("click", (event) => event.stopPropagation());

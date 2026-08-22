@@ -110,16 +110,54 @@ button,
 
   .pen-tray {
     position: absolute;
-    left: 8px;
-    right: 8px;
+    left: 4px;
+    right: 4px;
     bottom: calc(100% + 8px);
-    z-index: 2;
+    z-index: 95;
     margin: 0;
     padding: 8px 10px;
     border: var(--kid-bar-border);
     border-radius: 16px;
-    background: var(--kid-bar-bg);
-    box-shadow: var(--kid-bar-shadow);
+    background: rgba(255, 255, 255, 0.96);
+    box-shadow: 0 10px 28px rgba(76, 29, 149, 0.16);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+  }
+
+  .pen-tray .pen-size-control {
+    flex: 0 0 auto;
+    gap: 4px;
+    font-size: 11px;
+  }
+
+  .pen-tray .pen-size-control input[type="range"] {
+    width: 60px;
+  }
+
+  .pen-tray .pen-color-control {
+    flex: 1 1 auto;
+    justify-content: flex-end;
+    overflow-x: auto;
+  }
+
+  .pen-tray .color-orbit {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+  }
+
+  .pen-tray .orbit-swatch {
+    width: 20px;
+    min-height: 20px;
+    flex: 0 0 20px;
+    border-radius: 50%;
   }
 
   .zoom-controls {
