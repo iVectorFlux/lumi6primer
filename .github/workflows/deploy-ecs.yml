@@ -64,13 +64,29 @@ jobs:
           docker push "$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG"
           docker push "$ECR_REGISTRY/$ECR_REPOSITORY:latest"
 
-      - name: Force new ECS deployment
+      - name: Force new ECS deployment and wait for stability
         env:
           ECS_CLUSTER: ${{ secrets.ECS_CLUSTER }}
           ECS_SERVICE: ${{ secrets.ECS_SERVICE }}
         run: |
+          echo "Triggering new ECS deployment..."
           aws ecs update-service \
             --cluster "$ECS_CLUSTER" \
             --service "$ECS_SERVICE" \
             --force-new-deployment \
             --output text
+          echo "Waiting for new ECS tasks to become healthy and replace old containers..."
+          aws ecs wait services-stable \
+            --cluster "$ECS_CLUSTER" \
+            --services "$ECS_SERVICE"
+          echo "Deployment successful: new container is healthy and live!"
+
+      - name: Invalidate CloudFront cache (if configured)
+        env:
+          CLOUDFRONT_DISTRIBUTION_ID: ${{ secrets.CLOUDFRONT_DISTRIBUTION_ID }}
+        if: env.CLOUDFRONT_DISTRIBUTION_ID != ''
+        run: |
+          echo "Creating CloudFront invalidation for /* ..."
+          aws cloudfront create-invalidation \
+            --distribution-id "$CLOUDFRONT_DISTRIBUTION_ID" \
+            --paths "/*"
