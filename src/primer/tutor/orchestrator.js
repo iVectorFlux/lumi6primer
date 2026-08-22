@@ -28,6 +28,7 @@ const HomeworkTool = require("../tools/homework.js");
 const RetrievalTool = require("../tools/retrieval.js");
 const SimulationTool = require("../tools/simulation.js");
 const groqTalk = require("../tools/groq-talk.js");
+const openaiTalk = require("../tools/openai-talk.js");
 const geminiGraphic = require("../tools/gemini-graphic.js");
 const topicIcon = require("../tools/topic-icon.js");
 const graphicScene = require("../tools/graphic-scene.js");
@@ -531,18 +532,45 @@ class LearningOrchestrator {
   }
 
   async _proposeTalk(prompt, useVision, boardImage, options = {}) {
-    const timeoutMs = useVision ? 14000 : 8000;
-    const userText = prompt.userBlock || prompt.studentQuery || "";
+    const timeoutMs = useVision ? 22000 : 18000;
+    const userText = prompt.talkInput || prompt.userBlock || prompt.studentQuery || "";
     if (process.env.LUMI6_DEBUG_PROMPT === "1") {
       console.log("[PRIMER] --- talk prompt ---\n", prompt.talkPrompt || prompt.systemPrompt);
       console.log("[PRIMER] --- user block ---\n", userText);
     }
-    if (!useVision && groqTalk.isConfigured()) {
+    const groqFirst = String(process.env.PRIMER_TALK || "").toLowerCase() === "groq";
+    if (!useVision && groqFirst && groqTalk.isConfigured()) {
       try {
         const groq = await groqTalk.complete({
           systemPrompt: prompt.talkPrompt || prompt.systemPrompt,
           userText,
           timeoutMs,
+          temperature: options.mathMode ? 0.1 : 0.4
+        });
+        return parseProposal(groq.content) || { spoken: "" };
+      } catch (err) {
+        console.warn("[PRIMER] Groq talk failed, falling back:", err.message);
+      }
+    }
+    if (!useVision && openaiTalk.isConfigured()) {
+      try {
+        const openai = await openaiTalk.complete({
+          systemPrompt: prompt.talkPrompt || prompt.systemPrompt,
+          userText,
+          timeoutMs,
+          temperature: options.mathMode ? 0.1 : 0.4
+        });
+        return parseProposal(openai.content) || { spoken: "" };
+      } catch (err) {
+        console.warn("[PRIMER] OpenAI talk failed, falling back:", err.message);
+      }
+    }
+    if (!useVision && !groqFirst && groqTalk.isConfigured()) {
+      try {
+        const groq = await groqTalk.complete({
+          systemPrompt: prompt.talkPrompt || prompt.systemPrompt,
+          userText,
+          timeoutMs: Math.min(timeoutMs, 8000),
           temperature: options.mathMode ? 0.1 : 0.45
         });
         return parseProposal(groq.content) || { spoken: "" };
@@ -620,6 +648,17 @@ Never ask "what is this called" or "what is the name of this process".
 Never return JSON keys inside spoken.
 Return JSON only: {"spoken":"kid sentences here including the check question?"}`;
     const userText = `${systemPrompt}\n\nChild said: "${raw}"\nTeach: ${topic}`;
+    const groqFirst = String(process.env.PRIMER_TALK || "").toLowerCase() === "groq";
+    if (openaiTalk.isConfigured() && !groqFirst) {
+      try {
+        const openai = await openaiTalk.complete({ systemPrompt, userText, timeoutMs: 16000 });
+        const parsed = parseProposal(openai.content);
+        const spoken = String(parsed?.spoken || "").trim();
+        if (spoken && !ResponsePolicy.isCannedSpeech(spoken)) return parsed;
+      } catch (err) {
+        console.warn("[PRIMER] OpenAI simple talk failed:", err.message);
+      }
+    }
     if (!options.avoidGroq && groqTalk.isConfigured()) {
       try {
         const groq = await groqTalk.complete({ systemPrompt, userText, timeoutMs: 7000 });

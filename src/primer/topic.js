@@ -19,7 +19,9 @@ const STOP = new Set([
   "not", "isnt", "isn't", "arent", "aren't", "doesnt", "doesn't", "wasnt",
   "are", "am", "doing", "done", "saying", "said", "asking", "asked", "ask",
   "actually", "supposed", "again", "anything", "everything", "nothing", "damn",
-  "instead", "rather", "prefer", "start", "starting", "begin"
+  "instead", "rather", "prefer", "start", "starting", "begin",
+  "only", "get", "way", "don", "man", "tired", "complicated", "ready",
+  "lets", "let's", "gonna", "wanna", "able", "trying", "become", "better"
 ]);
 
 const WEAK = /^(this|that|it|idea|sorry|hell|talking|mean|teach me|can you teach me|what do you mean)$/i;
@@ -91,6 +93,20 @@ function isWeakTopic(topic) {
   const words = t.split(/\s+/).filter(Boolean);
   if (words.length > 6) return true;
   if (words.every((w) => STOP.has(w))) return true;
+  if (/^(only|get|way|don|ask)\b/.test(t)) return true;
+  return false;
+}
+
+function topicsRelated(a, b) {
+  const words = (text) => new Set(
+    String(text || "")
+      .toLowerCase()
+      .split(/\s+/)
+      .filter((w) => w.length > 3 && !STOP.has(w))
+  );
+  const left = words(a);
+  if (!left.size) return false;
+  for (const word of words(b)) if (left.has(word)) return true;
   return false;
 }
 
@@ -104,4 +120,4 @@ function searchQueriesForTopic(topic) {
   return [...new Set(queries)];
 }
 
-module.exports = { topicFromText, searchQueriesForTopic, isWeakTopic, spokenCoversTopic, deniesTopic, STOP };
+module.exports = { topicFromText, searchQueriesForTopic, isWeakTopic, spokenCoversTopic, deniesTopic, topicsRelated, STOP };

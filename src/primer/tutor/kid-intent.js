@@ -11,7 +11,7 @@ const EXPLICIT_SWITCH = /\b(now teach|teach me|i want to learn|explain|instead|w
 function isNewAsk(text, understanding = {}) {
   const raw = String(text || understanding.raw || "").trim();
   if (!raw) return false;
-  if (understanding.wantsExplain || understanding.wantsReason || understanding.askedToLook) return true;
+  if (understanding.justAnswer) return true;
   const intent = understanding.intent;
   if (["explain", "question", "homework", "fact", "goal"].includes(intent)) return true;
   if (NEW_ASK.test(raw)) return true;

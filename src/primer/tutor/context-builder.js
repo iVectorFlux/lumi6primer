@@ -212,6 +212,9 @@ TEACH NOW: ${state.currentConcept || understanding?.concept || "what they just a
     if (understanding.wantsDraw && understanding.wantsExplain) {
       return `DIRECTIVE: Explain one idea in kid speech. Mention what the picture will show.${topic} Do not copy their words.`;
     }
+    if (understanding.justAnswer) {
+      return `DIRECTIVE: They asked you to ANSWER now, simply. Give the reason in 2-3 kid sentences. Do not ask them a question first. Do not say not yet. Do not coach how they should speak.${topic}`;
+    }
     if (understanding.wantsExplain || understanding.intent === "explain") {
       return `DIRECTIVE: Teach "${understanding.concept || "what they just asked"}" NOW as a short story they can see. One true idea, one real-life example, then an open thinking question (how/why/what happens next). Do not start with a vocabulary quiz. Do not change the subject.`;
     }

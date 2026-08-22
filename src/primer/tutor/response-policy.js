@@ -8,8 +8,8 @@ const DEPENDENCY = /you (need|depend on) me|only i can (help|teach)|don't think 
 const BOARD_NARRATION = /whiteboard (is blank|shows|says|has)|the board (shows|says|has)|photo of the whiteboard|no handwriting visible|board par|halki grid/i;
 const CHEESE = /^(great question|you're getting it|what should we explore next)/i;
 const CANNED = /here'?s a situation where|the everyday assumption|a relationship, not a fact|which assumption|usual picture is missing a relationship|strange part stops being magic|here'?s the heart of/i;
-const STALL = /let's take .+ slowly|what part feels hardest|i'm here\. what do you want to figure out|hey\. what do you want to learn\?|let's look at .+ with a simple example|hmm,? let me think about that differently|tell me more about what you're trying to understand/i;
-const PHRASE_COACH = /^(say[,:]?\s*["“]|try saying|you can also say|a better way to (ask|say)|you could say)/i;
+const STALL = /let's take .+ slowly|what part feels hardest|i'm here\. what do you want to figure out|hey\. what do you want to learn\?|let's look at .+ with a simple example|hmm,? let me think about that differently|tell me more about what you're trying to understand|we were talking about/i;
+const PHRASE_COACH = /^(say[,:]?\s*["“]|try saying|you can also say|a better way to (ask|say)|you could say|for example,? say)/i;
 
 // Apologising for a mix-up and then teaching the mixed-up topic anyway is a
 // failed turn, not a recovery. Regenerate instead of speaking it.
@@ -150,6 +150,15 @@ class ResponsePolicy {
       return topic
         ? `No worries. Forget the fancy words. ${topic} in kid words is just a way to talk about something you already see in real life. Want one tiny example?`
         : "No worries. Say the thing you wanted to learn, in your own words.";
+    }
+    if (understanding?.justAnswer) {
+      const aboutWater = /water|evapor|vapor|cloud|rain|puddle/i.test(`${topic} ${understanding.raw || ""}`);
+      if (aboutWater) {
+        return "Water can turn into invisible air when the Sun warms it, because water bits are loose enough to fly up. Your body and a plant hold most of their water inside, so you do not vanish into the sky. A little water leaves you when you sweat, but you stay you.";
+      }
+      return topic
+        ? `Here is the simple reason for ${topic}, in kid words, not as a quiz.`
+        : "Okay. I will answer in short kid words, not with another question.";
     }
     if (understanding?.pushback || understanding?.wantsReason || understanding?.wantsExplain || decision?.action === "explain") {
       return topic

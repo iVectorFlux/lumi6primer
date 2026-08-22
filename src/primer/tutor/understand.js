@@ -1,6 +1,6 @@
 "use strict";
 
-const { topicFromText, isWeakTopic } = require("../topic.js");
+const { topicFromText, isWeakTopic, topicsRelated } = require("../topic.js");
 const { isPictureComment } = require("./teaching-move.js");
 const boardMath = require("../tools/board-math.js");
 const { explicitTopicSwitch } = require("./kid-intent.js");
@@ -40,11 +40,13 @@ function understandLearner(raw, extras = {}) {
     || /\b(is (that|it|this) (right|correct)|is it correct|what('?s| is) the answer)\b/i.test(t);
   const askedToLook = askedToLookDirect || (Boolean(extras.lastAskedToLook) && boardFollowUp && !wantsDraw);
   const wantsWrite = /\b((can you |could you |please )?(write|put|fill in)\b|\bwrite (the )?(answer|number|it|seven|\d+)\b)/.test(t);
-  const wantsExplain = /\b(explain|teach me about|teach me|tell me about|i want to learn|help me understand|break it down|how can i learn|learn about|curious about|difference between)\b/.test(t)
+  const justAnswer = /\b(you tell me|just (answer|tell|explain)|tell me the answer|i don'?t know|can you just answer|don'?t make it complicated|not complicated|answer it|answer me|keep it simple)\b/i.test(t);
+  const rejecting = /\b(no no|i don'?t want (about )?this|not (this|that|what i want)|wrong thing)\b/i.test(t);
+  const wantsExplain = justAnswer || /\b(explain|teach me about|teach me|tell me about|i want to learn|help me understand|break it down|how can i learn|learn about|curious about|difference between)\b/.test(t)
     || /\b(can you |could you |please )?(teach|explain)\b/.test(t);
-  const wantsReason = /\b(how is that possible|how is that|how does that|why is that|why does that|how can that)\b/.test(t)
+  const wantsReason = /\b(how is that possible|how is that|how does that|why is that|why does that|how can that|how does|understand how|why only|why not)\b/.test(t)
     || /^(how|why)\b/.test(t);
-  const pushback = /\b(come on|i asked you|just explain|answer me|what are you asking|you're not answering|stop asking|i want you to explain|not what real teaching|just writing|only text|the hell|what the hell|wtf|are you talking about|who asked|i did not ask|i didn't ask|i never asked)\b/i.test(t);
+  const pushback = /\b(come on|i asked you|just explain|answer me|what are you asking|you're not answering|stop asking|i want you to explain|not what real teaching|just writing|only text|the hell|what the hell|wtf|are you talking about|who asked|i did not ask|i didn't ask|i never asked|you are not able|not able to understand)\b/i.test(t);
   const meta = !voiceIssue && /\b(what can you help|what do you do|who are you|how does this work|what are you for)\b/.test(t);
   const confused = /\b(i don't understand|i do not understand|don't understand|dont understand|huh\??$|i'm confused|i am confused|that doesn't make sense|what do you mean)\b/i.test(t);
 
@@ -89,10 +91,12 @@ function understandLearner(raw, extras = {}) {
   const complaining = pushback || confusion || voiceIssue || intent === "dont_understand";
   const namedTopic = Boolean(guessed) && !isWeakTopic(guessed)
     && !(complaining && Boolean(prior) && !wantsExplain)
+    && !(rejecting && Boolean(prior) && !explicitTopicSwitch(text))
+    && !(prior && topicsRelated(prior, guessed) && !explicitTopicSwitch(text))
     && (
       !prior
       || Boolean(mathTopic)
-      || wantsExplain
+      || (wantsExplain && !justAnswer)
       || wantsReason
       || intent === "question"
       || intent === "homework"
@@ -102,6 +106,8 @@ function understandLearner(raw, extras = {}) {
   const keepPrior = Boolean(prior) && !greeting && !namedTopic && !askedToLook && (
     (wantsDraw && !wantsExplain)
     || wantsWrite
+    || justAnswer
+    || rejecting
     || (extras.askedBackLast && !wantsExplain && !isPictureComment(text) && text.length < 40)
     || pushback
     || voiceIssue
@@ -126,6 +132,7 @@ function understandLearner(raw, extras = {}) {
     wantsDraw,
     wantsWrite,
     wantsExplain: wantsExplain || bareTeach,
+    justAnswer,
     wantsReason,
     pushback,
     pictureComment: isPictureComment(text),
