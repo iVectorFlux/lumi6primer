@@ -50,6 +50,9 @@ function understandLearner(raw, extras = {}) {
   const meta = !voiceIssue && /\b(what can you help|what do you do|who are you|how does this work|what are you for)\b/.test(t);
   const confused = /\b(i don't understand|i do not understand|don't understand|dont understand|huh\??$|i'm confused|i am confused|that doesn't make sense|what do you mean)\b/i.test(t);
 
+  const GREETING = /^(hi|hello|hey|how are you|how do you do|what'?s up|good (morning|afternoon|evening)|how('?s| is) it going|are you there)\b/i;
+  const isGreeting = GREETING.test(t) && text.length < 50 && !wantsExplain;
+
   let intent = "chat";
   if (voiceIssue) {
     intent = "voice";
@@ -57,6 +60,8 @@ function understandLearner(raw, extras = {}) {
     intent = "pushback";
   } else if (meta) {
     intent = "meta";
+  } else if (isGreeting) {
+    intent = "greeting";
   } else if (confused) {
     intent = "dont_understand";
   } else if (wantsExplain || /\b(let's learn|what should i learn|start (a )?lesson)\b/.test(t)) {
@@ -84,7 +89,6 @@ function understandLearner(raw, extras = {}) {
   const confusion = intent === "dont_understand" || /\b(confused|stuck|lost)\b/.test(t);
   const guessed = guessConcept(text);
   const prior = String(extras.concept || "").trim();
-  const greeting = /^(hi|hello|hey|how are you)\b/i.test(t) && text.length < 48 && !wantsExplain;
   const bareTeach = /^(can you |could you |please )?(teach|explain)( me)?[\s.!?]*$/i.test(t);
   const explicitSwitch = explicitTopicSwitch(text) || (Boolean(guessed) && Boolean(wantsExplain) && !topicsRelated(prior, guessed));
   // A complaint ("what the hell is this") is about the current lesson, so the
@@ -101,7 +105,7 @@ function understandLearner(raw, extras = {}) {
       || (wantsExplain && !justAnswer)
     );
 
-  const keepPrior = Boolean(prior) && !greeting && !explicitSwitch && !namedTopic && (
+  const keepPrior = Boolean(prior) && !isGreeting && !explicitSwitch && !namedTopic && (
     intent === "attempt"
     || intent === "revision"
     || (wantsDraw && !wantsExplain)
@@ -117,7 +121,7 @@ function understandLearner(raw, extras = {}) {
 
   const concept = mathTopic
     ? mathTopic
-    : (keepPrior ? prior : (namedTopic ? guessed : (prior || guessed || "emerging")));
+    : (keepPrior ? prior : (namedTopic ? guessed : (isGreeting ? "" : (prior || guessed || "emerging"))));
 
   return {
     raw: text,
