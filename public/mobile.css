@@ -208,14 +208,21 @@ button,
     text-align: center;
   }
 
+  .atlas-graphic-loader {
+    right: max(12px, env(safe-area-inset-right));
+    bottom: calc(76px + env(safe-area-inset-bottom));
+  }
+
   .atlas-graphic-stage {
-    width: min(42vw, 148px);
-    padding: 12px;
+    width: auto;
+    max-width: calc(100vw - 32px);
+    padding: 6px 12px;
+    gap: 8px;
   }
 
   .atlas-graphic-icon {
-    width: 56px;
-    height: 56px;
+    width: 22px;
+    height: 22px;
   }
 
   #atlasChatSidebar {

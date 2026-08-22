@@ -74,15 +74,23 @@ function extractHandwrittenNotes({ concept, spoken, childText } = {}) {
     .replace(/^([Hh]ey|[Hh]ello|[Hh]i|[Gg]reat question|[Aa]lright|[Ss]ure|You'?re (?:almost |exactly )?right),?[^.!?]*[.!?]\s*/g, "")
     .split(/(?<=[.!?])\s+/)
     .map((s) => s.trim())
-    .filter((s) => s.length > 14 && !/^(try|now you|what do you think|can you|let'?s|how does that sound|ready|tell me|ask me|want to|shall we|have you ever)\b/i.test(s));
+    .filter((s) => s.length > 12);
 
-  const keyPoints = rawSentences.slice(0, 3);
-  if (!cleanTitle && !keyPoints.length) return null;
+  // Separate the thinking question from key explanation facts
+  const questionSentence = rawSentences.find((s) => s.endsWith("?") || /^(what|how|why|can you|where|do you think|have you ever)\b/i.test(s)) || "";
+  const keyPoints = rawSentences
+    .filter((s) => s !== questionSentence && !/^(try|now you|what do you think|can you|let'?s|how does that sound|ready|tell me|ask me|want to|shall we)\b/i.test(s))
+    .slice(0, 2);
+
+  if (!cleanTitle && !keyPoints.length && !questionSentence) return null;
 
   const lines = [];
   if (cleanTitle) lines.push(cleanTitle);
   for (const pt of keyPoints) {
     lines.push(`• ${pt}`);
+  }
+  if (questionSentence) {
+    lines.push(`? ${questionSentence}`);
   }
 
   return {
@@ -92,10 +100,10 @@ function extractHandwrittenNotes({ concept, spoken, childText } = {}) {
     text: lines.join("\n"),
     x: 600,
     y: 600,
-    fontSize: 135,
-    color: "#2e1065",
+    fontSize: 130,
+    color: "#4c1d95", // Velvet purple
     maxWidth: 2400,
-    lineHeight: 1.35,
+    lineHeight: 1.38,
     isLessonNote: true
   };
 }

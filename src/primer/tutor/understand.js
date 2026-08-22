@@ -86,24 +86,23 @@ function understandLearner(raw, extras = {}) {
   const prior = String(extras.concept || "").trim();
   const greeting = /^(hi|hello|hey|how are you)\b/i.test(t) && text.length < 48 && !wantsExplain;
   const bareTeach = /^(can you |could you |please )?(teach|explain)( me)?[\s.!?]*$/i.test(t);
-  const explicitSwitch = explicitTopicSwitch(text);
+  const explicitSwitch = explicitTopicSwitch(text) || (Boolean(guessed) && Boolean(wantsExplain) && !topicsRelated(prior, guessed));
   // A complaint ("what the hell is this") is about the current lesson, so the
   // words in it must never become the new topic. Only an explicit ask can switch.
   const complaining = pushback || confusion || voiceIssue || intent === "dont_understand";
   const namedTopic = Boolean(guessed) && !isWeakTopic(guessed)
     && !(complaining && Boolean(prior) && !wantsExplain)
     && !(rejecting && Boolean(prior) && !explicitSwitch)
-    && !(prior && topicsRelated(prior, guessed) && !explicitSwitch)
+    && !(prior && topicsRelated(prior, guessed) && !explicitSwitch && !wantsExplain)
     && (
       !prior
       || Boolean(mathTopic)
       || explicitSwitch
-      || (wantsExplain && !justAnswer && !prior)
+      || (wantsExplain && !justAnswer)
     );
 
-  const keepPrior = Boolean(prior) && !greeting && !explicitSwitch && (
-    !namedTopic
-    || intent === "attempt"
+  const keepPrior = Boolean(prior) && !greeting && !explicitSwitch && !namedTopic && (
+    intent === "attempt"
     || intent === "revision"
     || (wantsDraw && !wantsExplain)
     || wantsWrite

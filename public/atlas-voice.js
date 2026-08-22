@@ -20,7 +20,7 @@
     try {
       return {
         childId: localStorage.getItem("primerChildId") || null,
-        sessionId: localStorage.getItem("primerSessionId") || null,
+        sessionId: sessionStorage.getItem("primerSessionId") || localStorage.getItem("primerSessionId") || null,
         mode: localStorage.getItem("primerMode") || null
       };
     } catch {
@@ -32,7 +32,10 @@
     if (!state) return;
     try {
       if (state.childId) localStorage.setItem("primerChildId", state.childId);
-      if (state.sessionId) localStorage.setItem("primerSessionId", state.sessionId);
+      if (state.sessionId) {
+        sessionStorage.setItem("primerSessionId", state.sessionId);
+        localStorage.setItem("primerSessionId", state.sessionId);
+      }
       if (state.childName) localStorage.setItem("primerChildName", String(state.childName));
       if (state.mode === "autopilot" || state.mode === "manual") {
         localStorage.setItem("primerMode", state.mode);

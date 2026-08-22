@@ -6497,6 +6497,12 @@ User writes "Show air quality for Tokyo", names a place, and points to an empty 
     state.currentSnapshotId = null;
     state.currentSnapshotName = "";
     state.lessonTitle = "";
+    state.lastLessonNote = null;
+    if (typeof window.resetPrimerSession === "function") window.resetPrimerSession();
+    try {
+      sessionStorage.removeItem("primerSessionId");
+      localStorage.removeItem("primerSessionId");
+    } catch {}
     state.currentSnapshotLocation = null;
     state.viewInitialized = false;
     state.aiDraftReturnMode = null;
