@@ -896,7 +896,18 @@
       window.__atlasTeachingLock = true;
       this.tts.unlockPlayback();
       this.primeMic();
-      this.greetThenListen();
+      const hasActiveConversation = Boolean(
+        this.lastSpoken ||
+        sessionStorage.getItem("primerSessionId") ||
+        (Array.isArray(window.Lumi6Lesson?.turns?.()) && window.Lumi6Lesson.turns().length > 0)
+      );
+      if (hasActiveConversation) {
+        this.showOverlay("listening", "Listening... ask anything!");
+        this.state = "IDLE";
+        this.listen();
+      } else {
+        this.greetThenListen();
+      }
     }
 
     primeMic() {

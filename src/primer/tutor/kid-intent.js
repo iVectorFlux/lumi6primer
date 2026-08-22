@@ -5,18 +5,18 @@
  * new question, a board, or a sum is never treated as a failed quiz answer.
  */
 
-const NEW_ASK = /^(can you |could you |please )?(how|why|what|who|when|where)\b/i;
-const EXPLICIT_SWITCH = /\b(now teach|teach me|i want to learn|explain|instead|what about|look at)\b/i;
+const NEW_ASK = /^(wait,? |hey,? |tell me,? |can you |could you |please |i have a question,? |what if |is it |is |are |do |does |can |will |would |how |why |what |who |when |where)\b/i;
+const EXPLICIT_SWITCH = /\b(now teach|teach me|i want to learn|explain|instead|what about|look at|how about|can we learn)\b/i;
 
 function isNewAsk(text, understanding = {}) {
   const raw = String(text || understanding.raw || "").trim();
   if (!raw) return false;
   if (understanding.justAnswer) return true;
   const intent = understanding.intent;
-  if (["explain", "question", "homework", "fact", "goal"].includes(intent)) return true;
+  if (["explain", "question", "homework", "fact", "goal", "what_if"].includes(intent)) return true;
   if (NEW_ASK.test(raw)) return true;
-  if (/\?/.test(raw) && raw.length > 6) return true;
-  if (/\b(teach me|i want to learn|look at (the |this )?(board|whiteboard)|is it correct|what('?s| is) the answer)\b/i.test(raw)) {
+  if (/\?/.test(raw) && raw.length > 5) return true;
+  if (/\b(teach me|i want to learn|look at (the |this )?(board|whiteboard)|is it correct|what('?s| is) the answer|what if|can (we|you|it)|why does|how does)\b/i.test(raw)) {
     return true;
   }
   return false;
