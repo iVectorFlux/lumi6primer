@@ -57,14 +57,6 @@
       handleSelectionPointerDown(e, point);
       return;
     }
-    if (e.pointerType === "touch") {
-      state.panGesture = {
-        id: e.pointerId,
-        last: { x: e.clientX, y: e.clientY },
-      };
-      setNavigating(true);
-      return;
-    }
     const p = point;
     if (!valid(p)) {
       setStatusKey("outsideCanvas");
@@ -212,8 +204,8 @@
         moveCanvas(e.clientX - old.x, e.clientY - old.y);
         state.panGesture.last = { x: e.clientX, y: e.clientY };
         setNavigating(true);
+        return;
       }
-      return;
     }
     if (state.panGesture?.id === e.pointerId) {
       if (old) {
@@ -288,19 +280,17 @@
       if (!state.touches.size) setNavigating(false);
       return;
     }
-    if (e.pointerType === "touch") {
-      state.touchGesture = null;
-      if (state.touches.size === 1) {
-        const [id, p] = state.touches.entries().next().value;
-        state.panGesture = { id, last: p };
-      } else state.panGesture = null;
-      if (!state.touches.size) setNavigating(false);
-      return;
-    }
     if (state.panGesture?.id === e.pointerId) {
       state.panGesture = null;
       resetCanvasCursor();
       setNavigating(false);
+      if (e.pointerType === "touch") {
+        state.touchGesture = null;
+        if (state.touches.size === 1) {
+          const [id, p] = state.touches.entries().next().value;
+          state.panGesture = { id, last: p };
+        }
+      }
       return;
     }
     if (state.drawing?.id === e.pointerId) {
@@ -310,6 +300,20 @@
         state.pointerPreview = null;
         requestInteractionLayerRender();
       }
+      if (e.pointerType === "touch") {
+        state.touchGesture = null;
+        state.panGesture = null;
+      }
+      return;
+    }
+    if (e.pointerType === "touch") {
+      state.touchGesture = null;
+      if (state.touches.size === 1) {
+        const [id, p] = state.touches.entries().next().value;
+        state.panGesture = { id, last: p };
+      } else state.panGesture = null;
+      if (!state.touches.size) setNavigating(false);
+      return;
     }
   }
   screen.addEventListener("pointerup", end);
@@ -395,6 +399,9 @@
       item.setAttribute("aria-pressed", String(item === button));
     });
     resetCanvasCursor();
+    const penTray = document.querySelector("#penTray");
+    if (penTray && mode !== "pen") penTray.hidden = true;
+    else if (penTray && options.showTray) penTray.hidden = false;
     requestInteractionLayerRender();
     if (mode === "hand") setNavigating(true);
     if (deferredSelectionCommit) queueMicrotask(() => {
@@ -1314,9 +1321,9 @@
       try {
 
       // Route diagram_source and html_widget commands through the widget path
-      const svgCmds = rawCommands.filter((c) => c?.tool === "svg_picture");
-      const diagramCmds = rawCommands.filter((c) => c?.tool === "diagram_source" || c?.tool === "html_widget");
-      const primitiveCmds = rawCommands.filter((c) => c?.tool !== "diagram_source" && c?.tool !== "html_widget" && c?.tool !== "svg_picture");
+      const svgCmds = rawCommands.filter((c) => c?.tool === "svg_picture" || c?.tool === "place_photo");
+      const diagramCmds = rawCommands.filter((c) => c?.tool === "diagram_source" || (c?.tool === "html_widget" && c?.pluginId !== "image-search"));
+      const primitiveCmds = rawCommands.filter((c) => c?.tool !== "diagram_source" && c?.tool !== "html_widget" && c?.tool !== "svg_picture" && c?.tool !== "place_photo");
 
       let diagramCount = 0;
       for (const cmd of diagramCmds) {
@@ -1327,7 +1334,11 @@
       let lastPlaced = null;
       for (const cmd of svgCmds) {
         try {
-          const placed = await placeLessonImage(cmd);
+          const placed = await placeLessonImage(cmd, {
+            skipCamera: true,
+            keepOthers: cmd?.keepOthers === true || cmd?.archivePrevious === true,
+            archivePrevious: cmd?.archivePrevious === true
+          });
           if (placed) {
             imageCount++;
             lastPlaced = placed;
@@ -1338,13 +1349,20 @@
       }
 
       if (lastPlaced) {
-        let noteY = lastPlaced.y + lastPlaced.h + 80;
+        const textMaxWidth = Math.min(3200, Math.max(1400, Math.round(lastPlaced.w * 0.9)));
+        const noteX = Math.max(60, Math.round(lastPlaced.x - textMaxWidth - 140));
+        let noteY = Math.round(lastPlaced.y + 16);
         for (const cmd of primitiveCmds) {
-          if (cmd?.tool !== "write_text") continue;
-          cmd.x = Math.round(lastPlaced.x);
-          cmd.y = Math.round(noteY);
-          cmd.maxWidth = Math.max(800, Math.round(lastPlaced.w || 2400));
-          noteY += Math.max(220, Math.round((cmd.fontSize || 150) * 2.2));
+          cmd.x = noteX;
+          cmd.y = noteY;
+          if (cmd.tool === "write_text") {
+            cmd.maxWidth = textMaxWidth;
+            const charsPerLine = Math.max(24, Math.floor(textMaxWidth / Math.max(36, (cmd.fontSize || 135) * 0.52)));
+            const lines = Math.max(1, Math.ceil(String(cmd.text || "").length / charsPerLine));
+            noteY += Math.round((cmd.fontSize || 135) * (cmd.lineHeight || 1.35) * lines + 56);
+          } else {
+            noteY += Math.round((cmd.fontSize || 150) * 2.4);
+          }
         }
       }
 

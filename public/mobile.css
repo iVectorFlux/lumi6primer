@@ -133,27 +133,41 @@ button,
   }
 
   .ai-embodiment {
-    right: max(10px, env(safe-area-inset-right));
+    right: max(12px, env(safe-area-inset-right));
     left: auto;
-    bottom: calc(72px + env(safe-area-inset-bottom));
+    bottom: calc(84px + env(safe-area-inset-bottom));
     transform: none;
   }
 
   .ai-embodiment.menu-open .ai-radial {
     position: fixed;
-    left: max(8px, env(safe-area-inset-left));
-    right: max(8px, env(safe-area-inset-right));
-    bottom: calc(72px + env(safe-area-inset-bottom));
+    left: max(12px, env(safe-area-inset-left));
+    right: max(12px, env(safe-area-inset-right));
+    bottom: calc(88px + env(safe-area-inset-bottom));
     width: auto;
-    max-width: none;
+    max-width: 440px;
+    margin: 0 auto;
     transform: none;
     z-index: 86;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    padding: 10px 12px;
+    border-radius: 20px;
+    background: rgba(255, 255, 255, 0.94);
+    box-shadow: 0 12px 36px rgba(76, 29, 149, 0.18), 0 2px 8px rgba(0, 0, 0, 0.08);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
   }
 
   .radial-action {
-    min-height: 40px;
-    padding: 8px 12px;
-    font-size: 13px;
+    flex: 1 1 calc(33.333% - 8px);
+    min-height: 38px;
+    padding: 6px 10px;
+    font-size: 12.5px;
+    border-radius: 12px;
+    justify-content: center;
+    text-align: center;
   }
 
   .atlas-graphic-stage {

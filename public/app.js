@@ -10120,14 +10120,6 @@ User writes "Show air quality for Tokyo", names a place, and points to an empty 
       handleSelectionPointerDown(e, point);
       return;
     }
-    if (e.pointerType === "touch") {
-      state.panGesture = {
-        id: e.pointerId,
-        last: { x: e.clientX, y: e.clientY },
-      };
-      setNavigating(true);
-      return;
-    }
     const p = point;
     if (!valid(p)) {
       setStatusKey("outsideCanvas");
@@ -10275,8 +10267,8 @@ User writes "Show air quality for Tokyo", names a place, and points to an empty 
         moveCanvas(e.clientX - old.x, e.clientY - old.y);
         state.panGesture.last = { x: e.clientX, y: e.clientY };
         setNavigating(true);
+        return;
       }
-      return;
     }
     if (state.panGesture?.id === e.pointerId) {
       if (old) {
@@ -10351,19 +10343,17 @@ User writes "Show air quality for Tokyo", names a place, and points to an empty 
       if (!state.touches.size) setNavigating(false);
       return;
     }
-    if (e.pointerType === "touch") {
-      state.touchGesture = null;
-      if (state.touches.size === 1) {
-        const [id, p] = state.touches.entries().next().value;
-        state.panGesture = { id, last: p };
-      } else state.panGesture = null;
-      if (!state.touches.size) setNavigating(false);
-      return;
-    }
     if (state.panGesture?.id === e.pointerId) {
       state.panGesture = null;
       resetCanvasCursor();
       setNavigating(false);
+      if (e.pointerType === "touch") {
+        state.touchGesture = null;
+        if (state.touches.size === 1) {
+          const [id, p] = state.touches.entries().next().value;
+          state.panGesture = { id, last: p };
+        }
+      }
       return;
     }
     if (state.drawing?.id === e.pointerId) {
@@ -10373,6 +10363,20 @@ User writes "Show air quality for Tokyo", names a place, and points to an empty 
         state.pointerPreview = null;
         requestInteractionLayerRender();
       }
+      if (e.pointerType === "touch") {
+        state.touchGesture = null;
+        state.panGesture = null;
+      }
+      return;
+    }
+    if (e.pointerType === "touch") {
+      state.touchGesture = null;
+      if (state.touches.size === 1) {
+        const [id, p] = state.touches.entries().next().value;
+        state.panGesture = { id, last: p };
+      } else state.panGesture = null;
+      if (!state.touches.size) setNavigating(false);
+      return;
     }
   }
   screen.addEventListener("pointerup", end);
@@ -10459,7 +10463,8 @@ User writes "Show air quality for Tokyo", names a place, and points to an empty 
     });
     resetCanvasCursor();
     const penTray = document.querySelector("#penTray");
-    if (penTray) penTray.hidden = mode !== "pen";
+    if (penTray && mode !== "pen") penTray.hidden = true;
+    else if (penTray && options.showTray) penTray.hidden = false;
     requestInteractionLayerRender();
     if (mode === "hand") setNavigating(true);
     if (deferredSelectionCommit) queueMicrotask(() => {
@@ -10884,6 +10889,30 @@ User writes "Show air quality for Tokyo", names a place, and points to an empty 
   });
   document.querySelector("#copyShareLinkBtn")?.addEventListener("click", () => {
     void copyShareLink();
+  });
+  document.querySelector("#sharePdfBtn")?.addEventListener("click", () => {
+    if (typeof window.exportLessonPdf === "function") window.exportLessonPdf();
+    else document.querySelector("#exportPngBtn")?.click();
+  });
+  document.querySelector("#shareWhatsAppBtn")?.addEventListener("click", async () => {
+    let url = shareLinkInput?.value?.trim() || "";
+    if (!url) {
+      await prepareShareLink();
+      url = shareLinkInput?.value?.trim() || "";
+    }
+    const title = document.querySelector("#currentDocName")?.textContent || "Lumi6 Lesson";
+    const text = `Check out what we learned on Lumi6: ${title}`;
+    if (navigator.share) {
+      try {
+        await navigator.share({ title, text, url: url || window.location.href });
+        setShareStatus("Shared successfully!");
+        return;
+      } catch (err) {
+        if (err.name !== "AbortError") console.warn("Native share failed:", err);
+      }
+    }
+    const shareUrl = url ? `${text} ${url}` : text;
+    window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(shareUrl)}`, "_blank");
   });
   document.querySelector("#closeShareModal")?.addEventListener("click", closeShareModal);
   shareModal?.addEventListener("click", (event) => {
@@ -11571,16 +11600,17 @@ User writes "Show air quality for Tokyo", names a place, and points to an empty 
       }
 
       if (lastPlaced) {
-        const noteX = Math.round(lastPlaced.x + lastPlaced.w + 160);
-        let noteY = Math.round(lastPlaced.y + 24);
+        const textMaxWidth = Math.min(3200, Math.max(1400, Math.round(lastPlaced.w * 0.9)));
+        const noteX = Math.max(60, Math.round(lastPlaced.x - textMaxWidth - 140));
+        let noteY = Math.round(lastPlaced.y + 16);
         for (const cmd of primitiveCmds) {
           cmd.x = noteX;
           cmd.y = noteY;
           if (cmd.tool === "write_text") {
-            cmd.maxWidth = 4000;
-            const charsPerLine = Math.max(24, Math.floor(4000 / Math.max(40, (cmd.fontSize || 140) * 0.52)));
+            cmd.maxWidth = textMaxWidth;
+            const charsPerLine = Math.max(24, Math.floor(textMaxWidth / Math.max(36, (cmd.fontSize || 135) * 0.52)));
             const lines = Math.max(1, Math.ceil(String(cmd.text || "").length / charsPerLine));
-            noteY += Math.round((cmd.fontSize || 140) * (cmd.lineHeight || 1.35) * lines + 56);
+            noteY += Math.round((cmd.fontSize || 135) * (cmd.lineHeight || 1.35) * lines + 56);
           } else {
             noteY += Math.round((cmd.fontSize || 150) * 2.4);
           }

@@ -33,8 +33,8 @@ function geminiFlashAllowed() {
 function noteGeminiFailure(err) {
   const msg = String(err?.message || "");
   if (/\b429\b|quota|RESOURCE_EXHAUSTED/i.test(msg)) {
-    geminiSkipUntil = Date.now() + 15 * 60 * 1000;
-    console.warn("[PRIMER] Gemini Flash Image quota hit; skipping it for 15 minutes");
+    geminiSkipUntil = Date.now() + 60 * 60 * 1000;
+    console.warn("[PRIMER] Gemini Flash Image quota hit; skipping it for 1 hour");
   }
 }
 
@@ -288,18 +288,19 @@ async function generate(input = {}) {
   const prompt = kidPrompt(input);
 
   const attempts = [];
-  if (geminiKey().length > 20 && geminiFlashAllowed()) {
-    const flash = String(process.env.GEMINI_IMAGE_MODEL || "gemini-2.5-flash-image").trim();
-    attempts.push([`gemini:${flash}`, () => requestGeminiFlash(flash, prompt, 12000)]);
-  }
+  // If OpenAI is available, include working OpenAI image models
   if (openaiKey().startsWith("sk-")) {
     const preferred = String(process.env.OPENAI_IMAGE_MODEL || "gpt-image-2").trim();
     for (const model of [...new Set([preferred, "gpt-image-1.5", "gpt-image-1", "gpt-image-1-mini"])]) {
       attempts.push([`openai:${model}`, () => requestOpenAIModel(model, prompt, 26000)]);
     }
   }
-  if (geminiKey().length > 20) {
-    attempts.push(["imagen-fast", () => requestImagenFast(prompt, 14000)]);
+  if (geminiKey().length > 20 && geminiFlashAllowed()) {
+    const flash = String(process.env.GEMINI_IMAGE_MODEL || "gemini-2.5-flash-image").trim();
+    attempts.push([`gemini:${flash}`, () => requestGeminiFlash(flash, prompt, 8000)]);
+  }
+  if (geminiKey().length > 20 && geminiFlashAllowed()) {
+    attempts.push(["imagen-fast", () => requestImagenFast(prompt, 10000)]);
   }
 
   const live = attempts.filter(([label]) => !retiredModels.has(label));

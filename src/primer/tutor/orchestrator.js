@@ -42,6 +42,36 @@ function firstSpokenSentence(text) {
   return String(parts[0] || raw).trim().slice(0, 220);
 }
 
+function extractHandwrittenNotes({ concept, spoken, childText } = {}) {
+  const title = String(concept || "").replace(/^(teach me about|teach me|explain|learn about|what is|how does)\s+/i, "").trim();
+  const cleanTitle = title ? title.charAt(0).toUpperCase() + title.slice(1) : "";
+
+  const rawSentences = String(spoken || "")
+    .replace(/^([Hh]ey|[Hh]ello|[Hh]i|[Gg]reat question|[Aa]lright|[Ss]ure),?[^.!?]*[.!?]\s*/g, "")
+    .split(/(?<=[.!?])\s+/)
+    .map((s) => s.trim())
+    .filter((s) => s.length > 14 && !/^(try|now you|what do you think|can you|let'?s|how does that sound|ready|tell me|ask me|want to|shall we)\b/i.test(s));
+
+  const keyPoints = rawSentences.slice(0, 3);
+  if (!cleanTitle && !keyPoints.length) return null;
+
+  const lines = [];
+  if (cleanTitle) lines.push(cleanTitle);
+  for (const pt of keyPoints) {
+    lines.push(`• ${pt}`);
+  }
+
+  return {
+    tool: "write_text",
+    text: lines.join("\n"),
+    fontSize: 135,
+    color: "#2e1065",
+    maxWidth: 2400,
+    lineHeight: 1.35,
+    isLessonNote: true
+  };
+}
+
 /**
  * Learning Orchestrator
  *
@@ -344,7 +374,8 @@ class LearningOrchestrator {
           // Every new picture pushes the earlier ones aside. Without this an
           // overview picture landed on top of the one already on the board.
           photo.archivePrevious = true;
-          commands = [photo];
+          const noteCmd = extractHandwrittenNotes({ concept: graphicTitle, spoken, childText: spokenText });
+          commands = noteCmd ? [photo, noteCmd] : [photo];
         } else {
           console.warn("[PRIMER] Graphic produced no image for", graphicTitle, "— trying sketch fallback");
           const sketch = await this._proposePicture(understanding, state);

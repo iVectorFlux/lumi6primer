@@ -1930,6 +1930,10 @@ body.plugin-open { overflow: hidden; }
 .member-email { display: block; font-size: 11px; color: var(--text-muted); }
 .member-role { font-size: 12px; color: var(--text-muted); font-weight: 500; flex-shrink: 0; }
 .share-footer { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding-top: 12px; border-top: 1px solid var(--border-light); }
+.share-actions-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 4px; }
+.share-action-btn { display: inline-flex; align-items: center; justify-content: center; gap: 6px; padding: 9px 12px; border-radius: 10px; font-size: 13px; font-weight: 600; background: rgba(109, 40, 217, 0.08); border: 1px solid rgba(109, 40, 217, 0.16); color: #4c1d95; cursor: pointer; transition: background 0.15s ease, transform 0.1s ease; }
+.share-action-btn:hover { background: rgba(109, 40, 217, 0.14); }
+.share-action-btn:active { transform: scale(0.97); }
 .share-permission { font-size: 12px; color: var(--text-muted); }
 .copy-link-btn { padding: 6px 14px; }
 
@@ -2212,7 +2216,7 @@ button, a, .btool, .topbar-icon-btn, .zoom-btn, .share-btn, .nav-item {
 
   .ai-embodiment {
     right: 12px;
-    bottom: calc(78px + env(safe-area-inset-bottom));
+    bottom: calc(84px + env(safe-area-inset-bottom));
     transform: none;
     width: 60px;
     height: 60px;

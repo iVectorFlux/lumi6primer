@@ -44,11 +44,16 @@ async function complete({ systemPrompt, userText, timeoutMs = 18000, temperature
     });
     if (!response.ok) {
       const detail = await response.text().catch(() => "");
-      if (/response_format|max_completion_tokens|temperature/i.test(detail)) {
-        delete body.response_format;
-        delete body.temperature;
-        body.max_tokens = body.max_completion_tokens;
-        delete body.max_completion_tokens;
+      if (/response_format|max_completion_tokens|max_tokens|temperature/i.test(detail)) {
+        if (/max_completion_tokens/i.test(detail)) {
+          body.max_tokens = body.max_completion_tokens || 500;
+          delete body.max_completion_tokens;
+        } else if (/max_tokens/i.test(detail)) {
+          body.max_completion_tokens = body.max_tokens || 500;
+          delete body.max_tokens;
+        }
+        if (/response_format/i.test(detail)) delete body.response_format;
+        if (/temperature/i.test(detail)) delete body.temperature;
         response = await fetch("https://api.openai.com/v1/chat/completions", {
           method: "POST",
           signal: controller.signal,
