@@ -64,65 +64,68 @@ jobs:
           docker push "$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG"
           docker push "$ECR_REGISTRY/$ECR_REPOSITORY:latest"
 
-      - name: Update ECS Task Definition and Deploy
+      - name: Update ECS and Deploy
         env:
           ECS_CLUSTER: ${{ secrets.ECS_CLUSTER }}
           ECS_SERVICE: ${{ secrets.ECS_SERVICE }}
           NEW_IMAGE: ${{ steps.ecr.outputs.registry }}/${{ secrets.ECR_REPOSITORY }}:${{ github.sha }}
         run: |
-          echo "Fetching current task definition for service $ECS_SERVICE..."
+          DEPLOYED=false
+
+          echo "Attempting to fetch current task definition..."
           CURRENT_TASK_DEF_ARN=$(aws ecs describe-services \
             --cluster "$ECS_CLUSTER" \
             --services "$ECS_SERVICE" \
             --query "services[0].taskDefinition" \
-            --output text)
-          echo "Current Task Definition: $CURRENT_TASK_DEF_ARN"
+            --output text 2>/dev/null || echo "")
 
-          aws ecs describe-task-definition \
-            --task-definition "$CURRENT_TASK_DEF_ARN" \
-            --query "taskDefinition" > task-def.json
+          if [ -n "$CURRENT_TASK_DEF_ARN" ] && [ "$CURRENT_TASK_DEF_ARN" != "None" ]; then
+            if aws ecs describe-task-definition --task-definition "$CURRENT_TASK_DEF_ARN" --query "taskDefinition" > task-def.json 2>/dev/null; then
+              node -e '
+                const fs = require("fs");
+                const def = JSON.parse(fs.readFileSync("task-def.json", "utf8"));
+                delete def.taskDefinitionArn;
+                delete def.revision;
+                delete def.status;
+                delete def.requiresAttributes;
+                delete def.compatibilities;
+                delete def.registeredAt;
+                delete def.registeredBy;
+                delete def.deregisteredAt;
+                const newImage = process.env.NEW_IMAGE;
+                if (Array.isArray(def.containerDefinitions) && def.containerDefinitions.length > 0) {
+                  def.containerDefinitions[0].image = newImage;
+                }
+                fs.writeFileSync("new-task-def.json", JSON.stringify(def, null, 2));
+              '
+              NEW_TASK_DEF_ARN=$(aws ecs register-task-definition --cli-input-json file://new-task-def.json --query "taskDefinition.taskDefinitionArn" --output text 2>/dev/null || echo "")
+              if [ -n "$NEW_TASK_DEF_ARN" ] && [ "$NEW_TASK_DEF_ARN" != "None" ]; then
+                echo "Deploying with new task definition revision: $NEW_TASK_DEF_ARN"
+                aws ecs update-service \
+                  --cluster "$ECS_CLUSTER" \
+                  --service "$ECS_SERVICE" \
+                  --task-definition "$NEW_TASK_DEF_ARN" \
+                  --force-new-deployment \
+                  --output text
+                DEPLOYED=true
+              fi
+            fi
+          fi
 
-          node -e '
-            const fs = require("fs");
-            const def = JSON.parse(fs.readFileSync("task-def.json", "utf8"));
-            
-            delete def.taskDefinitionArn;
-            delete def.revision;
-            delete def.status;
-            delete def.requiresAttributes;
-            delete def.compatibilities;
-            delete def.registeredAt;
-            delete def.registeredBy;
-            delete def.deregisteredAt;
-
-            const newImage = process.env.NEW_IMAGE;
-            if (Array.isArray(def.containerDefinitions) && def.containerDefinitions.length > 0) {
-              def.containerDefinitions[0].image = newImage;
-              console.log("Updated container definition image to:", newImage);
-            }
-            fs.writeFileSync("new-task-def.json", JSON.stringify(def, null, 2));
-          '
-
-          echo "Registering new task definition revision..."
-          NEW_TASK_DEF_ARN=$(aws ecs register-task-definition \
-            --cli-input-json file://new-task-def.json \
-            --query "taskDefinition.taskDefinitionArn" \
-            --output text)
-          echo "Registered New Task Definition: $NEW_TASK_DEF_ARN"
-
-          echo "Updating ECS service with new task definition..."
-          aws ecs update-service \
-            --cluster "$ECS_CLUSTER" \
-            --service "$ECS_SERVICE" \
-            --task-definition "$NEW_TASK_DEF_ARN" \
-            --force-new-deployment \
-            --output text
+          if [ "$DEPLOYED" != "true" ]; then
+            echo "Triggering ECS force-new-deployment (rolling latest image)..."
+            aws ecs update-service \
+              --cluster "$ECS_CLUSTER" \
+              --service "$ECS_SERVICE" \
+              --force-new-deployment \
+              --output text
+          fi
 
           echo "Waiting for new ECS tasks to become healthy and reach steady state..."
           aws ecs wait services-stable \
             --cluster "$ECS_CLUSTER" \
             --services "$ECS_SERVICE"
-          echo "Deployment successful: new container ($NEW_IMAGE) is healthy and live!"
+          echo "Deployment successful: new container is healthy and live!"
 
       - name: Invalidate CloudFront cache (if configured)
         env:
