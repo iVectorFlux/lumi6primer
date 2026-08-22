@@ -1518,30 +1518,24 @@
           item.bounds.y += shiftY;
         }
 
-        // Push write_text objects to state.textBoxes for native Lumi6 text box rendering
+        // Record handwritten lesson note coordinates so the photo is placed beside it
         if (item.command && item.command.tool === "write_text") {
-          item.isTextBoxRecord = true;
           const w = item.image?.logicalWidth || item.image?.width || item.layoutWidth || 300;
           const h = item.image?.logicalHeight || item.image?.height || item.layoutHeight || 200;
-          const textRecord = {
-            id: `text-box-atlas-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
+          state.lastLessonNote = {
+            id: item.command.id || `note-${Date.now()}`,
             x: item.x,
             y: item.y,
             w,
             h,
-            maxWidth: item.command.maxWidth || w,
-            fontSize: item.command.fontSize || 140,
-            color: item.command.color || state.aiColor || "#2563eb",
-            text: item.command.text,
-            image: item.image
+            time: Date.now()
           };
-          if (!Array.isArray(state.textBoxes)) state.textBoxes = [];
-          state.textBoxes.push(textRecord);
-          console.log("[ATLAS Stage 8/9] Pushed text object to state.textBoxes:", textRecord);
+          if (item.command.title && typeof noteLessonTitle === "function") {
+            noteLessonTitle(item.command.title);
+          }
         }
       }
 
-      console.log("[ATLAS Stage 6/7] Starting batch and accepting pending items. Items count:", items.length);
       startPendingBatch(items, state.userRevision, meta);
       if (state.pending) acceptPending({ restoreMode: false });
 

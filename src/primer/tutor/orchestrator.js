@@ -42,15 +42,39 @@ function firstSpokenSentence(text) {
   return String(parts[0] || raw).trim().slice(0, 220);
 }
 
+function formatEducationalTitle(rawConcept, spoken, childText) {
+  let text = String(rawConcept || "").trim();
+  
+  // Strip conversational / speech-to-text noisy prefixes and words
+  text = text.replace(/^(can you|please|i want to|i am in \d+(?:th|st|nd|rd)? grade|teach me about|teach me|tell me about|tell me|explain to me|explain|learn about|what is|what are|how does|how do|why is|why does|like what exactly|what exactly)\s+/gi, "").trim();
+  
+  // Remove individual filler words or STT typos
+  text = text.replace(/\b(tit|plz|pls|wanna|gonna|like|exactly|know|show)\b/gi, "").replace(/\s+/g, " ").trim();
+
+  // If text is empty or too short, extract from spoken sentence 1
+  if (!text || text.length < 3) {
+    const firstSentence = String(spoken || "").split(/[.!?]/)[0] || "";
+    const m = firstSentence.match(/\b(?:is|are|called|named|about|on)\s+([A-Za-z0-9\s\-]{3,30})\b/i);
+    if (m && m[1]) text = m[1].trim();
+  }
+
+  // Capitalize nicely into Title Case
+  if (!text) text = "Science Discovery";
+  
+  return text.split(/\s+/).map(w => {
+    if (/^(and|of|the|in|on|at|to|for|with)$/i.test(w)) return w.toLowerCase();
+    return w.charAt(0).toUpperCase() + w.slice(1).toLowerCase();
+  }).join(" ");
+}
+
 function extractHandwrittenNotes({ concept, spoken, childText } = {}) {
-  const title = String(concept || "").replace(/^(teach me about|teach me|explain|learn about|what is|how does)\s+/i, "").trim();
-  const cleanTitle = title ? title.charAt(0).toUpperCase() + title.slice(1) : "";
+  const cleanTitle = formatEducationalTitle(concept, spoken, childText);
 
   const rawSentences = String(spoken || "")
-    .replace(/^([Hh]ey|[Hh]ello|[Hh]i|[Gg]reat question|[Aa]lright|[Ss]ure),?[^.!?]*[.!?]\s*/g, "")
+    .replace(/^([Hh]ey|[Hh]ello|[Hh]i|[Gg]reat question|[Aa]lright|[Ss]ure|You'?re (?:almost |exactly )?right),?[^.!?]*[.!?]\s*/g, "")
     .split(/(?<=[.!?])\s+/)
     .map((s) => s.trim())
-    .filter((s) => s.length > 14 && !/^(try|now you|what do you think|can you|let'?s|how does that sound|ready|tell me|ask me|want to|shall we)\b/i.test(s));
+    .filter((s) => s.length > 14 && !/^(try|now you|what do you think|can you|let'?s|how does that sound|ready|tell me|ask me|want to|shall we|have you ever)\b/i.test(s));
 
   const keyPoints = rawSentences.slice(0, 3);
   if (!cleanTitle && !keyPoints.length) return null;
@@ -62,7 +86,9 @@ function extractHandwrittenNotes({ concept, spoken, childText } = {}) {
   }
 
   return {
+    id: `note-${Date.now()}`,
     tool: "write_text",
+    title: cleanTitle,
     text: lines.join("\n"),
     x: 600,
     y: 600,

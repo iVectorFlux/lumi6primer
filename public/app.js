@@ -6542,20 +6542,30 @@ User writes "Show air quality for Tokyo", names a place, and points to an empty 
   }
   // A board saved from a lesson should be findable by what it taught, not by
   // the minute it was saved.
+  function formatCleanBoardTitle(title) {
+    let t = String(title || "").replace(/\s+/g, " ").trim();
+    t = t.replace(/^(can you|please|i want to|i am in \d+(?:th|st|nd|rd)? grade|teach me about|teach me|tell me about|tell me|explain to me|explain|learn about|what is|what are|how does|how do|why is|why does|like what exactly|what exactly)\s+/gi, "").trim();
+    t = t.replace(/\b(tit|plz|pls|wanna|gonna|like|exactly|know|show)\b/gi, "").replace(/\s+/g, " ").trim();
+    if (!t || t.length < 3) return "";
+    return t.split(/\s+/).map(w => {
+      if (/^(and|of|the|in|on|at|to|for|with)$/i.test(w)) return w.toLowerCase();
+      return w.charAt(0).toUpperCase() + w.slice(1).toLowerCase();
+    }).join(" ");
+  }
   function lessonBoardName() {
-    const raw = String(state.lessonTitle || "").replace(/\s+/g, " ").trim().replace(/[.,;:!?]+$/, "");
+    const raw = formatCleanBoardTitle(state.lessonTitle) || String(state.lessonTitle || "").replace(/\s+/g, " ").trim().replace(/[.,;:!?]+$/, "");
     if (raw.length < 3) return "";
     const clipped = raw.length <= 42 ? raw : `${raw.slice(0, 42).replace(/\s+\S*$/, "")}…`;
     return clipped.charAt(0).toUpperCase() + clipped.slice(1);
   }
   function noteLessonTitle(title) {
-    const next = String(title || "").replace(/\s+/g, " ").trim();
+    const next = formatCleanBoardTitle(title);
     if (!next || next.length < 3) return;
-    if (/^(picture|lesson picture|board)$/i.test(next)) return;
-    if (!state.lessonTitle) state.lessonTitle = next;
+    if (/^(picture|lesson picture|board|science discovery)$/i.test(next)) return;
+    state.lessonTitle = next;
     const label = document.querySelector("#currentDocName");
-    if (label && (!label.textContent || /^untitled$/i.test(label.textContent.trim()))) {
-      label.textContent = lessonBoardName() || label.textContent;
+    if (label) {
+      label.textContent = lessonBoardName() || next;
     }
   }
   function snapshotName(item) {
@@ -11442,19 +11452,21 @@ User writes "Show air quality for Tokyo", names a place, and points to an empty 
       });
     }
     const isMobile = window.innerWidth <= 768 || window.matchMedia("(max-width: 768px)").matches;
-    const recentNote = Array.isArray(state.textBoxes) && state.textBoxes.length
-      ? state.textBoxes[state.textBoxes.length - 1]
+    const recentNote = (state.lastLessonNote && (Date.now() - state.lastLessonNote.time < 300000))
+      ? state.lastLessonNote
       : null;
 
-    if (recentNote && (Date.now() - (recentNote.createdAt || 0) < 180000 || recentNote.isLessonNote)) {
+    if (recentNote) {
       if (isMobile) {
-        // Mobile layout: Note on top, Image directly underneath
+        // Mobile layout: Note on top, Image directly underneath with clean gap
         item.w = Math.min(place.w, Math.max(recentNote.w, 1400));
         item.h = Math.round(item.w * (naturalH / naturalW));
         item.x = Math.max(40, Math.round(recentNote.x + (recentNote.w - item.w) / 2));
         item.y = Math.round(recentNote.y + recentNote.h + 80);
       } else {
-        // Desktop layout: Note on left, Image on right
+        // Desktop layout: Note on left, Image directly to the RIGHT of the note
+        item.w = Math.min(place.w, 1800);
+        item.h = Math.round(item.w * (naturalH / naturalW));
         item.x = Math.round(recentNote.x + recentNote.w + 140);
         item.y = Math.round(recentNote.y);
       }
@@ -11469,17 +11481,21 @@ User writes "Show air quality for Tokyo", names a place, and points to an empty 
     save();
     if (!options.skipCamera) {
       const rect = view.getBoundingClientRect();
-      if (recentNote && (Date.now() - (recentNote.createdAt || 0) < 180000 || recentNote.isLessonNote)) {
+      if (recentNote) {
         const minX = Math.min(recentNote.x, item.x);
         const minY = Math.min(recentNote.y, item.y);
         const maxX = Math.max(recentNote.x + recentNote.w, item.x + item.w);
         const maxY = Math.max(recentNote.y + recentNote.h, item.y + item.h);
         const totalW = maxX - minX;
         const totalH = maxY - minY;
-        const fitScale = Math.min((rect.width * 0.84) / Math.max(totalW, 1), (rect.height * 0.76) / Math.max(totalH, 1), 0.55);
+        const fitScale = isMobile
+          ? Math.min((rect.width * 0.9) / Math.max(totalW, 1), (rect.height * 0.8) / Math.max(totalH, 1), 0.55)
+          : Math.min((rect.width * 0.84) / Math.max(totalW, 1), (rect.height * 0.76) / Math.max(totalH, 1), 0.55);
         state.scale = Math.max(0.14, Math.min(0.55, fitScale));
         state.panX = rect.width / 2 - (minX + totalW / 2) * state.scale;
-        state.panY = rect.height / 2 - (minY + totalH / 2) * state.scale;
+        state.panY = isMobile
+          ? Math.max(60, rect.height * 0.22 - minY * state.scale)
+          : rect.height / 2 - (minY + totalH / 2) * state.scale;
       } else {
         const fitScale = Math.min((rect.width * 0.78) / Math.max(item.w, 1), (rect.height * 0.68) / Math.max(item.h, 1), 0.85);
         state.scale = Math.max(0.12, Math.min(0.85, fitScale));
@@ -11824,25 +11840,21 @@ User writes "Show air quality for Tokyo", names a place, and points to an empty 
           item.bounds.y += shiftY;
         }
 
-        // Push write_text objects to state.textBoxes for native Lumi6 text box rendering
+        // Record handwritten lesson note coordinates so the photo is placed beside it
         if (item.command && item.command.tool === "write_text") {
-          item.isTextBoxRecord = true;
           const w = item.image?.logicalWidth || item.image?.width || item.layoutWidth || 300;
           const h = item.image?.logicalHeight || item.image?.height || item.layoutHeight || 200;
-          const textRecord = {
-            id: `text-box-atlas-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
+          state.lastLessonNote = {
+            id: item.command.id || `note-${Date.now()}`,
             x: item.x,
             y: item.y,
             w,
             h,
-            maxWidth: item.command.maxWidth || w,
-            fontSize: item.command.fontSize || 140,
-            color: item.command.color || state.aiColor || "#2563eb",
-            text: item.command.text,
-            image: item.image
+            time: Date.now()
           };
-          if (!Array.isArray(state.textBoxes)) state.textBoxes = [];
-          state.textBoxes.push(textRecord);
+          if (item.command.title) {
+            noteLessonTitle(item.command.title);
+          }
         }
       }
 
