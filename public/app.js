@@ -11416,6 +11416,25 @@ User writes "Show air quality for Tokyo", names a place, and points to an empty 
         return !name;
       });
     }
+    const isMobile = window.innerWidth <= 768 || window.matchMedia("(max-width: 768px)").matches;
+    const recentNote = Array.isArray(state.textBoxes) && state.textBoxes.length
+      ? state.textBoxes[state.textBoxes.length - 1]
+      : null;
+
+    if (recentNote && (Date.now() - (recentNote.createdAt || 0) < 180000 || recentNote.isLessonNote)) {
+      if (isMobile) {
+        // Mobile layout: Note on top, Image directly underneath
+        item.w = Math.min(place.w, Math.max(recentNote.w, 1400));
+        item.h = Math.round(item.w * (naturalH / naturalW));
+        item.x = Math.max(40, Math.round(recentNote.x + (recentNote.w - item.w) / 2));
+        item.y = Math.round(recentNote.y + recentNote.h + 80);
+      } else {
+        // Desktop layout: Note on left, Image on right
+        item.x = Math.round(recentNote.x + recentNote.w + 140);
+        item.y = Math.round(recentNote.y);
+      }
+    }
+
     if (state.images.length >= MAX_VISIBLE_IMAGES) {
       console.warn("[ATLAS] image skipped — MAX_VISIBLE_IMAGES reached.");
       return null;
@@ -11425,10 +11444,23 @@ User writes "Show air quality for Tokyo", names a place, and points to an empty 
     save();
     if (!options.skipCamera) {
       const rect = view.getBoundingClientRect();
-      const fitScale = Math.min((rect.width * 0.78) / Math.max(item.w, 1), (rect.height * 0.68) / Math.max(item.h, 1), 0.85);
-      state.scale = Math.max(0.12, Math.min(0.85, fitScale));
-      state.panX = rect.width / 2 - (item.x + item.w / 2) * state.scale;
-      state.panY = rect.height / 2 - (item.y + item.h / 2) * state.scale;
+      if (recentNote && (Date.now() - (recentNote.createdAt || 0) < 180000 || recentNote.isLessonNote)) {
+        const minX = Math.min(recentNote.x, item.x);
+        const minY = Math.min(recentNote.y, item.y);
+        const maxX = Math.max(recentNote.x + recentNote.w, item.x + item.w);
+        const maxY = Math.max(recentNote.y + recentNote.h, item.y + item.h);
+        const totalW = maxX - minX;
+        const totalH = maxY - minY;
+        const fitScale = Math.min((rect.width * 0.84) / Math.max(totalW, 1), (rect.height * 0.76) / Math.max(totalH, 1), 0.55);
+        state.scale = Math.max(0.14, Math.min(0.55, fitScale));
+        state.panX = rect.width / 2 - (minX + totalW / 2) * state.scale;
+        state.panY = rect.height / 2 - (minY + totalH / 2) * state.scale;
+      } else {
+        const fitScale = Math.min((rect.width * 0.78) / Math.max(item.w, 1), (rect.height * 0.68) / Math.max(item.h, 1), 0.85);
+        state.scale = Math.max(0.12, Math.min(0.85, fitScale));
+        state.panX = rect.width / 2 - (item.x + item.w / 2) * state.scale;
+        state.panY = rect.height / 2 - (item.y + item.h / 2) * state.scale;
+      }
     }
     requestRender();
     setStatusKey("ready");
@@ -11599,20 +11631,43 @@ User writes "Show air quality for Tokyo", names a place, and points to an empty 
         }
       }
 
+      const isMobile = window.innerWidth <= 768 || window.matchMedia("(max-width: 768px)").matches;
       if (lastPlaced) {
-        const textMaxWidth = Math.min(3200, Math.max(1400, Math.round(lastPlaced.w * 0.9)));
-        const noteX = Math.max(60, Math.round(lastPlaced.x - textMaxWidth - 140));
-        let noteY = Math.round(lastPlaced.y + 16);
-        for (const cmd of primitiveCmds) {
-          cmd.x = noteX;
-          cmd.y = noteY;
-          if (cmd.tool === "write_text") {
-            cmd.maxWidth = textMaxWidth;
-            const charsPerLine = Math.max(24, Math.floor(textMaxWidth / Math.max(36, (cmd.fontSize || 135) * 0.52)));
-            const lines = Math.max(1, Math.ceil(String(cmd.text || "").length / charsPerLine));
-            noteY += Math.round((cmd.fontSize || 135) * (cmd.lineHeight || 1.35) * lines + 56);
-          } else {
-            noteY += Math.round((cmd.fontSize || 150) * 2.4);
+        if (isMobile) {
+          // Mobile layout: Note on TOP, Image underneath
+          const textMaxWidth = Math.min(3200, Math.max(1400, Math.round(lastPlaced.w * 0.95)));
+          const noteX = Math.max(40, Math.round(lastPlaced.x + (lastPlaced.w - textMaxWidth) / 2));
+          let noteY = Math.max(40, Math.round(lastPlaced.y - 680));
+          for (const cmd of primitiveCmds) {
+            cmd.x = noteX;
+            cmd.y = noteY;
+            if (cmd.tool === "write_text") {
+              cmd.maxWidth = textMaxWidth;
+              const charsPerLine = Math.max(24, Math.floor(textMaxWidth / Math.max(36, (cmd.fontSize || 135) * 0.52)));
+              const lines = Math.max(1, Math.ceil(String(cmd.text || "").length / charsPerLine));
+              const noteH = Math.round((cmd.fontSize || 135) * (cmd.lineHeight || 1.35) * lines + 56);
+              cmd.y = Math.max(40, Math.round(lastPlaced.y - noteH - 80));
+              noteY = cmd.y + noteH + 40;
+            } else {
+              noteY += Math.round((cmd.fontSize || 150) * 2.4);
+            }
+          }
+        } else {
+          // Desktop layout: Note on LEFT, Image on RIGHT
+          const textMaxWidth = Math.min(3200, Math.max(1400, Math.round(lastPlaced.w * 0.9)));
+          const noteX = Math.max(60, Math.round(lastPlaced.x - textMaxWidth - 140));
+          let noteY = Math.round(lastPlaced.y + 16);
+          for (const cmd of primitiveCmds) {
+            cmd.x = noteX;
+            cmd.y = noteY;
+            if (cmd.tool === "write_text") {
+              cmd.maxWidth = textMaxWidth;
+              const charsPerLine = Math.max(24, Math.floor(textMaxWidth / Math.max(36, (cmd.fontSize || 135) * 0.52)));
+              const lines = Math.max(1, Math.ceil(String(cmd.text || "").length / charsPerLine));
+              noteY += Math.round((cmd.fontSize || 135) * (cmd.lineHeight || 1.35) * lines + 56);
+            } else {
+              noteY += Math.round((cmd.fontSize || 150) * 2.4);
+            }
           }
         }
       }

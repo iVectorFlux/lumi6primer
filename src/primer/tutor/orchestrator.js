@@ -343,8 +343,20 @@ class LearningOrchestrator {
       decisionAction: decision.action
     });
     let commands = [];
+    const graphicTitle = String(graphicPlan.scene || state.currentConcept || understanding.concept || "Lesson").slice(0, 48);
+    const noteCmd = extractHandwrittenNotes({ concept: graphicTitle, spoken, childText: spokenText });
+
+    // Emit handwritten concept note to the whiteboard immediately (0 ms latency)
+    if (noteCmd) {
+      commands.push(noteCmd);
+      this._emitStream(input, {
+        event: "graphic",
+        canvasActions: [noteCmd],
+        visualPlan: { shouldDraw: true, commands: [noteCmd] }
+      });
+    }
+
     if (graphicPlan.generate) {
-      const graphicTitle = String(graphicPlan.scene || state.currentConcept || understanding.concept || "Picture").slice(0, 48);
       if (!geminiGraphic.isConfigured()) {
         console.warn("[PRIMER] Graphic skipped: no Gemini/OpenAI image key");
       } else {
@@ -371,15 +383,20 @@ class LearningOrchestrator {
         });
         if (photo?.href) {
           photo.keepOthers = true;
-          // Every new picture pushes the earlier ones aside. Without this an
-          // overview picture landed on top of the one already on the board.
-          photo.archivePrevious = true;
-          const noteCmd = extractHandwrittenNotes({ concept: graphicTitle, spoken, childText: spokenText });
-          commands = noteCmd ? [photo, noteCmd] : [photo];
+          photo.archivePrevious = false;
+          commands.push(photo);
+          state.conversationState = state.conversationState || {};
+          state.conversationState.lastGraphicScene = graphicPlan.scene;
+          state.conversationState.lastGraphicKind = graphicPlan.kind;
+          this._emitStream(input, {
+            event: "graphic",
+            canvasActions: [photo],
+            visualPlan: { shouldDraw: true, commands: [photo] }
+          });
         } else {
           console.warn("[PRIMER] Graphic produced no image for", graphicTitle, "— trying sketch fallback");
           const sketch = await this._proposePicture(understanding, state);
-          commands = this.canvas.buildCommands({
+          const sketchCommands = this.canvas.buildCommands({
             picture: sketch?.picture,
             spoken,
             wantsDraw: true,
@@ -387,16 +404,14 @@ class LearningOrchestrator {
             concept: graphicTitle,
             studentInput: spokenText
           });
-        }
-        if (commands.length) {
-          state.conversationState = state.conversationState || {};
-          state.conversationState.lastGraphicScene = graphicPlan.scene;
-          state.conversationState.lastGraphicKind = graphicPlan.kind;
-          this._emitStream(input, {
-            event: "graphic",
-            canvasActions: commands,
-            visualPlan: { shouldDraw: true, commands }
-          });
+          if (sketchCommands.length) {
+            commands.push(...sketchCommands);
+            this._emitStream(input, {
+              event: "graphic",
+              canvasActions: sketchCommands,
+              visualPlan: { shouldDraw: true, commands: sketchCommands }
+            });
+          }
         }
       }
     } else {

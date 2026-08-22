@@ -1348,20 +1348,43 @@
         }
       }
 
+      const isMobile = window.innerWidth <= 768 || window.matchMedia("(max-width: 768px)").matches;
       if (lastPlaced) {
-        const textMaxWidth = Math.min(3200, Math.max(1400, Math.round(lastPlaced.w * 0.9)));
-        const noteX = Math.max(60, Math.round(lastPlaced.x - textMaxWidth - 140));
-        let noteY = Math.round(lastPlaced.y + 16);
-        for (const cmd of primitiveCmds) {
-          cmd.x = noteX;
-          cmd.y = noteY;
-          if (cmd.tool === "write_text") {
-            cmd.maxWidth = textMaxWidth;
-            const charsPerLine = Math.max(24, Math.floor(textMaxWidth / Math.max(36, (cmd.fontSize || 135) * 0.52)));
-            const lines = Math.max(1, Math.ceil(String(cmd.text || "").length / charsPerLine));
-            noteY += Math.round((cmd.fontSize || 135) * (cmd.lineHeight || 1.35) * lines + 56);
-          } else {
-            noteY += Math.round((cmd.fontSize || 150) * 2.4);
+        if (isMobile) {
+          // Mobile layout: Note on TOP, Image underneath
+          const textMaxWidth = Math.min(3200, Math.max(1400, Math.round(lastPlaced.w * 0.95)));
+          const noteX = Math.max(40, Math.round(lastPlaced.x + (lastPlaced.w - textMaxWidth) / 2));
+          let noteY = Math.max(40, Math.round(lastPlaced.y - 680));
+          for (const cmd of primitiveCmds) {
+            cmd.x = noteX;
+            cmd.y = noteY;
+            if (cmd.tool === "write_text") {
+              cmd.maxWidth = textMaxWidth;
+              const charsPerLine = Math.max(24, Math.floor(textMaxWidth / Math.max(36, (cmd.fontSize || 135) * 0.52)));
+              const lines = Math.max(1, Math.ceil(String(cmd.text || "").length / charsPerLine));
+              const noteH = Math.round((cmd.fontSize || 135) * (cmd.lineHeight || 1.35) * lines + 56);
+              cmd.y = Math.max(40, Math.round(lastPlaced.y - noteH - 80));
+              noteY = cmd.y + noteH + 40;
+            } else {
+              noteY += Math.round((cmd.fontSize || 150) * 2.4);
+            }
+          }
+        } else {
+          // Desktop layout: Note on LEFT, Image on RIGHT
+          const textMaxWidth = Math.min(3200, Math.max(1400, Math.round(lastPlaced.w * 0.9)));
+          const noteX = Math.max(60, Math.round(lastPlaced.x - textMaxWidth - 140));
+          let noteY = Math.round(lastPlaced.y + 16);
+          for (const cmd of primitiveCmds) {
+            cmd.x = noteX;
+            cmd.y = noteY;
+            if (cmd.tool === "write_text") {
+              cmd.maxWidth = textMaxWidth;
+              const charsPerLine = Math.max(24, Math.floor(textMaxWidth / Math.max(36, (cmd.fontSize || 135) * 0.52)));
+              const lines = Math.max(1, Math.ceil(String(cmd.text || "").length / charsPerLine));
+              noteY += Math.round((cmd.fontSize || 135) * (cmd.lineHeight || 1.35) * lines + 56);
+            } else {
+              noteY += Math.round((cmd.fontSize || 150) * 2.4);
+            }
           }
         }
       }

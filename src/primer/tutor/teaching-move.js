@@ -66,7 +66,13 @@ function replaceLastQuestion(spoken, nextQuestion) {
 }
 
 function advanceQuestion() {
-  return "What do you think happens next, and why?";
+  const options = [
+    "Can you picture what happens next when that occurs?",
+    "Have you ever noticed something like this around you?",
+    "What do you imagine happens next in this story?",
+    "Can you guess where that leads next?"
+  ];
+  return options[Math.floor(Math.random() * options.length)];
 }
 
 const { isNewAsk, shouldGrade } = require("./kid-intent.js");
@@ -89,7 +95,7 @@ function preventRepeatQuestion(spoken, lastCheckQuestion, sameQuestionStreak = 0
   if ((repeat || (closed && sameQuestionStreak >= 1)) && asked) {
     text = replaceLastQuestion(text, advanceQuestion());
   } else if (closed && !lastCheckQuestion) {
-    text = replaceLastQuestion(text, "Where have you seen this happen in real life?");
+    text = replaceLastQuestion(text, "Have you ever seen something like this happen around you?");
   }
   return text;
 }
