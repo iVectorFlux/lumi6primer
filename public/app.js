@@ -11934,8 +11934,14 @@ User writes "Show air quality for Tokyo", names a place, and points to an empty 
       talkBtn.setAttribute("aria-selected", String(currentAppViewMode === "talk"));
     }
 
-    if (canvasWorkspace) canvasWorkspace.hidden = currentAppViewMode === "talk";
-    if (talkWorkspace) talkWorkspace.hidden = currentAppViewMode !== "talk";
+    if (canvasWorkspace) {
+      canvasWorkspace.hidden = currentAppViewMode === "talk";
+      canvasWorkspace.style.display = currentAppViewMode === "talk" ? "none" : "";
+    }
+    if (talkWorkspace) {
+      talkWorkspace.hidden = currentAppViewMode !== "talk";
+      talkWorkspace.style.display = currentAppViewMode === "talk" ? "flex" : "none";
+    }
 
     if (currentAppViewMode === "talk") {
       syncTalkModeFeed();
@@ -11948,13 +11954,9 @@ User writes "Show air quality for Tokyo", names a place, and points to an empty 
 
   function syncTalkModeFeed() {
     const feed = document.querySelector("#talkFeed");
-    const heroTitle = document.querySelector("#talkHeroTitle");
     if (!feed) return;
 
     const titleText = formatCleanLessonTitle(state.lessonTitle || document.querySelector("#currentDocName")?.textContent);
-    if (heroTitle && titleText) {
-      heroTitle.textContent = titleText;
-    }
 
     const turns = typeof window.Lumi6Lesson?.turns === "function"
       ? window.Lumi6Lesson.turns()
@@ -11967,10 +11969,9 @@ User writes "Show air quality for Tokyo", names a place, and points to an empty 
             <div class="talk-lumi6-header">
               <div class="talk-lumi6-avatar">✨</div>
               <span class="talk-lumi6-name">Lumi6</span>
-              <span class="talk-topic-pill">Ready to Explore</span>
             </div>
             <div class="talk-explanation-body">
-              <p>Welcome! Tap <strong>Talk</strong> below or type a question to explore any topic step by step.</p>
+              <p>Welcome! Tap <strong>Talk</strong> below or type a question to start exploring.</p>
             </div>
           </div>
         </article>
