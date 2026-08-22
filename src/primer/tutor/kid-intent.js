@@ -38,8 +38,8 @@ function shouldGrade({ text, askedBackLast, understanding } = {}) {
     return false;
   }
   if (understanding?.pictureComment || understanding?.wantsDraw) return false;
-  if (intent === "attempt" || intent === "revision") return looksLikeQuizAnswer(text);
-  return looksLikeQuizAnswer(text) && String(text || "").length < 48;
+  if (intent === "attempt" || intent === "revision") return true;
+  return looksLikeQuizAnswer(text);
 }
 
 function explicitTopicSwitch(text) {

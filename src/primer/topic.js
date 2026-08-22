@@ -21,14 +21,18 @@ const STOP = new Set([
   "actually", "supposed", "again", "anything", "everything", "nothing", "damn",
   "instead", "rather", "prefer", "start", "starting", "begin",
   "only", "get", "way", "don", "man", "tired", "complicated", "ready",
-  "lets", "let's", "gonna", "wanna", "able", "trying", "become", "better"
+  "lets", "let's", "gonna", "wanna", "able", "trying", "become", "better",
+  "pretty", "difficult", "hard", "easy", "simple", "seat", "know", "sure", "true",
+  "false", "tap", "pipe", "travel", "bag", "circle", "flowing", "flow", "open", "closed",
+  "think", "thought", "guess", "say", "saying", "said", "look", "looking", "see",
+  "studying", "study", "grade", "class", "simplified", "simplify", "so", "if"
 ]);
 
-const WEAK = /^(this|that|it|idea|sorry|hell|talking|mean|teach me|can you teach me|what do you mean)$/i;
+const WEAK = /^(this|that|it|idea|sorry|hell|talking|mean|teach me|can you teach me|what do you mean|pretty difficult|so if|difficult|hard|easy|simple)$/i;
 
 // Requests about HOW to teach are not subjects. Treating "first principles" or
 // "step by step" as the topic makes the tutor abandon the real lesson.
-const META_REQUEST = /^(from )?(first principles?|deep basics?|step by step|simple(r)? words?|easy words?|kid words?|basics?|more detail|detail|examples?|example|slowly|slower|faster|short(er)?|again|in hindi|in english|hindi|english)$/i;
+const META_REQUEST = /^(from )?(first principles?|deep basics?|step by step|simple(r)? words?|easy words?|kid words?|basics?|more detail|detail|examples?|example|slowly|slower|faster|short(er)?|again|in hindi|in english|hindi|english|4th grade|grade 4|grade \d+|\d+th grade)$/i;
 
 // Words from our own prompt scaffolding. A model that echoes one of these has
 // not found a topic, it has read our instructions back to us.
@@ -41,16 +45,37 @@ const SCAFFOLD = /^(evidence|curiosity|question|attempt|misconception|insight|pe
  * "sorry I don't understand" → "" (keep the previous topic)
  */
 function topicFromText(text) {
-  const raw = String(text || "").replace(/[?!.,;:()'"]/g, " ").replace(/\s+/g, " ").trim();
+  const raw = String(text || "").trim();
   if (!raw) return "";
-  const words = raw
-    .split(" ")
-    .map((w) => w.toLowerCase())
-    .filter((w) => w.length > 1 && !STOP.has(w) && !/^\d+$/.test(w) && !WEAK.test(w));
-  if (!words.length) return "";
-  const phrase = [...new Set(words)].slice(0, 5).join(" ").trim();
-  if (isWeakTopic(phrase)) return "";
-  return phrase.slice(0, 64);
+
+  // 1. Explicit request patterns: "teach me about X", "what is X", "how does X work"
+  const explicitMatch = raw.match(/\b(?:teach(?:\s+me)?(?:\s+about)?|explain(?:\s+me)?|learn(?:\s+about)?|tell\s+me\s+about|what\s+(?:is|are)|how\s+does|how\s+do)\s+([a-zA-Z0-9\s\-]+)/i);
+  if (explicitMatch && explicitMatch[1]) {
+    const candidate = explicitMatch[1].replace(/[?!.,;:()'"]/g, " ").replace(/\s+/g, " ").trim();
+    const candidateWords = candidate
+      .split(" ")
+      .map((w) => w.toLowerCase())
+      .filter((w) => w.length > 1 && !STOP.has(w) && !WEAK.test(w));
+    if (candidateWords.length > 0) {
+      const phrase = candidateWords.slice(0, 4).join(" ").trim();
+      if (!isWeakTopic(phrase)) return phrase.slice(0, 64);
+    }
+  }
+
+  // 2. Short queries (<= 5 total words, e.g. "electromagnetism", "photosynthesis", "black holes")
+  const totalWords = raw.split(/\s+/).filter(Boolean);
+  if (totalWords.length <= 5) {
+    const candidateWords = totalWords
+      .map((w) => w.toLowerCase().replace(/[^a-z0-9\-]/g, ""))
+      .filter((w) => w.length > 1 && !STOP.has(w) && !WEAK.test(w));
+    if (candidateWords.length > 0) {
+      const phrase = candidateWords.slice(0, 4).join(" ").trim();
+      if (!isWeakTopic(phrase)) return phrase.slice(0, 64);
+    }
+  }
+
+  // Long conversational replies (child reasoning, answering, metaphor, or chatting) must NOT invent a new topic
+  return "";
 }
 
 function spokenCoversTopic(spoken, topic) {

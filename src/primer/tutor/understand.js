@@ -69,7 +69,7 @@ function understandLearner(raw, extras = {}) {
     intent = "attempt";
   } else if (isPictureComment(text)) {
     intent = "chat";
-  } else if (extras.askedBackLast && text.length < 48 && !wantsExplain && !askedToLook && !wantsReason && !/^(what|why|how|who|when|where)\b/i.test(t)) {
+  } else if (extras.askedBackLast && !wantsExplain && !askedToLook && !wantsReason && !/^(teach|what is|how does|who is|where is)\b/i.test(t)) {
     intent = "attempt";
   } else if (/\b(let me try|i think (it'?s|the answer)|maybe it'?s|maybe it is|try again)\b/.test(t) && !wantsExplain) {
     intent = /\btry again|instead\b/.test(t) ? "revision" : "attempt";
@@ -86,40 +86,39 @@ function understandLearner(raw, extras = {}) {
   const prior = String(extras.concept || "").trim();
   const greeting = /^(hi|hello|hey|how are you)\b/i.test(t) && text.length < 48 && !wantsExplain;
   const bareTeach = /^(can you |could you |please )?(teach|explain)( me)?[\s.!?]*$/i.test(t);
+  const explicitSwitch = explicitTopicSwitch(text);
   // A complaint ("what the hell is this") is about the current lesson, so the
   // words in it must never become the new topic. Only an explicit ask can switch.
   const complaining = pushback || confusion || voiceIssue || intent === "dont_understand";
   const namedTopic = Boolean(guessed) && !isWeakTopic(guessed)
     && !(complaining && Boolean(prior) && !wantsExplain)
-    && !(rejecting && Boolean(prior) && !explicitTopicSwitch(text))
-    && !(prior && topicsRelated(prior, guessed) && !explicitTopicSwitch(text))
+    && !(rejecting && Boolean(prior) && !explicitSwitch)
+    && !(prior && topicsRelated(prior, guessed) && !explicitSwitch)
     && (
       !prior
       || Boolean(mathTopic)
-      || (wantsExplain && !justAnswer)
-      || wantsReason
-      || intent === "question"
-      || intent === "homework"
-      || askedToLook
-      || explicitTopicSwitch(text)
+      || explicitSwitch
+      || (wantsExplain && !justAnswer && !prior)
     );
-  const keepPrior = Boolean(prior) && !greeting && !namedTopic && !askedToLook && (
-    (wantsDraw && !wantsExplain)
+
+  const keepPrior = Boolean(prior) && !greeting && !explicitSwitch && (
+    !namedTopic
+    || intent === "attempt"
+    || intent === "revision"
+    || (wantsDraw && !wantsExplain)
     || wantsWrite
     || justAnswer
     || rejecting
-    || (extras.askedBackLast && !wantsExplain && !isPictureComment(text) && text.length < 40)
     || pushback
     || voiceIssue
     || confusion
     || intent === "dont_understand"
     || bareTeach
   );
+
   const concept = mathTopic
     ? mathTopic
-    : namedTopic
-      ? guessed
-      : (askedToLook ? (guessed || prior) : (keepPrior ? prior : (guessed || prior)));
+    : (keepPrior ? prior : (namedTopic ? guessed : (prior || guessed || "emerging")));
 
   return {
     raw: text,
