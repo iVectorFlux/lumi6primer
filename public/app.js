@@ -1247,6 +1247,7 @@ User writes "Show air quality for Tokyo", names a place, and points to an empty 
     return true;
   }
   function maybeStartFeatureTour(retry = false) {
+    if (window.innerWidth <= 900) return false;
     if (featureTour.active || changelog.active || (featureTour.autoChecked && !retry)) return false;
     featureTour.autoChecked = true;
     const progress = readFeatureTourProgress(),
@@ -10934,26 +10935,19 @@ User writes "Show air quality for Tokyo", names a place, and points to an empty 
   document.querySelector("#sharePdfBtn")?.addEventListener("click", () => {
     if (typeof window.exportLessonPdf === "function") window.exportLessonPdf();
     else document.querySelector("#exportPngBtn")?.click();
+    closeShareModal();
   });
   document.querySelector("#shareWhatsAppBtn")?.addEventListener("click", async () => {
-    let url = shareLinkInput?.value?.trim() || "";
-    if (!url) {
-      await prepareShareLink();
-      url = shareLinkInput?.value?.trim() || "";
+    if (typeof window.shareLessonOnWhatsApp === "function") {
+      await window.shareLessonOnWhatsApp();
+      closeShareModal();
+      return;
     }
-    const title = document.querySelector("#currentDocName")?.textContent || "Lumi6 Lesson";
-    const text = `Check out what we learned on Lumi6: ${title}`;
-    if (navigator.share) {
-      try {
-        await navigator.share({ title, text, url: url || window.location.href });
-        setShareStatus("Shared successfully!");
-        return;
-      } catch (err) {
-        if (err.name !== "AbortError") console.warn("Native share failed:", err);
-      }
+    if (typeof window.exportLessonPdf === "function") {
+      await window.exportLessonPdf();
+      closeShareModal();
+      return;
     }
-    const shareUrl = url ? `${text} ${url}` : text;
-    window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(shareUrl)}`, "_blank");
   });
   document.querySelector("#closeShareModal")?.addEventListener("click", closeShareModal);
   shareModal?.addEventListener("click", (event) => {
@@ -11918,20 +11912,25 @@ User writes "Show air quality for Tokyo", names a place, and points to an empty 
       .trim();
   }
 
-  function setAppViewMode(mode) {
+  function setAppViewMode(mode, updateUrl = true) {
     currentAppViewMode = mode === "talk" ? "talk" : "draw";
     const drawBtn = document.querySelector("#modeDrawBtn");
     const talkBtn = document.querySelector("#modeTalkBtn");
     const canvasWorkspace = document.querySelector(".canvas-workspace");
     const talkWorkspace = document.querySelector("#talkModeWorkspace");
+    const docTitle = document.querySelector("#docTitleHeading");
 
     if (drawBtn) {
       drawBtn.classList.toggle("active", currentAppViewMode === "draw");
-      drawBtn.setAttribute("aria-selected", String(currentAppViewMode === "draw"));
+      drawBtn.setAttribute("aria-pressed", String(currentAppViewMode === "draw"));
     }
     if (talkBtn) {
       talkBtn.classList.toggle("active", currentAppViewMode === "talk");
-      talkBtn.setAttribute("aria-selected", String(currentAppViewMode === "talk"));
+      talkBtn.setAttribute("aria-pressed", String(currentAppViewMode === "talk"));
+    }
+
+    if (docTitle) {
+      docTitle.textContent = currentAppViewMode === "talk" ? "Talk Mode" : "Whiteboard";
     }
 
     if (canvasWorkspace) {
@@ -11941,6 +11940,24 @@ User writes "Show air quality for Tokyo", names a place, and points to an empty 
     if (talkWorkspace) {
       talkWorkspace.hidden = currentAppViewMode !== "talk";
       talkWorkspace.style.display = currentAppViewMode === "talk" ? "flex" : "none";
+    }
+
+    if (updateUrl && window.history?.replaceState) {
+      try {
+        const url = new URL(window.location.href);
+        if (currentAppViewMode === "talk") {
+          url.searchParams.set("mode", "talk");
+        } else {
+          url.searchParams.delete("mode");
+        }
+        window.history.replaceState(null, "", url.toString());
+      } catch {}
+    }
+
+    if (window.innerWidth <= 900) {
+      document.querySelector("#leftSidebar")?.classList.remove("open");
+      const backdrop = document.querySelector("#sidebarBackdrop");
+      if (backdrop) backdrop.hidden = true;
     }
 
     if (currentAppViewMode === "talk") {
@@ -12075,6 +12092,13 @@ User writes "Show air quality for Tokyo", names a place, and points to an empty 
 
   if (document.fonts?.load) {
     document.fonts.load('72px "Patrick Hand"').then(() => requestRender()).catch(() => {});
+  }
+  try {
+    const urlParams = new URLSearchParams(window.location.search);
+    const initialMode = (urlParams.get("mode") === "talk" || window.location.hash === "#talk") ? "talk" : "draw";
+    setAppViewMode(initialMode, false);
+  } catch {
+    setAppViewMode("draw", false);
   }
   requestAnimationFrame(() => requestAnimationFrame(maybeStartOnboarding));
 })();
