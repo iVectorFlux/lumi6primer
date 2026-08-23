@@ -11955,7 +11955,9 @@ User writes "Show air quality for Tokyo", names a place, and points to an empty 
     }
 
     if (window.innerWidth <= 900) {
-      document.querySelector("#leftSidebar")?.classList.remove("open");
+      document.body.classList.remove("mobile-nav-open");
+      const menuBtn = document.getElementById("mobileMenuBtn");
+      if (menuBtn) menuBtn.setAttribute("aria-expanded", "false");
       const backdrop = document.querySelector("#sidebarBackdrop");
       if (backdrop) backdrop.hidden = true;
     }
