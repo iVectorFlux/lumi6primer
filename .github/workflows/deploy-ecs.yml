@@ -83,32 +83,66 @@ jobs:
           ECS_SERVICE: ${{ secrets.ECS_SERVICE }}
           ECS_TASK_DEFINITION: ${{ secrets.ECS_TASK_DEFINITION }}
         run: |
-          # Auto-detect the task definition from the running service
           if [ -n "$ECS_TASK_DEFINITION" ]; then
             TASK_DEF_ID="$ECS_TASK_DEFINITION"
+            echo "Using ECS_TASK_DEFINITION secret: $TASK_DEF_ID"
           else
-            echo "No ECS_TASK_DEFINITION secret set — detecting from service..."
-            TASK_DEF_ID=$(aws ecs describe-services \
+            echo "No ECS_TASK_DEFINITION secret — detecting from service..."
+            # Dump full service JSON so we can find the task definition reliably
+            aws ecs describe-services \
               --cluster "$ECS_CLUSTER" \
               --services "$ECS_SERVICE" \
-              --query 'services[0].taskDefinition' \
-              --output text)
+              --output json > service-description.json
+
+            # Try multiple paths: top-level .taskDefinition, then PRIMARY deployment
+            TASK_DEF_ID=$(python3 -c "
+          import json
+          svc = json.load(open('service-description.json'))
+          s = svc.get('services', [{}])[0]
+          # Path 1: top-level taskDefinition
+          td = s.get('taskDefinition')
+          if td and td != 'None':
+              print(td)
+          else:
+              # Path 2: from the PRIMARY deployment
+              for d in s.get('deployments', []):
+                  if d.get('status') == 'PRIMARY' and d.get('taskDefinition'):
+                      print(d['taskDefinition'])
+                      break
+              else:
+                  # Path 3: from any deployment
+                  for d in s.get('deployments', []):
+                      if d.get('taskDefinition'):
+                          print(d['taskDefinition'])
+                          break
+                  else:
+                      # Debug: print available keys
+                      import sys
+                      print('DEBUG service keys:', list(s.keys()), file=sys.stderr)
+                      print('DEBUG deployments:', json.dumps(s.get('deployments', [])[:2], indent=2, default=str), file=sys.stderr)
+                      print('NONE')
+          ")
+            echo "Detected task definition: $TASK_DEF_ID"
+            if [ "$TASK_DEF_ID" = "NONE" ] || [ -z "$TASK_DEF_ID" ]; then
+              echo "::error::Could not detect task definition from service. Add ECS_TASK_DEFINITION secret with the task def family name."
+              exit 1
+            fi
           fi
-          echo "Task definition: $TASK_DEF_ID"
+          echo "Downloading task definition: $TASK_DEF_ID"
           aws ecs describe-task-definition \
             --task-definition "$TASK_DEF_ID" \
             --query 'taskDefinition' \
             --output json > task-definition.json
           echo "Downloaded task definition successfully"
-          cat task-definition.json | python3 -c "
+          python3 -c "
           import json, sys
-          td = json.load(sys.stdin)
-          # Remove fields that cannot be included in register-task-definition
+          td = json.load(open('task-definition.json'))
           for key in ['taskDefinitionArn','revision','status','requiresAttributes',
                       'compatibilities','registeredAt','registeredBy','deregisteredAt']:
               td.pop(key, None)
-          json.dump(td, sys.stdout, indent=2)
-          " > clean-task-definition.json
+          json.dump(td, open('clean-task-definition.json','w'), indent=2)
+          print('Cleaned task definition written.')
+          "
 
       - name: Update image in task definition
         env:
