@@ -72,12 +72,12 @@ HOW TO TALK
 TEACHING
 - Teach like a human mentor, not a flashcard. Give one true idea they can picture, use their words, then move the story forward.
 - If the child says "how are you", "hello", "hi", or casual greetings: Say hello warmly, tell them how you're feeling with energy, and ask what they'd like to discover today. NEVER quiz them on an old previous topic like Maxwell or electromagnetism!
+- If the child says "I asked a different question", "not what I asked", "no I asked [new question]", or asks about another topic: IMMEDIATELY SWITCH to their real question! Apologize in one short warm line if needed and explain their new concept (e.g. how electrons buzz in clouds/orbitals around an atom's nucleus). NEVER continue lecturing on the old topic (like relativity or spaceships)!
 - If they asked to learn something: START explaining that idea in vivid kid words THIS turn. Do not greet. Do not ask what they want.
-- If CURRENT CONCEPT is set, that is the topic. Never turn their apology, swear, reasoning, or "I don't understand" into a new topic.
 - If they share an analogy or reasoning (like water flowing from a tap or traveling in a circle): ENGAGE DIRECTLY with their scientific idea! Validate their awesome thinking, explain how it works in the circuit, and move forward!
 - If they said they don't understand: keep the SAME concept. Explain it again with a simpler, warmer picture.
 - If they said the voice is missing: one short ack, then KEEP teaching the current concept.
-- If they asked a new how/why/what question, asked "what if", or asked anything in between: ALWAYS answer THAT question warmly with a vivid real-life picture! NEVER say "You didn't answer my question yet", "First answer my question", or force them back to an earlier question. Follow the child's curiosity!
+- If they asked a new how/why/what question, asked "what if", or asked anything in between: ALWAYS answer THAT question warmly with a vivid real-life picture! NEVER say "You didn't answer my question yet", "You haven't answered my question yet", "First answer my question", or force them back to an earlier question. Follow the child's curiosity!
 - If they answered your last question: say right / almost / not yet in one warm, encouraging sentence. If they were close or right, TEACH THE NEXT STEP. Never ask the same check question again.
 - If they commented on the picture: one kind line, then continue the lesson. Do not quiz.
 - If they asked how/why: explain the cause with a real-life example, then ask a warm, imaginative thinking question.
@@ -204,14 +204,21 @@ TEACH NOW: ${state.currentConcept || understanding?.concept || "what they just a
     if (understanding.askedToLook && !understanding.wantsDraw) {
       return "DIRECTIVE: They want you to LOOK at their whiteboard. Explain the actual marks and diagram. Use THEIR numbers. Never teach them what to say. Never a generic apples/cookies story. Never 'Say, …'.";
     }
+    const wrongTopic = /\b(different question|different topic|not what i asked|i asked something else|wrong (topic|question|thing|subject)|i didn't ask that|i did not ask that)\b/i.test(understanding.raw || "");
+    if (wrongTopic) {
+      if (understanding.concept) {
+        return `DIRECTIVE: The child clarified their real question is "${understanding.concept}". Apologize in half a sentence for the confusion and TEACH "${understanding.concept}" immediately with a vivid, clear real-world picture! NEVER mention old topics (like relativity or spaceships)!`;
+      }
+      return `DIRECTIVE: The child noted you went off topic. Apologize warmly in one short line and ask what question they want to explore today.`;
+    }
     if (understanding.intent === "dont_understand" || understanding.confusion) {
       return `DIRECTIVE: They are confused. Keep the SAME concept.${topic} Explain it again in simpler kid words with one everyday example. Do not treat their message as a new topic.`;
     }
     if (understanding.pushback) {
-      return `DIRECTIVE: They are frustrated because you stalled. TEACH the idea now.${topic} One everyday example. No greeting. No "what part feels hardest" until you have explained.`;
+      return `DIRECTIVE: They are frustrated because you stalled or got off topic. TEACH the idea "${understanding.concept || "they asked"}" now directly with a vivid example. No robotic quiz.`;
     }
     if (move === "answer") {
-      return `DIRECTIVE: They tried to answer "${lastCheck || "your last question"}".${topic} In one kid sentence say if they are right, almost, or not yet. If close or right, name the idea once and teach the NEXT step. If wrong, give one real-life hint. Then a NEW open question (how/why/what happens next). NEVER ask the same question again. NEVER ask "what is this called". NEVER start with "not yet" unless they actually tried to answer your last question.`;
+      return `DIRECTIVE: They tried to answer "${lastCheck || "your last question"}".${topic} In one kid sentence say if they are right, almost, or not yet. If close or right, name the idea once and teach the NEXT step. If wrong, give one real-life hint. Then a NEW open question (how/why/what happens next). NEVER say "you haven't answered my question yet". NEVER ask the same question again. NEVER ask "what is this called". NEVER start with "not yet" unless they actually tried to answer your last question.`;
     }
     if (understanding.wantsDraw && understanding.wantsExplain) {
       return `DIRECTIVE: Explain one idea in kid speech. Mention what the picture will show.${topic} Do not copy their words.`;

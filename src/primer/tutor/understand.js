@@ -90,29 +90,24 @@ function understandLearner(raw, extras = {}) {
   const guessed = guessConcept(text);
   const prior = String(extras.concept || "").trim();
   const bareTeach = /^(can you |could you |please )?(teach|explain)( me)?[\s.!?]*$/i.test(t);
-  const explicitSwitch = explicitTopicSwitch(text) || (Boolean(guessed) && Boolean(wantsExplain) && !topicsRelated(prior, guessed));
-  // A complaint ("what the hell is this") is about the current lesson, so the
-  // words in it must never become the new topic. Only an explicit ask can switch.
-  const complaining = pushback || confusion || voiceIssue || intent === "dont_understand";
-  const namedTopic = Boolean(guessed) && !isWeakTopic(guessed)
-    && !(complaining && Boolean(prior) && !wantsExplain)
-    && !(rejecting && Boolean(prior) && !explicitSwitch)
-    && !(prior && topicsRelated(prior, guessed) && !explicitSwitch && !wantsExplain)
-    && (
-      !prior
-      || Boolean(mathTopic)
-      || explicitSwitch
-      || (wantsExplain && !justAnswer)
-    );
+  const wrongTopic = /\b(different question|different topic|not what i asked|i asked something else|wrong (topic|question|thing|subject)|i didn't ask that|i did not ask that)\b/i.test(t);
+  const isQuestionAsk = wantsExplain || wantsReason || intent === "question" || intent === "explain" || /^(how|why|what|who|when|where|tell me)\b/i.test(t);
+  const explicitSwitch = explicitTopicSwitch(text) || wrongTopic || (Boolean(guessed) && isQuestionAsk && !topicsRelated(prior, guessed));
 
-  const keepPrior = Boolean(prior) && !isGreeting && !explicitSwitch && !namedTopic && (
+  const namedTopic = Boolean(guessed) && !isWeakTopic(guessed) && (
+    !prior
+    || Boolean(mathTopic)
+    || explicitSwitch
+    || isQuestionAsk
+    || !topicsRelated(prior, guessed)
+  );
+
+  const keepPrior = Boolean(prior) && !isGreeting && !wrongTopic && !explicitSwitch && !namedTopic && (
     intent === "attempt"
     || intent === "revision"
     || (wantsDraw && !wantsExplain)
     || wantsWrite
     || justAnswer
-    || rejecting
-    || pushback
     || voiceIssue
     || confusion
     || intent === "dont_understand"
@@ -121,7 +116,7 @@ function understandLearner(raw, extras = {}) {
 
   const concept = mathTopic
     ? mathTopic
-    : (keepPrior ? prior : (namedTopic ? guessed : (isGreeting ? "" : (prior || guessed || "emerging"))));
+    : (namedTopic ? guessed : (wrongTopic && !guessed ? "" : (keepPrior ? prior : (isGreeting ? "" : (guessed || prior || "emerging")))));
 
   return {
     raw: text,

@@ -48,8 +48,15 @@ function topicFromText(text) {
   const raw = String(text || "").trim();
   if (!raw) return "";
 
-  // 1. Explicit request patterns: "teach me about X", "what is X", "how does X work"
-  const explicitMatch = raw.match(/\b(?:teach(?:\s+me)?(?:\s+about)?|explain(?:\s+me)?|learn(?:\s+about)?|tell\s+me\s+about|what\s+(?:is|are)|how\s+does|how\s+do)\s+([a-zA-Z0-9\s\-]+)/i);
+  // Strip conversational prefixes like "no i asked", "but i asked", "i want to know", "hey can you tell me"
+  let clean = raw
+    .replace(/^(no,? |nope,? |nah,? |but |actually,? |wait,? |hey,? |look,? )+/gi, "")
+    .replace(/^i (just |already |never |did not |didn't )?(asked|said|want to know|mean)\s*(about|that|how|what|why)?\s*/gi, "")
+    .replace(/^(can you |could you |please |tell me )+/gi, "")
+    .trim();
+
+  // 1. Explicit request / question patterns: "teach me about X", "what is X", "how does X work", "how does electron move inside atom"
+  const explicitMatch = clean.match(/\b(?:teach(?:\s+me)?(?:\s+about)?|explain(?:\s+me)?|learn(?:\s+about)?|tell\s+me\s+about|what\s+(?:is|are|about)|how\s+(?:does|do|can|is)|why\s+(?:does|do|is|are)|who\s+(?:is|was)|where\s+(?:is|do))\s+([a-zA-Z0-9\s\-]+)/i);
   if (explicitMatch && explicitMatch[1]) {
     const candidate = explicitMatch[1].replace(/[?!.,;:()'"]/g, " ").replace(/\s+/g, " ").trim();
     const candidateWords = candidate
@@ -62,9 +69,9 @@ function topicFromText(text) {
     }
   }
 
-  // 2. Short queries (<= 5 total words, e.g. "electromagnetism", "photosynthesis", "black holes")
-  const totalWords = raw.split(/\s+/).filter(Boolean);
-  if (totalWords.length <= 5) {
+  // 2. Short queries (<= 6 total words, e.g. "electrons in atom", "photosynthesis", "black holes")
+  const totalWords = clean.split(/\s+/).filter(Boolean);
+  if (totalWords.length <= 6) {
     const candidateWords = totalWords
       .map((w) => w.toLowerCase().replace(/[^a-z0-9\-]/g, ""))
       .filter((w) => w.length > 1 && !STOP.has(w) && !WEAK.test(w));
@@ -74,7 +81,6 @@ function topicFromText(text) {
     }
   }
 
-  // Long conversational replies (child reasoning, answering, metaphor, or chatting) must NOT invent a new topic
   return "";
 }
 

@@ -209,6 +209,8 @@ class LearningOrchestrator {
     state.currentGoal = plan.goal;
     if (understanding.concept && !isWeakTopic(understanding.concept)) {
       state.currentConcept = understanding.concept;
+    } else if (understanding.intent === "greeting" || understanding.concept === "") {
+      state.currentConcept = "";
     } else if (!state.currentConcept && plan.concept) {
       state.currentConcept = plan.concept;
     }
@@ -299,16 +301,20 @@ class LearningOrchestrator {
     state.learningPhase = decision.phase;
     state.selectedTools = decision.tools;
     const named = String(proposal?.interpretation?.concept || "").trim();
-    // While the child is complaining or lost, the lesson topic is settled. Letting
-    // the model rename it here is how a relativity lesson became a water cycle one.
+    const wrongTopic = /\b(different question|different topic|not what i asked|i asked something else|wrong (topic|question|thing|subject)|i didn't ask that|i did not ask that)\b/i.test(spokenText);
+    const hasNewAsk = isNewAsk(spokenText, understanding);
     const topicLocked = Boolean(state.currentConcept)
-      && (understanding.pushback || understanding.confusion || understanding.voiceIssue)
-      && !understanding.wantsExplain;
-    // The topic has to come from the child. When the model invents one it is
-    // usually a word lifted out of our own prompt scaffolding, not the lesson.
-    const childWords = `${understanding.raw || ""} ${state.currentConcept || ""}`;
-    const fromChild = spokenCoversTopic(childWords, named);
-    if (
+      && (understanding.confusion || understanding.voiceIssue)
+      && !understanding.wantsExplain
+      && !hasNewAsk
+      && !wrongTopic;
+
+    if (wrongTopic && !understanding.concept) {
+      state.currentConcept = "";
+      understanding.concept = "";
+    } else if (understanding.concept && understanding.concept !== state.currentConcept) {
+      state.currentConcept = understanding.concept;
+    } else if (
       named
       && !topicLocked
       && fromChild
