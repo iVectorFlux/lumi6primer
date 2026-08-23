@@ -79,15 +79,27 @@ jobs:
 
       - name: Download current task definition
         env:
+          ECS_CLUSTER: ${{ secrets.ECS_CLUSTER }}
+          ECS_SERVICE: ${{ secrets.ECS_SERVICE }}
           ECS_TASK_DEFINITION: ${{ secrets.ECS_TASK_DEFINITION }}
         run: |
-          # Use the task-definition family name, or fall back to the service name
-          TASK_DEF_FAMILY="${ECS_TASK_DEFINITION:-${{ secrets.ECS_SERVICE }}}"
+          # Auto-detect the task definition from the running service
+          if [ -n "$ECS_TASK_DEFINITION" ]; then
+            TASK_DEF_ID="$ECS_TASK_DEFINITION"
+          else
+            echo "No ECS_TASK_DEFINITION secret set — detecting from service..."
+            TASK_DEF_ID=$(aws ecs describe-services \
+              --cluster "$ECS_CLUSTER" \
+              --services "$ECS_SERVICE" \
+              --query 'services[0].taskDefinition' \
+              --output text)
+          fi
+          echo "Task definition: $TASK_DEF_ID"
           aws ecs describe-task-definition \
-            --task-definition "$TASK_DEF_FAMILY" \
+            --task-definition "$TASK_DEF_ID" \
             --query 'taskDefinition' \
             --output json > task-definition.json
-          echo "Downloaded task definition: $TASK_DEF_FAMILY"
+          echo "Downloaded task definition successfully"
           cat task-definition.json | python3 -c "
           import json, sys
           td = json.load(sys.stdin)
