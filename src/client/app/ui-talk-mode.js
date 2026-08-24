@@ -20,8 +20,8 @@
 
   function setAppViewMode(mode, updateUrl = true) {
     currentAppViewMode = mode === "talk" ? "talk" : "draw";
-    const drawBtn = document.querySelector("#modeDrawBtn");
-    const talkBtn = document.querySelector("#modeTalkBtn");
+    const drawBtns = document.querySelectorAll("#modeDrawBtn, #topbarModeDrawBtn");
+    const talkBtns = document.querySelectorAll("#modeTalkBtn, #topbarModeTalkBtn");
     const canvasWorkspace = document.querySelector(".canvas-workspace");
     const talkWorkspace = document.querySelector("#talkModeWorkspace");
     const docTitle = document.querySelector("#docTitleHeading");
@@ -29,14 +29,14 @@
     document.body.classList.toggle("mode-talk-active", currentAppViewMode === "talk");
     document.body.classList.toggle("mode-draw-active", currentAppViewMode === "draw");
 
-    if (drawBtn) {
-      drawBtn.classList.toggle("active", currentAppViewMode === "draw");
-      drawBtn.setAttribute("aria-pressed", String(currentAppViewMode === "draw"));
-    }
-    if (talkBtn) {
-      talkBtn.classList.toggle("active", currentAppViewMode === "talk");
-      talkBtn.setAttribute("aria-pressed", String(currentAppViewMode === "talk"));
-    }
+    drawBtns.forEach(btn => {
+      btn.classList.toggle("active", currentAppViewMode === "draw");
+      btn.setAttribute("aria-pressed", String(currentAppViewMode === "draw"));
+    });
+    talkBtns.forEach(btn => {
+      btn.classList.toggle("active", currentAppViewMode === "talk");
+      btn.setAttribute("aria-pressed", String(currentAppViewMode === "talk"));
+    });
 
     if (docTitle) {
       docTitle.textContent = currentAppViewMode === "talk" ? "Talk Mode" : "Whiteboard";
@@ -196,8 +196,12 @@
   window.syncTalkModeFeed = syncTalkModeFeed;
   window.setAppViewMode = setAppViewMode;
 
-  document.querySelector("#modeDrawBtn")?.addEventListener("click", () => setAppViewMode("draw"));
-  document.querySelector("#modeTalkBtn")?.addEventListener("click", () => setAppViewMode("talk"));
+  document.querySelectorAll("#modeDrawBtn, #topbarModeDrawBtn").forEach(el => {
+    el.addEventListener("click", () => setAppViewMode("draw"));
+  });
+  document.querySelectorAll("#modeTalkBtn, #topbarModeTalkBtn").forEach(el => {
+    el.addEventListener("click", () => setAppViewMode("talk"));
+  });
 
   document.querySelector("#talkModeMicBtn")?.addEventListener("click", () => {
     if (window.atlasVoice && typeof window.atlasVoice.handleMicButtonClick === "function") {

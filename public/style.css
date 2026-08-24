@@ -2455,7 +2455,15 @@ body.mode-talk-active #redoBtn,
 body.mode-talk-active #saveBtn,
 body.mode-talk-active #exportBtn,
 body.mode-talk-active .export-btn,
-body.mode-talk-active .history-btn {
+body.mode-talk-active .history-btn,
+body.mode-talk-active .bottom-toolbar,
+body.mode-talk-active .quick-actions-bar,
+body.mode-talk-active .layer-switcher,
+body.mode-talk-active .floating-zoom-control,
+body.mode-talk-active .pen-preview-badge,
+body.mode-talk-active #canvasFileActions,
+body.mode-talk-active .topbar-edit-actions,
+body.mode-talk-active .mobile-chat-btn {
   display: none !important;
 }
 
@@ -2715,13 +2723,13 @@ body.mode-talk-active .history-btn {
   left: 0;
   right: 0;
   bottom: 0;
-  padding: 14px 20px calc(14px + env(safe-area-inset-bottom));
-  background: rgba(255, 255, 255, 0.94);
+  padding: 12px 16px calc(12px + env(safe-area-inset-bottom));
+  background: rgba(255, 255, 255, 0.96);
   backdrop-filter: blur(16px);
   -webkit-backdrop-filter: blur(16px);
   border-top: 1px solid rgba(226, 232, 240, 0.85);
-  box-shadow: 0 -8px 24px rgba(15, 23, 42, 0.06);
-  z-index: 20;
+  box-shadow: 0 -8px 24px rgba(15, 23, 42, 0.08);
+  z-index: 100;
 }
 
 .talk-bar-container {
