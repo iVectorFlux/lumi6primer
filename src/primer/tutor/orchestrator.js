@@ -125,18 +125,11 @@ function extractHandwrittenNotes({ concept, spoken, childText, chapterIndex = 0 
     lines.push(`? ${questionSentence}`);
   }
 
-  const idx = Math.max(0, Number(chapterIndex) || 0);
-  const bayX = 600 + idx * 4400;
-  const bayY = 600;
-
   return {
     id: `note-${Date.now()}`,
     tool: "write_text",
     title: cleanTitle,
     text: lines.join("\n"),
-    x: bayX,
-    y: bayY,
-    chapterIndex: idx,
     fontSize: 130,
     color: "#4c1d95", // Velvet purple
     maxWidth: 2200,

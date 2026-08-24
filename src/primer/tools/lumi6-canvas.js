@@ -58,8 +58,6 @@ class Lumi6CanvasTool {
     return {
       tool: "write_text",
       text: bit,
-      x: 8200,
-      y: 9000,
       fontSize: 180,
       color: "#1d4ed8",
       maxWidth: 2400,
