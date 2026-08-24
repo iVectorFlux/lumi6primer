@@ -786,7 +786,7 @@ User writes "Show air quality for Tokyo", names a place, and points to an empty 
       language: initialLanguage,
       theme: initialTheme,
       gridVisible: initialTheme === "research" ? initialResearchGrid : initialGrid,
-      paint: { paper: "#ead9ad", paperGrid: "#c8ae7155", outside: "#090814", border: "#7f693b" },
+      paint: { paper: "#ffffff", paperGrid: "rgba(0, 0, 0, 0.05)", outside: "#ffffff", border: "#e2e8f0" },
       navigationTimer: 0,
       radialGesture: null,
       radialCloseTimer: 0,
@@ -2271,10 +2271,10 @@ User writes "Show air quality for Tokyo", names a place, and points to an empty 
   function updatePaint() {
     const css = getComputedStyle(document.body);
     state.paint = {
-      paper: css.getPropertyValue("--paper").trim() || "#ead9ad",
-      paperGrid: css.getPropertyValue("--paper-grid").trim() || "#c8ae7155",
-      outside: css.getPropertyValue("--outside").trim() || "#090814",
-      border: css.getPropertyValue("--line").trim() || "#7f693b",
+      paper: css.getPropertyValue("--paper").trim() || "#ffffff",
+      paperGrid: css.getPropertyValue("--paper-grid").trim() || "rgba(0, 0, 0, 0.05)",
+      outside: css.getPropertyValue("--outside").trim() || "#ffffff",
+      border: css.getPropertyValue("--line").trim() || "#e2e8f0",
     };
   }
   function applyLanguage() {
