@@ -535,7 +535,7 @@
           }
         }
 
-        if (!graphicApplied) applyPrimerGraphic(data);
+        applyPrimerGraphic(data);
         hideAtlasGraphicLoader();
 
         // Notify registered response listeners

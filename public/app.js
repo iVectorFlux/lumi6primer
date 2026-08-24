@@ -11907,8 +11907,8 @@ User writes "Show air quality for Tokyo", names a place, and points to an empty 
       // ── 6. Zoom and pan so the lesson fills the view ───────────────────────
       const drawCenterX = targetX + Math.round(groupW / 2);
       const drawCenterY = targetY + Math.round(groupH / 2);
-      const fitScale = Math.min((rect.width * 0.82) / Math.max(groupW, 1), (rect.height * 0.72) / Math.max(groupH, 1), 0.5);
-      state.scale = Math.max(0.16, Math.min(0.5, fitScale));
+      const fitScale = Math.min((rect.width * 0.84) / Math.max(groupW, 1), (rect.height * 0.76) / Math.max(groupH, 1), 0.55);
+      state.scale = Math.max(0.08, Math.min(0.55, fitScale));
       state.panX = rect.width / 2 - drawCenterX * state.scale;
       state.panY = rect.height / 2 - drawCenterY * state.scale;
 
@@ -12161,8 +12161,10 @@ User writes "Show air quality for Tokyo", names a place, and points to an empty 
     const urlParams = new URLSearchParams(window.location.search);
     const initialMode = (urlParams.get("mode") === "talk" || window.location.hash === "#talk") ? "talk" : "draw";
     setAppViewMode(initialMode, false);
+    syncTalkModeFeed();
   } catch {
     setAppViewMode("draw", false);
+    syncTalkModeFeed();
   }
   requestAnimationFrame(() => requestAnimationFrame(maybeStartOnboarding));
 })();

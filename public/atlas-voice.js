@@ -1235,22 +1235,19 @@
         if (!spoke && (data.teacherResponse || data.spokenResponse || data.spoken)) {
           this._holdListen = false;
           this.speakAndDraw(data, queryText, { draw: true });
-        } else if (spoke) {
-          if (!graphicApplied) {
-            this.syncer.executeVisualPlan(data.visualPlan, data.drawingResult, data.canvasActions)
-              .catch((err) => console.error("[ATLAS Voice] Board draw failed:", err));
-          }
+        } else {
+          this.syncer.executeVisualPlan(data.visualPlan, data.drawingResult, data.canvasActions)
+            .catch((err) => console.error("[ATLAS Voice] Board draw failed:", err));
           if (typeof window.hideAtlasGraphicLoader === "function") window.hideAtlasGraphicLoader();
           this._holdListen = false;
           if (this._awaitingListen && this.isActive) {
             this._awaitingListen = false;
             this.state = "IDLE";
             this.scheduleAutoRestart(400);
+          } else {
+            this.state = "IDLE";
+            this.scheduleAutoRestart(300);
           }
-        } else {
-          this._holdListen = false;
-          this.state = "IDLE";
-          this.scheduleAutoRestart(300);
         }
       } catch (err) {
         if (this.isActive) {
