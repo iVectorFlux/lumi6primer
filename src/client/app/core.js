@@ -101,13 +101,25 @@
     summonToggle = document.querySelector("#summonToggle"),
     settingsTourButton = document.querySelector("#settingsTourBtn"),
     settingsChangelogButton = document.querySelector("#settingsChangelogBtn");
-  const DRAW = window.LUMI6_DRAW;
-  const SELECT = window.LUMI6_SELECTION;
-  const TOUR = window.LUMI6_TOUR;
-  const MIXED_TEXT = window.LUMI6_MIXED_TEXT;
-  const ANIMATION = window.LUMI6_ANIMATION;
-  const PLUGINS = window.LUMI6_PLUGINS;
-  const SUMMON = window.LUMI6_SUMMON;
+  const DRAW = window.LUMI6_DRAW || {};
+  const SELECT = window.LUMI6_SELECTION || {};
+  const TOUR = window.LUMI6_TOUR || {
+    resolveInitialLanguage: (p, l) => p || l || "en",
+    parseProgress: () => ({ seen: [] }),
+    markSeen: (prog, ids) => ({ seen: Array.from(new Set([...(prog?.seen || []), ...(ids || [])])) }),
+    serializeProgress: (prog) => JSON.stringify(prog || { seen: [] }),
+    rectHasArea: (rect) => Boolean(rect && rect.width > 0 && rect.height > 0),
+    unionRects: (rects) => rects[0] || { left: 0, top: 0, right: 0, bottom: 0, width: 0, height: 0 },
+    placeCoachmark: () => ({ left: 0, top: 0 }),
+    unseenSteps: () => [],
+    keyAction: () => null
+  };
+  const MIXED_TEXT = window.LUMI6_MIXED_TEXT || {};
+  const ANIMATION = window.LUMI6_ANIMATION || {};
+  const PLUGINS = window.LUMI6_PLUGINS || {
+    parse: () => null
+  };
+  const SUMMON = window.LUMI6_SUMMON || {};
   const EFFORT_LEVELS = ["none", "low", "medium", "high", "max"],
     EFFORT_OPTIONS = ["config", ...EFFORT_LEVELS],
     TEXT_EDITOR_DEFAULT_WIDTH = 320,

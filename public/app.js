@@ -102,13 +102,25 @@
     summonToggle = document.querySelector("#summonToggle"),
     settingsTourButton = document.querySelector("#settingsTourBtn"),
     settingsChangelogButton = document.querySelector("#settingsChangelogBtn");
-  const DRAW = window.LUMI6_DRAW;
-  const SELECT = window.LUMI6_SELECTION;
-  const TOUR = window.LUMI6_TOUR;
-  const MIXED_TEXT = window.LUMI6_MIXED_TEXT;
-  const ANIMATION = window.LUMI6_ANIMATION;
-  const PLUGINS = window.LUMI6_PLUGINS;
-  const SUMMON = window.LUMI6_SUMMON;
+  const DRAW = window.LUMI6_DRAW || {};
+  const SELECT = window.LUMI6_SELECTION || {};
+  const TOUR = window.LUMI6_TOUR || {
+    resolveInitialLanguage: (p, l) => p || l || "en",
+    parseProgress: () => ({ seen: [] }),
+    markSeen: (prog, ids) => ({ seen: Array.from(new Set([...(prog?.seen || []), ...(ids || [])])) }),
+    serializeProgress: (prog) => JSON.stringify(prog || { seen: [] }),
+    rectHasArea: (rect) => Boolean(rect && rect.width > 0 && rect.height > 0),
+    unionRects: (rects) => rects[0] || { left: 0, top: 0, right: 0, bottom: 0, width: 0, height: 0 },
+    placeCoachmark: () => ({ left: 0, top: 0 }),
+    unseenSteps: () => [],
+    keyAction: () => null
+  };
+  const MIXED_TEXT = window.LUMI6_MIXED_TEXT || {};
+  const ANIMATION = window.LUMI6_ANIMATION || {};
+  const PLUGINS = window.LUMI6_PLUGINS || {
+    parse: () => null
+  };
+  const SUMMON = window.LUMI6_SUMMON || {};
   const EFFORT_LEVELS = ["none", "low", "medium", "high", "max"],
     EFFORT_OPTIONS = ["config", ...EFFORT_LEVELS],
     TEXT_EDITOR_DEFAULT_WIDTH = 320,
@@ -1953,30 +1965,40 @@ User writes "Show air quality for Tokyo", names a place, and points to an empty 
   }
   window.addEventListener("message", handlePluginStylesPreviewMessage);
   function updatePluginAuthoringUi() {
+    if (!pluginDocumentEditor || !pluginStylesEditor) return { valid: false, error: "Unavailable" };
     const validation = pluginDraftValidation(),
       status = state.pluginAuthoringStatus || (validation.manifest
         ? { key:"pluginDraftValid", values:{ name:localizedManifestValue(validation.manifest, "name") || validation.manifest.name }, type:"" }
         : { key:"pluginDraftInvalid", values:{ error:validation.error }, type:"error" });
     for (const button of [pluginSimpleTemplate]) {
+      if (!button) continue;
       const active = button.dataset.pluginTemplate === state.pluginAuthoringTemplate;
       button.classList.toggle("active", active);
       button.setAttribute("aria-pressed", String(active));
       button.disabled = state.pluginAuthoringBusy;
     }
-    pluginDocumentBytes.textContent = t("pluginBytes").replace("{bytes}", String(validation.bytes));
-    pluginDocumentBytes.classList.toggle("invalid", validation.bytes > 12000);
-    pluginStylesBytes.textContent = t("pluginStylesBytes").replace("{bytes}", String(validation.styleBytes));
-    pluginStylesBytes.classList.toggle("invalid", validation.styleBytes > 32000);
-    pluginDocumentStatus.textContent = pluginAuthoringText(status);
-    pluginDocumentStatus.className = status.type || "";
-    pluginTitle.disabled = state.pluginAuthoringBusy;
-    pluginDocumentEditor.disabled = state.pluginAuthoringBusy;
-    pluginStylesEditor.disabled = state.pluginAuthoringBusy;
-    pluginStylesUploadButton.disabled = state.pluginAuthoringBusy;
-    pluginStylesUpload.disabled = state.pluginAuthoringBusy;
-    pluginImprove.disabled = state.pluginAuthoringBusy || !pluginDocumentEditor.value.trim() || validation.bytes > 12000;
-    pluginSave.disabled = state.pluginAuthoringBusy || state.pluginCatalogLoading || !validation.manifest;
-    for (const tab of [pluginLocalTab, pluginCreateTab, pluginServerTab]) tab.disabled = state.pluginAuthoringBusy;
+    if (pluginDocumentBytes) {
+      pluginDocumentBytes.textContent = t("pluginBytes").replace("{bytes}", String(validation.bytes));
+      pluginDocumentBytes.classList.toggle("invalid", validation.bytes > 12000);
+    }
+    if (pluginStylesBytes) {
+      pluginStylesBytes.textContent = t("pluginStylesBytes").replace("{bytes}", String(validation.styleBytes));
+      pluginStylesBytes.classList.toggle("invalid", validation.styleBytes > 32000);
+    }
+    if (pluginDocumentStatus) {
+      pluginDocumentStatus.textContent = pluginAuthoringText(status);
+      pluginDocumentStatus.className = status.type || "";
+    }
+    if (pluginTitle) pluginTitle.disabled = state.pluginAuthoringBusy;
+    if (pluginDocumentEditor) pluginDocumentEditor.disabled = state.pluginAuthoringBusy;
+    if (pluginStylesEditor) pluginStylesEditor.disabled = state.pluginAuthoringBusy;
+    if (pluginStylesUploadButton) pluginStylesUploadButton.disabled = state.pluginAuthoringBusy;
+    if (pluginStylesUpload) pluginStylesUpload.disabled = state.pluginAuthoringBusy;
+    if (pluginImprove) pluginImprove.disabled = state.pluginAuthoringBusy || !pluginDocumentEditor?.value?.trim() || validation.bytes > 12000;
+    if (pluginSave) pluginSave.disabled = state.pluginAuthoringBusy || state.pluginCatalogLoading || !validation.manifest;
+    for (const tab of [pluginLocalTab, pluginCreateTab, pluginServerTab]) {
+      if (tab) tab.disabled = state.pluginAuthoringBusy;
+    }
     updatePluginStylesPreview(validation);
     return validation;
   }
@@ -1988,9 +2010,9 @@ User writes "Show air quality for Tokyo", names a place, and points to an empty 
     if (!Object.hasOwn(PLUGIN_TEMPLATE_DOCUMENTS, template) || state.pluginAuthoringBusy) return false;
     state.pluginAuthoringTemplate = template;
     state.pluginAuthoringStatus = null;
-    pluginDocumentEditor.value = PLUGIN_TEMPLATE_DOCUMENTS[template];
-    pluginStylesEditor.value = PLUGIN_TEMPLATE_STYLES[template] || "";
-    syncPluginTitleFromDocument(pluginDocumentEditor.value);
+    if (pluginDocumentEditor) pluginDocumentEditor.value = PLUGIN_TEMPLATE_DOCUMENTS[template];
+    if (pluginStylesEditor) pluginStylesEditor.value = PLUGIN_TEMPLATE_STYLES[template] || "";
+    if (pluginDocumentEditor) syncPluginTitleFromDocument(pluginDocumentEditor.value);
     updatePluginAuthoringUi();
     return true;
   }
@@ -10744,48 +10766,56 @@ User writes "Show air quality for Tokyo", names a place, and points to an empty 
     schedule();
     keepAutoDelayControlOpen();
   };
-  document.querySelector("#aiEffortButton").onclick = () => {
-    if (document.querySelector("#effortPopover").hidden) showEffortControl();
-    else hideEffortControl();
-  };
-  pluginButton.onclick = () => {
-    if (pluginPopover.hidden) showPluginControl();
-    else hidePluginControl();
-  };
-  pluginClose.onclick = hidePluginControl;
-  pluginRefresh.onclick = () => {
-    state.pluginCatalogNotice = null;
-    void loadPluginDocuments();
-  };
-  pluginLocalTab.onclick = () => setPluginTab("local");
-  pluginCreateTab.onclick = () => setPluginTab("create");
-  pluginServerTab.onclick = () => setPluginTab("server");
-  pluginSimpleTemplate.onclick = () => setPluginTemplate("simple");
-  pluginTitle.addEventListener("input", () => {
+  if (document.querySelector("#aiEffortButton")) {
+    document.querySelector("#aiEffortButton").onclick = () => {
+      if (document.querySelector("#effortPopover")?.hidden) showEffortControl();
+      else hideEffortControl();
+    };
+  }
+  if (pluginButton) {
+    pluginButton.onclick = () => {
+      if (pluginPopover?.hidden) showPluginControl();
+      else hidePluginControl();
+    };
+  }
+  if (pluginClose) pluginClose.onclick = hidePluginControl;
+  if (pluginRefresh) {
+    pluginRefresh.onclick = () => {
+      state.pluginCatalogNotice = null;
+      void loadPluginDocuments();
+    };
+  }
+  if (pluginLocalTab) pluginLocalTab.onclick = () => setPluginTab("local");
+  if (pluginCreateTab) pluginCreateTab.onclick = () => setPluginTab("create");
+  if (pluginServerTab) pluginServerTab.onclick = () => setPluginTab("server");
+  if (pluginSimpleTemplate) pluginSimpleTemplate.onclick = () => setPluginTemplate("simple");
+  pluginTitle?.addEventListener("input", () => {
     if (state.pluginAuthoringStatus?.type === "error") state.pluginAuthoringStatus = null;
     updatePluginAuthoringUi();
   });
-  pluginDocumentEditor.addEventListener("input", () => {
+  pluginDocumentEditor?.addEventListener("input", () => {
     state.pluginAuthoringStatus = null;
     updatePluginAuthoringUi();
   });
-  pluginStylesEditor.addEventListener("input", () => {
+  pluginStylesEditor?.addEventListener("input", () => {
     state.pluginAuthoringStatus = null;
     updatePluginAuthoringUi();
   });
-  pluginStylesUploadButton.onclick = () => {
-    if (state.pluginAuthoringBusy) return;
-    pluginStylesUpload.value = "";
-    pluginStylesUpload.click();
-  };
-  pluginStylesUpload.addEventListener("change", () => {
+  if (pluginStylesUploadButton) {
+    pluginStylesUploadButton.onclick = () => {
+      if (state.pluginAuthoringBusy) return;
+      if (pluginStylesUpload) pluginStylesUpload.value = "";
+      pluginStylesUpload?.click();
+    };
+  }
+  pluginStylesUpload?.addEventListener("change", () => {
     const file = pluginStylesUpload.files?.[0];
     if (file) void importPluginStylesFile(file);
-    else pluginStylesUpload.value = "";
+    else if (pluginStylesUpload) pluginStylesUpload.value = "";
   });
-  pluginImprove.onclick = () => void improvePluginDraft();
-  pluginCreateForm.addEventListener("submit", (event) => void savePluginDraft(event));
-  pluginOptions.addEventListener("click", (event) => {
+  if (pluginImprove) pluginImprove.onclick = () => void improvePluginDraft();
+  pluginCreateForm?.addEventListener("submit", (event) => void savePluginDraft(event));
+  pluginOptions?.addEventListener("click", (event) => {
     const detailButton = event.target.closest("button[data-plugin-detail]");
     if (detailButton) {
       event.preventDefault();
@@ -10813,17 +10843,17 @@ User writes "Show air quality for Tokyo", names a place, and points to an empty 
     event.stopPropagation();
     void deleteLocalPlugin(deleteButton.dataset.pluginDelete);
   });
-  pluginOptions.addEventListener("change", (event) => {
+  pluginOptions?.addEventListener("change", (event) => {
     const input = event.target.closest("input[data-plugin-id]");
     if (!input) return;
     void setPluginEnabled(input.dataset.pluginId, input.checked).then((enabled) => {
       if (!enabled && input.isConnected) input.checked = pluginEnabled(input.dataset.pluginId);
     });
   });
-  pluginPopover.addEventListener("pointerdown", (event) => {
+  pluginPopover?.addEventListener("pointerdown", (event) => {
     if (event.target === pluginPopover) hidePluginControl();
   });
-  pluginPopover.addEventListener("keydown", (event) => {
+  pluginPopover?.addEventListener("keydown", (event) => {
     if (event.key === "Escape") {
       event.preventDefault();
       hidePluginControl();
