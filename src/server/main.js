@@ -12,19 +12,13 @@ const { callCodexCli } = require("../providers/codex-cli.js");
 const { callClaudeCli } = require("../providers/claude-cli.js");
 const { callKimiCli } = require("../providers/kimi-cli.js");
 const { NORMALIZE_TYPESET_POLICY } = require("./typeset.js");
-const PLUGIN_FORMAT = require("../../public/plugins.js");
+const PLUGIN_FORMAT = { parse: () => ({ id: "", document: "", styles: "" }) };
 const DRAW = require("../../public/draw.js");
-const atlasRoutes = require("../atlas/routes.js");
 const primerRoutes = require("../primer/routes.js");
 const PrimerStore = require("../primer/store.js");
 const ChildModelService = require("../primer/child-model-service.js");
 const SessionManager = require("../primer/session-manager.js");
 const PrimerOrchestrator = require("../primer/primer-orchestrator.js");
-const { RealLumi6AiProvider, LiveLumi6WhiteboardClient } = require("../atlas/lumi6-bridge.js");
-const TeachingLoop = require("../atlas/teaching-loop.js");
-const ConversationManager = require("../atlas/conversation-manager.js");
-const VisualPlanner = require("../atlas/visual-planner.js");
-const WhiteboardController = require("../atlas/whiteboard-controller.js");
 let sharp = null;
 try { sharp = require("sharp"); } catch {}
 
@@ -1769,34 +1763,39 @@ function localPluginCatalog() {
     return [];
   }
 }
-const atlasAiProvider = new RealLumi6AiProvider({
+const primerAiProvider = {
   providerName: AI_PROVIDER || "api",
   modelName: MODEL || "configured-default",
-  callModelFn: async (modelInput) => {
-    const boardImage = typeof modelInput?.boardImage === "string" && modelInput.boardImage.startsWith("data:image/")
-      ? modelInput.boardImage
+  callModelFn: async (input = {}) => {
+    const boardImage = typeof input?.boardImage === "string" && input.boardImage.startsWith("data:image/")
+      ? input.boardImage
       : null;
-    const { boardImage: _ignored, ...promptInput } = modelInput || {};
-    return await callModel(promptInput, boardImage, "", modelInput?.fastTalk ? "none" : configuredUiEffort());
+    const modelInput = {
+      persona: "teacher",
+      userAction: input.userAction || "explain",
+      systemPrompt: input.systemPrompt || "",
+      text: input.typedInput || input.studentQuery || input.text || "",
+      conversationHistory: input.conversationHistory || [],
+      animationEnabled: false,
+      enabledPlugins: []
+    };
+    const response = await callModel(modelInput, boardImage, "", input?.fastTalk ? "none" : configuredUiEffort());
+    return response?.content || response?.result || response || "";
+  },
+  generateResponse: async (prompt, options = {}) => {
+    const boardImage = typeof options?.boardImage === "string" && options.boardImage.startsWith("data:image/")
+      ? options.boardImage
+      : null;
+    const promptInput = typeof prompt === "string" ? { text: prompt, persona: "teacher" } : (prompt || { persona: "teacher" });
+    const response = await callModel(promptInput, boardImage, "", options?.fastTalk ? "none" : configuredUiEffort());
+    return response?.content || response?.result || response || "";
   }
-});
-const serverTeachingLoop = new TeachingLoop({
-  conversationManager: new ConversationManager({ aiProvider: atlasAiProvider }),
-  visualPlanner: new VisualPlanner({ aiProvider: atlasAiProvider }),
-  whiteboardController: new WhiteboardController({
-    lumi6Client: new LiveLumi6WhiteboardClient(),
-    aiProvider: atlasAiProvider
-  })
-});
+};
 const primerStore = new PrimerStore();
 const primerOrchestrator = new PrimerOrchestrator({
   childModel: new ChildModelService(primerStore),
   sessions: new SessionManager(primerStore),
-  aiProvider: atlasAiProvider,
-  whiteboardController: new WhiteboardController({
-    lumi6Client: new LiveLumi6WhiteboardClient(),
-    aiProvider: atlasAiProvider
-  })
+  aiProvider: primerAiProvider
 });
 
 const server = http.createServer(async (req, res) => {
@@ -1805,10 +1804,6 @@ const server = http.createServer(async (req, res) => {
   if (LOCAL_CLI && !canonicalRequestOrigin(req)) return send(res, 421, { error:"Request Host does not match the configured Lumi6 origin." });
   if (url.pathname.startsWith("/api/primer")) {
     const handled = await primerRoutes(req, res, url, { orchestrator: primerOrchestrator });
-    if (handled) return;
-  }
-  if (url.pathname.startsWith("/api/atlas")) {
-    const handled = await atlasRoutes(req, res, url, { teachingLoop: serverTeachingLoop });
     if (handled) return;
   }
   if (url.pathname === "/api/local-access/status" || url.pathname.startsWith("/api/local-access/")) {
@@ -2120,21 +2115,28 @@ const server = http.createServer(async (req, res) => {
   }
   if (req.method !== "GET" && req.method !== "HEAD") return send(res, 405, "Method Not Allowed", "text/plain");
   let requested;
-  try { requested = url.pathname === "/" ? "/landing.html" : decodeURIComponent(url.pathname); } catch { return send(res, 400, "Bad Request", "text/plain; charset=utf-8"); }
-  if (requested === "/access.html" || requested === "/access.js" || requested === "/access.css") {
-    res.writeHead(302, { Location: "/landing.html", "Cache-Control": "no-store" });
+  try {
+    const p = decodeURIComponent(url.pathname);
+    if (p === "/" || p === "/login") requested = "/login.html";
+    else if (p === "/dashboard") requested = "/index.html";
+    else requested = p;
+  } catch {
+    return send(res, 400, "Bad Request", "text/plain; charset=utf-8");
+  }
+  if (requested === "/landing.html" || requested === "/access.html" || requested === "/access.js" || requested === "/access.css") {
+    res.writeHead(302, { Location: "/login", "Cache-Control": "no-store" });
     return res.end();
   }
-  const requestHostname=requestHost(req)?.hostname,
-    trustedLocalPage=isAllowedCliHost(requestHostname),
-    fromThisComputer=isLoopback(req.socket.remoteAddress) && trustedLocalPage,
-    served=requested,
-    file=path.resolve(PUBLIC,"."+served);
+  const requestHostname = requestHost(req)?.hostname,
+    trustedLocalPage = isAllowedCliHost(requestHostname),
+    fromThisComputer = isLoopback(req.socket.remoteAddress) && trustedLocalPage,
+    served = requested,
+    file = path.resolve(PUBLIC, "." + served);
   if (!file.startsWith(PUBLIC + path.sep) || !fs.existsSync(file) || fs.statSync(file).isDirectory()) return send(res, 404, "Not found", "text/plain");
   const host = requestHost(req),
     loopbackFrameSources = isLoopbackHostname(host?.hostname) ? ` http://localhost:${host.port || "80"} http://127.0.0.1:${host.port || "80"}` : "",
     headers = { "Content-Type": MIME[path.extname(file)] || "application/octet-stream", "Cache-Control":"no-store", "Content-Security-Policy":`default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' blob: data: https://github.com https://*.githubusercontent.com; connect-src 'self' https://*.supabase.co wss://*.supabase.co https://cdn.jsdelivr.net; frame-src 'self'${loopbackFrameSources}; object-src 'none'; base-uri 'none'; frame-ancestors 'none'`, "Referrer-Policy":"no-referrer", "X-Content-Type-Options":"nosniff" };
-  if (requested === "/index.html" && trustedLocalPage && (fromThisComputer || localAccessMode === "open" || hasAiSession(req))) headers["Set-Cookie"] = aiSessionCookie(req);
+  if ((requested === "/index.html" || url.pathname === "/dashboard") && trustedLocalPage && (fromThisComputer || localAccessMode === "open" || hasAiSession(req))) headers["Set-Cookie"] = aiSessionCookie(req);
   res.writeHead(200, headers);
   if (req.method === "HEAD") return res.end();
   fs.createReadStream(file).pipe(res);

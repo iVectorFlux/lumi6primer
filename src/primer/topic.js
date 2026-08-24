@@ -25,10 +25,12 @@ const STOP = new Set([
   "pretty", "difficult", "hard", "easy", "simple", "seat", "know", "sure", "true",
   "false", "tap", "pipe", "travel", "bag", "circle", "flowing", "flow", "open", "closed",
   "think", "thought", "guess", "say", "saying", "said", "look", "looking", "see",
-  "studying", "study", "grade", "class", "simplified", "simplify", "so", "if"
+  "studying", "study", "grade", "class", "simplified", "simplify", "so", "if",
+  "different", "another", "other", "something", "else", "topic", "subject",
+  "continue", "continued", "continuing", "keep", "going", "resume", "resuming", "proceed", "next", "more"
 ]);
 
-const WEAK = /^(this|that|it|idea|sorry|hell|talking|mean|teach me|can you teach me|what do you mean|pretty difficult|so if|difficult|hard|easy|simple)$/i;
+const WEAK = /^(this|that|it|idea|sorry|hell|talking|mean|teach me|can you teach me|what do you mean|pretty difficult|so if|difficult|hard|easy|simple|different|another|other|else|continue|please continue|keep going|go on|resume|next)$/i;
 
 // Requests about HOW to teach are not subjects. Treating "first principles" or
 // "step by step" as the topic makes the tutor abandon the real lesson.

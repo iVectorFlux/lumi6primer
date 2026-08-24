@@ -1,8 +1,4 @@
-"use strict";
-
-const BoardSummaryGenerator = require("../atlas/board-summary-generator.js");
-const WhiteboardController = require("../atlas/whiteboard-controller.js");
-const { synthesizeCartesiaSpeech, audioToPayload } = require("../atlas/cartesia-tts.js");
+const { synthesizeCartesiaSpeech, audioToPayload } = require("./tools/tts.js");
 const LearningOrchestrator = require("./tutor/orchestrator.js");
 
 function childProfileNote(child) {
@@ -24,15 +20,11 @@ class PrimerOrchestrator {
   constructor(options = {}) {
     this.childModel = options.childModel;
     this.sessions = options.sessions;
-    this.whiteboardController = options.whiteboardController || new WhiteboardController(options);
     this.aiProvider = options.aiProvider;
-    this.boardSummary = options.boardSummary || new BoardSummaryGenerator();
     this.learning = options.learningOrchestrator || new LearningOrchestrator({
       childModel: this.childModel,
       sessions: this.sessions,
-      aiProvider: this.aiProvider,
-      whiteboardController: this.whiteboardController,
-      boardSummary: this.boardSummary
+      aiProvider: this.aiProvider
     });
   }
 

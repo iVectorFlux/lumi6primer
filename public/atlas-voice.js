@@ -313,8 +313,12 @@
         return;
       }
       this.speakNeural(text, generation, startOnce, wrapEnd).catch((err) => {
-        console.warn("[Lumi6 Voice] Neural TTS failed:", err.message);
-        wrapEnd();
+        console.warn("[Lumi6 Voice] Neural TTS failed, falling back to browser speech:", err.message);
+        if (generation === this.generation) {
+          this.speakBrowser(text, startOnce, wrapEnd);
+        } else {
+          wrapEnd();
+        }
       });
     }
 
@@ -507,7 +511,7 @@
       const controller = new AbortController();
       const timer = setTimeout(() => controller.abort(), timeoutMs);
       try {
-        const response = await fetch(`${ATLAS_API_BASE}/tts`, {
+        const response = await fetch(`${PRIMER_API_BASE}/tts`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ text }),
@@ -530,7 +534,7 @@
           done = true;
           resolve();
         };
-        if (generation !== this.generation) {
+        if (generation !== this.generation || !blob) {
           finish();
           return;
         }
@@ -557,12 +561,26 @@
       }
       let started = false;
       let pending = this.firstAudioBlob(parts[0]);
+      const firstBlob = await pending.catch(() => null);
+      if (!firstBlob) {
+        console.warn("[Lumi6 Voice] First audio chunk unavailable, falling back to browser speech");
+        if (generation === this.generation) {
+          this.speakBrowser(text, onStart, onEnd);
+        }
+        return;
+      }
       for (let i = 0; i < parts.length; i++) {
         if (generation !== this.generation) return;
-        if (i === askIndex && i > 0) await this.pause(1700, generation);
+        if (i === askIndex && i > 0) await this.pause(350, generation);
         if (generation !== this.generation) return;
-        const blob = await pending;
-        if (i + 1 < parts.length) pending = this.fetchTtsBlob(parts[i + 1]);
+        const blob = i === 0 ? firstBlob : await pending.catch(() => null);
+        if (!blob) {
+          if (generation === this.generation) {
+            this.speakBrowser(parts.slice(i).join(" "), onStart, onEnd);
+          }
+          return;
+        }
+        if (i + 1 < parts.length) pending = this.fetchTtsBlob(parts[i + 1]).catch(() => null);
         await this.playBlobAsync(blob, generation, () => {
           if (started || generation !== this.generation) return;
           started = true;
@@ -700,7 +718,6 @@
       this._openingListen = false;
       this._welcomeWatch = null;
       this.outputMuted = false;
-      this.micMuted = localStorage.getItem("atlas-mic-muted") === "1";
       this.paused = false;
 
       this.initUI();
@@ -744,7 +761,6 @@
           <span id="atlasOverlayText" class="atlas-overlay-text">Tap the mic and ask me anything.</span>
         </div>
         <div class="atlas-kid-actions">
-          <button id="atlasVoiceMute" class="atlas-overlay-mute" type="button" aria-pressed="false" aria-label="Mute microphone">Mute mic</button>
           <button id="atlasVoiceStop" class="atlas-overlay-stop" type="button" aria-label="Stop conversation">Stop</button>
         </div>
       `;
@@ -758,8 +774,7 @@
         overlay,
         badge: overlay.querySelector("#atlasOverlayBadge"),
         text: overlay.querySelector("#atlasOverlayText"),
-        stopBtn: overlay.querySelector("#atlasVoiceStop"),
-        muteBtn: overlay.querySelector("#atlasVoiceMute")
+        stopBtn: overlay.querySelector("#atlasVoiceStop")
       };
 
       toggleBtn.addEventListener("click", () => this.handleMicButtonClick());
@@ -768,35 +783,6 @@
         e.stopPropagation();
         this.turnOff();
       });
-      this.elements.muteBtn.addEventListener("click", (e) => {
-        e.preventDefault();
-        e.stopPropagation();
-        this.toggleMute();
-      });
-      this.syncMuteButton();
-    }
-
-    toggleMute() {
-      this.micMuted = !this.micMuted;
-      try { localStorage.setItem("atlas-mic-muted", this.micMuted ? "1" : "0"); } catch {}
-      if (this.micMuted) {
-        this.stt.stop();
-        this.elements.toggleBtn.classList.remove("atlas-listening");
-        if (this.state === "LISTENING") this.state = "IDLE";
-        this.showOverlay(this.isSpeaking ? "teacher" : "listening", "Mic muted. I cannot hear you. Unmute when you want to talk.");
-      } else if (this.isActive && this.state !== "SPEAKING" && this.state !== "PROCESSING") {
-        this.startListening();
-      }
-      this.syncMuteButton();
-    }
-
-    syncMuteButton() {
-      const btn = this.elements?.muteBtn;
-      if (!btn) return;
-      btn.classList.toggle("is-muted", this.micMuted);
-      btn.setAttribute("aria-pressed", String(this.micMuted));
-      btn.textContent = this.micMuted ? "Unmute mic" : "Mute mic";
-      btn.setAttribute("aria-label", this.micMuted ? "Unmute microphone" : "Mute microphone");
     }
 
     handleMicButtonClick() {
@@ -904,7 +890,7 @@
       if (hasActiveConversation) {
         this.showOverlay("listening", "Listening... ask anything!");
         this.state = "IDLE";
-        this.listen();
+        this.startListening();
       } else {
         this.greetThenListen();
       }
@@ -939,7 +925,7 @@
           this.showPausedOverlay();
           return;
         }
-        if (this.isActive && !this.micMuted) this.startListening();
+        if (this.isActive) this.startListening();
       }, 180);
     }
 
@@ -954,7 +940,7 @@
 
     showPausedOverlay() {
       const kept = String(this.lastSpoken || this.elements?.text?.textContent || "").trim();
-      this.showOverlay("teacher", kept || "Paused. Tap the orb again and say continue.");
+      this.showOverlay("teacher", kept || "Paused. Tap the mic to talk.");
       this.elements.badge.textContent = "Paused";
     }
 
@@ -982,21 +968,13 @@
     resumeConversation() {
       this.paused = false;
       this.isActive = true;
+      this.state = "IDLE";
       window.__atlasTeachingLock = true;
       if (this.overlayTimeout) {
         clearTimeout(this.overlayTimeout);
         this.overlayTimeout = null;
       }
       this.tts.unlockPlayback();
-      if (this.state === "SPEAKING") {
-        this.showOverlay("teacher", this.lastSpoken || this.elements?.text?.textContent || "");
-        return;
-      }
-      if (this.micMuted) {
-        this.showOverlay("listening", "Mic muted. I cannot hear you. Unmute when you want to talk.");
-        this.state = "IDLE";
-        return;
-      }
       this.startListening();
     }
 
@@ -1024,11 +1002,6 @@
 
     async startListening() {
       if (!this.isActive || this.paused) return;
-      if (this.micMuted) {
-        this.showOverlay("listening", "Mic muted. Unmute when you want to talk.");
-        this.state = "IDLE";
-        return;
-      }
       if (this.state === "SPEAKING" || this.state === "PROCESSING") return;
 
       if (this.restartTimer) {
@@ -1102,7 +1075,7 @@
       }
       this.restartTimer = setTimeout(() => {
         this.restartTimer = null;
-        if (this.isActive && !this.paused && !this.micMuted && (this.state === "IDLE" || this.state === "LISTENING")) {
+        if (this.isActive && !this.paused && (this.state === "IDLE" || this.state === "LISTENING")) {
           this.startListening();
         }
       }, delayMs);
@@ -1124,7 +1097,7 @@
     handleSpeechEnd() {}
 
     handleSttResult(text) {
-      if (!this.isActive || this.micMuted) return;
+      if (!this.isActive || this.paused) return;
       if (this.state === "PROCESSING" || this.state === "SPEAKING") return;
       const queryText = (text || "").trim();
       if (queryText) {
@@ -1134,7 +1107,7 @@
     }
 
     commitHeardTurn(queryText) {
-      if (!this.isActive || this.micMuted) return;
+      if (!this.isActive || this.paused) return;
       if (this.state === "PROCESSING" || this.state === "SPEAKING") return;
       const heard = String(queryText || this.pendingHeard || "").trim();
       if (!heard || heard.length < 2) {
@@ -1182,7 +1155,7 @@
 
     handleSttEnd() {
       this.elements.toggleBtn.classList.remove("atlas-listening");
-      if (!this.isActive || this.micMuted) return;
+      if (!this.isActive || this.paused) return;
       if (this.state === "PROCESSING" || this.state === "SPEAKING") return;
       if (this.stt._committing) return;
       if (this.state === "LISTENING" && (this.stt.hasPendingSilence || this.pendingHeard)) {
@@ -1243,6 +1216,9 @@
           onGraphic: (msg) => {
             if (typeof window.applyPrimerGraphic === "function") {
               graphicApplied = window.applyPrimerGraphic(msg) || graphicApplied;
+            }
+            if (msg?.url && window.Lumi6Lesson && typeof window.Lumi6Lesson.attachImage === "function") {
+              window.Lumi6Lesson.attachImage(msg.url);
             }
           },
           onAudio: (msg) => {
@@ -1350,10 +1326,12 @@
       const speechText = this.cleanTextForSpeech(teacherText);
       this.lastSpoken = speechText || teacherText || "";
 
-      this.showOverlay("teacher", speechText || teacherText);
-
       if (window.atlasChat && typeof window.atlasChat.ingestTurn === "function") {
         window.atlasChat.ingestTurn(studentText, teacherText);
+      }
+      if (window.Lumi6Lesson && typeof window.Lumi6Lesson.record === "function") {
+        if (studentText) window.Lumi6Lesson.record("student", studentText);
+        if (teacherText) window.Lumi6Lesson.record("teacher", teacherText);
       }
 
       this.stt.stop();

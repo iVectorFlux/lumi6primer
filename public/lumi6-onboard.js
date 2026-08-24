@@ -423,8 +423,13 @@
 
   async function gateCanvas() {
     const path = window.location.pathname;
-    if (path.endsWith("landing.html") || path === "/" || path.endsWith("/")) return;
+    if (path === "/" || path === "/login" || path.endsWith("/login") || path.endsWith("login.html") || path.endsWith("landing.html")) return;
     if (!configured()) {
+      const local = readLocal();
+      if (!local?.name && !localStorage.getItem("primerChildName")) {
+        window.location.replace("/login");
+        return;
+      }
       state.ready = true;
       hideOverlay();
       return;
@@ -443,7 +448,7 @@
     }
     const user = await currentUser(12);
     if (!user) {
-      window.location.replace("landing.html");
+      window.location.replace("/login");
       return;
     }
     const profile = await loadRemoteProfile();

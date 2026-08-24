@@ -23,12 +23,13 @@ class PedagogicalPolicy {
     const proposed = this._normalizeProposal(proposal);
     const reasons = [];
 
-    const phase = this._lockPhase(proposed.phase, state, understanding, reasons);
+    const inquiry = this._lockInquiryPhase(state, understanding);
+    const phase = this._lockPhase(proposed.phase || inquiry.phase, state, understanding, reasons);
     const need = this.roleSelector
       ? this.roleSelector.needFrom({ ...state, learningPhase: phase }, understanding)
       : "knowledge";
     let role = this._lockRole(proposed.role, { ...state, learningPhase: phase }, understanding, need, reasons);
-    let action = this._lockAction(proposed.action, role, phase, understanding, state, reasons);
+    let action = this._lockAction(proposed.action || inquiry.action, role, phase, understanding, state, reasons);
     const tools = this._lockTools(proposed.tools, action, phase, understanding, state, reasons);
     const spokenHints = this._spokenConstraints(phase, role, action, understanding, state);
 
@@ -44,7 +45,7 @@ class PedagogicalPolicy {
     }
 
     if (
-      Number(state?.conversationState?.consecutiveExplanations || 0) >= 3
+      Number(state?.conversationState?.consecutiveExplanations || 0) >= 2
       && action === "explain"
       && !understanding?.wantsExplain
       && !understanding?.wantsReason
@@ -63,11 +64,48 @@ class PedagogicalPolicy {
       need,
       tools,
       spokenHints,
+      inquiryPhase: inquiry.phase,
+      targetSkill: inquiry.skill,
       interpretation: proposed.interpretation || understanding || {},
-      evidence: proposed.evidence || null,
+      evidence: proposed.evidence || { kind: inquiry.skill, note: inquiry.phase },
       reasons,
       proposedSpoken: proposed.spoken || ""
     };
+  }
+
+  _lockInquiryPhase(state, understanding) {
+    const prior = state?.inquiryState?.phase || "hook";
+    const intent = understanding?.intent;
+    const isNew = isNewAsk(understanding?.raw, understanding);
+
+    if (isNew || intent === "goal" || (understanding?.wantsExplain && !state?.currentConcept)) {
+      return { phase: "hook", skill: "hypothesis_generation", action: "present_phenomenon" };
+    }
+
+    if (intent === "dont_understand" || understanding?.confusion) {
+      return { phase: "mechanism", skill: "causal_reasoning", action: "explain_mechanism" };
+    }
+
+    if (intent === "continue") {
+      return { phase: "mechanism", skill: "causal_reasoning", action: "advance_mechanism" };
+    }
+
+    if (prior === "hook") {
+      return { phase: "hypothesis", skill: "hypothesis_generation", action: "elicit_hypothesis" };
+    }
+    if (prior === "hypothesis") {
+      return { phase: "mechanism", skill: "causal_reasoning", action: "counterexample_mechanism" };
+    }
+    if (prior === "mechanism") {
+      return { phase: "vocabulary", skill: "concept_naming", action: "name_discovery" };
+    }
+    if (prior === "vocabulary") {
+      return { phase: "transfer", skill: "far_transfer", action: "transfer_challenge" };
+    }
+    if (prior === "transfer") {
+      return { phase: "teach_back", skill: "metacognition", action: "teach_back_reflection" };
+    }
+    return { phase: "transfer", skill: "far_transfer", action: "transfer_challenge" };
   }
 
   _normalizeProposal(proposal) {

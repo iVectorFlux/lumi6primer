@@ -6,23 +6,25 @@ This README is for running and shipping the product. Internal product notes live
 
 ## What it does
 
-- Sign in with a grown-up’s Supabase account
+- Clean routes: `/login` (auth & sign-in), `/dashboard` (whiteboard & tutor)
 - Short onboarding: name, class, interests
-- Whiteboard for pictures and notes
-- Voice orb plus chat
-- One lesson picture when a new topic starts; more pictures only when the idea actually changes
-- Download a kid-readable lesson PDF from the chat
+- **Draw Mode**: Infinite white canvas for interactive notes and diagrams
+- **Talk Mode**: Structured Socratic story view with visual lesson cards, key discovery highlights, and kid-friendly thinking prompts
+- Voice orb plus chat with speech recognition
+- Real-time lesson pictures and visual models when topics evolve
+- Download a kid-readable lesson PDF from the session
 
 ## Stack
 
 | Piece | Role |
 | --- | --- |
-| Browser app in `public/` | Landing, board, chat, voice, profile |
-| Node server | Serves the app and `/api/*` |
+| Browser app in `public/` & `src/client/` | Clean login, Draw/Talk modes, chat, voice, profile |
+| Node server (`src/server/`) | Serves clean routes `/login`, `/dashboard`, and `/api/*` |
+| Primer AI Tutor (`src/primer/`) | Socratic pedagogical engine, first-principles level-up loop |
 | Groq | Fast spoken replies |
 | OpenAI | Fallback talk, fallback images |
-| Deepgram | Text-to-speech |
-| Gemini / OpenAI | Lesson pictures |
+| Deepgram / Cartesia | Text-to-speech voice synthesis |
+| Gemini / OpenAI | Lesson pictures and visual diagrams |
 | Supabase | Auth and learner data |
 | AWS ECS | Production Node tasks |
 | CloudFront + ALB | HTTPS in front of ECS |

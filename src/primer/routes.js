@@ -122,6 +122,33 @@ async function primerRoutes(req, res, url, options = {}) {
       return true;
     }
 
+    if (req.method === "POST" && (pathname === "/api/primer/tts" || pathname === "/api/atlas/tts")) {
+      const body = await readJsonBody(req);
+      const text = String(body.text || body.transcript || body.message || "").trim();
+      if (!text) {
+        sendJson(res, 400, { error: "Field 'text' is required." });
+        return true;
+      }
+      const { synthesizeCartesiaSpeech } = require("./tools/tts.js");
+      try {
+        const audio = await synthesizeCartesiaSpeech(text);
+        if (!audio || !audio.buffer) {
+          sendJson(res, 204, {});
+          return true;
+        }
+        res.writeHead(200, {
+          "Content-Type": audio.contentType || "audio/mpeg",
+          "Content-Length": audio.buffer.length,
+          "Cache-Control": "public, max-age=3600"
+        });
+        res.end(audio.buffer);
+      } catch (err) {
+        console.warn("[PRIMER TTS] synthesis error:", err.message);
+        sendJson(res, 500, { error: "TTS failed" });
+      }
+      return true;
+    }
+
     if (req.method === "POST" && pathname === "/api/primer/session/start") {
       const body = await readJsonBody(req);
       const accessToken = bearerToken(req);

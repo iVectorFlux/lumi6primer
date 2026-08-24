@@ -67,10 +67,14 @@ function replaceLastQuestion(spoken, nextQuestion) {
 
 function advanceQuestion() {
   const options = [
-    "Can you picture what happens next when that occurs?",
-    "Have you ever noticed something like this around you?",
-    "What do you imagine happens next in this story?",
-    "Can you guess where that leads next?"
+    "What if you could shrink tiny and peek inside?",
+    "Can you guess what would happen next?",
+    "Imagine you could time-travel — what would you see?",
+    "What if we tried that on the Moon?",
+    "What do you think would change if it got super cold?",
+    "Can you guess why that happens?",
+    "What would you build if you knew this secret?",
+    "Imagine you could see the atoms — what are they doing?"
   ];
   return options[Math.floor(Math.random() * options.length)];
 }

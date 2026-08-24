@@ -8,7 +8,7 @@ const ContextBuilder = require("./context-builder.js");
 const ResponsePolicy = require("./response-policy.js");
 const { understandLearner, historyFromTurns } = require("./understand.js");
 const { isWeakTopic, spokenCoversTopic, deniesTopic } = require("../topic.js");
-const { shouldGrade } = require("./kid-intent.js");
+const { shouldGrade, isNewAsk, explicitTopicSwitch } = require("./kid-intent.js");
 const { parseProposal, modelText, looksLikeJsonBlob } = require("./proposal.js");
 const { lastQuestion, questionsMatch, preventRepeatQuestion } = require("./teaching-move.js");
 const { LearnerModel } = require("../learner/learner-model.js");
@@ -33,7 +33,7 @@ const geminiGraphic = require("../tools/gemini-graphic.js");
 const topicIcon = require("../tools/topic-icon.js");
 const graphicScene = require("../tools/graphic-scene.js");
 const boardMath = require("../tools/board-math.js");
-const { synthesizeCartesiaSpeech, audioToPayload } = require("../../atlas/cartesia-tts.js");
+const { synthesizeCartesiaSpeech, audioToPayload } = require("../tools/tts.js");
 
 function firstSpokenSentence(text) {
   const raw = String(text || "").replace(/\s+/g, " ").trim();
@@ -45,21 +45,53 @@ function firstSpokenSentence(text) {
 function formatEducationalTitle(rawConcept, spoken, childText) {
   let text = String(rawConcept || "").trim();
   
-  // Strip conversational / speech-to-text noisy prefixes and words
-  text = text.replace(/^(can you|please|i want to|i am in \d+(?:th|st|nd|rd)? grade|teach me about|teach me|tell me about|tell me|explain to me|explain|learn about|what is|what are|how does|how do|why is|why does|like what exactly|what exactly)\s+/gi, "").trim();
-  
-  // Remove individual filler words or STT typos
-  text = text.replace(/\b(tit|plz|pls|wanna|gonna|like|exactly|know|show)\b/gi, "").replace(/\s+/g, " ").trim();
+  // If concept is conversational child speech / fragment, discard it
+  const isChildFragment = /^(it |they |as i |when |if |because |i think |maybe |what |how |why |almost |yes |okay |so |and |eyes |will |can |turn |slow )\b/i.test(text)
+    || text.length > 35
+    || /\b(evaporate|freeze|melt|warm|cold|slow down|turn into|become|floor|puppy)\b/i.test(text);
 
-  // If text is empty or too short, extract from spoken sentence 1
-  if (!text || text.length < 3) {
-    const firstSentence = String(spoken || "").split(/[.!?]/)[0] || "";
-    const m = firstSentence.match(/\b(?:is|are|called|named|about|on)\s+([A-Za-z0-9\s\-]{3,30})\b/i);
-    if (m && m[1]) text = m[1].trim();
+  if (isChildFragment) {
+    text = "";
   }
 
-  // Capitalize nicely into Title Case
-  if (!text) text = "Science Discovery";
+  // Clean STT artifacts and phonetic typos
+  text = text
+    .replace(/^(can you|could you|please|i want to|i am in \d+(?:th|st|nd|rd)? grade|teach me about|teach me|tell me about|tell me|explain to me|explain|learn about|what is|what are|how does|how do|why is|why does|like what exactly|what exactly)\s+/gi, "")
+    .replace(/\b(suns of|sons of|is why|why is|how does|state matter)\b/gi, "States of Matter")
+    .replace(/\bmom\b/gi, "warm")
+    .replace(/\bsuns\b/gi, "sun")
+    .replace(/\b(tit|plz|pls|wanna|gonna|like|exactly|know|show)\b/gi, "")
+    .replace(/\s+/g, " ")
+    .trim();
+
+  // Deduplicate repeated words
+  const words = text.split(/\s+/).filter(Boolean);
+  const seen = new Set();
+  const deduped = [];
+  for (const w of words) {
+    const lower = w.toLowerCase();
+    if (!seen.has(lower)) {
+      seen.add(lower);
+      deduped.push(w);
+    }
+  }
+  text = deduped.join(" ");
+
+  // If text is empty or too generic, deduce real science title from the teacher's explanation
+  if (!text || text.length < 3 || /^(turn|slow|science discovery|lesson)$/i.test(text)) {
+    const spokenLower = String(spoken || "").toLowerCase();
+    if (/solid|liquid|gas|plasma|ice|steam|vapor/i.test(spokenLower)) text = "States of Matter";
+    else if (/electron|atom|proton|nucleus|orbit/i.test(spokenLower)) text = "Electrons & Atoms";
+    else if (/sun|solar|fusion|star|hydrogen/i.test(spokenLower)) text = "The Sun & Solar Energy";
+    else if (/gravity|planet|orbit|space/i.test(spokenLower)) text = "Gravity & Space";
+    else if (/energy|heat|kinetic|temperature|absolute zero/i.test(spokenLower)) text = "Heat & Particle Energy";
+    else {
+      const m = String(spoken || "").split(/[.!?]/)[0].match(/\b(?:is|are|called|named|about|on)\s+([A-Za-z0-9\s\-]{3,24})\b/i);
+      if (m && m[1]) text = m[1].trim();
+    }
+  }
+
+  if (!text || text.length < 3) text = "Science Discovery";
   
   return text.split(/\s+/).map(w => {
     if (/^(and|of|the|in|on|at|to|for|with)$/i.test(w)) return w.toLowerCase();
@@ -67,7 +99,7 @@ function formatEducationalTitle(rawConcept, spoken, childText) {
   }).join(" ");
 }
 
-function extractHandwrittenNotes({ concept, spoken, childText } = {}) {
+function extractHandwrittenNotes({ concept, spoken, childText, chapterIndex = 0 } = {}) {
   const cleanTitle = formatEducationalTitle(concept, spoken, childText);
 
   const rawSentences = String(spoken || "")
@@ -93,16 +125,21 @@ function extractHandwrittenNotes({ concept, spoken, childText } = {}) {
     lines.push(`? ${questionSentence}`);
   }
 
+  const idx = Math.max(0, Number(chapterIndex) || 0);
+  const bayX = 600 + idx * 4400;
+  const bayY = 600;
+
   return {
     id: `note-${Date.now()}`,
     tool: "write_text",
     title: cleanTitle,
     text: lines.join("\n"),
-    x: 600,
-    y: 600,
+    x: bayX,
+    y: bayY,
+    chapterIndex: idx,
     fontSize: 130,
     color: "#4c1d95", // Velvet purple
-    maxWidth: 2400,
+    maxWidth: 2200,
     lineHeight: 1.38,
     isLessonNote: true
   };
@@ -384,10 +421,11 @@ class LearningOrchestrator {
       lastScene,
       decisionAction: decision.action
     });
-    let commands = [];
-    const graphicTitle = String(graphicPlan.scene || state.currentConcept || understanding.concept || "Lesson").slice(0, 48);
-    const noteCmd = extractHandwrittenNotes({ concept: graphicTitle, spoken, childText: spokenText });
+    const graphicTitle = graphicPlan.title || state.currentConcept || understanding.concept || spokenText.slice(0, 40);
+    const chapterIndex = Math.max(0, Math.ceil((Number(recentTurns?.length || 0)) / 2));
+    const noteCmd = extractHandwrittenNotes({ concept: graphicTitle, spoken, childText: spokenText, chapterIndex });
 
+    let commands = [];
     // Emit handwritten concept note to the whiteboard immediately (0 ms latency)
     if (noteCmd) {
       commands.push(noteCmd);
@@ -836,6 +874,11 @@ Return JSON only: {"spoken":"kid sentences here including the check question?"}`
           policyValidated: true
         }
       });
+      state.inquiryState = {
+        phase: decision.inquiryPhase || "hook",
+        targetSkill: decision.targetSkill || "hypothesis_generation",
+        turnCount: ((state.inquiryState?.turnCount || 0) + 1)
+      };
       const topics = Array.isArray(session.topics_touched) ? session.topics_touched : [];
       if (state.currentConcept && !topics.includes(state.currentConcept)) topics.push(state.currentConcept);
       await this.sessions.store.updateSession(session.id, {

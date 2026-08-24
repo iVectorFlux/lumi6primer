@@ -34,25 +34,13 @@ async function openaiTts(text, apiKey) {
   }
   const buffer = Buffer.from(await response.arrayBuffer());
   if (!buffer.length) throw new Error("OpenAI TTS returned empty audio");
-  console.log("[ATLAS TTS] OpenAI ok", buffer.length, "bytes, voice:", voice);
   return { buffer, contentType: "audio/mpeg" };
-}
-
-// ─── Deepgram TTS ──────────────────────────────────────────────────────────────
-
-function withSentencePauses(text, pauseMs = 500) {
-  const raw = String(text || "").replace(/\s+/g, " ").trim();
-  if (!raw) return "";
-  const parts = raw.match(/[^.!?]+[.!?]+(?:["”'])?|[^.!?]+$/g);
-  if (!parts || parts.length < 2) return raw;
-  const ms = Math.max(500, Math.min(5000, Math.round(Number(pauseMs) / 100) * 100)) || 500;
-  return parts.map((part) => part.trim()).filter(Boolean).join(` {pause:${ms}} `);
 }
 
 async function deepgramTts(text, apiKey) {
   const model = String(process.env.DEEPGRAM_TTS_MODEL || "aura-2-thalia-en").trim();
   const speed = String(process.env.DEEPGRAM_TTS_SPEED || "1").trim();
-  const spoken = withSentencePauses(text, process.env.DEEPGRAM_TTS_PAUSE_MS || 500);
+  const spoken = String(text || "").replace(/\s+/g, " ").trim();
   const response = await fetchWithTimeout(
     `https://api.deepgram.com/v1/speak?model=${encodeURIComponent(model)}&encoding=mp3&speed=${encodeURIComponent(speed)}`,
     {
@@ -71,7 +59,6 @@ async function deepgramTts(text, apiKey) {
   }
   const buffer = Buffer.from(await response.arrayBuffer());
   if (!buffer.length) throw new Error("Deepgram TTS returned empty audio");
-  console.log("[ATLAS TTS] Deepgram ok", buffer.length, "bytes, model:", model);
   return { buffer, contentType: "audio/mpeg" };
 }
 
@@ -102,7 +89,6 @@ async function cartesiaTts(text, apiKey) {
   }
   const buffer = Buffer.from(await response.arrayBuffer());
   if (!buffer.length) throw new Error("Cartesia returned empty audio");
-  console.log("[ATLAS TTS] Cartesia ok", buffer.length, "bytes");
   return { buffer, contentType: "audio/mpeg" };
 }
 
@@ -117,7 +103,6 @@ async function synthesizeCartesiaSpeech(transcript) {
     .slice(0, 4000);
   if (!text) return null;
 
-  // Determine provider order based on env config
   const ttsProvider = String(process.env.TTS_PROVIDER || "").trim().toLowerCase();
   const cartesiaKey = String(process.env.CARTESIA_API_KEY || "").trim();
   const openaiKey = String(process.env.OPENAI_API_KEY || "").trim();
@@ -133,7 +118,6 @@ async function synthesizeCartesiaSpeech(transcript) {
     providers.push({ name: "cartesia", fn: () => cartesiaTts(text, cartesiaKey) });
   }
 
-  // Add fallbacks in priority order
   if (deepgramKey && !providers.some((p) => p.name === "deepgram")) {
     providers.push({ name: "deepgram", fn: () => deepgramTts(text, deepgramKey) });
   }
@@ -144,16 +128,13 @@ async function synthesizeCartesiaSpeech(transcript) {
     providers.push({ name: "openai", fn: () => openaiTts(text, openaiKey) });
   }
 
-  if (!providers.length) {
-    console.warn("[ATLAS TTS] No TTS API key configured (set CARTESIA_API_KEY or OPENAI_API_KEY)");
-    return null;
-  }
+  if (!providers.length) return null;
 
   for (const provider of providers) {
     try {
       return await provider.fn();
     } catch (err) {
-      console.warn(`[ATLAS TTS] ${provider.name} failed:`, err.message);
+      console.warn(`[TTS] ${provider.name} failed:`, err.message);
     }
   }
   return null;

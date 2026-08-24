@@ -202,12 +202,6 @@
                 </div>
               </div>
             </div>
-            <div id="pluginControl" class="plugin-control">
-              <button id="pluginButton" class="plugin-trigger" type="button" aria-haspopup="dialog" aria-expanded="false" aria-controls="pluginPopover" aria-label="Plugins" title="Plugins">
-                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 4h3a2 2 0 1 1 4 0h3a2 2 0 0 1 2 2v3a2 2 0 1 0 0 4v3a2 2 0 0 1-2 2h-3a2 2 0 1 1-4 0H8a2 2 0 0 1-2-2v-3a2 2 0 1 0 0-4V6a2 2 0 0 1 2-2Z"/></svg>
-                <span>Plugins</span>
-              </button>
-            </div>
           </div>
           <div class="color-orb-control" data-color-control="ai">
             <button type="button" class="color-orb-trigger color-blue" aria-label="AI color" title="AI color" aria-expanded="false"><span aria-hidden="true">AI</span></button>
@@ -614,95 +608,6 @@
     </section>
   </div>
 
-  <!-- Plugin Manager -->
-  <div id="pluginPopover" class="plugin-modal-layer" hidden aria-hidden="true">
-    <section class="plugin-modal" role="dialog" aria-modal="true" aria-labelledby="pluginDialogTitle" aria-describedby="pluginDialogDescription" tabindex="-1">
-      <header class="plugin-modal-header">
-        <div>
-          <h2 id="pluginDialogTitle">Plugin manager</h2>
-          <p id="pluginDialogDescription">Choose which capabilities the AI can use. Disabled plugins add no prompt or canvas widget runtime.</p>
-        </div>
-        <button id="pluginClose" class="plugin-icon-button" type="button" aria-label="Close plugins" title="Close plugins">
-          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m6 6 12 12M18 6 6 18"/></svg>
-        </button>
-      </header>
-      <div class="plugin-tabs" role="tablist" aria-label="Plugin sources">
-        <button id="pluginLocalTab" class="active" type="button" role="tab" aria-selected="true" aria-controls="pluginLocalPanel" data-plugin-tab="local"><span>Local plugins</span><span id="pluginLocalCount" class="plugin-count">0</span></button>
-        <button id="pluginCreateTab" type="button" role="tab" aria-selected="false" aria-controls="pluginCreatePanel" data-plugin-tab="create"><span>Create</span><span class="plugin-preview">Preview</span></button>
-        <button id="pluginServerTab" type="button" role="tab" aria-selected="false" aria-controls="pluginServerPanel" data-plugin-tab="server"><span>Server plugins</span><span class="plugin-coming-soon">Coming soon</span></button>
-      </div>
-      <section id="pluginLocalPanel" class="plugin-panel" role="tabpanel" aria-labelledby="pluginLocalTab">
-        <div class="plugin-usage">
-          <strong>How to use</strong>
-          <p>Enable a data plugin, then write a request on the canvas. Use an arrow or box to choose where the live result appears.</p>
-        </div>
-        <div class="plugin-panel-bar">
-          <span id="pluginCatalogStatus" role="status" aria-live="polite"></span>
-          <button id="pluginRefresh" class="plugin-icon-button" type="button" aria-label="Refresh local plugins" title="Refresh local plugins">
-            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 6v5h-5M4 18v-5h5"/><path d="M18.2 9A7 7 0 0 0 6.4 6.4L4 9m16 6-2.4 2.6A7 7 0 0 1 5.8 15"/></svg>
-          </button>
-        </div>
-        <div id="pluginOptions" class="plugin-options"></div>
-      </section>
-      <section id="pluginCreatePanel" class="plugin-panel plugin-create-panel" role="tabpanel" aria-labelledby="pluginCreateTab" hidden>
-        <div class="plugin-create-intro">
-          <div>
-            <h3>Create a local plugin</h3>
-            <p>Preview: this workflow has limited testing. Describe the capability in the template, then preferably use Improve with AI before saving.</p>
-          </div>
-          <button class="plugin-share-button" type="button" disabled>Share for points · Coming soon</button>
-        </div>
-        <form id="pluginCreateForm" class="plugin-create-form">
-          <fieldset class="plugin-template-fieldset">
-            <legend>Template</legend>
-            <div class="plugin-template-switch" role="group" aria-label="Template">
-              <button id="pluginSimpleTemplate" class="active" type="button" data-plugin-template="simple" aria-pressed="true">Simple HTML</button>
-            </div>
-          </fieldset>
-          <label class="plugin-editor-field" for="pluginTitle">
-            <span>Plugin title</span>
-            <input id="pluginTitle" type="text" maxlength="80" placeholder="Filled automatically by Improve with AI, or enter your own">
-          </label>
-          <label class="plugin-editor-field" for="pluginDocumentEditor">
-            <span>Plugin Markdown</span>
-            <textarea id="pluginDocumentEditor" rows="18" spellcheck="false" aria-describedby="pluginDocumentHint pluginDocumentStatus"></textarea>
-          </label>
-          <div class="plugin-editor-meta">
-            <span id="pluginDocumentHint">Prefer Improve with AI before saving. The final document needs frontmatter and an exact One-shot example.</span>
-            <output id="pluginDocumentBytes" for="pluginDocumentEditor">0 / 12000 bytes</output>
-          </div>
-          <label class="plugin-editor-field" for="pluginStylesEditor">
-            <span>Plugin CSS (optional)</span>
-            <textarea id="pluginStylesEditor" class="plugin-styles-editor" rows="10" spellcheck="false" aria-describedby="pluginStylesHint pluginDocumentStatus"></textarea>
-          </label>
-          <div class="plugin-editor-meta plugin-styles-meta">
-            <div class="plugin-styles-help">
-              <button id="pluginStylesUploadButton" class="plugin-css-import" type="button">
-                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 16V4m0 0-4 4m4-4 4 4M5 15v4h14v-4"/></svg>
-                <span>Import .css</span>
-              </button>
-              <input id="pluginStylesUpload" type="file" accept=".css,text/css" hidden>
-              <span id="pluginStylesHint">Saved CSS is injected only when this plugin's widget is mounted.</span>
-            </div>
-            <output id="pluginStylesBytes" for="pluginStylesEditor pluginStylesUpload">0 / 32000 bytes</output>
-          </div>
-          <iframe id="pluginStylesPreview" class="plugin-styles-preview" title="Plugin CSS preview"></iframe>
-          <div class="plugin-create-actions">
-            <span id="pluginDocumentStatus" role="status" aria-live="polite"></span>
-            <button id="pluginImprove" class="plugin-secondary-action" type="button">Improve with AI</button>
-            <button id="pluginSave" class="plugin-primary-action" type="submit">Save and enable</button>
-          </div>
-        </form>
-        <p class="plugin-marketplace-note">The future marketplace will support free or points-priced downloads.</p>
-      </section>
-      <section id="pluginServerPanel" class="plugin-panel plugin-server-panel" role="tabpanel" aria-labelledby="pluginServerTab" hidden>
-        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 18h10a4 4 0 0 0 .7-7.9A6 6 0 0 0 6.4 8.5 4.8 4.8 0 0 0 7 18Z"/><path d="M9 14h6M12 11v6"/></svg>
-        <h3>Server plugin marketplace is coming</h3>
-        <p>Published plugins, free or points-priced downloads, server selection, trust details, and updates will appear here after the Lumi6 website launches.</p>
-      </section>
-    </section>
-  </div>
-
   <!-- Supabase Auth Modal -->
   <div id="supabaseAuthModal" class="auth-modal" hidden>
     <div class="auth-modal-content">
@@ -800,17 +705,11 @@
   <script src="/api/config.js"></script>
   <script src="draw.js?v=20260823_v2"></script>
   <script src="selection.js?v=20260823_v2"></script>
-  <script src="tour.js?v=20260823_v2"></script>
   <script src="mixed-text.js?v=20260823_v2"></script>
   <script src="animation.js?v=20260823_v2"></script>
-  <script src="plugins.js?v=20260823_v2"></script>
   <script src="summon.js?v=20260823_v2"></script>
   <script src="app.js?v=20260823_v2"></script>
   <script>
-    // Sidebar nav plugin button wires to pluginButton for JS compatibility
-    document.getElementById("navPlugins")?.addEventListener("click", () => {
-      document.getElementById("pluginButton")?.click();
-    });
     // Zoom buttons
     document.getElementById('zoomOutBtn')?.addEventListener('click', () => {
       const vp = document.getElementById('viewport');

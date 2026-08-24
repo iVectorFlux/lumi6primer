@@ -1570,6 +1570,3 @@
       }
     }
   };
-
-  requestAnimationFrame(() => requestAnimationFrame(maybeStartOnboarding));
-})();

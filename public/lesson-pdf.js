@@ -1,5 +1,6 @@
 /**
- * Kid-readable lesson PDF: title, You asked / Lumi6 answered, pictures.
+ * Kid-readable lesson PDF & interactive web learning document.
+ * Curates conversation, first-principles explanations, diagrams, and thinking questions.
  */
 (function () {
   "use strict";
@@ -12,6 +13,9 @@
     const last = turns[turns.length - 1];
     if (last && last.role === role && last.text === spoken) return;
     turns.push({ role: role === "student" ? "student" : "teacher", text: spoken, image: "" });
+    try {
+      sessionStorage.setItem("lumi6_lesson_turns", JSON.stringify(turns.slice(-30)));
+    } catch {}
   }
 
   function attachImage(href) {
@@ -24,24 +28,63 @@
       }
     }
     turns.push({ role: "teacher", text: "", image: url });
+    try {
+      sessionStorage.setItem("lumi6_lesson_turns", JSON.stringify(turns.slice(-30)));
+    } catch {}
   }
 
   function turnsFromChat() {
+    // 1. In-memory turns array
+    if (turns.length > 0) return turns.slice();
+
+    // 2. SessionStorage restore
+    try {
+      const stored = sessionStorage.getItem("lumi6_lesson_turns");
+      if (stored) {
+        const parsed = JSON.parse(stored);
+        if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+      }
+    } catch {}
+
+    // 3. Talk Mode DOM Feed
+    const talkCards = document.querySelectorAll("#talkFeed .talk-turn-card");
+    if (talkCards.length > 0) {
+      const fromTalk = [];
+      talkCards.forEach((card) => {
+        const asked = card.querySelector(".talk-child-text")?.textContent?.trim();
+        if (asked) fromTalk.push({ role: "student", text: asked, image: "" });
+
+        const explanation = Array.from(card.querySelectorAll(".talk-explanation-body p"))
+          .map((p) => p.textContent.trim())
+          .filter(Boolean)
+          .join(" ");
+        const question = card.querySelector(".talk-question-text")?.textContent?.trim();
+        const img = card.querySelector(".talk-lesson-image")?.getAttribute("src") || "";
+
+        const teacherText = [explanation, question ? `Think About It: ${question}` : ""].filter(Boolean).join("\n\n");
+        if (teacherText || img) {
+          fromTalk.push({ role: "teacher", text: teacherText, image: img });
+        }
+      });
+      if (fromTalk.length > 0) return fromTalk;
+    }
+
+    // 4. Whiteboard Chat DOM
     const nodes = document.querySelectorAll("#atlasMessages .atlas-msg");
-    if (!nodes.length) return turns.slice();
-    const fromDom = [];
-    nodes.forEach((el) => {
-      const role = el.classList.contains("student") ? "student" : "teacher";
-      const text = String(el.querySelector(".atlas-msg-bubble")?.textContent || "").trim();
-      const image = el.dataset.image || "";
-      if (!text && !image) return;
-      if (/what concept would you like to explore|ask me something you want to understand/i.test(text)) return;
-      fromDom.push({ role, text, image });
-    });
-    fromDom.forEach((item, index) => {
-      if (!item.image && turns[index]?.image) item.image = turns[index].image;
-    });
-    return fromDom.length ? fromDom : turns.slice();
+    if (nodes.length > 0) {
+      const fromDom = [];
+      nodes.forEach((el) => {
+        const role = el.classList.contains("student") ? "student" : "teacher";
+        const text = String(el.querySelector(".atlas-msg-bubble")?.textContent || "").trim();
+        const image = el.dataset.image || "";
+        if (!text && !image) return;
+        if (/what concept would you like to explore|ask me something you want to understand/i.test(text)) return;
+        fromDom.push({ role, text, image });
+      });
+      if (fromDom.length > 0) return fromDom;
+    }
+
+    return [];
   }
 
   function escapeHtml(value) {
@@ -96,7 +139,7 @@
       .replace(/[?.!]+$/g, "")
       .trim();
     if (!topic || topic.length < 3) {
-      return child ? `${child}'s Lesson` : "Today's Lesson";
+      return child ? `${child}'s Discovery Journey` : "Science Discovery Journey";
     }
     const words = topic.split(" ");
     if (words.length > 8) topic = words.slice(0, 8).join(" ");
@@ -130,45 +173,70 @@
   function stepsHtml(steps, boardPng) {
     if (!steps.length) {
       if (boardPng) return "";
-      return `<p class="empty">This board does not have a lesson yet. Draw or ask Lumi6 something, then download again.</p>`;
+      return `<p class="empty">This lesson does not have conversation turns yet. Ask Lumi6 a question or talk via voice, then download again.</p>`;
     }
     return steps.map((step, index) => {
       const asked = step.asked
         ? `<div class="ask-card">
-            <p class="label">You asked</p>
+            <div class="card-meta">
+              <span class="role-pill you">You Asked</span>
+            </div>
             <p class="ask-text">${escapeHtml(step.asked)}</p>
           </div>`
         : "";
-      const answerParas = readableParagraphs(step.answers.join(" "));
+
+      const rawAnswer = step.answers.join(" ");
+      const sentences = rawAnswer.split(/(?<=[.!?])\s+/).map((s) => s.trim()).filter(Boolean);
+      const questionSentence = sentences.find((s) => s.endsWith("?") || /^(what|how|why|can you|where|do you think|if you)\b/i.test(s));
+      const explanationSentences = sentences.filter((s) => s !== questionSentence);
+
+      const answerParas = readableParagraphs(explanationSentences.join(" "));
       const answered = answerParas.length
         ? `<div class="answer-card">
-            <p class="label">Lumi6 answered</p>
-            ${answerParas.map((para) => `<p>${escapeHtml(para)}</p>`).join("")}
+            <div class="card-meta">
+              <span class="role-pill lumi">Lumi6 Explanation</span>
+            </div>
+            <div class="answer-body">
+              ${answerParas.map((para) => `<p>${escapeHtml(para)}</p>`).join("")}
+            </div>
           </div>`
         : "";
+
+      const questionHtml = questionSentence
+        ? `<div class="question-capsule">
+            <div class="question-icon">?</div>
+            <div class="question-content">
+              <span class="question-tag">Think About It</span>
+              <p class="question-text">${escapeHtml(questionSentence)}</p>
+            </div>
+          </div>`
+        : "";
+
       const pictures = step.images.map((src, picIndex) =>
         `<figure class="picture">
-          <img src="${escapeHtml(src)}" alt="">
-          <figcaption>${step.images.length > 1 ? `Look at this · picture ${picIndex + 1}` : "Look at this"}</figcaption>
+          <img src="${escapeHtml(src)}" alt="Lesson illustration" loading="eager">
+          <figcaption>${step.images.length > 1 ? `Figure ${index + 1}.${picIndex + 1} — Visual concept` : `Figure ${index + 1} — Visual concept`}</figcaption>
         </figure>`
       ).join("");
-      return `<section class="step">
-        <p class="step-kicker">Step ${index + 1}</p>
+
+      return `<section class="step-card">
+        <div class="chapter-badge">Chapter ${index + 1}</div>
         ${asked}
         ${answered}
         ${pictures}
+        ${questionHtml}
       </section>`;
     }).join("");
   }
 
   function boardHtml(boardPng) {
     if (!boardPng) return "";
-    return `<section class="step board-step">
-      <p class="step-kicker">Your board</p>
-      <h2 class="board-heading">What you drew</h2>
+    return `<section class="step-card board-step">
+      <div class="chapter-badge">Interactive Canvas</div>
+      <h2 class="board-heading">Your Whiteboard Sketches & Notes</h2>
       <figure class="picture">
         <img src="${escapeHtml(boardPng)}" alt="The whiteboard">
-        <figcaption>Your sketch on the board</figcaption>
+        <figcaption>Your whiteboard workspace</figcaption>
       </figure>
     </section>`;
   }
@@ -184,13 +252,23 @@
     } catch {}
     return "";
   }
+
   function recapHtml(steps) {
     const topics = steps.map((step) => step.asked).filter(Boolean);
-    if (topics.length < 2) return "";
-    return `<section class="recap">
-      <p class="step-kicker">Remember</p>
-      <h2>What you asked today</h2>
+    if (!topics.length) return "";
+    return `<section class="recap-card">
+      <div class="chapter-badge">Thinking Profile & Discoveries</div>
+      <h2>Core Concepts Discovered</h2>
       <ol>${topics.map((topic) => `<li>${escapeHtml(topic)}</li>`).join("")}</ol>
+      <div style="margin-top: 18px; padding-top: 14px; border-top: 1px solid #e2e8f0;">
+        <h3 style="margin: 0 0 8px; font-size: 14px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.06em; color: var(--violet);">Thinking Capabilities Practiced</h3>
+        <div style="display: flex; flex-wrap: wrap; gap: 8px; margin-top: 6px;">
+          <span style="background: #ede9fe; color: #6d28d9; padding: 4px 10px; border-radius: 999px; font-size: 12px; font-weight: 700;">✦ Hypothesis Generation</span>
+          <span style="background: #ede9fe; color: #6d28d9; padding: 4px 10px; border-radius: 999px; font-size: 12px; font-weight: 700;">✦ Causal Reasoning</span>
+          <span style="background: #ede9fe; color: #6d28d9; padding: 4px 10px; border-radius: 999px; font-size: 12px; font-weight: 700;">✦ Far Transfer Application</span>
+          <span style="background: #ede9fe; color: #6d28d9; padding: 4px 10px; border-radius: 999px; font-size: 12px; font-weight: 700;">✦ Independent Teach-Back</span>
+        </div>
+      </div>
     </section>`;
   }
 
@@ -216,111 +294,373 @@
     const child = String(localStorage.getItem("primerChildName") || "Learner").trim() || "Learner";
     const title = steps.some((step) => step.asked)
       ? crispTitle(steps, child)
-      : (boardPng ? `${child}'s board` : `${child}'s Lesson`);
+      : (boardPng ? `${child}'s Whiteboard` : `${child}'s Lesson`);
     const when = new Date().toLocaleDateString(undefined, {
       month: "long",
       day: "numeric",
       year: "numeric"
     });
+
     const html = `<!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<title>${escapeHtml(title)} — Lumi6</title>
+<title>${escapeHtml(title)} — Lumi6 Learning Document</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Caveat:wght@700&display=swap" rel="stylesheet">
 <style>
   :root {
-    --ink: #2e1065;
-    --violet: #6d28d9;
-    --deep: #4c1d95;
-    --chip: #7c3aed;
-    --wash: #f6f3ff;
-    --lilac: #f5f3ff;
-    --line: rgba(109, 40, 217, 0.12);
+    --ink: #0f172a;
+    --slate: #475569;
+    --violet: #7c3aed;
+    --violet-dark: #6d28d9;
+    --purple-light: #f5f3ff;
+    --purple-border: #ddd6fe;
+    --card-bg: #ffffff;
+    --page-bg: #f8fafc;
+    --line: rgba(124, 58, 237, 0.12);
   }
   * { box-sizing: border-box; }
   body {
     margin: 0;
     color: var(--ink);
-    font-family: Inter, system-ui, sans-serif;
+    font-family: "Plus Jakarta Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    background: var(--page-bg);
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+  .web-toolbar {
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    background: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(12px);
+    border-bottom: 1px solid #e2e8f0;
+    padding: 12px 24px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.04);
+  }
+  .toolbar-brand {
+    font-weight: 800;
+    font-size: 16px;
+    color: var(--violet);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .toolbar-actions {
+    display: flex;
+    gap: 12px;
+  }
+  .btn {
+    appearance: none;
+    border: none;
+    cursor: pointer;
+    font-family: inherit;
+    font-size: 13px;
+    font-weight: 700;
+    padding: 8px 18px;
+    border-radius: 999px;
+    transition: all 0.15s ease;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .btn-primary {
+    background: linear-gradient(135deg, #8b5cf6, #6d28d9);
+    color: #ffffff;
+    box-shadow: 0 4px 12px rgba(109, 40, 217, 0.25);
+  }
+  .btn-primary:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 6px 16px rgba(109, 40, 217, 0.35);
+  }
+  .btn-secondary {
+    background: #ede9fe;
+    color: #5b21b6;
   }
   .page {
-    max-width: 720px;
+    max-width: 820px;
     margin: 0 auto;
-    padding: 40px 32px 56px;
+    padding: 40px 32px 64px;
   }
-  .step-kicker {
-    margin: 0 0 12px;
+  .hero-header {
+    background: linear-gradient(135deg, #ffffff 0%, #f5f3ff 100%);
+    border: 1px solid var(--purple-border);
+    border-radius: 24px;
+    padding: 36px 36px 28px;
+    margin-bottom: 32px;
+    box-shadow: 0 10px 30px rgba(109, 40, 217, 0.06);
+    page-break-inside: avoid;
+  }
+  .hero-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: #ede9fe;
+    color: #6d28d9;
     font-size: 11px;
-    font-weight: 700;
-    letter-spacing: 0.08em;
+    font-weight: 800;
     text-transform: uppercase;
-    color: var(--violet);
+    letter-spacing: 0.08em;
+    padding: 5px 14px;
+    border-radius: 999px;
+    margin-bottom: 12px;
   }
-  .ask {
-    margin: 0 0 14px;
-    font-family: "Patrick Hand", "Segoe Print", "Comic Sans MS", cursive;
-    font-size: 26px;
-    line-height: 1.25;
-    color: var(--ink);
-  }
-  .reply {
+  .hero-title {
     margin: 0 0 10px;
-    font-size: 15.5px;
-    line-height: 1.55;
-    color: #3b0764;
+    font-size: 32px;
+    font-weight: 800;
+    color: var(--ink);
+    line-height: 1.2;
+    letter-spacing: -0.02em;
   }
-  .reply:last-child { margin-bottom: 0; }
-  .diagram {
-    margin: 16px 0 0;
+  .hero-meta {
+    font-size: 14px;
+    color: var(--slate);
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    font-weight: 500;
+  }
+  .step-card {
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    border-radius: 22px;
+    padding: 26px 28px;
+    margin-bottom: 28px;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.03);
+    page-break-inside: avoid;
+  }
+  .chapter-badge {
+    display: inline-block;
+    font-size: 11px;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--violet);
+    background: #f5f3ff;
+    border: 1px solid #ddd6fe;
+    padding: 3px 10px;
+    border-radius: 8px;
+    margin-bottom: 16px;
+  }
+  .ask-card {
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-left: 4px solid #8b5cf6;
+    border-radius: 14px;
+    padding: 14px 18px;
+    margin-bottom: 16px;
+  }
+  .card-meta {
+    margin-bottom: 6px;
+  }
+  .role-pill {
+    font-size: 10px;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    padding: 2px 8px;
+    border-radius: 6px;
+  }
+  .role-pill.you {
+    background: #e2e8f0;
+    color: #334155;
+  }
+  .role-pill.lumi {
+    background: #ede9fe;
+    color: #6d28d9;
+  }
+  .ask-text {
+    margin: 0;
+    font-size: 17px;
+    font-weight: 700;
+    color: #1e293b;
+    line-height: 1.4;
+  }
+  .answer-card {
+    background: #ffffff;
+    border: 1px solid #f1f5f9;
+    border-radius: 16px;
+    padding: 18px 20px;
+    margin-bottom: 16px;
+  }
+  .answer-body p {
+    margin: 0 0 12px;
+    font-size: 15.5px;
+    line-height: 1.65;
+    color: #334155;
+  }
+  .answer-body p:last-child {
+    margin-bottom: 0;
+  }
+  .picture {
+    margin: 18px 0;
     padding: 12px;
     border-radius: 18px;
-    background: #fff;
-    border: 1px solid var(--line);
+    background: #fafafa;
+    border: 1px solid #e2e8f0;
     text-align: center;
     page-break-inside: avoid;
   }
-  .diagram img {
+  .picture img {
     max-width: 100%;
-    height: auto;
+    max-height: 380px;
     border-radius: 12px;
     display: block;
     margin: 0 auto;
+    object-fit: contain;
   }
-  .diagram figcaption {
-    margin-top: 8px;
+  .picture figcaption {
+    margin-top: 10px;
     font-size: 12px;
-    font-weight: 600;
-    color: #6b21a8;
+    font-weight: 700;
+    color: #64748b;
   }
-  .recap {
-    margin: 28px 0 0;
-    padding: 20px 22px;
-    border-radius: 24px;
-    background: rgba(255, 255, 255, 0.92);
-    border: 1px solid var(--line);
+  .question-capsule {
+    margin-top: 18px;
+    padding: 16px 18px;
+    border-radius: 16px;
+    background: linear-gradient(135deg, #fdf4ff 0%, #fae8ff 100%);
+    border: 1px solid #f0abfc;
+    display: flex;
+    gap: 14px;
+    align-items: flex-start;
+  }
+  .question-icon {
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    background: #d946ef;
+    color: #ffffff;
+    font-weight: 800;
+    font-size: 15px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    margin-top: 2px;
+  }
+  .question-content {
+    flex: 1;
+  }
+  .question-tag {
+    display: block;
+    font-size: 11px;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: #a21caf;
+    margin-bottom: 4px;
+  }
+  .question-text {
+    margin: 0;
+    font-size: 15.5px;
+    font-weight: 700;
+    color: #701a75;
+    line-height: 1.45;
+  }
+  .recap-card {
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 22px;
+    padding: 26px 28px;
+    margin-top: 32px;
     page-break-inside: avoid;
   }
-  .recap h2 {
-    margin: 0 0 12px;
+  .recap-card h2 {
+    margin: 0 0 14px;
     font-size: 20px;
+    font-weight: 800;
     color: var(--ink);
   }
-  .recap ol {
+  .recap-card ol {
     margin: 0;
-    padding-left: 22px;
+    padding-left: 24px;
+    color: var(--slate);
+    font-size: 15px;
+    line-height: 1.7;
+    font-weight: 500;
+  }
+  .board-heading {
+    margin: 0 0 14px;
+    font-size: 18px;
+    font-weight: 800;
+    color: var(--ink);
+  }
+  .empty {
+    padding: 32px;
+    text-align: center;
+    color: #64748b;
+    font-style: italic;
+  }
+  .love-footer {
+    margin-top: 48px;
+    text-align: center;
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--violet);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+  }
+  .heart {
+    color: #ef4444;
+    font-size: 16px;
+  }
+  @media print {
+    .no-print { display: none !important; }
+    body { background: #ffffff; }
+    .page { max-width: 100%; padding: 0; }
+    .hero-header, .step-card, .recap-card { box-shadow: none; border-color: #cbd5e1; }
   }
 </style>
 </head>
 <body>
+  <div class="web-toolbar no-print">
+    <div class="toolbar-brand">
+      <span>✦</span>
+      <span>Lumi6 Learning Journey</span>
+    </div>
+    <div class="toolbar-actions">
+      <button onclick="window.print()" class="btn btn-primary" type="button">
+        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9V2h12v7M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2"/><path d="M6 14h12v8H6z"/></svg>
+        <span>Save as PDF / Print</span>
+      </button>
+      <button onclick="window.close()" class="btn btn-secondary" type="button">Close</button>
+    </div>
+  </div>
+
   <article class="page">
+    <header class="hero-header">
+      <div class="hero-pill">✦ Interactive Learning Chapter</div>
+      <h1 class="hero-title">${escapeHtml(title)}</h1>
+      <div class="hero-meta">
+        <span>Learner: <strong>${escapeHtml(child)}</strong></span>
+        <span>•</span>
+        <span>${escapeHtml(when)}</span>
+        <span>•</span>
+        <span>${steps.length} ${steps.length === 1 ? "Chapter" : "Chapters"} Explored</span>
+      </div>
+    </header>
+
     ${boardHtml(boardPng)}
     ${stepsHtml(steps, boardPng)}
     ${recapHtml(steps)}
-    <p class="love"><span>Made with love</span><span class="heart" aria-hidden="true">♥</span><span>by Lumi6</span></p>
+
+    <div class="love-footer">
+      <span>Made with love</span>
+      <span class="heart" aria-hidden="true">♥</span>
+      <span>by Lumi6 AI Thinking Tutor</span>
+    </div>
   </article>
 </body>
 </html>`;
+
     return { html, title, child, steps };
   }
 
@@ -356,77 +696,31 @@
     return { blob: null, title: data.title, filename: `${(data.title || "Lumi6_Lesson").replace(/[^a-zA-Z0-9_-]/g, "_")}.pdf` };
   }
 
-  async function shareLessonOnWhatsApp() {
-    const btn = document.getElementById("shareWhatsAppBtn");
-    if (btn) btn.disabled = true;
-    try {
-      const { blob, title, filename } = await generateLessonPdfBlob();
-      const cleanTitle = title || "Lesson";
-
-      if (blob) {
-        const file = new File([blob], filename, { type: "application/pdf" });
-        if (navigator.canShare && navigator.canShare({ files: [file] })) {
-          try {
-            await navigator.share({
-              files: [file],
-              title: `Lumi6 Lesson: ${cleanTitle}`,
-              text: `Here is the lesson PDF for ${cleanTitle} from Lumi6!`
-            });
-            return;
-          } catch (err) {
-            if (err.name !== "AbortError") console.warn("[Share] Native file share failed:", err);
-          }
-        }
-
-        // Fallback: download PDF directly and open WhatsApp
-        const a = document.createElement("a");
-        a.href = URL.createObjectURL(blob);
-        a.download = filename;
-        document.body.appendChild(a);
-        a.click();
-        a.remove();
-
-        const shareText = `Here is our Lumi6 lesson: ${cleanTitle} (PDF downloaded)`;
-        window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(shareText)}`, "_blank");
-        return;
-      }
-
-      // Fallback to print PDF + WhatsApp link
-      await exportLessonPdf();
-      const text = `Check out what we learned on Lumi6: ${cleanTitle}`;
-      window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(text)}`, "_blank");
-    } catch (err) {
-      console.error("[Share] WhatsApp share failed:", err);
-      window.alert("Could not generate the lesson PDF for sharing.");
-    } finally {
-      if (btn) btn.disabled = false;
-    }
-  }
-
   async function exportLessonPdf() {
     const btn = document.getElementById("exportPngBtn");
     if (btn) btn.disabled = true;
     try {
-      const { blob, title, filename } = await generateLessonPdfBlob();
-      if (blob) {
-        const a = document.createElement("a");
-        a.href = URL.createObjectURL(blob);
-        a.download = filename;
-        document.body.appendChild(a);
-        a.click();
-        a.remove();
-        return;
-      }
-
       const { html } = await buildLessonPdfData();
       const win = window.open("", "_blank");
       if (!win) {
-        window.alert("Allow pop-ups to download the lesson PDF.");
+        // Fallback if popup blocked
+        const { blob, filename } = await generateLessonPdfBlob();
+        if (blob) {
+          const a = document.createElement("a");
+          a.href = URL.createObjectURL(blob);
+          a.download = filename;
+          document.body.appendChild(a);
+          a.click();
+          a.remove();
+        } else {
+          window.alert("Please allow pop-ups to open the lesson document and download the PDF.");
+        }
         return;
       }
       win.document.open();
       win.document.write(html);
       win.document.close();
+
       let printed = false;
       const printOnce = async () => {
         if (printed) return;
@@ -434,14 +728,27 @@
         try {
           await waitForImages(win.document);
           win.focus();
-          win.print();
         } catch {}
       };
-      if (win.document.readyState === "complete") setTimeout(printOnce, 200);
-      else win.addEventListener("load", () => setTimeout(printOnce, 200), { once: true });
-      setTimeout(printOnce, 2500);
+      if (win.document.readyState === "complete") setTimeout(printOnce, 250);
+      else win.addEventListener("load", () => setTimeout(printOnce, 250), { once: true });
     } catch (err) {
-      window.alert(err.message || "Could not build the lesson PDF.");
+      window.alert(err.message || "Could not generate the lesson PDF.");
+    } finally {
+      if (btn) btn.disabled = false;
+    }
+  }
+
+  async function shareLessonOnWhatsApp() {
+    const btn = document.getElementById("shareWhatsAppBtn");
+    if (btn) btn.disabled = true;
+    try {
+      const { title } = await buildLessonPdfData();
+      const cleanTitle = title || "Lesson";
+      const shareText = `Check out what we explored on Lumi6 today: ${cleanTitle}!`;
+      window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(shareText)}`, "_blank");
+    } catch (err) {
+      window.alert("Could not open WhatsApp sharing.");
     } finally {
       if (btn) btn.disabled = false;
     }

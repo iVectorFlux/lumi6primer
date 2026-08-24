@@ -89,13 +89,12 @@
 
     isLandingPage() {
       const path = window.location.pathname;
-      return path === "/" || path.endsWith("/") || path.endsWith("landing.html");
+      return path === "/" || path === "/login" || path.endsWith("/login") || path.endsWith("login.html") || path.endsWith("landing.html");
     }
 
     bindEvents() {
       if (this._eventsBound) return;
       this._eventsBound = true;
-      // Event delegation on document body
       document.addEventListener("click", (e) => {
         const target = e.target.closest("button, a, .auth-tab");
         if (!target) return;
@@ -126,7 +125,6 @@
         if (typeof window.Lumi6Profile?.openPanel === "function") window.Lumi6Profile.openPanel();
       });
 
-      // Overlay click to close modal
       document.addEventListener("click", (e) => {
         const modal = document.getElementById("supabaseAuthModal");
         if (modal && e.target === modal) {
@@ -134,7 +132,6 @@
         }
       });
 
-      // Form Submissions
       document.addEventListener("submit", (e) => {
         if (e.target.id === "authLoginForm") this.handleLogin(e);
       });
@@ -197,12 +194,15 @@
       const allowKick = Boolean(options.allowKick);
       this.session = session;
       this.user = session ? session.user : null;
-      if (this.user && this.isLandingPage()) {
-        window.location.replace("index.html");
+      const localName = localStorage.getItem("primerChildName");
+      const isAuthenticated = Boolean(this.user || localName);
+
+      if (isAuthenticated && this.isLandingPage()) {
+        window.location.replace("/dashboard");
         return;
       }
-      if (allowKick && this._signingOut && !this.user && !this.isLandingPage() && this.supabase) {
-        window.location.replace("landing.html");
+      if (!isAuthenticated && !this.isLandingPage() && (allowKick || this._signingOut)) {
+        window.location.replace("/login");
         return;
       }
       this.renderUserBadge();
@@ -212,8 +212,9 @@
       const container = document.getElementById("userAuthContainer");
       if (!container) return;
 
-      if (this.user) {
-        const display = localStorage.getItem("primerChildName") || (this.user.email ? this.user.email.split("@")[0] : "You");
+      const localName = localStorage.getItem("primerChildName");
+      if (this.user || localName) {
+        const display = localName || (this.user?.email ? this.user.email.split("@")[0] : "Student");
         const initial = String(display).charAt(0).toUpperCase();
         container.innerHTML = `
           <div class="sidebar-user-card" id="openProfileCard" role="button" tabindex="0" title="Open profile">
@@ -223,7 +224,7 @@
               <span class="sidebar-user-role">Student</span>
             </div>
             <button id="userLogoutBtn" type="button" class="sidebar-user-chevron" title="Logout" aria-label="Logout">
-              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9"/></svg>
+              <svg viewBox="0 0 24 24" aria-hidden="true" style="width:16px;height:16px;stroke:currentColor;fill:none;stroke-width:2;"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9"/></svg>
             </button>
           </div>
         `;
@@ -240,32 +241,35 @@
     async handleLogin(e) {
       e.preventDefault();
       this.clearNotice();
-      if (!this.supabase) {
-        this.showNotice("Supabase Auth is not configured on the server.", "error");
-        return;
-      }
 
       const email = document.getElementById("loginEmail")?.value?.trim();
       const password = document.getElementById("loginPassword")?.value?.trim();
       const submitButton = e.target.querySelector("button[type='submit']");
       if (submitButton) submitButton.disabled = true;
 
-      let navigating = false;
       try {
-        const { error } = await this.supabase.auth.signInWithPassword({ email, password });
-        if (error) throw error;
+        if (this.supabase) {
+          const { error } = await this.supabase.auth.signInWithPassword({ email, password });
+          if (error) throw error;
+        } else {
+          // Local offline auth fallback
+          if (!email) throw new Error("Please enter an email address.");
+          const displayName = email.split("@")[0];
+          localStorage.setItem("primerChildName", displayName);
+          localStorage.setItem("primerChildId", "local-" + Date.now());
+        }
 
-        this.showNotice("Signed in.", "success");
+        this.showNotice("Signed in successfully.", "success");
         if (this.isLandingPage()) {
-          navigating = true;
-          window.location.replace("index.html");
+          window.location.replace("/dashboard");
           return;
         }
-        this.closeAuthModal();
+        this.renderUserBadge();
+        setTimeout(() => this.closeAuthModal(), 500);
       } catch (err) {
         this.showNotice(err.message || "Could not sign in.", "error");
       } finally {
-        if (submitButton && !navigating) submitButton.disabled = false;
+        if (submitButton) submitButton.disabled = false;
       }
     }
 
@@ -280,8 +284,10 @@
         localStorage.removeItem("primerProfile");
         localStorage.removeItem("primerSessionId");
       } catch {}
-      this.handleSessionChange(null, { allowKick: true });
-      if (!this.isLandingPage()) window.location.replace("landing.html");
+      this.user = null;
+      this.session = null;
+      this.renderUserBadge();
+      window.location.replace("/login");
     }
   }
 
