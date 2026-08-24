@@ -124,6 +124,8 @@
   const DEFAULT_TOPIC_ICON = '<svg viewBox="0 0 128 128" aria-hidden="true"><path fill="#fde68a" d="M64 18a32 32 0 0 1 18 58c-4 4-6 8-6 14H52c0-6-2-10-6-14A32 32 0 0 1 64 18Z"/><rect x="52" y="94" width="24" height="8" rx="3" fill="#f59e0b"/><rect x="56" y="104" width="16" height="8" rx="3" fill="#d97706"/></svg>';
 
   function showAtlasGraphicLoader(title, extras = {}) {
+    window.__atlasGraphicLoading = true;
+    if (typeof window.syncTalkModeFeed === "function") window.syncTalkModeFeed();
     const el = document.getElementById("atlasGraphicLoader");
     const text = document.getElementById("atlasGraphicLoaderText");
     const icon = document.getElementById("atlasGraphicLoaderIcon");
@@ -133,6 +135,8 @@
   }
 
   function hideAtlasGraphicLoader() {
+    window.__atlasGraphicLoading = false;
+    if (typeof window.syncTalkModeFeed === "function") window.syncTalkModeFeed();
     const el = document.getElementById("atlasGraphicLoader");
     if (el) el.hidden = true;
   }
@@ -231,78 +235,78 @@
      * Programmatically create and mount Chat UI DOM elements.
      */
     initUI() {
-      if (document.getElementById("atlasChatSidebar")) {
-        return; // Already initialized
-      }
+      let sidebar = document.getElementById("atlasChatSidebar");
+      let toggleBtn = document.getElementById("atlasChatToggle");
 
-      // 1. Floating Toggle Button
-      const toggleBtn = document.createElement("button");
-      toggleBtn.id = "atlasChatToggle";
-      toggleBtn.type = "button";
-      toggleBtn.setAttribute("aria-label", "Toggle Lumi6 chat");
-      toggleBtn.innerHTML = `
-        <svg viewBox="0 0 24 24" aria-hidden="true">
-          <path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/>
-        </svg>
-        <span>Lumi6 Chat</span>
-      `;
+      if (!sidebar) {
+        sidebar = document.createElement("aside");
+        sidebar.id = "atlasChatSidebar";
+        sidebar.setAttribute("aria-label", "Lumi6 Teacher Chat");
+        sidebar.innerHTML = `
+          <header class="atlas-chat-header">
+            <div class="atlas-chat-header-title">
+              <div class="atlas-header-text">
+                <p class="atlas-kicker">Chat</p>
+                <h3>Lumi6</h3>
+              </div>
+            </div>
+            <div class="atlas-header-actions">
+              <button id="atlasResetBtn" class="atlas-icon-btn" type="button" title="Reset Session" aria-label="Reset Session">
+                <svg viewBox="0 0 24 24"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>
+              </button>
+              <button id="atlasCloseBtn" class="atlas-icon-btn" type="button" title="Close Chat" aria-label="Close Chat">
+                <svg viewBox="0 0 24 24"><path d="M18 6 6 18M6 6l12 12"/></svg>
+              </button>
+            </div>
+          </header>
 
-      // 2. Sidebar Panel Container
-      const sidebar = document.createElement("aside");
-      sidebar.id = "atlasChatSidebar";
-      sidebar.setAttribute("aria-label", "Lumi6 Teacher Chat");
-      sidebar.innerHTML = `
-        <header class="atlas-chat-header">
-          <div class="atlas-chat-header-title">
-            <div class="atlas-header-text">
-              <p class="atlas-kicker">Chat</p>
-              <h3>Lumi6</h3>
+          <div id="atlasMessages" class="atlas-chat-messages" role="log" aria-live="polite">
+            <div class="atlas-msg teacher">
+              <div class="atlas-msg-author">Lumi6</div>
+              <div class="atlas-msg-bubble">Hey! Ask me something you want to understand. I will explain it and draw it on the board.</div>
+              <div class="atlas-msg-time">${this.formatTime(new Date())}</div>
             </div>
           </div>
-          <div class="atlas-header-actions">
-            <button id="atlasResetBtn" class="atlas-icon-btn" type="button" title="Reset Session" aria-label="Reset Session">
-              <svg viewBox="0 0 24 24"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>
+
+          <footer class="atlas-chat-footer">
+            <textarea id="atlasInput" class="atlas-chat-input" rows="1" placeholder="Ask Lumi6…" aria-label="Ask Lumi6 a question"></textarea>
+            <button id="atlasSendBtn" class="atlas-send-btn" type="button" aria-label="Send Message">
+              <svg viewBox="0 0 24 24"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
             </button>
-            <button id="atlasCloseBtn" class="atlas-icon-btn" type="button" title="Close Chat" aria-label="Close Chat">
-              <svg viewBox="0 0 24 24"><path d="M18 6 6 18M6 6l12 12"/></svg>
-            </button>
-          </div>
-        </header>
+          </footer>
+        `;
 
-        <div id="atlasMessages" class="atlas-chat-messages" role="log" aria-live="polite">
-          <div class="atlas-msg teacher">
-            <div class="atlas-msg-author">Lumi6</div>
-            <div class="atlas-msg-bubble">Hey! Ask me something you want to understand. I will explain it and draw it on the board.</div>
-            <div class="atlas-msg-time">${this.formatTime(new Date())}</div>
-          </div>
-        </div>
-
-        <footer class="atlas-chat-footer">
-          <textarea id="atlasInput" class="atlas-chat-input" rows="1" placeholder="Ask Lumi6…" aria-label="Ask Lumi6 a question"></textarea>
-          <button id="atlasSendBtn" class="atlas-send-btn" type="button" aria-label="Send Message">
-            <svg viewBox="0 0 24 24"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
-          </button>
-        </footer>
-      `;
-
-      // Mount toggle into body (floats on mobile), sidebar into right panel slot
-      const rightMount = document.getElementById('atlasChatSidebarMount');
-      if (rightMount) {
-        rightMount.appendChild(sidebar);
-      } else {
-        document.body.appendChild(sidebar);
+        const rightMount = document.getElementById('atlasChatSidebarMount');
+        if (rightMount) {
+          rightMount.appendChild(sidebar);
+        } else {
+          document.body.appendChild(sidebar);
+        }
       }
-      document.body.appendChild(toggleBtn);
 
-      // Cache DOM references
+      if (!toggleBtn) {
+        toggleBtn = document.createElement("button");
+        toggleBtn.id = "atlasChatToggle";
+        toggleBtn.type = "button";
+        toggleBtn.setAttribute("aria-label", "Toggle Lumi6 chat");
+        toggleBtn.innerHTML = `
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/>
+          </svg>
+          <span>Lumi6 Chat</span>
+        `;
+        document.body.appendChild(toggleBtn);
+      }
+
+      // Always cache DOM references
       this.elements = {
         toggleBtn,
         sidebar,
         closeBtn: sidebar.querySelector("#atlasCloseBtn"),
         resetBtn: sidebar.querySelector("#atlasResetBtn"),
         messagesList: sidebar.querySelector("#atlasMessages"),
-        inputField: sidebar.querySelector("#atlasInput"),
-        sendBtn: sidebar.querySelector("#atlasSendBtn")
+        inputField: sidebar.querySelector("#atlasInput, #atlasChatInput, textarea"),
+        sendBtn: sidebar.querySelector("#atlasSendBtn, #atlasChatSendBtn, button[type='submit']")
       };
 
       this.bindEvents();
@@ -474,17 +478,14 @@
      * Programmatic message sending for Talk Mode.
      */
     async sendMessage(explicitText) {
-      if (explicitText && typeof explicitText === "string") {
-        if (this.elements.inputField) this.elements.inputField.value = explicitText;
-      }
-      return this.handleSendMessage();
+      return this.handleSendMessage(explicitText);
     }
 
     /**
      * Handle user sending a prompt.
      */
-    async handleSendMessage() {
-      const text = this.elements.inputField.value.trim();
+    async handleSendMessage(explicitText) {
+      const text = (explicitText || this.elements.inputField?.value || "").trim();
       if (!text || this.isSending) {
         return;
       }
@@ -496,12 +497,14 @@
       this.appendMessage("student", text);
 
       // Clear input field
-      this.elements.inputField.value = "";
-      this.elements.inputField.style.height = "auto";
+      if (this.elements.inputField) {
+        this.elements.inputField.value = "";
+        this.elements.inputField.style.height = "auto";
+      }
 
       // Set loading state
       this.isSending = true;
-      this.elements.sendBtn.disabled = true;
+      if (this.elements.sendBtn) this.elements.sendBtn.disabled = true;
       this.showLoading();
 
       try {

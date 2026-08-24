@@ -45,10 +45,11 @@ function firstSpokenSentence(text) {
 function formatEducationalTitle(rawConcept, spoken, childText) {
   let text = String(rawConcept || "").trim();
   
-  // If concept is conversational child speech / fragment, discard it
+  // If concept is conversational child speech, greeting, or learner name, discard it
   const isChildFragment = /^(it |they |as i |when |if |because |i think |maybe |what |how |why |almost |yes |okay |so |and |eyes |will |can |turn |slow )\b/i.test(text)
     || text.length > 35
-    || /\b(evaporate|freeze|melt|warm|cold|slow down|turn into|become|floor|puppy)\b/i.test(text);
+    || /\b(evaporate|freeze|melt|warm|cold|slow down|turn into|become|floor|puppy)\b/i.test(text)
+    || /^(kamal|alex|student|learner|buddy|kid|friend|hello|hey|hi|welcome|none|null|undefined)$/i.test(text);
 
   if (isChildFragment) {
     text = "";

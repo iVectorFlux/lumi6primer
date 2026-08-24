@@ -1919,10 +1919,7 @@
     inkCtx.restore();
   }
   function updateCoordinates() {
-    const r = view.getBoundingClientRect(),
-      x = (r.width / 2 - state.panX) / state.scale,
-      y = (r.height / 2 - state.panY) / state.scale;
-    coords.textContent = `x ${Math.round(x)} · y ${Math.round(y)} · ${Math.round(state.scale * 100)}%`;
+    coords.textContent = `${Math.round(state.scale * 100)}%`;
   }
   function render() {
     const d = devicePixelRatio || 1,

@@ -467,11 +467,11 @@
     }
 
     async firstAudioBlob(text) {
-      const fetchPromise = this.fetchTtsBlob(text, 8000).catch((err) => {
+      const fetchPromise = this.fetchTtsBlob(text, 12000).catch((err) => {
         console.warn("[Lumi6 Voice] opener fetch failed:", err.message);
         return null;
       });
-      const openerPromise = this.waitOpenerAudio(5000);
+      const openerPromise = this.waitOpenerAudio(6000);
       const raced = await Promise.race([openerPromise, fetchPromise]);
       if (raced && raced.size >= 32) return raced;
       const [opener, fetched] = await Promise.all([openerPromise, fetchPromise]);
@@ -580,7 +580,7 @@
           }
           return;
         }
-        if (i + 1 < parts.length) pending = this.fetchTtsBlob(parts[i + 1]).catch(() => null);
+        if (i + 1 < parts.length) pending = this.fetchTtsBlob(parts[i + 1], 12000).catch(() => null);
         await this.playBlobAsync(blob, generation, () => {
           if (started || generation !== this.generation) return;
           started = true;
@@ -599,6 +599,10 @@
         if (onEnd) onEnd();
         return;
       }
+      try {
+        window.speechSynthesis.cancel();
+        window.speechSynthesis.resume();
+      } catch {}
       if (!this.voice) this.pickVoice();
       const generation = this.generation;
       const chunks = String(text).match(/[^.!?]+[.!?]+(?:["”'])?|[^.!?]+$/g) || [text];
@@ -615,11 +619,14 @@
           if (onEnd) onEnd();
           return;
         }
+        try {
+          window.speechSynthesis.resume();
+        } catch {}
         const utterance = new SpeechSynthesisUtterance(parts[index]);
         if (this.voice) utterance.voice = this.voice;
         utterance.lang = this.voice?.lang || "en-US";
-        utterance.rate = 0.9;
-        utterance.pitch = 1.12;
+        utterance.rate = 1.0;
+        utterance.pitch = 1.05;
         utterance.volume = 1;
         utterance.onstart = () => {
           if (generation !== this.generation || started) return;
@@ -631,13 +638,20 @@
           index += 1;
           speakNext();
         };
-        utterance.onerror = () => {
+        utterance.onerror = (e) => {
+          console.warn("[Lumi6 Voice] speech utterance error:", e);
           if (generation !== this.generation) return;
-          if (onEnd) onEnd();
+          index += 1;
+          if (index >= parts.length && onEnd) onEnd();
+          else speakNext();
         };
-        window.speechSynthesis.speak(utterance);
+        try {
+          window.speechSynthesis.speak(utterance);
+        } catch (err) {
+          if (onEnd) onEnd();
+        }
       };
-      setTimeout(speakNext, 20);
+      setTimeout(speakNext, 10);
     }
 
     releaseAudio() {
@@ -732,57 +746,61 @@
     }
 
     initUI() {
-      if (document.getElementById("atlasVoiceToggle")) return;
+      let toggleBtn = document.getElementById("atlasVoiceToggle");
+      let overlay = document.getElementById("atlasVoiceOverlay");
 
-      // Floating Microphone Button
-      const toggleBtn = document.createElement("button");
-      toggleBtn.id = "atlasVoiceToggle";
-      toggleBtn.type = "button";
-      toggleBtn.title = "Lumi6 voice";
-      toggleBtn.setAttribute("aria-label", "Toggle Lumi6 voice");
-      toggleBtn.innerHTML = `
-        <svg viewBox="0 0 24 24" aria-hidden="true">
-          <path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3z"/>
-          <path d="M19 10v2a7 7 0 0 1-14 0v-2"/>
-          <line x1="12" y1="19" x2="12" y2="22"/>
-        </svg>
-        <span id="atlasVoiceLabel">Lumi6</span>
-      `;
+      if (!toggleBtn) {
+        toggleBtn = document.createElement("button");
+        toggleBtn.id = "atlasVoiceToggle";
+        toggleBtn.type = "button";
+        toggleBtn.title = "Lumi6 voice";
+        toggleBtn.setAttribute("aria-label", "Toggle Lumi6 voice");
+        toggleBtn.innerHTML = `
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3z"/>
+            <path d="M19 10v2a7 7 0 0 1-14 0v-2"/>
+            <line x1="12" y1="19" x2="12" y2="22"/>
+          </svg>
+          <span id="atlasVoiceLabel">Lumi6</span>
+        `;
+        document.body.appendChild(toggleBtn);
+      }
 
-      // Minimal Transcript Overlay
-      const overlay = document.createElement("div");
-      overlay.id = "atlasVoiceOverlay";
-      overlay.setAttribute("aria-live", "polite");
-      overlay.innerHTML = `
-        <span class="atlas-kid-sparkle" aria-hidden="true"></span>
-        <span class="atlas-kid-orb" aria-hidden="true"></span>
-        <div class="atlas-kid-copy">
-          <span id="atlasOverlayBadge" class="atlas-badge listening">Listening</span>
-          <span id="atlasOverlayText" class="atlas-overlay-text">Tap the mic and ask me anything.</span>
-        </div>
-        <div class="atlas-kid-actions">
-          <button id="atlasVoiceStop" class="atlas-overlay-stop" type="button" aria-label="Stop conversation">Stop</button>
-        </div>
-      `;
-
-      document.body.appendChild(toggleBtn);
-      document.body.appendChild(overlay);
+      if (!overlay) {
+        overlay = document.createElement("div");
+        overlay.id = "atlasVoiceOverlay";
+        overlay.setAttribute("aria-live", "polite");
+        overlay.innerHTML = `
+          <span class="atlas-kid-sparkle" aria-hidden="true"></span>
+          <span class="atlas-kid-orb" aria-hidden="true"></span>
+          <div class="atlas-kid-copy">
+            <span id="atlasOverlayBadge" class="atlas-badge listening">Listening</span>
+            <span id="atlasOverlayText" class="atlas-overlay-text">Tap the mic and ask me anything.</span>
+          </div>
+          <div class="atlas-kid-actions">
+            <button id="atlasVoiceStop" class="atlas-overlay-stop" type="button" aria-label="Stop conversation">Stop</button>
+          </div>
+        `;
+        document.body.appendChild(overlay);
+      }
 
       this.elements = {
         toggleBtn,
-        label: toggleBtn.querySelector("#atlasVoiceLabel"),
+        label: toggleBtn.querySelector("#atlasVoiceLabel") || toggleBtn,
         overlay,
         badge: overlay.querySelector("#atlasOverlayBadge"),
         text: overlay.querySelector("#atlasOverlayText"),
         stopBtn: overlay.querySelector("#atlasVoiceStop")
       };
 
-      toggleBtn.addEventListener("click", () => this.handleMicButtonClick());
-      this.elements.stopBtn.addEventListener("click", (e) => {
-        e.preventDefault();
-        e.stopPropagation();
-        this.turnOff();
-      });
+      toggleBtn.onclick = () => this.handleMicButtonClick();
+      if (this.elements.stopBtn) {
+        this.elements.stopBtn.onclick = (e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          this.turnOff();
+        };
+      }
     }
 
     handleMicButtonClick() {
@@ -1325,8 +1343,7 @@
 
       if (window.atlasChat && typeof window.atlasChat.ingestTurn === "function") {
         window.atlasChat.ingestTurn(studentText, teacherText);
-      }
-      if (window.Lumi6Lesson && typeof window.Lumi6Lesson.record === "function") {
+      } else if (window.Lumi6Lesson && typeof window.Lumi6Lesson.record === "function") {
         if (studentText) window.Lumi6Lesson.record("student", studentText);
         if (teacherText) window.Lumi6Lesson.record("teacher", teacherText);
       }
@@ -1382,15 +1399,22 @@
      * Update minimal accessibility transcript overlay.
      */
     showOverlay(role, text) {
+      if (!this.elements || !this.elements.overlay) this.initUI();
       if (this.overlayTimeout) clearTimeout(this.overlayTimeout);
 
-      this.elements.badge.className = `atlas-badge ${role}`;
-      this.elements.badge.textContent = role === "student" ? "You" : role === "teacher" ? "Lumi6" : role === "listening" ? "Listening" : role === "processing" ? "Thinking" : role;
-      this.elements.text.textContent = text;
-      this.elements.overlay.dataset.mood = role;
-      this.elements.overlay.classList.add("atlas-visible");
-      this.elements.overlay.classList.toggle("atlas-live", this.isActive || this.paused);
-      this.elements.overlay.classList.toggle("is-muted", this.micMuted);
+      if (this.elements.badge) {
+        this.elements.badge.className = `atlas-badge ${role}`;
+        this.elements.badge.textContent = role === "student" ? "You" : role === "teacher" ? "Lumi6" : role === "listening" ? "Listening" : role === "processing" ? "Thinking" : role;
+      }
+      if (this.elements.text) {
+        this.elements.text.textContent = text;
+      }
+      if (this.elements.overlay) {
+        this.elements.overlay.dataset.mood = role;
+        this.elements.overlay.classList.add("atlas-visible");
+        this.elements.overlay.classList.toggle("atlas-live", this.isActive || this.paused);
+        this.elements.overlay.classList.toggle("is-muted", this.micMuted);
+      }
     }
 
     autoHideOverlay(delayMs = 8000) {

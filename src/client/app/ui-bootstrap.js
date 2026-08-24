@@ -182,8 +182,7 @@
     }
     if (state.selectionGesture?.id === e.pointerId) {
       updateSelectionGesture(e);
-      const point = clientPoint(e);
-      coords.textContent = `x ${Math.round(point.x)} · y ${Math.round(point.y)} · ${Math.round(state.scale * 100)}%`;
+      coords.textContent = `${Math.round(state.scale * 100)}%`;
       return;
     }
     if (state.textTap?.id === e.pointerId) {
@@ -235,7 +234,7 @@
       y2 = Math.max(d.bbox.y + d.bbox.h, p.y);
     d.bbox = { x: x1, y: y1, w: x2 - x1, h: y2 - y1 };
     requestRender();
-    coords.textContent = `x ${Math.round(p.x)} · y ${Math.round(p.y)} · ${Math.round(state.scale * 100)}%`;
+    coords.textContent = `${Math.round(state.scale * 100)}%`;
   });
   function end(e) {
     state.pointers.delete(e.pointerId);
@@ -663,94 +662,110 @@
     if (document.querySelector("#effortPopover").hidden) showEffortControl();
     else hideEffortControl();
   };
-  pluginButton.onclick = () => {
-    if (pluginPopover.hidden) showPluginControl();
-    else hidePluginControl();
-  };
-  pluginClose.onclick = hidePluginControl;
-  pluginRefresh.onclick = () => {
-    state.pluginCatalogNotice = null;
-    void loadPluginDocuments();
-  };
-  pluginLocalTab.onclick = () => setPluginTab("local");
-  pluginCreateTab.onclick = () => setPluginTab("create");
-  pluginServerTab.onclick = () => setPluginTab("server");
-  pluginSimpleTemplate.onclick = () => setPluginTemplate("simple");
-  pluginTitle.addEventListener("input", () => {
-    if (state.pluginAuthoringStatus?.type === "error") state.pluginAuthoringStatus = null;
-    updatePluginAuthoringUi();
-  });
-  pluginDocumentEditor.addEventListener("input", () => {
-    state.pluginAuthoringStatus = null;
-    updatePluginAuthoringUi();
-  });
-  pluginStylesEditor.addEventListener("input", () => {
-    state.pluginAuthoringStatus = null;
-    updatePluginAuthoringUi();
-  });
-  pluginStylesUploadButton.onclick = () => {
-    if (state.pluginAuthoringBusy) return;
-    pluginStylesUpload.value = "";
-    pluginStylesUpload.click();
-  };
-  pluginStylesUpload.addEventListener("change", () => {
-    const file = pluginStylesUpload.files?.[0];
-    if (file) void importPluginStylesFile(file);
-    else pluginStylesUpload.value = "";
-  });
-  pluginImprove.onclick = () => void improvePluginDraft();
-  pluginCreateForm.addEventListener("submit", (event) => void savePluginDraft(event));
-  pluginOptions.addEventListener("click", (event) => {
-    const detailButton = event.target.closest("button[data-plugin-detail]");
-    if (detailButton) {
-      event.preventDefault();
-      event.stopPropagation();
-      togglePluginDetails(detailButton.dataset.pluginDetail, detailButton);
-      return;
-    }
-    const copyButton = event.target.closest("button[data-plugin-copy]");
-    if (copyButton) {
-      event.preventDefault();
-      event.stopPropagation();
-      void copyPluginMarkdown(copyButton.dataset.pluginCopy, copyButton);
-      return;
-    }
-    const duplicateButton = event.target.closest("button[data-plugin-duplicate]");
-    if (duplicateButton) {
-      event.preventDefault();
-      event.stopPropagation();
-      createPluginCopy(duplicateButton.dataset.pluginDuplicate);
-      return;
-    }
-    const deleteButton = event.target.closest("button[data-plugin-delete]");
-    if (!deleteButton) return;
-    event.preventDefault();
-    event.stopPropagation();
-    void deleteLocalPlugin(deleteButton.dataset.pluginDelete);
-  });
-  pluginOptions.addEventListener("change", (event) => {
-    const input = event.target.closest("input[data-plugin-id]");
-    if (!input) return;
-    void setPluginEnabled(input.dataset.pluginId, input.checked).then((enabled) => {
-      if (!enabled && input.isConnected) input.checked = pluginEnabled(input.dataset.pluginId);
+  if (pluginButton && pluginPopover) {
+    pluginButton.onclick = () => {
+      if (pluginPopover.hidden) showPluginControl();
+      else hidePluginControl();
+    };
+  }
+  if (pluginClose) pluginClose.onclick = hidePluginControl;
+  if (pluginRefresh) {
+    pluginRefresh.onclick = () => {
+      state.pluginCatalogNotice = null;
+      void loadPluginDocuments();
+    };
+  }
+  if (pluginLocalTab) pluginLocalTab.onclick = () => setPluginTab("local");
+  if (pluginCreateTab) pluginCreateTab.onclick = () => setPluginTab("create");
+  if (pluginServerTab) pluginServerTab.onclick = () => setPluginTab("server");
+  if (pluginSimpleTemplate) pluginSimpleTemplate.onclick = () => setPluginTemplate("simple");
+  if (pluginTitle) {
+    pluginTitle.addEventListener("input", () => {
+      if (state.pluginAuthoringStatus?.type === "error") state.pluginAuthoringStatus = null;
+      updatePluginAuthoringUi();
     });
-  });
-  pluginPopover.addEventListener("pointerdown", (event) => {
-    if (event.target === pluginPopover) hidePluginControl();
-  });
-  pluginPopover.addEventListener("keydown", (event) => {
-    if (event.key === "Escape") {
+  }
+  if (pluginDocumentEditor) {
+    pluginDocumentEditor.addEventListener("input", () => {
+      state.pluginAuthoringStatus = null;
+      updatePluginAuthoringUi();
+    });
+  }
+  if (pluginStylesEditor) {
+    pluginStylesEditor.addEventListener("input", () => {
+      state.pluginAuthoringStatus = null;
+      updatePluginAuthoringUi();
+    });
+  }
+  if (pluginStylesUploadButton && pluginStylesUpload) {
+    pluginStylesUploadButton.onclick = () => {
+      if (state.pluginAuthoringBusy) return;
+      pluginStylesUpload.value = "";
+      pluginStylesUpload.click();
+    };
+    pluginStylesUpload.addEventListener("change", () => {
+      const file = pluginStylesUpload.files?.[0];
+      if (file) void importPluginStylesFile(file);
+      else pluginStylesUpload.value = "";
+    });
+  }
+  if (pluginImprove) pluginImprove.onclick = () => void improvePluginDraft();
+  if (pluginCreateForm) pluginCreateForm.addEventListener("submit", (event) => void savePluginDraft(event));
+  if (pluginOptions) {
+    pluginOptions.addEventListener("click", (event) => {
+      const detailButton = event.target.closest("button[data-plugin-detail]");
+      if (detailButton) {
+        event.preventDefault();
+        event.stopPropagation();
+        togglePluginDetails(detailButton.dataset.pluginDetail, detailButton);
+        return;
+      }
+      const copyButton = event.target.closest("button[data-plugin-copy]");
+      if (copyButton) {
+        event.preventDefault();
+        event.stopPropagation();
+        void copyPluginMarkdown(copyButton.dataset.pluginCopy, copyButton);
+        return;
+      }
+      const duplicateButton = event.target.closest("button[data-plugin-duplicate]");
+      if (duplicateButton) {
+        event.preventDefault();
+        event.stopPropagation();
+        createPluginCopy(duplicateButton.dataset.pluginDuplicate);
+        return;
+      }
+      const deleteButton = event.target.closest("button[data-plugin-delete]");
+      if (!deleteButton) return;
       event.preventDefault();
-      hidePluginControl();
-      return;
-    }
-    if (event.key !== "Tab") return;
-    const focusable = [...pluginPopover.querySelectorAll("button:not(:disabled), input:not(:disabled), textarea:not(:disabled), select:not(:disabled)")].filter((element) => !element.closest("[hidden]"));
-    if (!focusable.length) return;
-    const current = focusable.indexOf(document.activeElement), next = event.shiftKey ? (current <= 0 ? focusable.length - 1 : current - 1) : current < 0 || current === focusable.length - 1 ? 0 : current + 1;
-    event.preventDefault();
-    focusable[next].focus();
-  });
+      event.stopPropagation();
+      void deleteLocalPlugin(deleteButton.dataset.pluginDelete);
+    });
+    pluginOptions.addEventListener("change", (event) => {
+      const input = event.target.closest("input[data-plugin-id]");
+      if (!input) return;
+      void setPluginEnabled(input.dataset.pluginId, input.checked).then((enabled) => {
+        if (!enabled && input.isConnected) input.checked = pluginEnabled(input.dataset.pluginId);
+      });
+    });
+  }
+  if (pluginPopover) {
+    pluginPopover.addEventListener("pointerdown", (event) => {
+      if (event.target === pluginPopover) hidePluginControl();
+    });
+    pluginPopover.addEventListener("keydown", (event) => {
+      if (event.key === "Escape") {
+        event.preventDefault();
+        hidePluginControl();
+        return;
+      }
+      if (event.key !== "Tab") return;
+      const focusable = [...pluginPopover.querySelectorAll("button:not(:disabled), input:not(:disabled), textarea:not(:disabled), select:not(:disabled)")].filter((element) => !element.closest("[hidden]"));
+      if (!focusable.length) return;
+      const current = focusable.indexOf(document.activeElement), next = event.shiftKey ? (current <= 0 ? focusable.length - 1 : current - 1) : current < 0 || current === focusable.length - 1 ? 0 : current + 1;
+      event.preventDefault();
+      focusable[next].focus();
+    });
+  }
   document.querySelectorAll("#effortOptions .effort-option").forEach((option) => {
     option.onclick = () => setEffort(option.dataset.effort);
   });
@@ -1196,7 +1211,7 @@
     return fallbackLessonCard(cmd.title, cmd.title);
   }
 
-  async function placeLessonImage(cmd) {
+  async function placeLessonImage(cmd, options = {}) {
     const canvas = await rasterizeSvgPicture(cmd);
     if (!canvas) return null;
     const blob = await canvasBlob(canvas, "image/png");
@@ -1205,7 +1220,27 @@
     const naturalW = canvas.width;
     const naturalH = canvas.height;
     canvas.width = canvas.height = 1;
-    const place = importedImagePlacement(naturalW, naturalH);
+
+    const rect = view.getBoundingClientRect();
+    const isMobile = window.innerWidth <= 768 || window.matchMedia("(max-width: 768px)").matches;
+    const recentNote = (state.lastLessonNote && (Date.now() - state.lastLessonNote.time < 300000)) ? state.lastLessonNote : null;
+
+    let place;
+    if (recentNote) {
+      const maxPicW = Math.min(3200, Math.max(1400, Math.round(rect.width * 1.8)));
+      const targetW = Math.min(naturalW, maxPicW);
+      const targetH = Math.round(naturalH * (targetW / naturalW));
+      const x = isMobile
+        ? recentNote.x
+        : Math.max(60, recentNote.x + recentNote.w + 140);
+      const y = isMobile
+        ? recentNote.y + recentNote.h + 80
+        : recentNote.y;
+      place = { x, y, w: targetW, h: targetH };
+    } else {
+      place = importedImagePlacement(naturalW, naturalH);
+    }
+
     const item = imageRecord({
       id: `image-${state.nextImageId++}`,
       ...place,
@@ -1231,11 +1266,30 @@
     state.images.push(item);
     state.userRevision++;
     save();
-    const rect = view.getBoundingClientRect();
-    const fitScale = Math.min((rect.width * 0.78) / Math.max(item.w, 1), (rect.height * 0.68) / Math.max(item.h, 1), 0.85);
-    state.scale = Math.max(0.12, Math.min(0.85, fitScale));
-    state.panX = rect.width / 2 - (item.x + item.w / 2) * state.scale;
-    state.panY = rect.height / 2 - (item.y + item.h / 2) * state.scale;
+
+    if (options.skipCamera !== true) {
+      if (recentNote) {
+        const minX = Math.min(recentNote.x, item.x);
+        const minY = Math.min(recentNote.y, item.y);
+        const maxX = Math.max(recentNote.x + recentNote.w, item.x + item.w);
+        const maxY = Math.max(recentNote.y + recentNote.h, item.y + item.h);
+        const totalW = maxX - minX;
+        const totalH = maxY - minY;
+        const fitScale = isMobile
+          ? Math.min((rect.width * 0.9) / Math.max(totalW, 1), (rect.height * 0.8) / Math.max(totalH, 1), 0.55)
+          : Math.min((rect.width * 0.84) / Math.max(totalW, 1), (rect.height * 0.76) / Math.max(totalH, 1), 0.55);
+        state.scale = Math.max(0.14, Math.min(0.55, fitScale));
+        state.panX = rect.width / 2 - (minX + totalW / 2) * state.scale;
+        state.panY = isMobile
+          ? Math.max(60, rect.height * 0.22 - minY * state.scale)
+          : rect.height / 2 - (minY + totalH / 2) * state.scale;
+      } else {
+        const fitScale = Math.min((rect.width * 0.78) / Math.max(item.w, 1), (rect.height * 0.68) / Math.max(item.h, 1), 0.85);
+        state.scale = Math.max(0.12, Math.min(0.85, fitScale));
+        state.panX = rect.width / 2 - (item.x + item.w / 2) * state.scale;
+        state.panY = rect.height / 2 - (item.y + item.h / 2) * state.scale;
+      }
+    }
     requestRender();
     setStatusKey("ready");
     console.log("[ATLAS] lesson picture placed:", item.id, item.w, "x", item.h);
@@ -1451,7 +1505,33 @@
       const items = [];
 
       if (!primitiveCmds.length && !items.length) {
+        if (lastPlaced) {
+          const recentNote = (state.lastLessonNote && (Date.now() - state.lastLessonNote.time < 300000)) ? state.lastLessonNote : null;
+          if (recentNote) {
+            const minX = Math.min(recentNote.x, lastPlaced.x);
+            const minY = Math.min(recentNote.y, lastPlaced.y);
+            const maxX = Math.max(recentNote.x + recentNote.w, lastPlaced.x + lastPlaced.w);
+            const maxY = Math.max(recentNote.y + recentNote.h, lastPlaced.y + lastPlaced.h);
+            const totalW = maxX - minX;
+            const totalH = maxY - minY;
+            const fitScale = isMobile
+              ? Math.min((rect.width * 0.9) / Math.max(totalW, 1), (rect.height * 0.8) / Math.max(totalH, 1), 0.55)
+              : Math.min((rect.width * 0.84) / Math.max(totalW, 1), (rect.height * 0.76) / Math.max(totalH, 1), 0.55);
+            state.scale = Math.max(0.14, Math.min(0.55, fitScale));
+            state.panX = rect.width / 2 - (minX + totalW / 2) * state.scale;
+            state.panY = isMobile
+              ? Math.max(60, rect.height * 0.22 - minY * state.scale)
+              : rect.height / 2 - (minY + totalH / 2) * state.scale;
+          } else {
+            const fitScale = Math.min((rect.width * 0.82) / Math.max(lastPlaced.w, 1), (rect.height * 0.72) / Math.max(lastPlaced.h, 1), 0.5);
+            state.scale = Math.max(0.16, Math.min(0.5, fitScale));
+            state.panX = rect.width / 2 - (lastPlaced.x + lastPlaced.w / 2) * state.scale;
+            state.panY = rect.height / 2 - (lastPlaced.y + lastPlaced.h / 2) * state.scale;
+          }
+          render();
+        }
         if ((diagramCount > 0 || imageCount > 0) && typeof setStatusKey === "function") setStatusKey("ready");
+        if (typeof syncTalkModeFeed === "function") syncTalkModeFeed();
         return { success: diagramCount + imageCount > 0, count: diagramCount + imageCount };
       }
 
@@ -1464,14 +1544,26 @@
 
       for (const c of commands || []) {
         try {
-          const item = await preparePendingItem(c, state.userRevision, meta, null);
+          const item = await preparePendingItem(c, null, meta, null);
           if (item) items.push(item);
         } catch (err) {
-          // item skipped
+          console.warn("[ATLAS] preparePendingItem failed:", err);
         }
       }
 
-      if (!items.length) return { success: diagramCount + imageCount > 0, count: diagramCount + imageCount };
+      restackFlowItems(items, 80);
+
+      if (!items.length) {
+        if (lastPlaced) {
+          const fitScale = Math.min((rect.width * 0.82) / Math.max(lastPlaced.w, 1), (rect.height * 0.72) / Math.max(lastPlaced.h, 1), 0.5);
+          state.scale = Math.max(0.16, Math.min(0.5, fitScale));
+          state.panX = rect.width / 2 - (lastPlaced.x + lastPlaced.w / 2) * state.scale;
+          state.panY = rect.height / 2 - (lastPlaced.y + lastPlaced.h / 2) * state.scale;
+          render();
+        }
+        if (typeof syncTalkModeFeed === "function") syncTalkModeFeed();
+        return { success: diagramCount + imageCount > 0, count: diagramCount + imageCount };
+      }
 
       // ── 2. Compute TRUE bounding box of the entire generated group ─────────
       let groupMinX = Infinity, groupMinY = Infinity, groupMaxX = -Infinity, groupMaxY = -Infinity;
@@ -1485,6 +1577,12 @@
         groupMinY = Math.min(groupMinY, iy);
         groupMaxX = Math.max(groupMaxX, ix + iw);
         groupMaxY = Math.max(groupMaxY, iy + ih);
+      }
+      if (lastPlaced) {
+        groupMinX = Math.min(groupMinX, lastPlaced.x);
+        groupMinY = Math.min(groupMinY, lastPlaced.y);
+        groupMaxX = Math.max(groupMaxX, lastPlaced.x + lastPlaced.w);
+        groupMaxY = Math.max(groupMaxY, lastPlaced.y + lastPlaced.h);
       }
 
       const groupW = Math.max(250, Math.round(groupMaxX - groupMinX));
@@ -1505,6 +1603,11 @@
       // ── 4. Shift ALL elements in the group coherently as ONE logical output ──
       const shiftX = targetX - groupMinX;
       const shiftY = targetY - groupMinY;
+
+      if (lastPlaced) {
+        lastPlaced.x += shiftX;
+        lastPlaced.y += shiftY;
+      }
 
       for (const item of items) {
         if (Number.isFinite(item.x)) item.x += shiftX;
@@ -1537,7 +1640,7 @@
       }
 
       startPendingBatch(items, state.userRevision, meta);
-      if (state.pending) acceptPending({ restoreMode: false });
+      if (state.pending) acceptPending({ restoreMode: false, force: true });
 
       // ── 5. Record EXACT footprint & update draw cursor ─────────────────────
       _atlasDrawCursor = { x: targetX, y: targetY + groupH };
@@ -1555,14 +1658,13 @@
       // ── 6. Zoom and pan so the lesson fills the view ───────────────────────
       const drawCenterX = targetX + Math.round(groupW / 2);
       const drawCenterY = targetY + Math.round(groupH / 2);
-      const fitScale = Math.min((rect.width * 0.82) / Math.max(groupW, 1), (rect.height * 0.72) / Math.max(groupH, 1), 0.5);
-      state.scale = Math.max(0.16, Math.min(0.5, fitScale));
+      const fitScale = Math.min((rect.width * 0.84) / Math.max(groupW, 1), (rect.height * 0.76) / Math.max(groupH, 1), 0.55);
+      state.scale = Math.max(0.08, Math.min(0.55, fitScale));
       state.panX = rect.width / 2 - drawCenterX * state.scale;
       state.panY = rect.height / 2 - drawCenterY * state.scale;
 
-      console.log("[ATLAS Stage 10] Viewport panned to center:", { drawCenterX, drawCenterY, panX: state.panX, panY: state.panY, scale: state.scale });
-      console.log("[ATLAS Stage 11/12] Triggering canvas render(). Total state.textBoxes:", state.textBoxes.length);
       render();
+      if (typeof syncTalkModeFeed === "function") syncTalkModeFeed();
 
       return { success: true, count: items.length + diagramCount + imageCount };
       } finally {

@@ -70,17 +70,17 @@
 /* Kid-friendly voice bar */
 #atlasVoiceOverlay {
   position: fixed;
-  top: 62px;
+  top: 72px;
   left: 50%;
   transform: translateX(-50%) translateY(-10px);
-  z-index: 90;
+  z-index: 99999;
   display: flex;
   align-items: center;
   gap: 12px;
   overflow: visible;
   max-width: 720px;
   width: min(720px, calc(100vw - 48px));
-  padding: 10px 12px 10px 14px;
+  padding: 10px 14px 10px 16px;
   color: #3b2064;
   border: 2px solid rgba(255, 255, 255, 0.85);
   border-radius: 999px;
@@ -89,7 +89,7 @@
     radial-gradient(circle at 88% 80%, rgba(167, 243, 208, 0.9) 0 24%, transparent 50%),
     linear-gradient(135deg, #ffd6e8 0%, #e9d5ff 42%, #c7f0ff 100%);
   box-shadow:
-    0 12px 32px rgba(91, 79, 232, 0.22),
+    0 12px 32px rgba(91, 79, 232, 0.25),
     inset 0 1px 0 rgba(255, 255, 255, 0.8);
   font-family: "Patrick Hand", "Segoe Print", "Comic Sans MS", cursive;
   font-size: 18px;
@@ -100,9 +100,11 @@
 }
 
 #atlasVoiceOverlay.atlas-visible {
-  opacity: 1;
-  transform: translateX(-50%) translateY(0);
-  pointer-events: auto;
+  opacity: 1 !important;
+  transform: translateX(-50%) translateY(0) !important;
+  pointer-events: auto !important;
+  display: flex !important;
+  visibility: visible !important;
 }
 
 .atlas-kid-sparkle,

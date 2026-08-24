@@ -2450,20 +2450,16 @@ button, a, .btool, .topbar-icon-btn, .zoom-btn, .share-btn, .nav-item {
 }
 
 body.mode-talk-active #aiMergedBadge,
-body.mode-talk-active #undoBtn,
-body.mode-talk-active #redoBtn,
-body.mode-talk-active #saveBtn,
-body.mode-talk-active #exportBtn,
-body.mode-talk-active .export-btn,
-body.mode-talk-active .history-btn,
+body.mode-talk-active [data-action="undo"],
+body.mode-talk-active [data-action="redo"],
 body.mode-talk-active .bottom-toolbar,
+body.mode-talk-active .pen-tray,
 body.mode-talk-active .quick-actions-bar,
 body.mode-talk-active .layer-switcher,
 body.mode-talk-active .floating-zoom-control,
+body.mode-talk-active .zoom-controls,
 body.mode-talk-active .pen-preview-badge,
-body.mode-talk-active #canvasFileActions,
-body.mode-talk-active .topbar-edit-actions,
-body.mode-talk-active .mobile-chat-btn {
+body.mode-talk-active .canvas-footer {
   display: none !important;
 }
 
@@ -2633,6 +2629,93 @@ body.mode-talk-active .mobile-chat-btn {
   border: 1px solid rgba(226, 232, 240, 0.8);
   background: #f8fafc;
   box-shadow: 0 8px 22px rgba(15, 23, 42, 0.08);
+}
+
+@keyframes talkShimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+.talk-shimmer-box {
+  background: #ffffff;
+  border: 1.5px solid rgba(139, 92, 246, 0.2);
+  box-shadow: 0 4px 18px rgba(139, 92, 246, 0.06);
+}
+
+.talk-shimmer-pill {
+  background: linear-gradient(90deg, #ede9fe 25%, #f5f3ff 50%, #ede9fe 75%) !important;
+  background-size: 200% 100% !important;
+  animation: talkShimmer 1.8s infinite ease-in-out !important;
+  color: #6d28d9 !important;
+}
+
+.talk-shimmer-content {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 14px 4px 6px;
+}
+
+.talk-shimmer-line {
+  height: 14px;
+  border-radius: 8px;
+  background: linear-gradient(90deg, #f1f5f9 25%, #e2e8f0 50%, #f1f5f9 75%);
+  background-size: 200% 100%;
+  animation: talkShimmer 1.6s infinite ease-in-out;
+}
+
+.talk-shimmer-line.line-long { width: 94%; }
+.talk-shimmer-line.line-med { width: 76%; }
+.talk-shimmer-line.line-short { width: 48%; }
+
+.talk-shimmer-image-placeholder {
+  margin-top: 10px;
+  height: 150px;
+  border-radius: 16px;
+  background: linear-gradient(90deg, #f8fafc 25%, #f5f3ff 50%, #f8fafc 75%);
+  background-size: 200% 100%;
+  animation: talkShimmer 2s infinite ease-in-out;
+  border: 1.5px dashed rgba(139, 92, 246, 0.35);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  color: #7c3aed;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.talk-image-loading-wrapper {
+  padding: 36px 20px;
+  background: linear-gradient(90deg, #faf5ff 25%, #ede9fe 50%, #faf5ff 75%);
+  background-size: 200% 100%;
+  animation: talkShimmer 2s infinite ease-in-out;
+  border: 1.5px dashed rgba(139, 92, 246, 0.4);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+}
+
+.talk-image-loading-indicator {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: #7c3aed;
+  font-size: 14.5px;
+  font-weight: 600;
+}
+
+.talk-spinner {
+  display: inline-block;
+  font-size: 18px;
+  animation: talkSpin 2s linear infinite;
+}
+
+@keyframes talkSpin {
+  0% { transform: rotate(0deg) scale(1); }
+  50% { transform: rotate(180deg) scale(1.2); }
+  100% { transform: rotate(360deg) scale(1); }
 }
 
 .talk-lesson-image {

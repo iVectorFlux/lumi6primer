@@ -117,7 +117,11 @@
         current = { asked: turn.text, explanation: [], image: turn.image || "", question: "" };
       } else {
         if (!current) current = { asked: "", explanation: [], image: turn.image || "", question: "" };
-        const cleanSpoken = String(turn.text || "").replace(/^([Hh]ey|[Hh]ello|[Hh]i),?[^.!?]*[.!?]\s*/g, "").trim();
+        const cleanSpoken = String(turn.text || "")
+          .replace(/^(Hey|Hello|Hi|Welcome back|Welcome|Good morning|Good afternoon)\s+[A-Za-z0-9_]+[.,!?:-]*\s*/i, "")
+          .replace(/^([A-Za-z0-9_]+)[,!:]\s+(?=[A-Z])/i, "")
+          .replace(/^(Hey|Hello|Hi|Welcome)\s*[,!.]\s*/i, "")
+          .trim();
         const sentences = cleanSpoken.split(/(?<=[.!?])\s+/).map(s => s.trim()).filter(Boolean);
         const q = sentences.find(s => s.endsWith("?") || /^(what|how|why|can you|where|do you think|imagine|can you guess)\b/i.test(s));
         const bodySentences = sentences.filter(s => s !== q);
@@ -130,9 +134,52 @@
 
     feed.innerHTML = pairs.map((step, idx) => {
       const stepNumber = idx + 1;
-      const allSentences = (step.explanation || []).join(" ").split(/(?<=[.!?])\s+/).filter(Boolean);
-      const keyInsight = allSentences.length > 1 ? allSentences[0] : "";
-      const deeperExpl = allSentences.length > 1 ? allSentences.slice(1).join(" ") : allSentences.join(" ");
+      const allSentences = (step.explanation || []).join(" ").split(/(?<=[.!?])\s+/).map(s => s.trim()).filter(Boolean);
+      
+      // A legitimate key insight must be a substantial educational statement (>= 32 chars, not a question, not a greeting)
+      let keyInsight = "";
+      let deeperExpl = "";
+      const candidateInsight = allSentences.find(s =>
+        s.length >= 32 &&
+        !s.endsWith("?") &&
+        !/^(hello|hey|hi|welcome|i'm|ready|sure|great|let's|glad|no problem|ok|okay|kamal|alex)\b/i.test(s)
+      );
+      if (candidateInsight && allSentences.length > 1) {
+        keyInsight = candidateInsight;
+        deeperExpl = allSentences.filter(s => s !== keyInsight).join(" ");
+      } else {
+        deeperExpl = allSentences.join(" ");
+      }
+
+      if (!allSentences.length && !step.question) {
+        return `
+        <article class="talk-turn-card" data-step="${stepNumber}">
+          ${step.asked ? `
+            <div class="talk-child-prompt">
+              <span class="talk-child-badge">You asked</span>
+              <p class="talk-child-text">${escapeHtml(step.asked)}</p>
+            </div>
+          ` : ""}
+          <div class="talk-lumi6-box talk-shimmer-box">
+            <div class="talk-lumi6-header">
+              ${LUMI6_AVATAR_HTML}
+              <span class="talk-lumi6-name">Lumi6</span>
+              <span class="talk-step-badge">Step ${stepNumber}</span>
+              <span class="talk-topic-pill talk-shimmer-pill">Exploring…</span>
+            </div>
+            <div class="talk-shimmer-content">
+              <div class="talk-shimmer-line line-long"></div>
+              <div class="talk-shimmer-line line-med"></div>
+              <div class="talk-shimmer-line line-short"></div>
+              <div class="talk-shimmer-image-placeholder">
+                <span class="talk-spinner">✦</span>
+                <span>Lumi6 is preparing your explanation & visual model…</span>
+              </div>
+            </div>
+          </div>
+        </article>
+        `;
+      }
 
       return `
       <article class="talk-turn-card" data-step="${stepNumber}">
@@ -173,7 +220,14 @@
                 ${escapeHtml(titleText)}
               </figcaption>
             </div>
-          ` : ""}
+          ` : (idx === pairs.length - 1 && window.__atlasGraphicLoading ? `
+            <div class="talk-image-wrapper talk-image-loading-wrapper">
+              <div class="talk-image-loading-indicator">
+                <span class="talk-spinner">✦</span>
+                <span>Illustrating visual concept for this step…</span>
+              </div>
+            </div>
+          ` : "")}
 
           ${step.question ? `
             <div class="talk-question-capsule">

@@ -1681,6 +1681,7 @@ User writes "Show air quality for Tokyo", names a place, and points to an empty 
     return text;
   }
   function renderPluginOptions() {
+    if (!pluginOptions) return;
     const fragment = document.createDocumentFragment(),
       groups = [
         { titleKey: "pluginPersonalSection", plugins: PLUGIN_DEFINITIONS.filter((plugin) => plugin.builtIn === false) },
@@ -1820,16 +1821,21 @@ User writes "Show air quality for Tokyo", names a place, and points to an empty 
     pluginOptions.replaceChildren(fragment);
   }
   function updatePluginControl() {
+    if (!pluginButton) return;
     renderPluginOptions();
     const anyEnabled = PLUGIN_DEFINITIONS.some((plugin) => pluginEnabled(plugin.id));
     pluginButton.classList.toggle("active", anyEnabled);
     pluginButton.setAttribute("aria-pressed", String(anyEnabled));
-    pluginButton.setAttribute("aria-expanded", String(!pluginPopover.hidden));
-    pluginLocalCount.textContent = String(PLUGIN_DEFINITIONS.length);
-    pluginCatalogStatus.textContent = pluginCatalogStatusText();
-    pluginCatalogStatus.classList.toggle("plugin-option-error", Boolean(state.pluginCatalogError) || state.pluginCatalogNotice?.type === "error");
-    pluginRefresh.classList.toggle("loading", state.pluginCatalogLoading);
-    pluginRefresh.disabled = state.pluginCatalogLoading;
+    if (pluginPopover) pluginButton.setAttribute("aria-expanded", String(!pluginPopover.hidden));
+    if (pluginLocalCount) pluginLocalCount.textContent = String(PLUGIN_DEFINITIONS.length);
+    if (pluginCatalogStatus) {
+      pluginCatalogStatus.textContent = pluginCatalogStatusText();
+      pluginCatalogStatus.classList.toggle("plugin-option-error", Boolean(state.pluginCatalogError) || state.pluginCatalogNotice?.type === "error");
+    }
+    if (pluginRefresh) {
+      pluginRefresh.classList.toggle("loading", state.pluginCatalogLoading);
+      pluginRefresh.disabled = state.pluginCatalogLoading;
+    }
   }
   function togglePluginDetails(pluginId, button) {
     const detail = button?.closest(".plugin-option")?.querySelector(`#plugin-detail-${CSS.escape(pluginId)}`);
@@ -1961,30 +1967,36 @@ User writes "Show air quality for Tokyo", names a place, and points to an empty 
   }
   window.addEventListener("message", handlePluginStylesPreviewMessage);
   function updatePluginAuthoringUi() {
+    if (!pluginDocumentEditor || !pluginTitle || !pluginDocumentStatus) return { bytes: 0, styleBytes: 0, manifest: null };
     const validation = pluginDraftValidation(),
       status = state.pluginAuthoringStatus || (validation.manifest
         ? { key:"pluginDraftValid", values:{ name:localizedManifestValue(validation.manifest, "name") || validation.manifest.name }, type:"" }
         : { key:"pluginDraftInvalid", values:{ error:validation.error }, type:"error" });
     for (const button of [pluginSimpleTemplate]) {
-      const active = button.dataset.pluginTemplate === state.pluginAuthoringTemplate;
+      if (!button) continue;
+      const active = button.dataset?.pluginTemplate === state.pluginAuthoringTemplate;
       button.classList.toggle("active", active);
       button.setAttribute("aria-pressed", String(active));
       button.disabled = state.pluginAuthoringBusy;
     }
-    pluginDocumentBytes.textContent = t("pluginBytes").replace("{bytes}", String(validation.bytes));
-    pluginDocumentBytes.classList.toggle("invalid", validation.bytes > 12000);
-    pluginStylesBytes.textContent = t("pluginStylesBytes").replace("{bytes}", String(validation.styleBytes));
-    pluginStylesBytes.classList.toggle("invalid", validation.styleBytes > 32000);
+    if (pluginDocumentBytes) {
+      pluginDocumentBytes.textContent = t("pluginBytes").replace("{bytes}", String(validation.bytes));
+      pluginDocumentBytes.classList.toggle("invalid", validation.bytes > 12000);
+    }
+    if (pluginStylesBytes) {
+      pluginStylesBytes.textContent = t("pluginStylesBytes").replace("{bytes}", String(validation.styleBytes));
+      pluginStylesBytes.classList.toggle("invalid", validation.styleBytes > 32000);
+    }
     pluginDocumentStatus.textContent = pluginAuthoringText(status);
     pluginDocumentStatus.className = status.type || "";
     pluginTitle.disabled = state.pluginAuthoringBusy;
     pluginDocumentEditor.disabled = state.pluginAuthoringBusy;
-    pluginStylesEditor.disabled = state.pluginAuthoringBusy;
-    pluginStylesUploadButton.disabled = state.pluginAuthoringBusy;
-    pluginStylesUpload.disabled = state.pluginAuthoringBusy;
-    pluginImprove.disabled = state.pluginAuthoringBusy || !pluginDocumentEditor.value.trim() || validation.bytes > 12000;
-    pluginSave.disabled = state.pluginAuthoringBusy || state.pluginCatalogLoading || !validation.manifest;
-    for (const tab of [pluginLocalTab, pluginCreateTab, pluginServerTab]) tab.disabled = state.pluginAuthoringBusy;
+    if (pluginStylesEditor) pluginStylesEditor.disabled = state.pluginAuthoringBusy;
+    if (pluginStylesUploadButton) pluginStylesUploadButton.disabled = state.pluginAuthoringBusy;
+    if (pluginStylesUpload) pluginStylesUpload.disabled = state.pluginAuthoringBusy;
+    if (pluginImprove) pluginImprove.disabled = state.pluginAuthoringBusy || !pluginDocumentEditor.value.trim() || validation.bytes > 12000;
+    if (pluginSave) pluginSave.disabled = state.pluginAuthoringBusy || state.pluginCatalogLoading || !validation.manifest;
+    for (const tab of [pluginLocalTab, pluginCreateTab, pluginServerTab]) if (tab) tab.disabled = state.pluginAuthoringBusy;
     updatePluginStylesPreview(validation);
     return validation;
   }
@@ -1993,7 +2005,7 @@ User writes "Show air quality for Tokyo", names a place, and points to an empty 
     updatePluginAuthoringUi();
   }
   function setPluginTemplate(template) {
-    if (!Object.hasOwn(PLUGIN_TEMPLATE_DOCUMENTS, template) || state.pluginAuthoringBusy) return false;
+    if (!pluginDocumentEditor || !pluginStylesEditor || !Object.hasOwn(PLUGIN_TEMPLATE_DOCUMENTS, template) || state.pluginAuthoringBusy) return false;
     state.pluginAuthoringTemplate = template;
     state.pluginAuthoringStatus = null;
     pluginDocumentEditor.value = PLUGIN_TEMPLATE_DOCUMENTS[template];
