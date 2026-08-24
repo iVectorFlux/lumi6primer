@@ -8201,7 +8201,7 @@ User writes "Show air quality for Tokyo", names a place, and points to an empty 
     return c;
   }
   function checkAI(revision, run = null) {
-    if (state.userRevision !== revision) throw Error(AI_CANCELLED);
+    if (revision !== null && revision !== undefined && state.userRevision !== revision) throw Error(AI_CANCELLED);
     if (run && (run.superseded || state.activeAI !== run)) throw Error(AI_SUPERSEDED);
   }
   async function animate(c, revision, meta, run) {
@@ -9129,7 +9129,7 @@ User writes "Show air quality for Tokyo", names a place, and points to an empty 
     if (!p) return;
     const pendingBefore = capturePendingHistoryState();
     blockCanvasInput();
-    if (p.revision !== state.userRevision && state.userRevision !== p.latestUserRevision) {
+    if (options.force !== true && p.revision !== null && p.revision !== undefined && p.revision !== state.userRevision && state.userRevision !== p.latestUserRevision) {
       rejectPending();
       setStatusKey("canvasChanged");
       return;
@@ -11794,10 +11794,10 @@ User writes "Show air quality for Tokyo", names a place, and points to an empty 
 
       for (const c of commands || []) {
         try {
-          const item = await preparePendingItem(c, state.userRevision, meta, null);
+          const item = await preparePendingItem(c, null, meta, null);
           if (item) items.push(item);
         } catch (err) {
-          // item skipped
+          console.warn("[ATLAS] preparePendingItem failed:", err);
         }
       }
 
@@ -11889,7 +11889,7 @@ User writes "Show air quality for Tokyo", names a place, and points to an empty 
       }
 
       startPendingBatch(items, state.userRevision, meta);
-      if (state.pending) acceptPending({ restoreMode: false });
+      if (state.pending) acceptPending({ restoreMode: false, force: true });
 
       // ── 5. Record EXACT footprint & update draw cursor ─────────────────────
       _atlasDrawCursor = { x: targetX, y: targetY + groupH };
