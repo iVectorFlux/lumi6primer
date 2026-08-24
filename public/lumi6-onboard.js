@@ -424,9 +424,18 @@
   async function gateCanvas() {
     const path = window.location.pathname;
     if (path === "/" || path === "/login" || path.endsWith("/login") || path.endsWith("login.html") || path.endsWith("landing.html")) return;
+
+    // Wait for supabaseAuth controller to initialize if available
+    for (let i = 0; i < 50 && !window.supabaseAuth?._sessionReady; i += 1) {
+      await sleep(50);
+    }
+
+    const local = readLocal();
+    const localName = localStorage.getItem("primerChildName") || local?.name;
+    const localId = localStorage.getItem("primerChildId") || local?.id;
+
     if (!configured()) {
-      const local = readLocal();
-      if (!local?.name && !localStorage.getItem("primerChildName")) {
+      if (!localName && !localId) {
         window.location.replace("/login");
         return;
       }
@@ -434,33 +443,34 @@
       hideOverlay();
       return;
     }
+
     bindOverlay();
-    const waitForClient = async () => {
-      for (let i = 0; i < 40; i += 1) {
-        if (client()) return client();
-        await new Promise((resolve) => setTimeout(resolve, 50));
-      }
-      return null;
-    };
-    await waitForClient();
-    for (let i = 0; i < 40 && !window.supabaseAuth?._sessionReady; i += 1) {
-      await sleep(50);
-    }
-    const user = await currentUser(12);
-    if (!user) {
+    const user = (await currentUser(15)) || window.supabaseAuth?.user || null;
+
+    if (!user && !localName && !localId) {
       window.location.replace("/login");
       return;
     }
-    const profile = await loadRemoteProfile();
-    if (profile?.onboarded_at || (profile?.name && profile.name !== "Learner")) {
-      saveLocal(profile);
+
+    if (user) {
+      const profile = await loadRemoteProfile();
+      if (profile?.onboarded_at || (profile?.name && profile.name !== "Learner")) {
+        saveLocal(profile);
+        hideOverlay();
+        state.ready = true;
+        if (isEditingFromProfile()) await openProfilePanel();
+        return;
+      }
+    }
+
+    if (localName || local?.onboarded_at) {
       hideOverlay();
       state.ready = true;
-      if (isEditingFromProfile()) await openProfilePanel();
       return;
     }
-    const local = readLocal() || profile || {};
-    fillFromProfile(local);
+
+    const initialProfile = local || (user ? { name: user.email?.split("@")[0] || "Learner" } : {});
+    fillFromProfile(initialProfile);
     showOverlay();
     state.ready = true;
   }
