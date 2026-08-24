@@ -196,12 +196,17 @@
   window.syncTalkModeFeed = syncTalkModeFeed;
   window.setAppViewMode = setAppViewMode;
 
-  document.querySelectorAll("#modeDrawBtn, #topbarModeDrawBtn").forEach(el => {
-    el.addEventListener("click", () => setAppViewMode("draw"));
-  });
-  document.querySelectorAll("#modeTalkBtn, #topbarModeTalkBtn").forEach(el => {
-    el.addEventListener("click", () => setAppViewMode("talk"));
-  });
+  const bindModeBtn = (selector, mode) => {
+    document.querySelectorAll(selector).forEach(el => {
+      el.addEventListener("click", (e) => {
+        e.preventDefault();
+        setAppViewMode(mode);
+      });
+    });
+  };
+
+  bindModeBtn("#modeDrawBtn", "draw");
+  bindModeBtn("#modeTalkBtn", "talk");
 
   document.querySelector("#talkModeMicBtn")?.addEventListener("click", () => {
     if (window.atlasVoice && typeof window.atlasVoice.handleMicButtonClick === "function") {
