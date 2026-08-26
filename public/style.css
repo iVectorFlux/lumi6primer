@@ -1125,12 +1125,21 @@ body.sidebar-collapsed .sidebar-user-avatar {
 }
 
 .pen-tray {
+  position: absolute;
+  bottom: 84px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 90;
   display: flex;
   align-items: center;
-  gap: 10px;
-  margin-left: 4px;
-  padding: 0 4px 0 8px;
-  border-left: 1px solid rgba(255, 255, 255, 0.55);
+  gap: 14px;
+  padding: 8px 16px;
+  background: var(--kid-bar-bg);
+  border: var(--kid-bar-border);
+  border-radius: 18px;
+  box-shadow: 0 10px 28px rgba(76, 29, 149, 0.14);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
 }
 
 .pen-tray[hidden] {
@@ -1140,20 +1149,21 @@ body.sidebar-collapsed .sidebar-user-avatar {
 .pen-size-control {
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: 8px;
   color: var(--text-secondary);
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 600;
 }
 
 .pen-size-control input[type="range"] {
-  width: 76px;
+  width: 80px;
   accent-color: var(--accent);
 }
 
 .pen-size-control output {
-  min-width: 1.2em;
+  min-width: 2.4em;
   color: var(--text-primary);
+  font-weight: 700;
   font-variant-numeric: tabular-nums;
 }
 
@@ -1170,15 +1180,7 @@ body.sidebar-collapsed .sidebar-user-avatar {
 
 .pen-color-control .color-orb-trigger,
 .toolbar .pen-color-control .color-orb-trigger {
-  position: relative;
-  inset: auto;
-  z-index: 3;
-  width: 22px;
-  min-height: 22px;
-  flex: 0 0 22px;
-  border: 2px solid #f0ece8;
-  border-radius: 50%;
-  background: var(--selected-color);
+  display: none;
 }
 
 .pen-color-control .color-orbit,
@@ -1187,7 +1189,7 @@ body.sidebar-collapsed .sidebar-user-avatar {
   inset: auto;
   display: flex;
   align-items: center;
-  gap: 4px;
+  gap: 6px;
   pointer-events: auto;
 }
 
@@ -1197,17 +1199,29 @@ body.sidebar-collapsed .sidebar-user-avatar {
   top: auto;
   left: auto;
   z-index: 1;
-  width: 16px;
-  min-height: 16px;
+  display: block;
+  width: 22px;
+  height: 22px;
+  min-height: 22px;
+  flex: 0 0 22px;
+  border-radius: 50%;
+  border: 2px solid #ffffff;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.15);
   opacity: 1;
   pointer-events: auto;
   transform: none;
-  box-shadow: none;
+  cursor: pointer;
+  transition: transform 0.12s ease, outline 0.12s ease;
+}
+
+.pen-color-control .orbit-swatch:hover {
+  transform: scale(1.15);
 }
 
 .pen-color-control .orbit-swatch.active {
-  outline: 2px solid var(--accent);
-  outline-offset: 1px;
+  outline: 2.5px solid var(--accent);
+  outline-offset: 2px;
+  transform: scale(1.1);
 }
 
 .danger-btool:hover {

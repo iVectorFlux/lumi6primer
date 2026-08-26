@@ -789,7 +789,7 @@
     return c;
   }
   function checkAI(revision, run = null) {
-    if (state.userRevision !== revision) throw Error(AI_CANCELLED);
+    if (revision != null && state.userRevision !== revision) throw Error(AI_CANCELLED);
     if (run && (run.superseded || state.activeAI !== run)) throw Error(AI_SUPERSEDED);
   }
   async function animate(c, revision, meta, run) {
@@ -1690,7 +1690,7 @@
     if (!p) return;
     const pendingBefore = capturePendingHistoryState();
     blockCanvasInput();
-    if (p.revision !== state.userRevision && state.userRevision !== p.latestUserRevision) {
+    if (!options?.force && p.revision !== state.userRevision && state.userRevision !== p.latestUserRevision) {
       rejectPending();
       setStatusKey("canvasChanged");
       return;

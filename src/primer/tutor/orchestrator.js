@@ -27,7 +27,6 @@ const VisionTool = require("../tools/vision.js");
 const HomeworkTool = require("../tools/homework.js");
 const RetrievalTool = require("../tools/retrieval.js");
 const SimulationTool = require("../tools/simulation.js");
-const groqTalk = require("../tools/groq-talk.js");
 const openaiTalk = require("../tools/openai-talk.js");
 const geminiGraphic = require("../tools/gemini-graphic.js");
 const topicIcon = require("../tools/topic-icon.js");
@@ -371,8 +370,7 @@ class LearningOrchestrator {
       || (topicUsable && deniesTopic(text, topicNow));
     const skipsTopic = (text) => topicUsable && !spokenCoversTopic(text, topicNow);
     if (!askedToLook && (unusable(proposalSpoken) || skipsTopic(proposalSpoken))) {
-      // The fast model just drifted, so the second attempt goes to the stronger one.
-      const retry = await this._proposeSimple(understanding, null, { avoidGroq: offTopic });
+      const retry = await this._proposeSimple(understanding, null);
       const retrySpoken = String(retry?.spoken || "").trim();
       let chosen = "";
       if (!unusable(retrySpoken) && !skipsTopic(retrySpoken)) chosen = retrySpoken;
@@ -658,20 +656,6 @@ class LearningOrchestrator {
       console.log("[PRIMER] --- talk prompt ---\n", prompt.talkPrompt || prompt.systemPrompt);
       console.log("[PRIMER] --- user block ---\n", userText);
     }
-    const groqFirst = String(process.env.PRIMER_TALK || "").toLowerCase() === "groq";
-    if (!useVision && groqFirst && groqTalk.isConfigured()) {
-      try {
-        const groq = await groqTalk.complete({
-          systemPrompt: prompt.talkPrompt || prompt.systemPrompt,
-          userText,
-          timeoutMs,
-          temperature: options.mathMode ? 0.1 : 0.4
-        });
-        return parseProposal(groq.content) || { spoken: "" };
-      } catch (err) {
-        console.warn("[PRIMER] Groq talk failed, falling back:", err.message);
-      }
-    }
     if (!useVision && openaiTalk.isConfigured()) {
       try {
         const openai = await openaiTalk.complete({
@@ -683,19 +667,6 @@ class LearningOrchestrator {
         return parseProposal(openai.content) || { spoken: "" };
       } catch (err) {
         console.warn("[PRIMER] OpenAI talk failed, falling back:", err.message);
-      }
-    }
-    if (!useVision && !groqFirst && groqTalk.isConfigured()) {
-      try {
-        const groq = await groqTalk.complete({
-          systemPrompt: prompt.talkPrompt || prompt.systemPrompt,
-          userText,
-          timeoutMs: Math.min(timeoutMs, 8000),
-          temperature: options.mathMode ? 0.1 : 0.45
-        });
-        return parseProposal(groq.content) || { spoken: "" };
-      } catch (err) {
-        console.warn("[PRIMER] Groq talk failed, falling back:", err.message);
       }
     }
     const provider = this.aiProvider;
@@ -768,8 +739,7 @@ Never ask "what is this called" or "what is the name of this process".
 Never return JSON keys inside spoken.
 Return JSON only: {"spoken":"kid sentences here including the check question?"}`;
     const userText = `${systemPrompt}\n\nChild said: "${raw}"\nTeach: ${topic}`;
-    const groqFirst = String(process.env.PRIMER_TALK || "").toLowerCase() === "groq";
-    if (openaiTalk.isConfigured() && !groqFirst) {
+    if (openaiTalk.isConfigured()) {
       try {
         const openai = await openaiTalk.complete({ systemPrompt, userText, timeoutMs: 16000 });
         const parsed = parseProposal(openai.content);
@@ -777,16 +747,6 @@ Return JSON only: {"spoken":"kid sentences here including the check question?"}`
         if (spoken && !ResponsePolicy.isCannedSpeech(spoken)) return parsed;
       } catch (err) {
         console.warn("[PRIMER] OpenAI simple talk failed:", err.message);
-      }
-    }
-    if (!options.avoidGroq && groqTalk.isConfigured()) {
-      try {
-        const groq = await groqTalk.complete({ systemPrompt, userText, timeoutMs: 7000 });
-        const parsed = parseProposal(groq.content);
-        const spoken = String(parsed?.spoken || "").trim();
-        if (spoken && !ResponsePolicy.isCannedSpeech(spoken)) return parsed;
-      } catch (err) {
-        console.warn("[PRIMER] Groq simple talk failed:", err.message);
       }
     }
     const provider = this.aiProvider;

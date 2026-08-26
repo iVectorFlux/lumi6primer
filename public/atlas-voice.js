@@ -419,11 +419,17 @@
       for (const chunk of chunks) {
         const part = String(chunk || "").replace(/\s+/g, " ").trim();
         if (!part) continue;
-        if (parts.length > 1 && parts[parts.length - 1].length + part.length < 90) {
+        if (!parts.length) {
+          parts.push(part);
+        } else if (parts[parts.length - 1].length + part.length < 120 || parts[parts.length - 1].length < 35) {
           parts[parts.length - 1] = `${parts[parts.length - 1]} ${part}`;
         } else {
           parts.push(part);
         }
+      }
+      if (parts.length > 1 && parts[0].length < 35) {
+        parts[0] = `${parts[0]} ${parts[1]}`;
+        parts.splice(1, 1);
       }
       return parts.length ? parts : [String(text || "").trim()].filter(Boolean);
     }

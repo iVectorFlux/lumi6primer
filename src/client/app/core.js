@@ -675,7 +675,7 @@ User writes "Show air quality for Tokyo", names a place, and points to an empty 
       scale: 0.1,
       panX: 0,
       panY: 0,
-      pen: 10,
+      pen: 6,
       eraser: 35,
       aiFont: "ui-rounded, system-ui, sans-serif",
       inkColor: "#2563eb",

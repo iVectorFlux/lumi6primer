@@ -676,7 +676,7 @@ User writes "Show air quality for Tokyo", names a place, and points to an empty 
       scale: 0.1,
       panX: 0,
       panY: 0,
-      pen: 10,
+      pen: 6,
       eraser: 35,
       aiFont: "ui-rounded, system-ui, sans-serif",
       inkColor: "#2563eb",
@@ -8126,7 +8126,7 @@ User writes "Show air quality for Tokyo", names a place, and points to an empty 
     return c;
   }
   function checkAI(revision, run = null) {
-    if (state.userRevision !== revision) throw Error(AI_CANCELLED);
+    if (revision != null && state.userRevision !== revision) throw Error(AI_CANCELLED);
     if (run && (run.superseded || state.activeAI !== run)) throw Error(AI_SUPERSEDED);
   }
   async function animate(c, revision, meta, run) {
@@ -9027,7 +9027,7 @@ User writes "Show air quality for Tokyo", names a place, and points to an empty 
     if (!p) return;
     const pendingBefore = capturePendingHistoryState();
     blockCanvasInput();
-    if (p.revision !== state.userRevision && state.userRevision !== p.latestUserRevision) {
+    if (!options?.force && p.revision !== state.userRevision && state.userRevision !== p.latestUserRevision) {
       rejectPending();
       setStatusKey("canvasChanged");
       return;
@@ -11549,7 +11549,7 @@ User writes "Show air quality for Tokyo", names a place, and points to an empty 
 
       for (const c of commands || []) {
         try {
-          const item = await preparePendingItem(c, null, meta, null);
+          const item = await preparePendingItem(c, null, meta, state.userRevision);
           if (item) items.push(item);
         } catch (err) {
           console.warn("[ATLAS] preparePendingItem failed:", err);

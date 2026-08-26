@@ -1,8 +1,5 @@
 "use strict";
 
-// Primer talk goes through OpenAI first (Luna). Groq is optional and off unless
-// PRIMER_TALK=groq. Luna holds conversation context better than the Groq models
-// this key can still reach.
 const DEFAULT_MODEL = "gpt-5.6-luna";
 
 function openaiKey() {
@@ -17,11 +14,9 @@ function isConfigured() {
   return openaiKey().startsWith("sk-");
 }
 
-async function complete({ systemPrompt, userText, timeoutMs = 18000, temperature = 0.4 } = {}) {
-  if (!isConfigured()) throw new Error("OpenAI talk is not configured.");
+async function fetchChat(model, systemPrompt, userText, timeoutMs, temperature) {
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), timeoutMs);
-  const model = talkModel();
   const body = {
     model,
     temperature,
@@ -80,6 +75,24 @@ async function complete({ systemPrompt, userText, timeoutMs = 18000, temperature
   } finally {
     clearTimeout(timer);
   }
+}
+
+async function complete({ systemPrompt, userText, timeoutMs = 18000, temperature = 0.4 } = {}) {
+  if (!isConfigured()) throw new Error("OpenAI talk is not configured.");
+  const primary = talkModel();
+  const models = [primary, "gpt-4o-mini", "gpt-4o", "gpt-3.5-turbo"];
+  const uniqueModels = [...new Set(models.filter(Boolean))];
+
+  let lastError = null;
+  for (const model of uniqueModels) {
+    try {
+      return await fetchChat(model, systemPrompt, userText, timeoutMs, temperature);
+    } catch (err) {
+      lastError = err;
+      console.warn(`[PRIMER] talk attempt with ${model} failed:`, err.message);
+    }
+  }
+  throw lastError || new Error("All OpenAI chat models failed.");
 }
 
 module.exports = { isConfigured, complete, talkModel };

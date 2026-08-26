@@ -1544,7 +1544,7 @@
 
       for (const c of commands || []) {
         try {
-          const item = await preparePendingItem(c, null, meta, null);
+          const item = await preparePendingItem(c, null, meta, state.userRevision);
           if (item) items.push(item);
         } catch (err) {
           console.warn("[ATLAS] preparePendingItem failed:", err);

@@ -3,10 +3,6 @@
 const crypto = require("crypto");
 
 const graphics = new Map();
-let geminiSkipUntil = 0;
-
-// A model that answers "does not exist" will never start existing mid-process,
-// so retrying it just adds its whole timeout to every picture the child waits for.
 const retiredModels = new Set();
 let lastGoodLabel = "";
 
@@ -14,28 +10,12 @@ function isRetiredError(err) {
   return /\b404\b|does not exist|is not found|not supported for predict|invalid_val/i.test(String(err?.message || ""));
 }
 
-function geminiKey() {
-  return String(process.env.GEMINI_API_KEY || process.env.GOOGLE_API_KEY || "").trim();
-}
-
 function openaiKey() {
   return String(process.env.OPENAI_API_KEY || process.env.AI_API_KEY || "").trim();
 }
 
 function isConfigured() {
-  return geminiKey().length > 20 || openaiKey().startsWith("sk-");
-}
-
-function geminiFlashAllowed() {
-  return geminiKey().length > 20 && Date.now() >= geminiSkipUntil;
-}
-
-function noteGeminiFailure(err) {
-  const msg = String(err?.message || "");
-  if (/\b429\b|quota|RESOURCE_EXHAUSTED/i.test(msg)) {
-    geminiSkipUntil = Date.now() + 60 * 60 * 1000;
-    console.warn("[PRIMER] Gemini Flash Image quota hit; skipping it for 1 hour");
-  }
+  return openaiKey().startsWith("sk-");
 }
 
 function get(id) {
@@ -126,33 +106,6 @@ function photoCommand(input, image, model) {
   };
 }
 
-function extractInlineImage(payload) {
-  const parts = payload?.candidates?.[0]?.content?.parts;
-  if (!Array.isArray(parts)) return null;
-  for (const part of parts) {
-    const data = part?.inlineData || part?.inline_data;
-    const mime = String(data?.mimeType || data?.mime_type || "image/png").trim() || "image/png";
-    const b64 = String(data?.data || "").trim();
-    if (b64.length > 80) return { mime, b64 };
-  }
-  return null;
-}
-
-function extractImagen(payload) {
-  const preds = payload?.predictions;
-  if (!Array.isArray(preds)) return null;
-  for (const pred of preds) {
-    const b64 = String(pred?.bytesBase64Encoded || pred?.image?.bytesBase64Encoded || "").trim();
-    if (b64.length > 80) {
-      return {
-        mime: String(pred?.mimeType || "image/png"),
-        b64
-      };
-    }
-  }
-  return null;
-}
-
 function sanitizeErr(err) {
   return String(err?.message || err || "error")
     .replace(/key[^\s"]*/gi, "")
@@ -174,66 +127,28 @@ async function fetchJson(url, options, timeoutMs) {
   }
 }
 
-async function requestGeminiFlash(model, prompt, timeoutMs) {
-  const url = `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(model)}:generateContent`;
-  const result = await fetchJson(url, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      "x-goog-api-key": geminiKey()
-    },
-    body: JSON.stringify({
-      contents: [{ role: "user", parts: [{ text: prompt }] }],
-      generationConfig: {
-        responseModalities: ["TEXT", "IMAGE"],
-        imageConfig: { aspectRatio: "16:9" }
-      }
-    })
-  }, timeoutMs);
-  if (!result.ok) {
-    throw new Error(`Gemini ${result.status}: ${String(result.text || "").replace(/key[^\s"]*/gi, "").slice(0, 160)}`);
-  }
-  const image = extractInlineImage(result.json);
-  if (!image) throw new Error("Gemini returned no image.");
-  return image;
-}
-
-async function requestImagenFast(prompt, timeoutMs) {
-  const model = "imagen-4.0-fast-generate-001";
-  const url = `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(model)}:predict`;
-  const result = await fetchJson(url, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      "x-goog-api-key": geminiKey()
-    },
-    body: JSON.stringify({
-      instances: [{ prompt }],
-      parameters: {
-        sampleCount: 1,
-        aspectRatio: "16:9"
-      }
-    })
-  }, timeoutMs);
-  if (!result.ok) {
-    throw new Error(`Imagen ${result.status}: ${String(result.text || "").replace(/key[^\s"]*/gi, "").slice(0, 160)}`);
-  }
-  const image = extractImagen(result.json);
-  if (!image) throw new Error("Imagen returned no image.");
-  return { ...image, model };
-}
-
 async function requestOpenAIModel(model, prompt, timeoutMs) {
   const key = openaiKey();
   if (!key.startsWith("sk-")) throw new Error("OpenAI image is not configured.");
+  const isDalle3 = /dall-e-3/i.test(model);
+  const isDalle2 = /dall-e-2/i.test(model);
   const gpt = /gpt-image/i.test(model);
+
   const body = {
     model,
     prompt,
     n: 1,
-    size: gpt ? "1536x1024" : "1792x1024"
+    size: isDalle3 ? "1024x1024" : gpt ? "1536x1024" : "1024x1024"
   };
-  if (gpt) body.quality = "low";
+  if (isDalle3) {
+    body.quality = "standard";
+    body.response_format = "b64_json";
+  } else if (isDalle2) {
+    body.response_format = "b64_json";
+  } else if (gpt) {
+    body.quality = "low";
+  }
+
   const result = await fetchJson("https://api.openai.com/v1/images/generations", {
     method: "POST",
     headers: {
@@ -242,15 +157,37 @@ async function requestOpenAIModel(model, prompt, timeoutMs) {
     },
     body: JSON.stringify(body)
   }, timeoutMs);
+
+  if (!result.ok) {
+    // If specific option failed (e.g. response_format or quality not supported on this model), retry with simple body
+    if (/response_format|quality|size/i.test(result.text || "")) {
+      const simpleBody = { model, prompt, n: 1 };
+      const retryResult = await fetchJson("https://api.openai.com/v1/images/generations", {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${key}`,
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify(simpleBody)
+      }, timeoutMs);
+      if (retryResult.ok) {
+        result.ok = true;
+        result.json = retryResult.json;
+        result.status = retryResult.status;
+      }
+    }
+  }
+
   if (!result.ok) {
     throw new Error(`OpenAI ${model} ${result.status}: ${String(result.text || "").slice(0, 160)}`);
   }
+
   const item = result.json?.data?.[0] || result.json?.output?.[0] || {};
   const inline = item.b64_json || item.image_base64 || item.b64 || result.json?.b64_json || "";
   if (inline) return { mime: "image/png", b64: inline, model };
   if (item.url) {
     const controller = new AbortController();
-    const timer = setTimeout(() => controller.abort(), 8000);
+    const timer = setTimeout(() => controller.abort(), 12000);
     try {
       const bin = await fetch(item.url, { signal: controller.signal });
       if (!bin.ok) throw new Error(`OpenAI image download ${bin.status}`);
@@ -273,7 +210,6 @@ async function tryOne(label, fn) {
     return image;
   } catch (err) {
     console.warn(`[PRIMER] graphic failed (${label}):`, sanitizeErr(err));
-    if (label.startsWith("gemini")) noteGeminiFailure(err);
     if (isRetiredError(err)) {
       retiredModels.add(label);
       console.warn(`[PRIMER] dropping ${label} for this process — the API says it does not exist`);
@@ -288,19 +224,19 @@ async function generate(input = {}) {
   const prompt = kidPrompt(input);
 
   const attempts = [];
-  // If OpenAI is available, include working OpenAI image models
-  if (openaiKey().startsWith("sk-")) {
-    const preferred = String(process.env.OPENAI_IMAGE_MODEL || "gpt-image-2").trim();
-    for (const model of [...new Set([preferred, "gpt-image-1.5", "gpt-image-1", "gpt-image-1-mini"])]) {
-      attempts.push([`openai:${model}`, () => requestOpenAIModel(model, prompt, 26000)]);
-    }
-  }
-  if (geminiKey().length > 20 && geminiFlashAllowed()) {
-    const flash = String(process.env.GEMINI_IMAGE_MODEL || "gemini-2.5-flash-image").trim();
-    attempts.push([`gemini:${flash}`, () => requestGeminiFlash(flash, prompt, 8000)]);
-  }
-  if (geminiKey().length > 20 && geminiFlashAllowed()) {
-    attempts.push(["imagen-fast", () => requestImagenFast(prompt, 10000)]);
+  const preferred = String(process.env.OPENAI_IMAGE_MODEL || "").trim();
+  const models = [
+    preferred,
+    "dall-e-3",
+    "gpt-image-2",
+    "gpt-image-1.5",
+    "gpt-image-1",
+    "gpt-image-1-mini",
+    "dall-e-2"
+  ].filter(Boolean);
+
+  for (const model of [...new Set(models)]) {
+    attempts.push([`openai:${model}`, () => requestOpenAIModel(model, prompt, 28000)]);
   }
 
   const live = attempts.filter(([label]) => !retiredModels.has(label));
