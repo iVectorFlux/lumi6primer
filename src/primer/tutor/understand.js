@@ -47,9 +47,8 @@ function understandLearner(raw, extras = {}) {
   const wantsReason = /\b(how is that possible|how is that|how does that|why is that|why does that|how can that|how does|understand how|why only|why not)\b/.test(t)
     || /^(how|why)\b/.test(t);
   const pushback = /\b(come on|i asked you|just explain|answer me|what are you asking|you're not answering|stop asking|i want you to explain|not what real teaching|just writing|only text|the hell|what the hell|wtf|are you talking about|who asked|i did not ask|i didn't ask|i never asked|you are not able|not able to understand)\b/i.test(t);
-  const meta = !voiceIssue && /\b(what can you help|what do you do|who are you|how does this work|what are you for)\b/.test(t);
-  const confused = /\b(i don't understand|i do not understand|don't understand|dont understand|huh\??$|i'm confused|i am confused|that doesn't make sense|what do you mean|what does that mean|why are you talking about)\b/i.test(t)
-    || /^what\?*$/i.test(t);
+  const confused = /\b(i don't understand|i do not understand|don't understand|dont understand|huh\??$|i'm confused|i am confused|that doesn't make sense|what do you mean|what does that mean|why are you talking about|clarify|can you clarify|what does .* mean|i didn't get that|i didn't understand|could you explain again|repeat that|say that again|what do you mean by|i'm lost|i am lost|not getting it|didn't get it|did not get it|explain again|tell me again|can you explain that|i still don't get|i don't get it|what are you saying|hard to understand|too complicated|simpler|explain simply|in simple words|make it simpler)\b/i.test(t)
+    || /^(what|huh|pardon|sorry|repeat)\??$/i.test(t);
 
   const isContinue = /^(please )?(continue|keep going|go on|resume|carry on|tell me more|what next|continue explaining)[\s.!?]*$/i.test(text)
     || /\b(please continue|keep going|carry on)\b/i.test(t);

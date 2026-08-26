@@ -779,7 +779,13 @@
     }
   }
 
-  window.Lumi6Lesson = { record, attachImage, turns: turnsFromChat };
+  function clear() {
+    turns.length = 0;
+    const feed = document.getElementById("talkFeed");
+    if (feed) feed.replaceChildren();
+  }
+
+  window.Lumi6Lesson = { record, attachImage, turns: turnsFromChat, clear };
   window.exportLessonPdf = exportLessonPdf;
   window.generateLessonPdfBlob = generateLessonPdfBlob;
   window.shareLessonOnWhatsApp = shareLessonOnWhatsApp;

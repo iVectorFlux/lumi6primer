@@ -642,6 +642,21 @@
       skipDraftFinalize:true,
       preserveWidgetRefinement:true,
     });
+    if (typeof window.resetPrimerSession === "function") {
+      window.resetPrimerSession();
+    } else {
+      try {
+        sessionStorage.removeItem("primerSessionId");
+        localStorage.removeItem("primerSessionId");
+        sessionStorage.removeItem("primerRecentTurns");
+        localStorage.removeItem("primerRecentTurns");
+      } catch {}
+    }
+    state.lastLessonNote = null;
+    state.atlasDrawnBoxes = [];
+    if (typeof _atlasDrawCursor !== "undefined") {
+      try { _atlasDrawCursor = null; } catch {}
+    }
     document.querySelector("#newSnapshotName").value = "";
     if (dialog.open) dialog.close();
     if (document.querySelector("#historyPanel").classList.contains("open")) closeHistoryPanel();

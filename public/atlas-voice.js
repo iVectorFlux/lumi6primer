@@ -1002,6 +1002,22 @@
       this.startListening();
     }
 
+    resetSession() {
+      this.turnOff();
+      this.lastSpoken = "";
+      this.pendingHeard = "";
+      this._lastOpening = "";
+      this._didWelcome = false;
+      try {
+        sessionStorage.removeItem("primerSessionId");
+        localStorage.removeItem("primerSessionId");
+        sessionStorage.removeItem("primerRecentTurns");
+        localStorage.removeItem("primerRecentTurns");
+        sessionStorage.removeItem("lumi6-voice-welcomed");
+      } catch {}
+      this.hideOverlay();
+    }
+
     turnOff() {
       this.paused = false;
       this.isActive = false;

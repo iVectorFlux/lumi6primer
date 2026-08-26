@@ -802,6 +802,8 @@
     }
   };
   document.querySelector("#newCanvasBtn").onclick = openNewCanvasDialog;
+  const clearCanvasBtn = document.querySelector("#clearCanvasBtn");
+  if (clearCanvasBtn) clearCanvasBtn.onclick = startBlankCanvas;
   document.querySelector("#saveCanvasBtn").onclick = saveCurrentCanvas;
   document.querySelector("#exportPngBtn").onclick = exportCanvasPng;
   document.querySelector("#historyBtn").onclick = openHistoryPanel;

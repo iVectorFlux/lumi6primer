@@ -6519,6 +6519,21 @@ User writes "Show air quality for Tokyo", names a place, and points to an empty 
       skipDraftFinalize:true,
       preserveWidgetRefinement:true,
     });
+    if (typeof window.resetPrimerSession === "function") {
+      window.resetPrimerSession();
+    } else {
+      try {
+        sessionStorage.removeItem("primerSessionId");
+        localStorage.removeItem("primerSessionId");
+        sessionStorage.removeItem("primerRecentTurns");
+        localStorage.removeItem("primerRecentTurns");
+      } catch {}
+    }
+    state.lastLessonNote = null;
+    state.atlasDrawnBoxes = [];
+    if (typeof _atlasDrawCursor !== "undefined") {
+      try { _atlasDrawCursor = null; } catch {}
+    }
     document.querySelector("#newSnapshotName").value = "";
     if (dialog.open) dialog.close();
     if (document.querySelector("#historyPanel").classList.contains("open")) closeHistoryPanel();
@@ -10807,6 +10822,8 @@ User writes "Show air quality for Tokyo", names a place, and points to an empty 
     }
   };
   document.querySelector("#newCanvasBtn").onclick = openNewCanvasDialog;
+  const clearCanvasBtn = document.querySelector("#clearCanvasBtn");
+  if (clearCanvasBtn) clearCanvasBtn.onclick = startBlankCanvas;
   document.querySelector("#saveCanvasBtn").onclick = saveCurrentCanvas;
   document.querySelector("#exportPngBtn").onclick = exportCanvasPng;
   document.querySelector("#historyBtn").onclick = openHistoryPanel;

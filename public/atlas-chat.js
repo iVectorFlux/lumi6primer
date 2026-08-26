@@ -42,8 +42,21 @@
     try {
       sessionStorage.removeItem("primerSessionId");
       localStorage.removeItem("primerSessionId");
+      sessionStorage.removeItem("primerRecentTurns");
+      localStorage.removeItem("primerRecentTurns");
       const msgs = document.querySelector("#atlasMessages");
       if (msgs) msgs.replaceChildren();
+      if (window.atlasChat && Array.isArray(window.atlasChat.messages)) {
+        window.atlasChat.messages = [];
+      }
+      if (window.Lumi6Lesson && typeof window.Lumi6Lesson.clear === "function") {
+        window.Lumi6Lesson.clear();
+      }
+      if (window.atlasVoice && typeof window.atlasVoice.resetSession === "function") {
+        window.atlasVoice.resetSession();
+      }
+      const feed = document.getElementById("talkFeed");
+      if (feed) feed.replaceChildren();
     } catch {}
   };
 
