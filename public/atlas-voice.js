@@ -1280,13 +1280,17 @@
             .catch((err) => console.error("[ATLAS Voice] Board draw failed:", err));
           if (typeof window.hideAtlasGraphicLoader === "function") window.hideAtlasGraphicLoader();
           this._holdListen = false;
-          if (this._awaitingListen && this.isActive) {
-            this._awaitingListen = false;
-            this.state = "IDLE";
-            this.scheduleAutoRestart(400);
-          } else {
-            this.state = "IDLE";
-            this.scheduleAutoRestart(300);
+          // If we did NOT speak, return to listening. If we ARE speaking (spoke === true),
+          // speakAndDraw's finishTurn callback will handle transitioning to listening when playback completes.
+          if (!spoke) {
+            if (this._awaitingListen && this.isActive) {
+              this._awaitingListen = false;
+              this.state = "IDLE";
+              this.scheduleAutoRestart(400);
+            } else {
+              this.state = "IDLE";
+              this.scheduleAutoRestart(300);
+            }
           }
         }
       } catch (err) {

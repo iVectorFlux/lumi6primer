@@ -804,8 +804,16 @@
   document.querySelector("#newCanvasBtn").onclick = openNewCanvasDialog;
   const clearCanvasBtn = document.querySelector("#clearCanvasBtn");
   if (clearCanvasBtn) clearCanvasBtn.onclick = startBlankCanvas;
-  document.querySelector("#saveCanvasBtn").onclick = saveCurrentCanvas;
-  document.querySelector("#exportPngBtn").onclick = exportCanvasPng;
+  const exportBtn = document.querySelector("#exportPngBtn");
+  if (exportBtn) {
+    exportBtn.onclick = () => {
+      if (typeof window.exportLessonPdf === "function") {
+        window.exportLessonPdf();
+      } else if (typeof exportCanvasPng === "function") {
+        exportCanvasPng();
+      }
+    };
+  }
   document.querySelector("#historyBtn").onclick = openHistoryPanel;
   document.querySelector("#historyClose").onclick = closeHistoryPanel;
   document.querySelector("#historyBackdrop").onclick = closeHistoryPanel;

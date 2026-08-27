@@ -105,12 +105,12 @@ class ResponsePolicy {
   _questionFor(decision, understanding) {
     const topic = this._topic(understanding);
     if (understanding?.voiceIssue) return topic ? `Want me to keep going with ${topic}?` : "What do you want to learn?";
-    if (decision?.action === "diagnose") return "What do you think happens next, and why?";
     if (understanding?.refersToBoard) return "What happens if we change one of YOUR numbers?";
-    if (decision?.role === "editor") return "What were you trying to do?";
-    if (decision?.role === "advisor" && !topic) return "What do you want to learn?";
-    if (understanding?.intent === "drawing") return "What did you want this drawing to show?";
-    return "What do you think happens next?";
+    if (decision?.role === "editor") return "What were you trying to explore?";
+    if (decision?.role === "advisor" && !topic) return "What would you like to explore today?";
+    if (understanding?.intent === "drawing") return "What did you want this diagram to show?";
+    if (topic) return `What is your hypothesis about how ${topic} works?`;
+    return "What part of this are you most curious about?";
   }
 
   _ensureReinterpretation(text, understanding) {

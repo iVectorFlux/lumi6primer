@@ -72,27 +72,26 @@ Illustrated, not a photo. No photoreal humans, no fashion/stock-model faces.`
 }
 
 function kidPrompt({ topic, spoken, question, age, grade, scene, previousScene, kind } = {}) {
-  const asked = String(question || "").replace(/\s+/g, " ").trim().slice(0, 220);
-  const focus = String(scene || topic || asked || spoken || "this idea").replace(/\s+/g, " ").trim().slice(0, 160);
+  const cleanTopic = String(topic || scene || "").replace(/\s+/g, " ").trim().slice(0, 120);
+  const cleanScene = String(scene || topic || spoken || "the core physical concept").replace(/\s+/g, " ").trim().slice(0, 160);
   const prior = String(previousScene || "").replace(/\s+/g, " ").trim().slice(0, 160);
   const style = styleGuide({ grade, age });
   const overview = kind !== "detail";
   const sceneLine = overview
-    ? `Draw ONE complete landscape that tells the whole story of "${topic || focus}" at a glance.
-A child should understand the idea from the picture itself.
-If it is a cycle, show the full loop in one scene: start, middle, and return.
-Do not zoom into one tiny step.`
+    ? `Create a clear, highly relatable, and educational illustration showing "${cleanTopic || cleanScene}".
+A student should clearly understand the physical concept from the visual itself.
+Make it visually stunning, vibrant, accurate to science, and relatable to a student's intuition.`
     : prior
-      ? `The board already shows "${prior}". Draw a NEW close-up of this next moment only: "${focus}". Same world, closer in.`
-      : `Draw a close-up of this one moment: "${focus}".`;
+      ? `The previous visual showed "${prior}". Create a NEW detailed illustration focusing on "${cleanScene}".`
+      : `Create a detailed educational illustration focusing on "${cleanScene}".`;
   return `${style.look}
 
-The student asked: "${asked || focus}"
+Concept: "${cleanTopic || cleanScene}"
 
 ${sceneLine}
-Keep it easy to understand at a glance.
-No written words, no labels, no arrows, no flowcharts, no infographic text.
-The picture must be complete and fill the whole frame.`;
+Keep the composition clean, balanced, and easy to understand at a glance.
+No written words, no labels, no arrows, no watermarks, no distorted symbols.
+The illustration must be complete and fill the entire frame.`;
 }
 
 function photoCommand(input, image, model) {
