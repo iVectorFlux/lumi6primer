@@ -174,7 +174,8 @@ button,
     flex: 0 0 22px !important;
     border-radius: 50% !important;
     border: 2px solid #ffffff !important;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.14) !important;
+    background-color: var(--swatch, #2563eb) !important;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.18) !important;
     opacity: 1 !important;
     transform: none !important;
     pointer-events: auto !important;

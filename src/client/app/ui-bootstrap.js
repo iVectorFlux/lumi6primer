@@ -413,11 +413,19 @@
         event.stopPropagation();
         if (event.type === "pointerdown" && event.pointerType === "mouse" && event.button !== 0) return;
       }
-      if (button.dataset.mode === "pen" && state.mode === "pen") {
+      if (button.dataset.mode === "pen") {
         const penTray = document.querySelector("#penTray");
+        if (state.mode === "pen") {
+          if (penTray) {
+            penTray.hidden = !penTray.hidden;
+            if (!penTray.hidden) closeRadialMenu();
+          }
+          return;
+        }
+        setCanvasMode("pen", { showTray: true });
         if (penTray) {
-          penTray.hidden = !penTray.hidden;
-          if (!penTray.hidden) closeRadialMenu();
+          penTray.hidden = false;
+          closeRadialMenu();
         }
         return;
       }

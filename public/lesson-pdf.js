@@ -20,6 +20,14 @@
 
     for (let i = turns.length - 1; i >= Math.max(0, turns.length - 3); i--) {
       if (turns[i].role === cleanRole) {
+        if (!turns[i].text && turns[i].image) {
+          turns[i].text = spoken;
+          try {
+            sessionStorage.setItem("lumi6_lesson_turns", JSON.stringify(turns.slice(-30)));
+          } catch {}
+          if (typeof window.syncTalkModeFeed === "function") window.syncTalkModeFeed();
+          return;
+        }
         const existingNorm = normalizeText(turns[i].text);
         if (existingNorm === norm || (existingNorm.length > 20 && (existingNorm.includes(norm) || norm.includes(existingNorm)))) {
           if (spoken.length > (turns[i].text || "").length) {
@@ -43,7 +51,7 @@
     if (!url) return;
     for (let i = turns.length - 1; i >= 0; i -= 1) {
       if (turns[i].role === "teacher") {
-        if (!turns[i].image) turns[i].image = url;
+        turns[i].image = url;
         try {
           sessionStorage.setItem("lumi6_lesson_turns", JSON.stringify(turns.slice(-30)));
         } catch {}

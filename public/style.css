@@ -1194,7 +1194,8 @@ body.sidebar-collapsed .sidebar-user-avatar {
 }
 
 .pen-color-control .orbit-swatch,
-.toolbar .pen-color-control .orbit-swatch {
+.toolbar .pen-color-control .orbit-swatch,
+.pen-tray .orbit-swatch {
   position: static;
   top: auto;
   left: auto;
@@ -1206,7 +1207,8 @@ body.sidebar-collapsed .sidebar-user-avatar {
   flex: 0 0 22px;
   border-radius: 50%;
   border: 2px solid #ffffff;
-  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.15);
+  background-color: var(--swatch, #2563eb);
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.18);
   opacity: 1;
   pointer-events: auto;
   transform: none;
@@ -1214,15 +1216,26 @@ body.sidebar-collapsed .sidebar-user-avatar {
   transition: transform 0.12s ease, outline 0.12s ease;
 }
 
-.pen-color-control .orbit-swatch:hover {
-  transform: scale(1.15);
+.pen-color-control .orbit-swatch:hover,
+.pen-tray .orbit-swatch:hover {
+  transform: scale(1.18);
 }
 
-.pen-color-control .orbit-swatch.active {
+.pen-color-control .orbit-swatch.active,
+.pen-tray .orbit-swatch.active {
   outline: 2.5px solid var(--accent);
   outline-offset: 2px;
-  transform: scale(1.1);
+  transform: scale(1.12);
 }
+
+.orbit-swatch.color-blue, [data-ink-color="#2563eb"], [data-ai-color="#2563eb"] { background-color: #2563eb !important; --swatch: #2563eb; }
+.orbit-swatch.color-black, [data-ink-color="#1f2937"], [data-ai-color="#1f2937"] { background-color: #1f2937 !important; --swatch: #1f2937; }
+.orbit-swatch.color-red, [data-ink-color="#dc2626"], [data-ai-color="#dc2626"] { background-color: #dc2626 !important; --swatch: #dc2626; }
+.orbit-swatch.color-orange, [data-ink-color="#ea580c"], [data-ai-color="#ea580c"] { background-color: #ea580c !important; --swatch: #ea580c; }
+.orbit-swatch.color-gold, [data-ink-color="#ca8a04"], [data-ai-color="#ca8a04"] { background-color: #ca8a04 !important; --swatch: #ca8a04; }
+.orbit-swatch.color-green, [data-ink-color="#16a34a"], [data-ai-color="#16a34a"] { background-color: #16a34a !important; --swatch: #16a34a; }
+.orbit-swatch.color-cyan, [data-ink-color="#0891b2"], [data-ai-color="#0891b2"] { background-color: #0891b2 !important; --swatch: #0891b2; }
+.orbit-swatch.color-purple, [data-ink-color="#9333ea"], [data-ai-color="#9333ea"] { background-color: #9333ea !important; --swatch: #9333ea; }
 
 .danger-btool:hover {
   color: var(--danger) !important;

@@ -1257,9 +1257,11 @@
             if (typeof window.applyPrimerGraphic === "function") {
               graphicApplied = window.applyPrimerGraphic(msg) || graphicApplied;
             }
-            if (msg?.url && window.Lumi6Lesson && typeof window.Lumi6Lesson.attachImage === "function") {
-              window.Lumi6Lesson.attachImage(msg.url);
+            const imageUrl = msg?.url || msg?.href || (Array.isArray(msg?.canvasActions) && msg.canvasActions[0]?.href) || (Array.isArray(msg?.visualPlan?.commands) && msg.visualPlan.commands[0]?.href) || "";
+            if (imageUrl && window.Lumi6Lesson && typeof window.Lumi6Lesson.attachImage === "function") {
+              window.Lumi6Lesson.attachImage(imageUrl);
             }
+            if (typeof window.syncTalkModeFeed === "function") window.syncTalkModeFeed();
           },
           onAudio: (msg) => {
             if (msg && this.tts && typeof this.tts.acceptOpenerAudio === "function") {

@@ -657,6 +657,12 @@
     if (typeof _atlasDrawCursor !== "undefined") {
       try { _atlasDrawCursor = null; } catch {}
     }
+    state.lessonTitle = "";
+    const docName = document.querySelector("#currentDocName");
+    if (docName) docName.textContent = "Untitled";
+    if (typeof window.syncTalkModeFeed === "function") {
+      window.syncTalkModeFeed();
+    }
     document.querySelector("#newSnapshotName").value = "";
     if (dialog.open) dialog.close();
     if (document.querySelector("#historyPanel").classList.contains("open")) closeHistoryPanel();
@@ -664,7 +670,8 @@
     setStatusKey("newCanvasReady");
   }
   function openNewCanvasDialog() {
-    if (!tiles.size && !state.images.length && !state.textBoxes.length && (!pluginEnabled("animation") || !state.animations.length) && !visibleWidgets().length) {
+    const inTalkMode = document.body.classList.contains("mode-talk-active");
+    if (inTalkMode || (!tiles.size && !state.images.length && !state.textBoxes.length && (!pluginEnabled("animation") || !state.animations.length) && !visibleWidgets().length)) {
       startBlankCanvas();
       return;
     }

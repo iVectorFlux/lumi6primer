@@ -6534,6 +6534,12 @@ User writes "Show air quality for Tokyo", names a place, and points to an empty 
     if (typeof _atlasDrawCursor !== "undefined") {
       try { _atlasDrawCursor = null; } catch {}
     }
+    state.lessonTitle = "";
+    const docName = document.querySelector("#currentDocName");
+    if (docName) docName.textContent = "Untitled";
+    if (typeof window.syncTalkModeFeed === "function") {
+      window.syncTalkModeFeed();
+    }
     document.querySelector("#newSnapshotName").value = "";
     if (dialog.open) dialog.close();
     if (document.querySelector("#historyPanel").classList.contains("open")) closeHistoryPanel();
@@ -6541,7 +6547,8 @@ User writes "Show air quality for Tokyo", names a place, and points to an empty 
     setStatusKey("newCanvasReady");
   }
   function openNewCanvasDialog() {
-    if (!tiles.size && !state.images.length && !state.textBoxes.length && (!pluginEnabled("animation") || !state.animations.length) && !visibleWidgets().length) {
+    const inTalkMode = document.body.classList.contains("mode-talk-active");
+    if (inTalkMode || (!tiles.size && !state.images.length && !state.textBoxes.length && (!pluginEnabled("animation") || !state.animations.length) && !visibleWidgets().length)) {
       startBlankCanvas();
       return;
     }
@@ -10433,11 +10440,19 @@ User writes "Show air quality for Tokyo", names a place, and points to an empty 
         event.stopPropagation();
         if (event.type === "pointerdown" && event.pointerType === "mouse" && event.button !== 0) return;
       }
-      if (button.dataset.mode === "pen" && state.mode === "pen") {
+      if (button.dataset.mode === "pen") {
         const penTray = document.querySelector("#penTray");
+        if (state.mode === "pen") {
+          if (penTray) {
+            penTray.hidden = !penTray.hidden;
+            if (!penTray.hidden) closeRadialMenu();
+          }
+          return;
+        }
+        setCanvasMode("pen", { showTray: true });
         if (penTray) {
-          penTray.hidden = !penTray.hidden;
-          if (!penTray.hidden) closeRadialMenu();
+          penTray.hidden = false;
+          closeRadialMenu();
         }
         return;
       }
