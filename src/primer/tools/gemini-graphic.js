@@ -227,10 +227,6 @@ async function generate(input = {}) {
   const models = [
     preferred,
     "dall-e-3",
-    "gpt-image-2",
-    "gpt-image-1.5",
-    "gpt-image-1",
-    "gpt-image-1-mini",
     "dall-e-2"
   ].filter(Boolean);
 

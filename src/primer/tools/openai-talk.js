@@ -1,6 +1,6 @@
 "use strict";
 
-const DEFAULT_MODEL = "gpt-5.6-luna";
+const DEFAULT_MODEL = "gpt-4o-mini";
 
 function openaiKey() {
   return String(process.env.OPENAI_API_KEY || process.env.AI_API_KEY || "").trim();

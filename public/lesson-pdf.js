@@ -286,13 +286,45 @@
     return "";
   }
 
+  function cleanConceptTitle(raw) {
+    if (!raw) return "";
+    let clean = String(raw)
+      .replace(/\s+/g, " ")
+      .replace(/^(hey|hi|hello|please|can you|could you|would you)\b[,!. ]*/gi, "")
+      .replace(/^(teach me|tell me about|tell me|explain|what is|what's|whats|how does|how do|how to|i want to learn about)\b[,!. ]*/gi, "")
+      .replace(/[?.!]+$/g, "")
+      .trim();
+
+    const words = clean.split(" ");
+    const deduped = [];
+    words.forEach((w) => {
+      if (deduped.length === 0 || deduped[deduped.length - 1].toLowerCase() !== w.toLowerCase()) {
+        deduped.push(w);
+      }
+    });
+    clean = deduped.join(" ");
+
+    clean = clean.replace(/\bdarvin\b/gi, "Darwin");
+    clean = clean.replace(/\btarzan theory\b/gi, "Theory of Evolution");
+
+    if (words.length > 7) clean = words.slice(0, 7).join(" ");
+    if (clean.length > 60) clean = `${clean.slice(0, 57).trim()}…`;
+    if (!clean) return "Exploration & Discovery";
+
+    return clean
+      .split(" ")
+      .map((w) => (w.length > 2 || w.toLowerCase() === "ai" ? w.charAt(0).toUpperCase() + w.slice(1) : w.toLowerCase()))
+      .join(" ");
+  }
+
   function recapHtml(steps) {
-    const topics = steps.map((step) => step.asked).filter(Boolean);
-    if (!topics.length) return "";
+    const topics = steps.map((step) => cleanConceptTitle(step.asked)).filter(Boolean);
+    const uniqueTopics = [...new Set(topics)];
+    if (!uniqueTopics.length) return "";
     return `<section class="recap-card">
       <div class="chapter-badge">Thinking Profile & Discoveries</div>
       <h2>Core Concepts Discovered</h2>
-      <ol>${topics.map((topic) => `<li>${escapeHtml(topic)}</li>`).join("")}</ol>
+      <ol>${uniqueTopics.map((topic) => `<li>${escapeHtml(topic)}</li>`).join("")}</ol>
       <div style="margin-top: 18px; padding-top: 14px; border-top: 1px solid #e2e8f0;">
         <h3 style="margin: 0 0 8px; font-size: 14px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.06em; color: var(--violet);">Thinking Capabilities Practiced</h3>
         <div style="display: flex; flex-wrap: wrap; gap: 8px; margin-top: 6px;">
@@ -789,8 +821,15 @@
 
   function clear() {
     turns.length = 0;
+    try {
+      sessionStorage.removeItem("lumi6_lesson_turns");
+      localStorage.removeItem("lumi6_lesson_turns");
+    } catch {}
     const feed = document.getElementById("talkFeed");
     if (feed) feed.replaceChildren();
+    if (typeof window.syncTalkModeFeed === "function") {
+      window.syncTalkModeFeed();
+    }
   }
 
   window.Lumi6Lesson = { record, attachImage, turns: turnsFromChat, clear };

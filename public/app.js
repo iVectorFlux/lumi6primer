@@ -6527,7 +6527,15 @@ User writes "Show air quality for Tokyo", names a place, and points to an empty 
         localStorage.removeItem("primerSessionId");
         sessionStorage.removeItem("primerRecentTurns");
         localStorage.removeItem("primerRecentTurns");
+        sessionStorage.removeItem("lumi6_lesson_turns");
+        localStorage.removeItem("lumi6_lesson_turns");
       } catch {}
+    }
+    if (typeof window.Lumi6Lesson?.clear === "function") {
+      window.Lumi6Lesson.clear();
+    }
+    if (typeof window.atlasVoice?.resetSession === "function") {
+      window.atlasVoice.resetSession();
     }
     state.lastLessonNote = null;
     state.atlasDrawnBoxes = [];

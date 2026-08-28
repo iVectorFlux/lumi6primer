@@ -123,8 +123,11 @@
       this._committing = false;
       this.endOfSpeechMs = END_OF_SPEECH_MS;
 
+      const isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent) || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
+      this.isMobile = isMobile;
+
       if (this.isSupported) {
-        this.recognition.continuous = true;
+        this.recognition.continuous = !isMobile;
         this.recognition.interimResults = true;
         this.recognition.lang = options.lang || "en-US";
 
@@ -143,6 +146,8 @@
         };
 
         this.recognition.onerror = (e) => {
+          if (e.error === "no-speech") return;
+          console.warn("[ATLAS STT] Recognition error:", e.error);
           if (this.onError) this.onError(e.error);
         };
 
@@ -204,6 +209,9 @@
         clearTimeout(this._silenceTimer);
         this._silenceTimer = null;
       }
+      this._finalParts = [];
+      this._interim = "";
+      this.lastTranscript = "";
       if (this.isSupported && this.isListening) {
         try {
           this.recognition.stop();
@@ -270,6 +278,17 @@
           console.log("[ATLAS Voice] AudioContext unlocked, state:", ctx.state);
         }
       } catch (e) { console.warn("[ATLAS Voice] unlock error:", e.message); }
+      try {
+        const p = this.ensurePlayer();
+        p.load();
+      } catch (e) {}
+      if ("speechSynthesis" in window) {
+        try {
+          const u = new SpeechSynthesisUtterance("");
+          u.volume = 0.01;
+          window.speechSynthesis.speak(u);
+        } catch (e) {}
+      }
     }
 
     ensurePlayer() {
@@ -809,6 +828,17 @@
       }
     }
 
+    _syncVoiceButtonUI(stateName) {
+      const btns = [this.elements?.toggleBtn, document.getElementById("talkModeMicBtn")].filter(Boolean);
+      btns.forEach((btn) => {
+        btn.classList.remove("atlas-listening", "atlas-speaking", "atlas-processing");
+        if (stateName) btn.classList.add(`atlas-${stateName}`);
+      });
+      if (this.elements?.label) {
+        this.elements.label.textContent = stateName === "speaking" ? "Speaking..." : stateName === "listening" ? "Listening..." : stateName === "processing" ? "Thinking..." : "Lumi6";
+      }
+    }
+
     handleMicButtonClick() {
       if (this.paused) {
         this.resumeConversation();
@@ -884,8 +914,7 @@
       this.lastSpoken = line;
       this.showOverlay("teacher", line);
       this.state = "SPEAKING";
-      this.elements.toggleBtn.classList.add("atlas-speaking");
-      this.elements.label.textContent = "Speaking";
+      this._syncVoiceButtonUI("speaking");
       if (this._welcomeWatch) {
         clearTimeout(this._welcomeWatch);
         this._welcomeWatch = null;
@@ -904,8 +933,13 @@
       this.paused = false;
       this.isActive = true;
       window.__atlasTeachingLock = true;
+      this.pendingHeard = "";
+      if (this.stt) {
+        this.stt._finalParts = [];
+        this.stt._interim = "";
+        this.stt.lastTranscript = "";
+      }
       this.tts.unlockPlayback();
-      this.primeMic();
       const hasActiveConversation = Boolean(
         this.lastSpoken ||
         sessionStorage.getItem("primerSessionId") ||
@@ -920,19 +954,7 @@
       }
     }
 
-    primeMic() {
-      if (navigator.mediaDevices && typeof navigator.mediaDevices.getUserMedia === "function") {
-        navigator.mediaDevices.getUserMedia({ audio: true }).then((stream) => {
-          stream.getTracks().forEach((track) => track.stop());
-          this.hasMicPermission = true;
-        }).catch((err) => {
-          if (err.name === "NotAllowedError" || err.name === "PermissionDeniedError") {
-            this.showOverlay("error", "Microphone blocked. Click the lock icon in your address bar -> allow Microphone.");
-            this.turnOff();
-          }
-        });
-      }
-    }
+    primeMic() {}
 
     listenAfterSpeech() {
       if (this._openingListen) return;
@@ -941,7 +963,7 @@
         clearTimeout(this._welcomeWatch);
         this._welcomeWatch = null;
       }
-      this.elements.toggleBtn.classList.remove("atlas-speaking");
+      this._syncVoiceButtonUI(null);
       this.state = "IDLE";
       setTimeout(() => {
         this._openingListen = false;
@@ -973,6 +995,13 @@
       this.isActive = false;
       window.__atlasTeachingLock = false;
       this.state = "IDLE";
+      this.pendingHeard = "";
+      if (this.stt) {
+        this.stt.stop();
+        this.stt._finalParts = [];
+        this.stt._interim = "";
+        this.stt.lastTranscript = "";
+      }
       if (this.restartTimer) {
         clearTimeout(this.restartTimer);
         this.restartTimer = null;
@@ -983,9 +1012,7 @@
       }
       this._openingListen = false;
       this.tts.cancel();
-      this.stt.stop();
-      this.elements.toggleBtn.classList.remove("atlas-listening", "atlas-speaking", "atlas-processing");
-      this.elements.label.textContent = "Lumi6";
+      this._syncVoiceButtonUI(null);
       this.showPausedOverlay();
     }
 
@@ -994,6 +1021,12 @@
       this.isActive = true;
       this.state = "IDLE";
       window.__atlasTeachingLock = true;
+      this.pendingHeard = "";
+      if (this.stt) {
+        this.stt._finalParts = [];
+        this.stt._interim = "";
+        this.stt.lastTranscript = "";
+      }
       if (this.overlayTimeout) {
         clearTimeout(this.overlayTimeout);
         this.overlayTimeout = null;
@@ -1008,11 +1041,19 @@
       this.pendingHeard = "";
       this._lastOpening = "";
       this._didWelcome = false;
+      if (this.stt) {
+        this.stt.stop();
+        this.stt._finalParts = [];
+        this.stt._interim = "";
+        this.stt.lastTranscript = "";
+      }
       try {
         sessionStorage.removeItem("primerSessionId");
         localStorage.removeItem("primerSessionId");
         sessionStorage.removeItem("primerRecentTurns");
         localStorage.removeItem("primerRecentTurns");
+        sessionStorage.removeItem("lumi6_lesson_turns");
+        localStorage.removeItem("lumi6_lesson_turns");
         sessionStorage.removeItem("lumi6-voice-welcomed");
       } catch {}
       this.hideOverlay();
@@ -1023,6 +1064,13 @@
       this.isActive = false;
       window.__atlasTeachingLock = false;
       this.state = "IDLE";
+      this.pendingHeard = "";
+      if (this.stt) {
+        this.stt.stop();
+        this.stt._finalParts = [];
+        this.stt._interim = "";
+        this.stt.lastTranscript = "";
+      }
       if (this.restartTimer) {
         clearTimeout(this.restartTimer);
         this.restartTimer = null;
@@ -1033,9 +1081,7 @@
       }
       this._openingListen = false;
       this.tts.cancel();
-      this.stt.stop();
-      this.elements.toggleBtn.classList.remove("atlas-listening", "atlas-speaking", "atlas-processing");
-      this.elements.label.textContent = "Lumi6";
+      this._syncVoiceButtonUI(null);
       this.elements.overlay.classList.remove("atlas-live");
       this.autoHideOverlay(0);
     }
@@ -1058,21 +1104,6 @@
       // Safeguard: Ensure TTS is stopped before listening to prevent self-talk feedback
       this.tts.cancel();
 
-      // Trigger native browser microphone permission dialog if needed
-      if (!this.hasMicPermission && navigator.mediaDevices && typeof navigator.mediaDevices.getUserMedia === "function") {
-        try {
-          const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-          stream.getTracks().forEach(track => track.stop());
-          this.hasMicPermission = true;
-        } catch (err) {
-          if (err.name === "NotAllowedError" || err.name === "PermissionDeniedError") {
-            this.showOverlay("error", "Microphone blocked. Click the lock icon in your address bar -> allow Microphone.");
-            this.turnOff();
-            return;
-          }
-        }
-      }
-
       const keepBuffer = Boolean(this.pendingHeard) || this.stt.hasPendingSilence;
       this.state = "LISTENING";
       if (!keepBuffer) {
@@ -1081,9 +1112,7 @@
       }
       const started = this.stt.start({ keepBuffer });
       if (started) {
-        this.elements.toggleBtn.classList.remove("atlas-speaking", "atlas-processing");
-        this.elements.toggleBtn.classList.add("atlas-listening");
-        this.elements.label.textContent = "Listening...";
+        this._syncVoiceButtonUI("listening");
         if (keepBuffer && this.pendingHeard) {
           this.showOverlay("student", this.pendingHeard);
         } else {
@@ -1096,7 +1125,7 @@
 
     stopListening() {
       this.stt.stop();
-      this.elements.toggleBtn.classList.remove("atlas-listening");
+      this._syncVoiceButtonUI(null);
     }
 
     interrupt() {
@@ -1161,9 +1190,7 @@
 
       this.state = "PROCESSING";
       this.pendingHeard = "";
-      this.elements.toggleBtn.classList.remove("atlas-listening", "atlas-speaking");
-      this.elements.toggleBtn.classList.add("atlas-processing");
-      this.elements.label.textContent = "Thinking...";
+      this._syncVoiceButtonUI("processing");
       this.showOverlay("processing", "Got it — thinking...");
 
       if (/want me to explain|what are you curious|listening to your|listening for your next|click the ai orb|you('re| are) getting it|what should we explore|which part should we|or a new topic|what else are you wondering|should we zoom|say heart, lungs/i.test(heard) || this.isHeardEcho(heard)) {
@@ -1194,7 +1221,7 @@
     }
 
     handleSttEnd() {
-      this.elements.toggleBtn.classList.remove("atlas-listening");
+      this._syncVoiceButtonUI(null);
       if (!this.isActive || this.paused) return;
       if (this.state === "PROCESSING" || this.state === "SPEAKING") return;
       if (this.stt._committing) return;
@@ -1344,25 +1371,31 @@
       text = text.replace(/\\\(([\s\S]*?)\\\)/g, "$1");
 
       // Remove any leftover backslashes and LaTeX words so TTS NEVER says "backslash"!
-      text = text.replace(/\\+[a-zA-Z]+/g, "");
+      text = text.replace(/\\[a-zA-Z]+/g, " ");
       text = text.replace(/\\/g, "");
 
-      // Clean Markdown formatting (bold, italic, headers, code backticks)
+      // Strip markdown bold, italics, headers, code, bullet points
+      text = text.replace(/\*\*(.*?)\*\*/g, "$1");
+      text = text.replace(/\*(.*?)\*/g, "$1");
+      text = text.replace(/#{1,6}\s+/g, "");
       text = text.replace(/`([^`]+)`/g, "$1");
-      text = text.replace(/\*\*([^*]+)\*\*/g, "$1");
-      text = text.replace(/\*([^*]+)\*/g, "$1");
-      text = text.replace(/#+\s+/g, "");
+      text = text.replace(/^\s*[-*+]\s+/gm, "");
 
-      // Clean extra whitespaces
+      // Collapse multiple whitespace
       text = text.replace(/\s+/g, " ").trim();
       return text;
     }
 
     /**
-     * Speak response via TTS and trigger canvas drawing execution.
+     * Speak teacher response and synchronously execute whiteboard drawing plan.
      */
-    speakAndDraw(data, studentText = "", options = {}) {
-      const shouldDraw = options.draw !== false;
+    speakAndDraw(data, studentText = "", { draw = true } = {}) {
+      const shouldDraw = draw && (
+        (data.visualPlan && Array.isArray(data.visualPlan.commands) && data.visualPlan.commands.length > 0) ||
+        (data.drawingResult && Array.isArray(data.drawingResult.commands) && data.drawingResult.commands.length > 0) ||
+        (Array.isArray(data.canvasActions) && data.canvasActions.length > 0)
+      );
+
       this.state = "SPEAKING";
       const teacherText = data.spokenResponse || data.teacherResponse || data.spoken;
 
@@ -1377,9 +1410,7 @@
       }
 
       this.stt.stop();
-      this.elements.toggleBtn.classList.remove("atlas-listening", "atlas-processing");
-      this.elements.label.textContent = "Speaking...";
-      this.elements.toggleBtn.classList.add("atlas-speaking");
+      this._syncVoiceButtonUI("speaking");
 
       const drawPromise = shouldDraw
         ? this.syncer.executeVisualPlan(data.visualPlan, data.drawingResult, data.canvasActions)
@@ -1387,26 +1418,22 @@
         : Promise.resolve();
 
       const finishTurn = () => {
-        this.elements.toggleBtn.classList.remove("atlas-speaking", "atlas-listening");
+        this._syncVoiceButtonUI(null);
         if (this.paused) {
           this.state = "IDLE";
-          this.elements.label.textContent = "Lumi6";
           this.showPausedOverlay();
           return;
         }
         if (this._holdListen) {
           this._awaitingListen = true;
           this.state = "IDLE";
-          this.elements.label.textContent = "Lumi6";
           return;
         }
         if (this.isActive) {
           this.state = "IDLE";
-          this.elements.label.textContent = "Lumi6";
           this.scheduleAutoRestart(500);
         } else {
           this.state = "IDLE";
-          this.elements.label.textContent = "Lumi6";
           this.autoHideOverlay(3000);
         }
       };

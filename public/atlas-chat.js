@@ -157,13 +157,16 @@
   function applyPrimerGraphic(msg) {
     const commands = (msg?.visualPlan && Array.isArray(msg.visualPlan.commands) && msg.visualPlan.commands.length)
       ? msg.visualPlan.commands
-      : (Array.isArray(msg?.canvasActions) ? msg.canvasActions : []);
+      : (Array.isArray(msg?.canvasActions) ? msg.canvasActions : (msg?.tool ? [msg] : []));
     if (!commands.length) return false;
     const photo = commands.find((cmd) => cmd && (cmd.tool === "place_photo" || cmd.tool === "svg_picture") && (cmd.href || cmd.svg));
-    if (photo?.href) {
-      window.Lumi6Lesson?.attachImage(photo.href);
+    const imgSrc = photo?.href || (photo?.svg ? `data:image/svg+xml;utf8,${encodeURIComponent(photo.svg)}` : "");
+    if (imgSrc) {
+      if (typeof window.Lumi6Lesson?.attachImage === "function") {
+        window.Lumi6Lesson.attachImage(imgSrc);
+      }
       const lastTeacher = document.querySelector("#atlasMessages .atlas-msg.teacher:last-of-type");
-      if (lastTeacher) lastTeacher.dataset.image = photo.href;
+      if (lastTeacher) lastTeacher.dataset.image = imgSrc;
     }
     if (typeof window.syncTalkModeFeed === "function") {
       window.syncTalkModeFeed();

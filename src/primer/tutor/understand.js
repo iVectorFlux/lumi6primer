@@ -55,6 +55,7 @@ function understandLearner(raw, extras = {}) {
 
   const GREETING = /^(hi|hello|hey|how are you|how do you do|what'?s up|good (morning|afternoon|evening)|how('?s| is) it going|are you there)\b/i;
   const isGreeting = GREETING.test(t) && text.length < 50 && !wantsExplain && !isContinue;
+  const meta = /\b(what can you do|how do you work|who are you|what is your name|help me|what are you)\b/i.test(t);
 
   let intent = "chat";
   if (voiceIssue) {
