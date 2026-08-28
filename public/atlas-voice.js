@@ -638,9 +638,35 @@
       }
       let index = 0;
       let started = false;
+
+      if (this._speechHeartbeat) {
+        clearInterval(this._speechHeartbeat);
+        this._speechHeartbeat = null;
+      }
+      this._speechHeartbeat = setInterval(() => {
+        try {
+          if (window.speechSynthesis && window.speechSynthesis.speaking) {
+            window.speechSynthesis.pause();
+            window.speechSynthesis.resume();
+          }
+        } catch {}
+      }, 5000);
+
+      const cleanup = () => {
+        if (this._speechHeartbeat) {
+          clearInterval(this._speechHeartbeat);
+          this._speechHeartbeat = null;
+        }
+        this._activeUtterance = null;
+      };
+
       const speakNext = () => {
-        if (generation !== this.generation) return;
+        if (generation !== this.generation) {
+          cleanup();
+          return;
+        }
         if (index >= parts.length) {
+          cleanup();
           if (onEnd) onEnd();
           return;
         }
@@ -648,6 +674,7 @@
           window.speechSynthesis.resume();
         } catch {}
         const utterance = new SpeechSynthesisUtterance(parts[index]);
+        this._activeUtterance = utterance;
         if (this.voice) utterance.voice = this.voice;
         utterance.lang = this.voice?.lang || "en-US";
         utterance.rate = 1.0;
@@ -659,20 +686,31 @@
           if (onStart) onStart();
         };
         utterance.onend = () => {
-          if (generation !== this.generation) return;
+          if (generation !== this.generation) {
+            cleanup();
+            return;
+          }
           index += 1;
           speakNext();
         };
         utterance.onerror = (e) => {
           console.warn("[Lumi6 Voice] speech utterance error:", e);
-          if (generation !== this.generation) return;
+          if (generation !== this.generation) {
+            cleanup();
+            return;
+          }
           index += 1;
-          if (index >= parts.length && onEnd) onEnd();
-          else speakNext();
+          if (index >= parts.length) {
+            cleanup();
+            if (onEnd) onEnd();
+          } else {
+            speakNext();
+          }
         };
         try {
           window.speechSynthesis.speak(utterance);
         } catch (err) {
+          cleanup();
           if (onEnd) onEnd();
         }
       };
@@ -696,6 +734,11 @@
     cancel() {
       this.generation += 1;
       this._openerBlob = null;
+      if (this._speechHeartbeat) {
+        clearInterval(this._speechHeartbeat);
+        this._speechHeartbeat = null;
+      }
+      this._activeUtterance = null;
       const waiters = (this._openerWaiters || []).splice(0);
       for (const wait of waiters) wait(null);
       if (this._sourceNode) { try { this._sourceNode.stop(); } catch (e) {} this._sourceNode = null; }
@@ -1221,7 +1264,9 @@
     }
 
     handleSttEnd() {
-      this._syncVoiceButtonUI(null);
+      if (this.state !== "SPEAKING" && this.state !== "PROCESSING") {
+        this._syncVoiceButtonUI(null);
+      }
       if (!this.isActive || this.paused) return;
       if (this.state === "PROCESSING" || this.state === "SPEAKING") return;
       if (this.stt._committing) return;

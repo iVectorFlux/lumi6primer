@@ -15,7 +15,7 @@ function openaiKey() {
 }
 
 function isConfigured() {
-  return openaiKey().startsWith("sk-");
+  return true;
 }
 
 function get(id) {
@@ -34,6 +34,86 @@ function remember(mime, b64) {
     if (oldest) graphics.delete(oldest[0]);
   }
   return `/api/primer/graphic/${id}`;
+}
+
+async function downloadImageAsBase64(url) {
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), 12000);
+  try {
+    const res = await fetch(url, {
+      signal: controller.signal,
+      headers: { "User-Agent": "Lumi6EducationalTutor/1.0 (https://lumi6.com)" }
+    });
+    if (!res.ok) return null;
+    const contentType = res.headers.get("content-type") || "image/jpeg";
+    const buf = Buffer.from(await res.arrayBuffer());
+    if (!buf.length || buf.length < 500) return null;
+    return { mime: contentType.split(";")[0].trim(), b64: buf.toString("base64") };
+  } catch {
+    return null;
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
+async function searchEducationalGraphic(topic, spoken) {
+  const query = String(topic || spoken || "")
+    .replace(/^(teach me about|teach me|tell me about|what is|what's|whats|how does|how do|how to|can you teach me|explain|i want to learn about)\s+/i, "")
+    .replace(/[?.!]+$/g, "")
+    .replace(/\s+/g, " ")
+    .trim();
+  if (!query || query.length < 2) return null;
+
+  // 1. Wikipedia Page Thumbnail / Original (high quality 1024px raster)
+  const wikiUrl = `https://en.wikipedia.org/w/api.php?action=query&generator=search&gsrsearch=${encodeURIComponent(query)}&gsrlimit=5&prop=pageimages|extracts&exintro=1&explaintext=1&piprop=thumbnail|original&pithumbsize=1024&format=json&origin=*`;
+  try {
+    const res = await fetch(wikiUrl, {
+      headers: { "User-Agent": "Lumi6EducationalTutor/1.0 (https://lumi6.com)" }
+    });
+    if (res.ok) {
+      const data = await res.json();
+      const pages = Object.values(data?.query?.pages || {}).sort((a, b) => (a.index || 0) - (b.index || 0));
+      for (const page of pages) {
+        const imgUrl = page.thumbnail?.source || page.original?.source;
+        if (imgUrl && !/\.(webm|ogv|mp4|avi|mov)$/i.test(imgUrl) && !/icon|logo|flag|disambig|symbol/i.test(imgUrl)) {
+          const fetched = await downloadImageAsBase64(imgUrl);
+          if (fetched) {
+            console.log(`[PRIMER] Educational graphic found via Wikipedia for "${query}": ${page.title}`);
+            return { mime: fetched.mime, b64: fetched.b64, model: "wikimedia:wikipedia" };
+          }
+        }
+      }
+    }
+  } catch (err) {
+    console.warn("[PRIMER] Wikipedia image search failed:", err.message);
+  }
+
+  // 2. Wikimedia Commons scientific diagram & illustration search
+  const commonsUrl = `https://commons.wikimedia.org/w/api.php?action=query&generator=search&gsrnamespace=6&gsrsearch=${encodeURIComponent(query + " diagram illustration science")}&gsrlimit=5&prop=imageinfo&iiprop=url|mime|size&iiurlwidth=1024&format=json&origin=*`;
+  try {
+    const res = await fetch(commonsUrl, {
+      headers: { "User-Agent": "Lumi6EducationalTutor/1.0 (https://lumi6.com)" }
+    });
+    if (res.ok) {
+      const data = await res.json();
+      const pages = Object.values(data?.query?.pages || {});
+      for (const page of pages) {
+        const info = page.imageinfo?.[0];
+        const imgUrl = info?.thumburl || info?.url;
+        if (imgUrl && !/\.(webm|ogv|mp4|avi|mov)$/i.test(imgUrl) && !/icon|logo|flag|symbol/i.test(imgUrl)) {
+          const fetched = await downloadImageAsBase64(imgUrl);
+          if (fetched) {
+            console.log(`[PRIMER] Educational graphic found via Commons for "${query}": ${page.title}`);
+            return { mime: fetched.mime, b64: fetched.b64, model: "wikimedia:commons" };
+          }
+        }
+      }
+    }
+  } catch (err) {
+    console.warn("[PRIMER] Commons image search failed:", err.message);
+  }
+
+  return null;
 }
 
 function gradeNumber(grade, age) {
@@ -99,7 +179,7 @@ function photoCommand(input, image, model) {
     tool: "place_photo",
     title: String(input.scene || input.topic || "Picture").slice(0, 48),
     href: remember(image.mime, image.b64),
-    model,
+    model: model || "educational_image",
     keepOthers: true,
     archivePrevious: true
   };
@@ -158,7 +238,6 @@ async function requestOpenAIModel(model, prompt, timeoutMs) {
   }, timeoutMs);
 
   if (!result.ok) {
-    // If specific option failed (e.g. response_format or quality not supported on this model), retry with simple body
     if (/response_format|quality|size/i.test(result.text || "")) {
       const simpleBody = { model, prompt, n: 1 };
       const retryResult = await fetchJson("https://api.openai.com/v1/images/generations", {
@@ -219,29 +298,42 @@ async function tryOne(label, fn) {
 }
 
 async function generate(input = {}) {
-  if (!isConfigured()) return null;
-  const prompt = kidPrompt(input);
+  const topic = input.topic || input.scene || input.spoken || "";
 
-  const attempts = [];
-  const preferred = String(process.env.OPENAI_IMAGE_MODEL || "").trim();
-  const models = [
-    preferred,
-    "dall-e-3",
-    "dall-e-2"
-  ].filter(Boolean);
-
-  for (const model of [...new Set(models)]) {
-    attempts.push([`openai:${model}`, () => requestOpenAIModel(model, prompt, 28000)]);
+  // 1. Try instant educational image search first (Wikimedia / Wikipedia scientific diagrams)
+  try {
+    const eduImage = await searchEducationalGraphic(topic, input.spoken);
+    if (eduImage?.b64) {
+      return photoCommand(input, eduImage, eduImage.model);
+    }
+  } catch (err) {
+    console.warn("[PRIMER] Educational image search error:", err.message);
   }
 
-  const live = attempts.filter(([label]) => !retiredModels.has(label));
-  // The model that worked last time goes first, so a good run stays a one-call run.
-  live.sort((a, b) => (b[0] === lastGoodLabel ? 1 : 0) - (a[0] === lastGoodLabel ? 1 : 0));
+  // 2. Try OpenAI image generation if key is configured
+  if (openaiKey().startsWith("sk-")) {
+    const prompt = kidPrompt(input);
+    const attempts = [];
+    const preferred = String(process.env.OPENAI_IMAGE_MODEL || "").trim();
+    const models = [
+      preferred,
+      "dall-e-3",
+      "dall-e-2"
+    ].filter(Boolean);
 
-  for (const [label, fn] of live) {
-    const image = await tryOne(label, fn);
-    if (image?.b64) return photoCommand(input, image, image.model || label);
+    for (const model of [...new Set(models)]) {
+      attempts.push([`openai:${model}`, () => requestOpenAIModel(model, prompt, 28000)]);
+    }
+
+    const live = attempts.filter(([label]) => !retiredModels.has(label));
+    live.sort((a, b) => (b[0] === lastGoodLabel ? 1 : 0) - (a[0] === lastGoodLabel ? 1 : 0));
+
+    for (const [label, fn] of live) {
+      const image = await tryOne(label, fn);
+      if (image?.b64) return photoCommand(input, image, image.model || label);
+    }
   }
+
   return null;
 }
 
