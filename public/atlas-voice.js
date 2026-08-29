@@ -833,8 +833,7 @@
         `;
         document.body.appendChild(toggleBtn);
       }
-
-      if (!overlay) {
+         if (!overlay) {
         overlay = document.createElement("div");
         overlay.id = "atlasVoiceOverlay";
         overlay.setAttribute("aria-live", "polite");
@@ -843,10 +842,11 @@
           <span class="atlas-kid-orb" aria-hidden="true"></span>
           <div class="atlas-kid-copy">
             <span id="atlasOverlayBadge" class="atlas-badge listening">Listening</span>
-            <span id="atlasOverlayText" class="atlas-overlay-text">Tap the mic and ask me anything.</span>
+            <span id="atlasOverlayText" class="atlas-overlay-text">Speak now — release or tap Send</span>
           </div>
           <div class="atlas-kid-actions">
-            <button id="atlasVoiceStop" class="atlas-overlay-stop" type="button" aria-label="Stop conversation">Stop</button>
+            <button id="atlasVoiceSendBtn" class="atlas-overlay-send" type="button" aria-label="Send spoken message">Send ➔</button>
+            <button id="atlasVoiceStop" class="atlas-overlay-stop" type="button" aria-label="Cancel">Cancel</button>
           </div>
         `;
         document.body.appendChild(overlay);
@@ -858,10 +858,27 @@
         overlay,
         badge: overlay.querySelector("#atlasOverlayBadge"),
         text: overlay.querySelector("#atlasOverlayText"),
+        sendBtn: overlay.querySelector("#atlasVoiceSendBtn"),
         stopBtn: overlay.querySelector("#atlasVoiceStop")
       };
 
-      toggleBtn.onclick = () => this.handleMicButtonClick();
+      this.bindMicTriggers(toggleBtn);
+      const talkMic = document.getElementById("talkModeMicBtn");
+      if (talkMic) this.bindMicTriggers(talkMic);
+
+      if (this.elements.sendBtn) {
+        this.elements.sendBtn.onclick = (e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          const heard = (this.pendingHeard || this.stt?.lastTranscript || "").trim();
+          if (heard) {
+            this.commitHeardTurn(heard);
+          } else {
+            this.turnOff();
+          }
+        };
+      }
+
       if (this.elements.stopBtn) {
         this.elements.stopBtn.onclick = (e) => {
           e.preventDefault();
@@ -871,10 +888,76 @@
       }
     }
 
+    bindMicTriggers(btn) {
+      if (!btn || btn._hasVoiceTriggers) return;
+      btn._hasVoiceTriggers = true;
+      btn.style.userSelect = "none";
+      btn.style.webkitUserSelect = "none";
+
+      const onPointerDown = (e) => {
+        if (e.button !== undefined && e.button !== 0) return;
+        this._isHolding = true;
+        this._pressStartTime = Date.now();
+        this._heldTranscriptSent = false;
+        btn.classList.add("atlas-holding");
+        this.tts.unlockPlayback();
+        this.turnOn({ pushToTalk: true });
+      };
+
+      const onPointerUp = () => {
+        if (!this._isHolding) return;
+        btn.classList.remove("atlas-holding");
+        const holdDuration = Date.now() - (this._pressStartTime || 0);
+        this._isHolding = false;
+
+        if (holdDuration >= 350) {
+          // Long press: release to send
+          setTimeout(() => {
+            if (this._heldTranscriptSent) return;
+            this._heldTranscriptSent = true;
+            const heard = (this.pendingHeard || this.stt?.lastTranscript || "").trim();
+            if (heard && heard.length >= 2) {
+              this.commitHeardTurn(heard);
+            } else {
+              this.turnOff();
+            }
+          }, 120);
+        }
+      };
+
+      const onPointerCancel = () => {
+        btn.classList.remove("atlas-holding");
+        this._isHolding = false;
+      };
+
+      btn.addEventListener("pointerdown", onPointerDown);
+      btn.addEventListener("pointerup", onPointerUp);
+      btn.addEventListener("pointercancel", onPointerCancel);
+
+      btn.addEventListener("click", (e) => {
+        e.preventDefault();
+        const holdDuration = Date.now() - (this._pressStartTime || 0);
+        if (holdDuration >= 350) {
+          return; // Handled by hold release
+        }
+        // Short tap: toggle recording state
+        if (this.state === "LISTENING") {
+          const heard = (this.pendingHeard || this.stt?.lastTranscript || "").trim();
+          if (heard && heard.length >= 2) {
+            this.commitHeardTurn(heard);
+          } else {
+            this.turnOff();
+          }
+        } else {
+          this.turnOn();
+        }
+      });
+    }
+
     _syncVoiceButtonUI(stateName) {
       const btns = [this.elements?.toggleBtn, document.getElementById("talkModeMicBtn")].filter(Boolean);
       btns.forEach((btn) => {
-        btn.classList.remove("atlas-listening", "atlas-speaking", "atlas-processing");
+        btn.classList.remove("atlas-listening", "atlas-speaking", "atlas-processing", "atlas-holding");
         if (stateName) btn.classList.add(`atlas-${stateName}`);
       });
       if (this.elements?.label) {
@@ -921,11 +1004,12 @@
       return "";
     }
 
-    pickOpening(kind, name) {
+    pickOpening(kind = "first", name = "") {
       const first = [
-        (n) => n ? `Hello ${n}. I'm Lumi6. How can I help you today?` : "Hello. I'm Lumi6. How can I help you today?",
-        (n) => n ? `Hey ${n}. I'm Lumi6, your learning buddy. What would you like to figure out?` : "Hey. I'm Lumi6, your learning buddy. What would you like to figure out?",
-        (n) => n ? `Hi ${n}. I'm Lumi6. Ask me anything and we'll take it one step at a time.` : "Hi. I'm Lumi6. Ask me anything and we'll take it one step at a time."
+        (n) => n ? `Hey ${n}! What would you like to explore today?` : "Hey! What would you like to explore today?",
+        (n) => n ? `Hi ${n}! Pick a question or something you're curious about.` : "Hi! Pick a question or something you're curious about.",
+        () => "Welcome to Lumi6! What should we figure out today?",
+        () => "I'm listening — ask anything you want to understand."
       ];
       const again = [
         (n) => n ? `Hey ${n}. What's going on?` : "Hey. What's going on?",
@@ -972,7 +1056,7 @@
       );
     }
 
-    turnOn() {
+    turnOn({ pushToTalk = false } = {}) {
       this.paused = false;
       this.isActive = true;
       window.__atlasTeachingLock = true;
@@ -983,18 +1067,9 @@
         this.stt.lastTranscript = "";
       }
       this.tts.unlockPlayback();
-      const hasActiveConversation = Boolean(
-        this.lastSpoken ||
-        sessionStorage.getItem("primerSessionId") ||
-        (Array.isArray(window.Lumi6Lesson?.turns?.()) && window.Lumi6Lesson.turns().length > 0)
-      );
-      if (hasActiveConversation) {
-        this.showOverlay("listening", "Listening... ask anything!");
-        this.state = "IDLE";
-        this.startListening();
-      } else {
-        this.greetThenListen();
-      }
+      this.showOverlay("listening", pushToTalk ? "Listening... speak now" : "Listening... speak now");
+      this.state = "IDLE";
+      this.startListening();
     }
 
     primeMic() {}
@@ -1215,6 +1290,10 @@
       if (queryText) {
         this.pendingHeard = queryText;
         this.showOverlay("student", queryText);
+        const talkInput = document.getElementById("talkModeTextInput");
+        if (talkInput) {
+          talkInput.value = queryText;
+        }
       }
     }
 

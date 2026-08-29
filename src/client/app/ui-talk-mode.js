@@ -262,13 +262,18 @@
   bindModeBtn("#modeDrawBtn", "draw");
   bindModeBtn("#modeTalkBtn", "talk");
 
-  document.querySelector("#talkModeMicBtn")?.addEventListener("click", () => {
-    if (window.atlasVoice && typeof window.atlasVoice.handleMicButtonClick === "function") {
-      window.atlasVoice.handleMicButtonClick();
-    } else {
-      invokeAIAction("voice");
-    }
-  });
+  const talkMic = document.querySelector("#talkModeMicBtn");
+  if (talkMic && window.atlasVoice && typeof window.atlasVoice.bindMicTriggers === "function") {
+    window.atlasVoice.bindMicTriggers(talkMic);
+  } else if (talkMic) {
+    talkMic.addEventListener("click", () => {
+      if (window.atlasVoice && typeof window.atlasVoice.handleMicButtonClick === "function") {
+        window.atlasVoice.handleMicButtonClick();
+      } else {
+        invokeAIAction("voice");
+      }
+    });
+  }
 
   document.querySelector("#talkModeForm")?.addEventListener("submit", (e) => {
     e.preventDefault();
