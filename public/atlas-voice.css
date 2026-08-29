@@ -164,7 +164,6 @@
   gap: 8px;
 }
 
-.atlas-overlay-send,
 .atlas-overlay-stop,
 .atlas-overlay-mute {
   min-height: 32px;
@@ -178,18 +177,6 @@
   align-items: center;
   justify-content: center;
   transition: transform 0.15s ease, background-color 0.15s ease, box-shadow 0.15s ease;
-}
-
-.atlas-overlay-send {
-  color: #ffffff;
-  background: #6d28d9;
-  box-shadow: 0 3px 0 #5b21b6, 0 4px 10px rgba(109, 40, 217, 0.35);
-}
-
-.atlas-overlay-send:hover,
-.atlas-overlay-send:active {
-  background: #5b21b6;
-  transform: translateY(1px) scale(1.02);
 }
 
 .atlas-overlay-stop {
@@ -344,7 +331,6 @@ body[data-theme="canvas-pro"] #atlasVoiceOverlay.atlas-visible {
     gap: 6px;
   }
 
-  .atlas-overlay-send,
   .atlas-overlay-stop {
     min-height: 30px;
     padding: 5px 10px;

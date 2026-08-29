@@ -11992,14 +11992,6 @@ User writes "Show air quality for Tokyo", names a place, and points to an empty 
   const talkMic = document.querySelector("#talkModeMicBtn");
   if (talkMic && window.atlasVoice && typeof window.atlasVoice.bindMicTriggers === "function") {
     window.atlasVoice.bindMicTriggers(talkMic);
-  } else if (talkMic) {
-    talkMic.addEventListener("click", () => {
-      if (window.atlasVoice && typeof window.atlasVoice.handleMicButtonClick === "function") {
-        window.atlasVoice.handleMicButtonClick();
-      } else {
-        invokeAIAction("voice");
-      }
-    });
   }
 
   document.querySelector("#talkModeForm")?.addEventListener("submit", (e) => {

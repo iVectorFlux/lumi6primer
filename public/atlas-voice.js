@@ -103,7 +103,7 @@
 
   /**
    * Modular Speech Recognition Wrapper (STT)
-   * Waits END_OF_SPEECH_MS of silence after the last heard words so kids can pause mid-sentence.
+   * Live streaming recognition with zero premature auto-commit timeouts during hold-to-talk.
    */
   class SpeechRecognizer {
     constructor(options = {}) {
@@ -115,19 +115,15 @@
       this.onResult = options.onResult || null;
       this.onError = options.onError || null;
       this.onEnd = options.onEnd || null;
-      this.onTurnComplete = options.onTurnComplete || null;
       this.lastTranscript = "";
       this._finalParts = [];
       this._interim = "";
-      this._silenceTimer = null;
-      this._committing = false;
-      this.endOfSpeechMs = END_OF_SPEECH_MS;
 
       const isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent) || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
       this.isMobile = isMobile;
 
       if (this.isSupported) {
-        this.recognition.continuous = !isMobile;
+        this.recognition.continuous = true;
         this.recognition.interimResults = true;
         this.recognition.lang = options.lang || "en-US";
 
@@ -142,7 +138,6 @@
           this._interim = interim;
           this.lastTranscript = this._fullText();
           if (this.onResult) this.onResult(this.lastTranscript, false);
-          this._bumpSilence();
         };
 
         this.recognition.onerror = (e) => {
@@ -162,38 +157,12 @@
       return `${this._finalParts.join(" ")} ${this._interim}`.replace(/\s+/g, " ").trim();
     }
 
-    _bumpSilence() {
-      if (this._silenceTimer) clearTimeout(this._silenceTimer);
-      this._silenceTimer = setTimeout(() => this._commitTurn(), this.endOfSpeechMs);
-    }
-
-    _commitTurn() {
-      this._silenceTimer = null;
-      const text = this._fullText();
-      if (!text) return;
-      this._committing = true;
-      if (this.onTurnComplete) this.onTurnComplete(text);
-      this.stop();
-      this._finalParts = [];
-      this._interim = "";
-      this.lastTranscript = "";
-      this._committing = false;
-    }
-
-    get hasPendingSilence() {
-      return Boolean(this._silenceTimer);
-    }
-
     start({ keepBuffer = false } = {}) {
       if (!this.isSupported) return false;
       if (!keepBuffer) {
         this._finalParts = [];
         this._interim = "";
         this.lastTranscript = "";
-        if (this._silenceTimer) {
-          clearTimeout(this._silenceTimer);
-          this._silenceTimer = null;
-        }
       }
       try {
         this.recognition.start();
@@ -205,10 +174,6 @@
     }
 
     stop() {
-      if (this._silenceTimer && !this._committing) {
-        clearTimeout(this._silenceTimer);
-        this._silenceTimer = null;
-      }
       this._finalParts = [];
       this._interim = "";
       this.lastTranscript = "";
@@ -833,7 +798,8 @@
         `;
         document.body.appendChild(toggleBtn);
       }
-         if (!overlay) {
+
+      if (!overlay) {
         overlay = document.createElement("div");
         overlay.id = "atlasVoiceOverlay";
         overlay.setAttribute("aria-live", "polite");
@@ -842,10 +808,9 @@
           <span class="atlas-kid-orb" aria-hidden="true"></span>
           <div class="atlas-kid-copy">
             <span id="atlasOverlayBadge" class="atlas-badge listening">Listening</span>
-            <span id="atlasOverlayText" class="atlas-overlay-text">Speak now — release or tap Send</span>
+            <span id="atlasOverlayText" class="atlas-overlay-text">Hold to talk — release to send</span>
           </div>
           <div class="atlas-kid-actions">
-            <button id="atlasVoiceSendBtn" class="atlas-overlay-send" type="button" aria-label="Send spoken message">Send ➔</button>
             <button id="atlasVoiceStop" class="atlas-overlay-stop" type="button" aria-label="Cancel">Cancel</button>
           </div>
         `;
@@ -858,26 +823,12 @@
         overlay,
         badge: overlay.querySelector("#atlasOverlayBadge"),
         text: overlay.querySelector("#atlasOverlayText"),
-        sendBtn: overlay.querySelector("#atlasVoiceSendBtn"),
         stopBtn: overlay.querySelector("#atlasVoiceStop")
       };
 
       this.bindMicTriggers(toggleBtn);
       const talkMic = document.getElementById("talkModeMicBtn");
       if (talkMic) this.bindMicTriggers(talkMic);
-
-      if (this.elements.sendBtn) {
-        this.elements.sendBtn.onclick = (e) => {
-          e.preventDefault();
-          e.stopPropagation();
-          const heard = (this.pendingHeard || this.stt?.lastTranscript || "").trim();
-          if (heard) {
-            this.commitHeardTurn(heard);
-          } else {
-            this.turnOff();
-          }
-        };
-      }
 
       if (this.elements.stopBtn) {
         this.elements.stopBtn.onclick = (e) => {
@@ -893,65 +844,82 @@
       btn._hasVoiceTriggers = true;
       btn.style.userSelect = "none";
       btn.style.webkitUserSelect = "none";
+      btn.style.touchAction = "none";
 
-      const onPointerDown = (e) => {
+      const startHold = (e) => {
         if (e.button !== undefined && e.button !== 0) return;
+        if (e.preventDefault) e.preventDefault();
+        if (this._isHolding) return;
         this._isHolding = true;
         this._pressStartTime = Date.now();
-        this._heldTranscriptSent = false;
         btn.classList.add("atlas-holding");
+        try {
+          if (e.pointerId && typeof btn.setPointerCapture === "function") {
+            btn.setPointerCapture(e.pointerId);
+          }
+        } catch {}
         this.tts.unlockPlayback();
-        this.turnOn({ pushToTalk: true });
+        this.startPushToTalk();
       };
 
-      const onPointerUp = () => {
+      const endHold = (e) => {
+        if (!this._isHolding) return;
+        if (e && e.preventDefault) e.preventDefault();
+        btn.classList.remove("atlas-holding");
+        this._isHolding = false;
+        try {
+          if (e && e.pointerId && typeof btn.releasePointerCapture === "function") {
+            btn.releasePointerCapture(e.pointerId);
+          }
+        } catch {}
+        this.endPushToTalk();
+      };
+
+      const cancelHold = () => {
         if (!this._isHolding) return;
         btn.classList.remove("atlas-holding");
-        const holdDuration = Date.now() - (this._pressStartTime || 0);
         this._isHolding = false;
-
-        if (holdDuration >= 350) {
-          // Long press: release to send
-          setTimeout(() => {
-            if (this._heldTranscriptSent) return;
-            this._heldTranscriptSent = true;
-            const heard = (this.pendingHeard || this.stt?.lastTranscript || "").trim();
-            if (heard && heard.length >= 2) {
-              this.commitHeardTurn(heard);
-            } else {
-              this.turnOff();
-            }
-          }, 120);
-        }
+        this.turnOff();
       };
 
-      const onPointerCancel = () => {
-        btn.classList.remove("atlas-holding");
-        this._isHolding = false;
-      };
-
-      btn.addEventListener("pointerdown", onPointerDown);
-      btn.addEventListener("pointerup", onPointerUp);
-      btn.addEventListener("pointercancel", onPointerCancel);
-
+      btn.addEventListener("pointerdown", startHold);
+      btn.addEventListener("pointerup", endHold);
+      btn.addEventListener("pointercancel", cancelHold);
+      btn.addEventListener("contextmenu", (e) => e.preventDefault());
       btn.addEventListener("click", (e) => {
         e.preventDefault();
-        const holdDuration = Date.now() - (this._pressStartTime || 0);
-        if (holdDuration >= 350) {
-          return; // Handled by hold release
-        }
-        // Short tap: toggle recording state
-        if (this.state === "LISTENING") {
-          const heard = (this.pendingHeard || this.stt?.lastTranscript || "").trim();
-          if (heard && heard.length >= 2) {
-            this.commitHeardTurn(heard);
-          } else {
-            this.turnOff();
-          }
-        } else {
-          this.turnOn();
-        }
+        e.stopPropagation();
       });
+    }
+
+    startPushToTalk() {
+      this.paused = false;
+      this.isActive = true;
+      window.__atlasTeachingLock = true;
+      this.pendingHeard = "";
+      this.tts.cancel();
+      if (this.stt) {
+        this.stt._finalParts = [];
+        this.stt._interim = "";
+        this.stt.lastTranscript = "";
+      }
+      this.state = "LISTENING";
+      this.showOverlay("listening", "Listening... speak now");
+      this._syncVoiceButtonUI("listening");
+      if (this.stt) this.stt.start({ keepBuffer: false });
+    }
+
+    endPushToTalk() {
+      if (this.state !== "LISTENING" && !this.isActive) return;
+      const heard = String(this.pendingHeard || this.stt?._fullText?.() || this.stt?.lastTranscript || "").trim();
+      if (this.stt) this.stt.stop();
+      this._syncVoiceButtonUI(null);
+
+      if (heard && heard.length >= 2) {
+        this.commitHeardTurn(heard);
+      } else {
+        this.turnOff();
+      }
     }
 
     _syncVoiceButtonUI(stateName) {
