@@ -50,6 +50,7 @@
     document.getElementById("guestLoginBtn")?.addEventListener("click", () => {
       localStorage.setItem("primerChildName", "Explorer");
       localStorage.setItem("primerChildId", uuidv4());
+      localStorage.setItem("primerProfile", JSON.stringify({ name: "Explorer", grade: "4", age_years: 9, interests: ["Science", "Space"] }));
       window.location.replace("/dashboard");
     });
   </script>

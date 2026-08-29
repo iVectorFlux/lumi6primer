@@ -15,7 +15,7 @@
     try {
       return {
         childId: localStorage.getItem("primerChildId") || null,
-        sessionId: sessionStorage.getItem("primerSessionId") || localStorage.getItem("primerSessionId") || null,
+        sessionId: sessionStorage.getItem("primerSessionId") || null,
         mode: localStorage.getItem("primerMode") || null
       };
     } catch {
