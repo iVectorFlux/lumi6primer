@@ -8,9 +8,17 @@ const ROOT = path.resolve(__dirname, "..");
 const TARGET = path.join(ROOT, "public", "app.js");
 const SOURCES = [
   "src/client/app/core.js",
-  "src/client/app/canvas-runtime.js",
+  "src/client/app/core-ui-controls.js",
+  "src/client/app/core-plugins.js",
+  "src/client/app/canvas-tiles.js",
+  "src/client/app/canvas-images.js",
+  "src/client/app/canvas-widgets.js",
+  "src/client/app/canvas-rendering.js",
+  "src/client/app/canvas-text-editors.js",
   "src/client/app/persistence.js",
   "src/client/app/ai-runtime.js",
+  "src/client/app/ai-rendering.js",
+  "src/client/app/ai-drafts.js",
   "src/client/app/ui-bootstrap.js",
   "src/client/app/ui-talk-mode.js",
 ];

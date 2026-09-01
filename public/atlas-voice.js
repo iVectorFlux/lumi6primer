@@ -897,6 +897,8 @@
       this.isActive = true;
       window.__atlasTeachingLock = true;
       this.pendingHeard = "";
+      const talkInput = document.getElementById("talkModeTextInput");
+      if (talkInput) talkInput.value = "";
       this.tts.cancel();
       if (this.stt) {
         this.stt._finalParts = [];
@@ -1127,6 +1129,8 @@
       this.pendingHeard = "";
       this._lastOpening = "";
       this._didWelcome = false;
+      const talkInput = document.getElementById("talkModeTextInput");
+      if (talkInput) talkInput.value = "";
       if (this.stt) {
         this.stt.stop();
         this.stt._finalParts = [];
@@ -1151,6 +1155,8 @@
       window.__atlasTeachingLock = false;
       this.state = "IDLE";
       this.pendingHeard = "";
+      const talkInput = document.getElementById("talkModeTextInput");
+      if (talkInput) talkInput.value = "";
       if (this.stt) {
         this.stt.stop();
         this.stt._finalParts = [];
