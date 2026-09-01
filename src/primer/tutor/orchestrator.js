@@ -599,24 +599,31 @@ class LearningOrchestrator {
   }
 
   _kickOpenerTts(input, spoken) {
-    const first = firstSpokenSentence(spoken);
-    if (!first) return Promise.resolve(null);
-    return synthesizeCartesiaSpeech(first)
-      .then((audio) => {
-        const payload = audioToPayload(audio);
-        if (!payload.audioBase64) return null;
-        this._emitStream(input, {
-          event: "audio",
-          opener: true,
-          text: first,
-          ...payload
-        });
-        return payload;
-      })
-      .catch((err) => {
-        console.warn("[PRIMER] opener TTS failed:", err.message);
-        return null;
-      });
+    const sentences = String(spoken || "").replace(/\s+/g, " ").trim()
+      .match(/[^.!?]+[.!?]+(?:[\"\u201D\u2019])?|[^.!?]+$/g) || [];
+    const chunks = sentences.map(s => s.trim()).filter(s => s.length > 3).slice(0, 2);
+    if (!chunks.length) return Promise.resolve(null);
+    // Synthesize first 2 sentences in parallel for faster audio start
+    const promises = chunks.map((text, i) =>
+      synthesizeCartesiaSpeech(text.slice(0, 220))
+        .then((audio) => {
+          const payload = audioToPayload(audio);
+          if (!payload.audioBase64) return null;
+          this._emitStream(input, {
+            event: "audio",
+            opener: i === 0,
+            chunkIndex: i,
+            text: text.slice(0, 220),
+            ...payload
+          });
+          return payload;
+        })
+        .catch((err) => {
+          console.warn(`[PRIMER] opener TTS chunk ${i} failed:`, err.message);
+          return null;
+        })
+    );
+    return Promise.all(promises).then(results => results[0]);
   }
 
   async _readBoardMath(spokenText, boardImage) {
@@ -651,7 +658,7 @@ class LearningOrchestrator {
   }
 
   async _proposeTalk(prompt, useVision, boardImage, options = {}) {
-    const timeoutMs = useVision ? 22000 : 18000;
+    const timeoutMs = useVision ? 22000 : 14000;
     const userText = prompt.talkInput || prompt.userBlock || prompt.studentQuery || "";
     if (process.env.LUMI6_DEBUG_PROMPT === "1") {
       console.log("[PRIMER] --- talk prompt ---\n", prompt.talkPrompt || prompt.systemPrompt);
@@ -796,6 +803,14 @@ Return JSON only: {"spoken":"spoken explanation here including the check questio
       ? Number(conv.consecutiveExplanations || 0) + 1
       : 0;
     conv.lastAskedToLook = Boolean(understanding.askedToLook) && !understanding.wantsDraw;
+    // Track turns since last doubt check-in for proactive clarification
+    const didDoubtCheck = /everything making sense|any part you want|any doubts|anything unclear|want me to explain.+again/i.test(String(spoken || ""));
+    const childSignaledConfusion = understanding.confusion || understanding.intent === "dont_understand";
+    if (didDoubtCheck || childSignaledConfusion) {
+      conv.turnsSinceDoubtCheck = 0;
+    } else {
+      conv.turnsSinceDoubtCheck = Number(conv.turnsSinceDoubtCheck || 0) + 1;
+    }
     state.conversationState = conv;
   }
 

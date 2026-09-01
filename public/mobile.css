@@ -310,6 +310,210 @@ button,
     width: auto !important;
     max-width: none !important;
   }
+
+  /* ── TALK MODE WORKSPACE (mobile) ──────────────────────────── */
+  .talk-mode-workspace {
+    position: absolute;
+    inset: 0;
+    z-index: 10;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+
+  .talk-scroll-area {
+    padding: 60px 12px 110px;
+  }
+
+  .talk-container {
+    max-width: 100%;
+    gap: 16px;
+  }
+
+  .talk-feed {
+    gap: 16px;
+  }
+
+  .talk-turn-card {
+    gap: 12px;
+  }
+
+  .talk-child-prompt {
+    max-width: 92%;
+    padding: 10px 14px;
+    border-radius: 18px 18px 4px 18px;
+  }
+
+  .talk-child-prompt .talk-child-text {
+    font-size: 15px;
+  }
+
+  .talk-child-prompt .talk-child-badge {
+    font-size: 10px;
+  }
+
+  .talk-lumi6-box {
+    padding: 16px 14px;
+    border-radius: 18px;
+    gap: 14px;
+  }
+
+  .talk-lumi6-header {
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+
+  .talk-lumi6-avatar {
+    width: 30px;
+    height: 30px;
+    border-radius: 8px;
+  }
+
+  .talk-lumi6-name {
+    font-size: 15px;
+  }
+
+  .talk-step-badge {
+    font-size: 10px;
+    padding: 2px 8px;
+  }
+
+  .talk-topic-pill {
+    font-size: 11px;
+    padding: 3px 8px;
+  }
+
+  .talk-concept-card {
+    padding: 10px 12px;
+    gap: 8px;
+    border-radius: 12px;
+  }
+
+  .talk-concept-icon {
+    font-size: 16px;
+  }
+
+  .talk-concept-text {
+    font-size: 14.5px;
+  }
+
+  .talk-explanation-body {
+    font-size: 15.5px;
+    line-height: 1.58;
+  }
+
+  .talk-question-capsule {
+    padding: 12px 14px;
+    gap: 10px;
+    border-radius: 14px;
+  }
+
+  .talk-question-icon {
+    width: 26px;
+    height: 26px;
+    border-radius: 8px;
+    font-size: 14px;
+  }
+
+  .talk-question-tag {
+    font-size: 10.5px;
+  }
+
+  .talk-question-text {
+    font-size: 15px;
+  }
+
+  .talk-image-wrapper {
+    border-radius: 14px;
+  }
+
+  .talk-lesson-image {
+    max-height: 260px;
+  }
+
+  .talk-image-caption {
+    padding: 8px 12px;
+    font-size: 12px;
+  }
+
+  /* Talk bottom bar — must be fully visible and not cut off */
+  .talk-bottom-bar {
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    padding: 10px 10px calc(10px + env(safe-area-inset-bottom));
+    z-index: 100;
+  }
+
+  .talk-bar-container {
+    gap: 8px;
+  }
+
+  .talk-mic-btn {
+    padding: 8px 12px;
+    font-size: 13px;
+    gap: 4px;
+  }
+
+  .talk-mic-btn svg {
+    width: 16px;
+    height: 16px;
+  }
+
+  .talk-input-form {
+    padding: 3px 4px 3px 12px;
+  }
+
+  .talk-input-field {
+    font-size: 16px; /* prevent iOS zoom */
+  }
+
+  .talk-send-action-btn {
+    width: 32px;
+    height: 32px;
+  }
+
+  /* Hide AI orb and draw-mode-only controls in Talk Mode on mobile */
+  body.mode-talk-active .ai-embodiment {
+    display: none !important;
+  }
+
+  /* Shimmer / loading states */
+  .talk-shimmer-image-placeholder {
+    height: 100px;
+    font-size: 12px;
+  }
+
+  /* Voice overlay — keep within viewport on mobile */
+  #atlasVoiceOverlay {
+    max-width: calc(100vw - 16px);
+    width: calc(100vw - 16px);
+    padding: 8px 10px;
+    gap: 8px;
+    font-size: 15px;
+    bottom: calc(74px + env(safe-area-inset-bottom, 0px) + var(--keyboard-inset, 0px));
+  }
+
+  body.mode-talk-active #atlasVoiceOverlay {
+    bottom: calc(64px + env(safe-area-inset-bottom, 0px) + var(--keyboard-inset, 0px));
+  }
+
+  .atlas-kid-orb {
+    width: 28px;
+    height: 28px;
+  }
+
+  .atlas-overlay-stop,
+  .atlas-overlay-mute {
+    min-height: 28px;
+    padding: 4px 10px;
+    font-size: 11px;
+  }
+
+  .atlas-kid-copy {
+    font-size: 14px;
+  }
 }
 
 @media (max-width: 640px) {
@@ -340,6 +544,31 @@ button,
   .bottom-tool-group .btool-divider:last-of-type,
   #clearCanvasBtn {
     margin-left: auto;
+  }
+
+  /* Talk Mode narrow-screen adjustments */
+  .talk-mic-btn span {
+    display: none;
+  }
+
+  .talk-mic-btn {
+    width: 38px;
+    height: 38px;
+    padding: 0;
+    justify-content: center;
+    border-radius: 50%;
+  }
+
+  .talk-topic-pill {
+    display: none;
+  }
+
+  .talk-lumi6-header {
+    gap: 6px;
+  }
+
+  .talk-scroll-area {
+    padding: 54px 8px 100px;
   }
 }
 

@@ -550,7 +550,10 @@
         return;
       }
       let started = false;
+      // Prefetch first chunk (may come from server opener TTS)
       let pending = this.firstAudioBlob(parts[0]);
+      // Also prefetch chunk 2 in parallel if available
+      let pending2 = parts.length > 1 ? this.fetchTtsBlob(parts[1], 8000).catch(() => null) : null;
       const firstBlob = await pending.catch(() => null);
       if (!firstBlob) {
         console.warn("[Lumi6 Voice] First audio chunk unavailable, falling back to browser speech");
@@ -563,14 +566,25 @@
         if (generation !== this.generation) return;
         if (i === askIndex && i > 0) await this.pause(350, generation);
         if (generation !== this.generation) return;
-        const blob = i === 0 ? firstBlob : await pending.catch(() => null);
+        let blob;
+        if (i === 0) blob = firstBlob;
+        else if (i === 1 && pending2) blob = await pending2;
+        else blob = await pending.catch(() => null);
         if (!blob) {
           if (generation === this.generation) {
             this.speakBrowser(parts.slice(i).join(" "), onStart, onEnd);
           }
           return;
         }
-        if (i + 1 < parts.length) pending = this.fetchTtsBlob(parts[i + 1], 12000).catch(() => null);
+        // Prefetch next 2 chunks ahead in parallel
+        if (i + 1 < parts.length) {
+          pending = this.fetchTtsBlob(parts[i + 1], 8000).catch(() => null);
+        }
+        if (i + 2 < parts.length) {
+          pending2 = this.fetchTtsBlob(parts[i + 2], 8000).catch(() => null);
+        } else {
+          pending2 = null;
+        }
         await this.playBlobAsync(blob, generation, () => {
           if (started || generation !== this.generation) return;
           started = true;

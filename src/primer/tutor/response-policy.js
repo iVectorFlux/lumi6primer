@@ -116,17 +116,17 @@ class ResponsePolicy {
     if (understanding?.intent === "drawing") return "What did you want this diagram to show?";
 
     if (grade <= 5) {
-      // Elementary: Warm intuitive check-in or simple thought experiment
-      if (topic) return `Does that picture of ${topic} make sense, or should we see what happens next?`;
-      return "Does that picture make sense to you?";
+      // Elementary: Warm reasoning question with answer options
+      if (topic) return `What do you think makes ${topic} work that way? (a) Magic keeps it going (b) A push and pull are perfectly balanced (c) It just happens on its own`;
+      return "Does that picture make sense, or should we explore it from a different angle?";
     }
     if (grade <= 8) {
-      // Middle school: Cause-and-effect prediction
-      if (topic) return `What do you predict would happen if the forces in ${topic} were to change?`;
+      // Middle school: Cause-and-effect with options
+      if (topic) return `What would happen if the main force in ${topic} suddenly changed? (a) Everything stays the same (b) The motion changes direction (c) It stops completely`;
       return "What do you predict happens next in this process?";
     }
-    // High school: Physical model reasoning
-    if (topic) return `What physical principle keeps ${topic} in balance?`;
+    // High school: Open-ended physical reasoning, no options
+    if (topic) return `What underlying principle governs how ${topic} behaves, and what would change if conditions were different?`;
     return "What part of this are you most curious about?";
   }
 

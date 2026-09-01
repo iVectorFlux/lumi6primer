@@ -12,7 +12,10 @@ class ChildModelService {
   async getOrCreate(childId, fields = {}) {
     let existing = null;
     if (fields.user_id) existing = await this.store.getChildByUserId(fields.user_id);
-    if (!existing && childId) existing = await this.store.getChild(childId);
+    if (!existing && !childId && !fields.user_id) {
+      const listed = await this.store.listChildren();
+      if (listed.length) existing = listed[0];
+    }
     if (existing) {
       const patch = {};
       if (fields.name && fields.name !== existing.name) patch.name = String(fields.name).slice(0, 40);
@@ -25,10 +28,6 @@ class ChildModelService {
       if (fields.user_id && !existing.user_id) patch.user_id = fields.user_id;
       if (Object.keys(patch).length) return this.store.updateChild(existing.id, patch);
       return existing;
-    }
-    if (!childId && !fields.user_id) {
-      const listed = await this.store.listChildren();
-      if (listed.length) return listed[0];
     }
     return this.store.insertChild({
       name: fields.name || "Learner",
