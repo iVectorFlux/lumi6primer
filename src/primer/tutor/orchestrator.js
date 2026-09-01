@@ -370,7 +370,7 @@ class LearningOrchestrator {
       || (topicUsable && deniesTopic(text, topicNow));
     const skipsTopic = (text) => topicUsable && !spokenCoversTopic(text, topicNow);
     if (!askedToLook && (unusable(proposalSpoken) || skipsTopic(proposalSpoken))) {
-      const retry = await this._proposeSimple(understanding, null);
+      const retry = await this._proposeSimple(understanding, null, {}, child);
       const retrySpoken = String(retry?.spoken || "").trim();
       let chosen = "";
       if (!unusable(retrySpoken) && !skipsTopic(retrySpoken)) chosen = retrySpoken;
@@ -383,7 +383,8 @@ class LearningOrchestrator {
     let spoken = this.responsePolicy.apply(
       decision.proposedSpoken || proposal.spoken || "",
       decision,
-      understanding
+      understanding,
+      child
     );
     spoken = boardMath.ensureResult(spoken, mathFromTurn);
     spoken = preventRepeatQuestion(
@@ -725,19 +726,18 @@ Use 6 to 10 parts. Types: circle, box, ellipse, arrow, line, beam, person, text.
     }
   }
 
-  async _proposeSimple(understanding, boardImage, options = {}) {
+  async _proposeSimple(understanding, boardImage, options = {}, child = {}) {
     const topic = String(understanding?.concept || "").trim() || "what they just asked";
     const raw = String(understanding?.raw || "").trim();
-    const systemPrompt = `You are a patient older sibling teaching a 10-year-old.
-Teach "${topic}" right now. The child said: "${raw}".
-Every sentence must be about "${topic}". Never name or teach a different subject, even to apologise for one.
-Do not say you messed up, mixed things up, or talked about the wrong thing. Just teach "${topic}".
-Do not switch to a random object, gadget, toast, or hearing test.
-3 short spoken sentences plus one open thinking question (how/why/what happens next) about THIS topic, in the SAME spoken text.
-Use an everyday example that belongs to the topic. Short words. No markdown. No stock lecture.
-Never ask "what is this called" or "what is the name of this process".
-Never return JSON keys inside spoken.
-Return JSON only: {"spoken":"kid sentences here including the check question?"}`;
+    const gradeNum = Number(String(child?.grade || "").replace(/[^\d]/g, "")) || (child?.age_years ? Number(child.age_years) - 5 : 4);
+    const isElem = gradeNum <= 5;
+    const systemPrompt = `You are Lumi6 — a warm, inspiring human teacher teaching a Class ${gradeNum} student (age ~${gradeNum + 5}).
+Teach "${topic}" from first principles. The child asked: "${raw}".
+Every sentence must be about "${topic}".
+Explain the full physical intuition in 3-4 simple, vivid spoken sentences using concrete everyday analogies (${isElem ? "spinning a ball on a string, swings, or water buckets" : "momentum and balanced forces"}).
+End with exactly ONE warm, friendly thought experiment or check-in for Class ${gradeNum} (under 14 words).
+NEVER ask "what is this called", "what is your hypothesis", or dry vocabulary quizzes.
+Return JSON only: {"spoken":"spoken explanation here including the check question?"}`;
     const userText = `${systemPrompt}\n\nChild said: "${raw}"\nTeach: ${topic}`;
     if (openaiTalk.isConfigured()) {
       try {

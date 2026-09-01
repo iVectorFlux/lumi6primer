@@ -21,21 +21,21 @@ function isCannedSpeech(text) {
 }
 
 class ResponsePolicy {
-  apply(spoken, decision, understanding) {
+  apply(spoken, decision, understanding, child = {}) {
     let text = String(spoken || "").replace(/\s+/g, " ").trim();
     if (!text || looksLikeJsonBlob(text)) {
-      text = extractSpoken(text) || this._fallback(decision, understanding);
+      text = extractSpoken(text) || this._fallback(decision, understanding, child);
     }
-    if (!text || isCannedSpeech(text)) text = this._fallback(decision, understanding);
+    if (!text || isCannedSpeech(text)) text = this._fallback(decision, understanding, child);
 
     text = this._stripMarkdown(text);
     text = this._stripBoardNarration(text);
     text = this._stripPhraseCoaching(text);
-    if (!text) text = this._fallback(decision, understanding);
+    if (!text) text = this._fallback(decision, understanding, child);
     text = text.replace(/^sorry[,.]?\s*/i, "").trim();
     text = text.replace(CHEESE, "").trim();
     if (isCannedSpeech(text)) {
-      text = this._fallback(decision, understanding);
+      text = this._fallback(decision, understanding, child);
     }
 
     if (DEPENDENCY.test(text)) {
@@ -46,7 +46,7 @@ class ResponsePolicy {
     text = this._limitSentences(text, hints.maxSentences || 5);
 
     if (hints.mustAskQuestion && !/\?/.test(text)) {
-      text = `${text} ${this._questionFor(decision, understanding)}`.trim();
+      text = `${text} ${this._questionFor(decision, understanding, child)}`.trim();
     }
 
     if (hints.mustReinterpret && understanding?.intent === "dont_understand") {
@@ -58,11 +58,11 @@ class ResponsePolicy {
     }
 
     if (hints.englishUnlessAsked && this._looksLikeUnsolicitedHindi(text, understanding)) {
-      text = this._fallback(decision, understanding);
+      text = this._fallback(decision, understanding, child);
     }
 
     if (this._isPhaseSlogan(text) && (understanding?.intent !== "insight" || decision?.action !== "reflect")) {
-      text = this._fallback(decision, understanding);
+      text = this._fallback(decision, understanding, child);
     }
 
     if (this._shouldNotGrade(understanding) && /^(not yet|right|almost)[,.]?\s+/i.test(text)) {
@@ -102,14 +102,31 @@ class ResponsePolicy {
     return topic;
   }
 
-  _questionFor(decision, understanding) {
+  _gradeNumber(child) {
+    return Number(String(child?.grade || "").replace(/[^\d]/g, "")) || (child?.age_years ? Number(child.age_years) - 5 : 4);
+  }
+
+  _questionFor(decision, understanding, child = {}) {
     const topic = this._topic(understanding);
+    const grade = this._gradeNumber(child);
     if (understanding?.voiceIssue) return topic ? `Want me to keep going with ${topic}?` : "What do you want to learn?";
     if (understanding?.refersToBoard) return "What happens if we change one of YOUR numbers?";
     if (decision?.role === "editor") return "What were you trying to explore?";
     if (decision?.role === "advisor" && !topic) return "What would you like to explore today?";
     if (understanding?.intent === "drawing") return "What did you want this diagram to show?";
-    if (topic) return `What is your hypothesis about how ${topic} works?`;
+
+    if (grade <= 5) {
+      // Elementary: Warm intuitive check-in or simple thought experiment
+      if (topic) return `Does that picture of ${topic} make sense, or should we see what happens next?`;
+      return "Does that picture make sense to you?";
+    }
+    if (grade <= 8) {
+      // Middle school: Cause-and-effect prediction
+      if (topic) return `What do you predict would happen if the forces in ${topic} were to change?`;
+      return "What do you predict happens next in this process?";
+    }
+    // High school: Physical model reasoning
+    if (topic) return `What physical principle keeps ${topic} in balance?`;
     return "What part of this are you most curious about?";
   }
 
@@ -119,7 +136,7 @@ class ResponsePolicy {
     if (/another way|different way|try this|picture it like|imagine|kid words|simple/i.test(rest)) return rest;
     return rest
       ? `Let me try a simpler way. ${rest}`
-      : `No worries. Let me say ${topic} in simpler kid words. Which word felt weird?`;
+      : `No worries at all! Let me explain ${topic} with an even simpler everyday picture. Which part felt confusing?`;
   }
 
   _stripPhraseCoaching(text) {
@@ -133,8 +150,9 @@ class ResponsePolicy {
       .trim();
   }
 
-  _fallback(decision, understanding) {
+  _fallback(decision, understanding, child = {}) {
     const topic = this._topic(understanding);
+    const grade = this._gradeNumber(child);
     if (understanding?.voiceIssue) {
       return topic
         ? `Got it — if the voice is missing, read this. Let's keep going with ${topic} in simple words.`
@@ -148,39 +166,39 @@ class ResponsePolicy {
     }
     if (understanding?.intent === "dont_understand" || understanding?.confusion) {
       return topic
-        ? `No worries. Forget the fancy words. ${topic} in kid words is just a way to talk about something you already see in real life. Want one tiny example?`
-        : "No worries. Say the thing you wanted to learn, in your own words.";
+        ? `No worries at all! Let's picture ${topic} in a super simple, everyday way. Want one quick example?`
+        : "No problem at all! Tell me what you're curious about in your own words, and we'll explore it together.";
     }
     if (understanding?.justAnswer) {
-      const aboutWater = /water|evapor|vapor|cloud|rain|puddle/i.test(`${topic} ${understanding.raw || ""}`);
+      const aboutWater = /water|evapor|vapor|cloud|rain|puddle/i.test(`${topic} ${understanding?.raw || ""}`);
       if (aboutWater) {
-        return "Water can turn into invisible air when the Sun warms it, because water bits are loose enough to fly up. Your body and a plant hold most of their water inside, so you do not vanish into the sky. A little water leaves you when you sweat, but you stay you.";
+        return "Water can turn into invisible air when the Sun warms it, because water bits get energized enough to float up. Your body holds water inside safely so you stay healthy. A little water leaves when you sweat, but you stay you!";
       }
       return topic
-        ? `Here is the simple reason for ${topic}, in kid words, not as a quiz.`
-        : "Okay. I will answer in short kid words, not with another question.";
+        ? `Here is the simple reason for ${topic}, explained clearly from first principles.`
+        : "Okay! Here is the direct, simple reason in plain words.";
     }
     if (understanding?.pushback || understanding?.wantsReason || understanding?.wantsExplain || decision?.action === "explain") {
       return topic
-        ? `Yes — ${topic}. Kid version first: I will say what it is in one sentence, then a real-life example that belongs to ${topic}. What is the first thing you already know about it?`
-        : "Yes. Tell me the topic in a few words and I will explain it simply.";
+        ? `Let's break down ${topic} step-by-step from first principles so you can see exactly how it works. Ready for the first picture?`
+        : "Yes! Tell me what you'd like to explore, and I will explain the complete mechanism simply.";
     }
     const phase = decision?.phase || "think";
     if (phase === "story") {
       return topic
-        ? `Okay — ${topic}. I will explain it in short kid sentences. Ready for the first idea?`
-        : "Hey. What do you want to learn?";
+        ? `Let's explore ${topic} together! Ready to picture how it starts?`
+        : "Hey! What would you like to discover today?";
     }
     if (phase === "learn") {
       return topic
-        ? `Let's look at ${topic}. I will use one everyday example, then a tiny check question. Ready?`
-        : "What do you want to learn? Say it in a few words.";
+        ? `Let's look at how ${topic} works in real life. Ready?`
+        : "What would you like to learn about? Say it in a few words.";
     }
-    if (phase === "think_again") return "Want to try that again with a slightly different example?";
-    if (phase === "become") return "You just saw that a new way. What changed in your head?";
+    if (phase === "think_again") return "Want to look at that from a fresh, new angle?";
+    if (phase === "become") return "You just saw that in a brand new way! What does the picture look like in your mind now?";
     return topic
-      ? `Let's keep going with ${topic}. What part should I say more slowly?`
-      : "I'm here. What do you want to figure out?";
+      ? `Let's keep going with ${topic}. Does that mental picture make sense?`
+      : "I'm right here! What would you like to figure out together?";
   }
 
   _stripBoardNarration(text) {
