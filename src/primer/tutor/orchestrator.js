@@ -847,6 +847,7 @@ Return JSON only: {"spoken":"kid sentences here including the check question?"}`
       intent: understanding.intent,
       teacherResponse: spoken,
       spokenResponse: spoken,
+      spokenText: spoken,
       spoken,
       visualPlan: { shouldDraw: commands.length > 0, commands },
       canvasActions: commands,

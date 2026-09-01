@@ -165,19 +165,11 @@
 
   function crispTitle(steps, child) {
     const asked = steps.find((step) => step.asked)?.asked || "";
-    let topic = asked
-      .replace(/\s+/g, " ")
-      .replace(/^(hey|hi|hello|please|can you|could you|would you)\b[,!. ]*/gi, "")
-      .replace(/^(teach me|tell me about|tell me|explain|what is|what's|whats|how does|how do|how to)\b[,!. ]*/gi, "")
-      .replace(/[?.!]+$/g, "")
-      .trim();
-    if (!topic || topic.length < 3) {
+    const clean = cleanConceptTitle(asked);
+    if (!clean || clean === "Exploration & Discovery") {
       return child ? `${child}'s Discovery Journey` : "Science Discovery Journey";
     }
-    const words = topic.split(" ");
-    if (words.length > 8) topic = words.slice(0, 8).join(" ");
-    if (topic.length > 56) topic = `${topic.slice(0, 53).trim()}…`;
-    return topic.charAt(0).toUpperCase() + topic.slice(1);
+    return clean;
   }
 
   function readableParagraphs(text) {
@@ -291,23 +283,28 @@
     let clean = String(raw)
       .replace(/\s+/g, " ")
       .replace(/^(hey|hi|hello|please|can you|could you|would you)\b[,!. ]*/gi, "")
-      .replace(/^(teach me|tell me about|tell me|explain|what is|what's|whats|how does|how do|how to|i want to learn about)\b[,!. ]*/gi, "")
+      .replace(/^(teach me about|teach me|tell me about|tell me|explain to me|explain|what is|what's|whats|how does|how do|how to|how|what|why|who|when|where|i want to learn about|i want to know about)\b[,!. ]*/gi, "")
+      .replace(/^(teach me about|teach me|tell me about|tell me|explain)\b[,!. ]*/gi, "")
       .replace(/[?.!]+$/g, "")
       .trim();
 
-    const words = clean.split(" ");
+    clean = clean.replace(/\bdarvin\b/gi, "Darwin");
+    clean = clean.replace(/\btarzan\b/gi, "Darwin");
+    clean = clean.replace(/\b(tarzan|darwin)\s+theory(\s+(darwin|theory))*\b/gi, "Theory of Evolution");
+
+    const rawWords = clean.split(" ");
+    const seenWords = new Set();
     const deduped = [];
-    words.forEach((w) => {
-      if (deduped.length === 0 || deduped[deduped.length - 1].toLowerCase() !== w.toLowerCase()) {
-        deduped.push(w);
-      }
+    rawWords.forEach((w) => {
+      const lower = w.toLowerCase().replace(/[^a-z0-9]/g, "");
+      if (!lower) return;
+      if (seenWords.has(lower) && lower.length > 3) return;
+      seenWords.add(lower);
+      deduped.push(w);
     });
     clean = deduped.join(" ");
 
-    clean = clean.replace(/\bdarvin\b/gi, "Darwin");
-    clean = clean.replace(/\btarzan theory\b/gi, "Theory of Evolution");
-
-    if (words.length > 7) clean = words.slice(0, 7).join(" ");
+    if (deduped.length > 7) clean = deduped.slice(0, 7).join(" ");
     if (clean.length > 60) clean = `${clean.slice(0, 57).trim()}…`;
     if (!clean) return "Exploration & Discovery";
 
