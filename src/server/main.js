@@ -13,7 +13,7 @@ const { callClaudeCli } = require("../providers/claude-cli.js");
 const { callKimiCli } = require("../providers/kimi-cli.js");
 const { NORMALIZE_TYPESET_POLICY } = require("./typeset.js");
 const PLUGIN_FORMAT = { parse: () => ({ id: "", document: "", styles: "" }) };
-const DRAW = require("../../public/draw.js");
+const DRAW = require("../../public/js/canvas/draw.js");
 const primerRoutes = require("../primer/routes.js");
 const PrimerStore = require("../primer/store.js");
 const ChildModelService = require("../primer/child-model-service.js");

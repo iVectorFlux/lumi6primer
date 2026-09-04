@@ -792,6 +792,10 @@
       return this.state === "SPEAKING";
     }
 
+    isTalkModeActive() {
+      return document.body.classList.contains("mode-talk-active");
+    }
+
     initUI() {
       let toggleBtn = document.getElementById("atlasVoiceToggle");
       let overlay = document.getElementById("atlasVoiceOverlay");
@@ -861,10 +865,12 @@
       btn.style.touchAction = "none";
 
       const startHold = (e) => {
+        if (!this.isTalkModeActive()) return;
         if (e.button !== undefined && e.button !== 0) return;
         if (e.preventDefault) e.preventDefault();
         if (this._isHolding) return;
         this._isHolding = true;
+        this._pushToTalkTurn = true;
         this._pressStartTime = Date.now();
         btn.classList.add("atlas-holding");
         try {
@@ -907,6 +913,7 @@
     }
 
     startPushToTalk() {
+      if (!this.isTalkModeActive()) return;
       this.paused = false;
       this.isActive = true;
       window.__atlasTeachingLock = true;
@@ -950,13 +957,11 @@
     }
 
     handleMicButtonClick() {
-      if (this.paused) {
-        this.resumeConversation();
-      } else if (this.isActive) {
-        this.pauseConversation();
-      } else {
-        this.turnOn();
+      if (!this.isTalkModeActive()) {
+        if (typeof window.setAppViewMode === "function") window.setAppViewMode("talk");
+        return;
       }
+      // Talk mode uses hold-to-talk on the mic button; a tap alone does not start listening.
     }
 
     friendlyName(raw) {
@@ -1193,7 +1198,7 @@
     }
 
     async startListening() {
-      if (!this.isActive || this.paused) return;
+      if (!this.isTalkModeActive() || !this.isActive || this.paused) return;
       if (this.state === "SPEAKING" || this.state === "PROCESSING") return;
 
       if (this.restartTimer) {
@@ -1245,15 +1250,7 @@
     }
 
     scheduleAutoRestart(delayMs = 300) {
-      if (this.restartTimer) {
-        clearTimeout(this.restartTimer);
-      }
-      this.restartTimer = setTimeout(() => {
-        this.restartTimer = null;
-        if (this.isActive && !this.paused && (this.state === "IDLE" || this.state === "LISTENING")) {
-          this.startListening();
-        }
-      }, delayMs);
+      // Push-to-talk only: do not reopen the mic after a turn finishes.
     }
 
     isHeardEcho(queryText) {
@@ -1531,6 +1528,11 @@
 
       const finishTurn = () => {
         this._syncVoiceButtonUI(null);
+        if (this._pushToTalkTurn) {
+          this._pushToTalkTurn = false;
+          this.turnOff();
+          return;
+        }
         if (this.paused) {
           this.state = "IDLE";
           this.showPausedOverlay();
@@ -1543,10 +1545,9 @@
         }
         if (this.isActive) {
           this.state = "IDLE";
-          this.scheduleAutoRestart(500);
         } else {
           this.state = "IDLE";
-          this.autoHideOverlay(3000);
+          this.hideOverlay();
         }
       };
 
@@ -1566,6 +1567,8 @@
      * Update minimal accessibility transcript overlay.
      */
     showOverlay(role, text) {
+      if (!this.isTalkModeActive()) return;
+      if (role === "listening" && !this._isHolding) return;
       if (!this.elements || !this.elements.overlay) this.initUI();
       if (this.overlayTimeout) clearTimeout(this.overlayTimeout);
 
@@ -1587,12 +1590,16 @@
     autoHideOverlay(delayMs = 8000) {
       if (this.overlayTimeout) clearTimeout(this.overlayTimeout);
       if (delayMs === 0) {
-        this.elements.overlay.classList.remove("atlas-visible");
+        if (this.elements?.overlay) this.elements.overlay.classList.remove("atlas-visible");
         return;
       }
       this.overlayTimeout = setTimeout(() => {
-        this.elements.overlay.classList.remove("atlas-visible");
+        if (this.elements?.overlay) this.elements.overlay.classList.remove("atlas-visible");
       }, delayMs);
+    }
+
+    hideOverlay() {
+      this.autoHideOverlay(0);
     }
   }
 

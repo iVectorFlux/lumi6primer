@@ -59,7 +59,7 @@ Useful scripts:
 | Command | Purpose |
 | --- | --- |
 | `npm start` | Run the app |
-| `npm run build:client` | Rebuild `public/app.js` from `src/client` (only if you change client source) |
+| `npm run build:client` | Rebuild `public/js/canvas/app.js` from `src/client/app` |
 | `npm run check` | Syntax check |
 
 Live UI work in `public/*.js` and `public/*.css` is served as-is. After changing those files, hard-refresh the browser. After changing `src/` server code, restart Node.

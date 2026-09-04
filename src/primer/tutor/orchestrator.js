@@ -380,6 +380,10 @@ class LearningOrchestrator {
       decision.proposedSpoken = chosen;
     }
 
+    const turnsSinceDoubtCheck = Number(state.conversationState?.turnsSinceDoubtCheck || 0);
+    const allowDoubtCheck = turnsSinceDoubtCheck >= 3 && !understanding?.confusion && !understanding?.voiceIssue;
+    decision.spokenHints = { ...(decision.spokenHints || {}), allowDoubtCheck };
+
     let spoken = this.responsePolicy.apply(
       decision.proposedSpoken || proposal.spoken || "",
       decision,

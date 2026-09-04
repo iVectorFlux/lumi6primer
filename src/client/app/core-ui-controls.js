@@ -470,7 +470,8 @@
     } catch {}
   }
   function maybeShowChangelog(force = false) {
-    if (!changelogLayer || !changelogDialog || changelog.active || featureTour.active || !pluginPopover.hidden || (!force && changelogSeen())) return false;
+    if (!force) return false;
+    if (!changelogLayer || !changelogDialog || changelog.active || featureTour.active || (pluginPopover && !pluginPopover.hidden) || (!force && changelogSeen())) return false;
     hideAutoDelayControl();
     hideEffortControl();
     hidePluginControl();
@@ -494,7 +495,7 @@
     changelogLayer.hidden = true;
     changelogLayer.setAttribute("aria-hidden", "true");
     document.body.classList.remove("changelog-open");
-    tourMain.inert = featureTour.active || !pluginPopover.hidden;
+    tourMain.inert = featureTour.active || Boolean(pluginPopover && !pluginPopover.hidden);
     requestAnimationFrame(() => {
       if (!featureTour.active && !changelog.active) restoreFocus?.focus({ preventScroll: true });
     });
@@ -558,7 +559,7 @@
     updateSettingsPanel();
   }
   function maybeStartOnboarding() {
-    if (!maybeStartFeatureTour()) maybeShowChangelog();
+    return false;
   }
   function autoDelayText() {
     const seconds = state.autoDelayMs / 1000;

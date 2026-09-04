@@ -10,6 +10,7 @@ const CHEESE = /^(great question|you're getting it|what should we explore next)/
 const CANNED = /here'?s a situation where|the everyday assumption|a relationship, not a fact|which assumption|usual picture is missing a relationship|strange part stops being magic|here'?s the heart of/i;
 const STALL = /let's take .+ slowly|what part feels hardest|i'm here\. what do you want to figure out|hey\. what do you want to learn\?|let's look at .+ with a simple example|hmm,? let me think about that differently|tell me more about what you're trying to understand|we were talking about/i;
 const PHRASE_COACH = /^(say[,:]?\s*["“]|try saying|you can also say|a better way to (ask|say)|you could say|for example,? say)/i;
+const DOUBT_CHECK = /everything making sense|any part you want me to explain|any doubts|anything unclear|want me to explain.+again|making sense so far/i;
 
 // Apologising for a mix-up and then teaching the mixed-up topic anyway is a
 // failed turn, not a recovery. Regenerate instead of speaking it.
@@ -22,6 +23,7 @@ function isCannedSpeech(text) {
 
 class ResponsePolicy {
   apply(spoken, decision, understanding, child = {}) {
+    const hints = decision?.spokenHints || {};
     let text = String(spoken || "").replace(/\s+/g, " ").trim();
     if (!text || looksLikeJsonBlob(text)) {
       text = extractSpoken(text) || this._fallback(decision, understanding, child);
@@ -31,6 +33,7 @@ class ResponsePolicy {
     text = this._stripMarkdown(text);
     text = this._stripBoardNarration(text);
     text = this._stripPhraseCoaching(text);
+    if (!hints.allowDoubtCheck) text = this._stripDoubtCheck(text);
     if (!text) text = this._fallback(decision, understanding, child);
     text = text.replace(/^sorry[,.]?\s*/i, "").trim();
     text = text.replace(CHEESE, "").trim();
@@ -42,7 +45,6 @@ class ResponsePolicy {
       text = this._stripDependency(text);
     }
 
-    const hints = decision?.spokenHints || {};
     text = this._limitSentences(text, hints.maxSentences || 5);
 
     if (hints.mustAskQuestion && !/\?/.test(text)) {
@@ -146,6 +148,14 @@ class ResponsePolicy {
         const t = s.trim();
         return t && !PHRASE_COACH.test(t) && !/\byou can also say\b/i.test(t) && !/\btry saying\b/i.test(t);
       })
+      .join(" ")
+      .trim();
+  }
+
+  _stripDoubtCheck(text) {
+    return String(text || "")
+      .split(/(?<=[.!?])\s+/)
+      .filter((s) => s.trim() && !DOUBT_CHECK.test(s))
       .join(" ")
       .trim();
   }

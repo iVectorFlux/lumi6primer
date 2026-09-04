@@ -68,10 +68,6 @@
     return Boolean(cfg.supabaseUrl && cfg.supabaseAnonKey);
   }
 
-  function guestMode() {
-    try { return localStorage.getItem("primerGuest") === "1"; } catch { return false; }
-  }
-
   function readLocal() {
     try {
       const raw = localStorage.getItem("primerProfile");
@@ -430,24 +426,10 @@
       await sleep(50);
     }
 
-    const local = readLocal();
-    const localName = localStorage.getItem("primerChildName") || local?.name;
-    const localId = localStorage.getItem("primerChildId") || local?.id;
-
-    if (!configured()) {
-      if (!localName && !localId) {
-        window.location.replace("/login");
-        return;
-      }
-      state.ready = true;
-      hideOverlay();
-      return;
-    }
-
     bindOverlay();
     const user = (await currentUser(15)) || window.supabaseAuth?.user || null;
 
-    if (!user && !localName && !localId) {
+    if (!user) {
       window.location.replace("/login");
       return;
     }
@@ -463,13 +445,14 @@
       }
     }
 
-    if (localName || local?.onboarded_at) {
+    const local = readLocal();
+    if (local?.onboarded_at) {
       hideOverlay();
       state.ready = true;
       return;
     }
 
-    const initialProfile = local || (user ? { name: user.email?.split("@")[0] || "Learner" } : {});
+    const initialProfile = local || { name: user.email?.split("@")[0] || "Learner" };
     fillFromProfile(initialProfile);
     showOverlay();
     state.ready = true;
@@ -479,7 +462,6 @@
     get: () => state.profile || readLocal(),
     childPayload,
     authHeaders,
-    guestMode,
     configured,
     openPanel: openProfilePanel
   };

@@ -251,145 +251,18 @@
      * Programmatically create and mount Chat UI DOM elements.
      */
     initUI() {
-      let sidebar = document.getElementById("atlasChatSidebar");
-      let toggleBtn = document.getElementById("atlasChatToggle");
-
-      if (!sidebar) {
-        sidebar = document.createElement("aside");
-        sidebar.id = "atlasChatSidebar";
-        sidebar.setAttribute("aria-label", "Lumi6 Teacher Chat");
-        sidebar.innerHTML = `
-          <header class="atlas-chat-header">
-            <div class="atlas-chat-header-title">
-              <div class="atlas-header-text">
-                <p class="atlas-kicker">Chat</p>
-                <h3>Lumi6</h3>
-              </div>
-            </div>
-            <div class="atlas-header-actions">
-              <button id="atlasResetBtn" class="atlas-icon-btn" type="button" title="Reset Session" aria-label="Reset Session">
-                <svg viewBox="0 0 24 24"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>
-              </button>
-              <button id="atlasCloseBtn" class="atlas-icon-btn" type="button" title="Close Chat" aria-label="Close Chat">
-                <svg viewBox="0 0 24 24"><path d="M18 6 6 18M6 6l12 12"/></svg>
-              </button>
-            </div>
-          </header>
-
-          <div id="atlasMessages" class="atlas-chat-messages" role="log" aria-live="polite">
-            <div class="atlas-msg teacher">
-              <div class="atlas-msg-author">Lumi6</div>
-              <div class="atlas-msg-bubble">Hey! Ask me something you want to understand. I will explain it and draw it on the board.</div>
-              <div class="atlas-msg-time">${this.formatTime(new Date())}</div>
-            </div>
-          </div>
-
-          <footer class="atlas-chat-footer">
-            <textarea id="atlasInput" class="atlas-chat-input" rows="1" placeholder="Ask Lumi6…" aria-label="Ask Lumi6 a question"></textarea>
-            <button id="atlasSendBtn" class="atlas-send-btn" type="button" aria-label="Send Message">
-              <svg viewBox="0 0 24 24"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
-            </button>
-          </footer>
-        `;
-
-        const rightMount = document.getElementById('atlasChatSidebarMount');
-        if (rightMount) {
-          rightMount.appendChild(sidebar);
-        } else {
-          document.body.appendChild(sidebar);
-        }
-      }
-
-      if (!toggleBtn) {
-        toggleBtn = document.createElement("button");
-        toggleBtn.id = "atlasChatToggle";
-        toggleBtn.type = "button";
-        toggleBtn.setAttribute("aria-label", "Toggle Lumi6 chat");
-        toggleBtn.innerHTML = `
-          <svg viewBox="0 0 24 24" aria-hidden="true">
-            <path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/>
-          </svg>
-          <span>Lumi6 Chat</span>
-        `;
-        document.body.appendChild(toggleBtn);
-      }
-
-      // Always cache DOM references
-      this.elements = {
-        toggleBtn,
-        sidebar,
-        closeBtn: sidebar.querySelector("#atlasCloseBtn"),
-        resetBtn: sidebar.querySelector("#atlasResetBtn"),
-        messagesList: sidebar.querySelector("#atlasMessages"),
-        inputField: sidebar.querySelector("#atlasInput, #atlasChatInput, textarea"),
-        sendBtn: sidebar.querySelector("#atlasSendBtn, #atlasChatSendBtn, button[type='submit']")
-      };
-
-      this.bindEvents();
-    }
-
-    /**
-     * Bind DOM event listeners.
-     */
-    bindEvents() {
-      const { toggleBtn, closeBtn, resetBtn, inputField, sendBtn } = this.elements;
-
-      toggleBtn.addEventListener("click", () => this.toggleChat());
-      const navChat = document.getElementById("navAtlasChat");
-      if (navChat) navChat.addEventListener("click", () => this.toggleChat());
-      closeBtn.addEventListener("click", () => this.closeChat());
-      resetBtn.addEventListener("click", () => this.resetSession());
-
-      sendBtn.addEventListener("click", () => this.handleSendMessage());
-
-      inputField.addEventListener("keydown", (e) => {
-        if (e.key === "Enter" && !e.shiftKey) {
-          e.preventDefault();
-          this.handleSendMessage();
-        }
-      });
-
-      // Auto-expand textarea
-      inputField.addEventListener("input", () => {
-        inputField.style.height = "auto";
-        inputField.style.height = Math.min(inputField.scrollHeight, 100) + "px";
-      });
-    }
-
-    toggleChat() {
-      this.isOpen ? this.closeChat() : this.openChat();
-    }
-
-    openChat() {
-      this.isOpen = true;
-      this.elements.sidebar.classList.add("atlas-open");
-      document.body.classList.add("atlas-chat-open");
-      const navChat = document.getElementById("navAtlasChat");
-      if (navChat) {
-        navChat.classList.add("active");
-        navChat.setAttribute("aria-pressed", "true");
-      }
-      window.dispatchEvent(new Event("resize"));
-      document.body.classList.remove("mobile-nav-open");
-      const menuBtn = document.getElementById("mobileMenuBtn");
-      if (menuBtn) menuBtn.setAttribute("aria-expanded", "false");
-      const backdrop = document.getElementById("sidebarBackdrop");
-      if (backdrop) backdrop.hidden = true;
-      if (!window.matchMedia("(max-width: 900px)").matches) {
-        this.elements.inputField.focus();
-      }
-    }
-
-    closeChat() {
-      this.isOpen = false;
-      this.elements.sidebar.classList.remove("atlas-open");
+      document.getElementById("atlasChatToggle")?.remove();
+      document.getElementById("atlasChatSidebar")?.remove();
       document.body.classList.remove("atlas-chat-open");
-      const navChat = document.getElementById("navAtlasChat");
-      if (navChat) {
-        navChat.classList.remove("active");
-        navChat.setAttribute("aria-pressed", "false");
-      }
-      window.dispatchEvent(new Event("resize"));
+      this.elements = {
+        toggleBtn: null,
+        sidebar: null,
+        closeBtn: null,
+        resetBtn: null,
+        messagesList: null,
+        inputField: null,
+        sendBtn: null
+      };
     }
 
     /**
@@ -423,36 +296,39 @@
      */
     appendMessage(role, text) {
       this.removeWelcomeIfNeeded();
-      const msgDiv = document.createElement("div");
-      msgDiv.className = `atlas-msg ${role}`;
+      if (this.elements.messagesList) {
+        const msgDiv = document.createElement("div");
+        msgDiv.className = `atlas-msg ${role}`;
 
-      const author = document.createElement("div");
-      author.className = "atlas-msg-author";
-      author.textContent = role === "teacher" ? "Lumi6" : "You";
+        const author = document.createElement("div");
+        author.className = "atlas-msg-author";
+        author.textContent = role === "teacher" ? "Lumi6" : "You";
 
-      const bubble = document.createElement("div");
-      bubble.className = "atlas-msg-bubble";
-      bubble.textContent = text;
+        const bubble = document.createElement("div");
+        bubble.className = "atlas-msg-bubble";
+        bubble.textContent = text;
 
-      const timeSpan = document.createElement("div");
-      timeSpan.className = "atlas-msg-time";
-      timeSpan.textContent = this.formatTime(new Date());
+        const timeSpan = document.createElement("div");
+        timeSpan.className = "atlas-msg-time";
+        timeSpan.textContent = this.formatTime(new Date());
 
-      msgDiv.appendChild(author);
-      msgDiv.appendChild(bubble);
-      msgDiv.appendChild(timeSpan);
+        msgDiv.appendChild(author);
+        msgDiv.appendChild(bubble);
+        msgDiv.appendChild(timeSpan);
 
-      this.elements.messagesList.appendChild(msgDiv);
-      this.scrollToBottom();
+        this.elements.messagesList.appendChild(msgDiv);
+        this.scrollToBottom();
+      }
       if (typeof window.Lumi6Lesson?.record === "function") window.Lumi6Lesson.record(role, text);
       if (typeof window.syncTalkModeFeed === "function") window.syncTalkModeFeed();
-      return msgDiv;
     }
 
     /**
      * Show animated loading indicator.
      */
     showLoading() {
+      const list = this.elements.messagesList;
+      if (!list) return;
       const loadingDiv = document.createElement("div");
       loadingDiv.id = "atlasLoadingIndicator";
       loadingDiv.className = "atlas-loading";
@@ -461,7 +337,7 @@
         <span class="atlas-dot"></span>
         <span class="atlas-dot"></span>
       `;
-      this.elements.messagesList.appendChild(loadingDiv);
+      list.appendChild(loadingDiv);
       this.scrollToBottom();
     }
 
@@ -479,15 +355,24 @@
      * Show inline error message banner.
      */
     showError(errorText) {
-      const errorDiv = document.createElement("div");
-      errorDiv.className = "atlas-error-notice";
-      errorDiv.textContent = `Error: ${errorText}`;
-      this.elements.messagesList.appendChild(errorDiv);
-      this.scrollToBottom();
+      const list = this.elements.messagesList;
+      if (list) {
+        const errorDiv = document.createElement("div");
+        errorDiv.className = "atlas-error-notice";
+        errorDiv.textContent = `Error: ${errorText}`;
+        list.appendChild(errorDiv);
+        this.scrollToBottom();
+      }
+      if (typeof window.Lumi6Lesson?.record === "function") {
+        window.Lumi6Lesson.record("teacher", errorText || "Unable to reach Lumi6.");
+      }
+      if (typeof window.syncTalkModeFeed === "function") window.syncTalkModeFeed();
     }
 
     scrollToBottom() {
-      this.elements.messagesList.scrollTop = this.elements.messagesList.scrollHeight;
+      const list = this.elements.messagesList;
+      if (!list) return;
+      list.scrollTop = list.scrollHeight;
     }
 
     /**
@@ -565,8 +450,8 @@
       } finally {
         hideAtlasGraphicLoader();
         this.isSending = false;
-        this.elements.sendBtn.disabled = false;
-        this.elements.inputField.focus();
+        if (this.elements.sendBtn) this.elements.sendBtn.disabled = false;
+        this.elements.inputField?.focus();
       }
     }
 
@@ -589,13 +474,15 @@
         }
         try { localStorage.removeItem("primerSessionId"); } catch {}
         await fetch(`${ATLAS_API_BASE}/reset`, { method: "POST" });
-        this.elements.messagesList.innerHTML = `
+        if (this.elements.messagesList) {
+          this.elements.messagesList.innerHTML = `
           <div class="atlas-msg teacher">
             <div class="atlas-msg-author">Lumi6</div>
             <div class="atlas-msg-bubble">Session reset. What new topic would you like to discuss?</div>
             <div class="atlas-msg-time">${this.formatTime(new Date())}</div>
           </div>
         `;
+        }
       } catch (err) {
         this.showError("Failed to reset session.");
       }

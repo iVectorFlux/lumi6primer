@@ -194,9 +194,7 @@
       const allowKick = Boolean(options.allowKick);
       this.session = session;
       this.user = session ? session.user : null;
-      const localName = localStorage.getItem("primerChildName") || localStorage.getItem("primerProfile");
-      const localId = localStorage.getItem("primerChildId");
-      const isAuthenticated = Boolean(this.user || localName || localId);
+      const isAuthenticated = Boolean(this.user);
 
       if (isAuthenticated && this.isLandingPage()) {
         window.location.replace("/dashboard");

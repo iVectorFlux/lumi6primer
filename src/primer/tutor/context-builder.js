@@ -135,7 +135,11 @@ ${shouldCheckDoubt ? `
 DOUBT CHECK-IN (it has been ${turnsSinceDoubtCheck} turns):
 - Before your main teaching, gently check: "Everything making sense so far? Any part you want me to explain again?"
 - If the child says they're fine, continue teaching the next layer. If they have a doubt, address it warmly.
-` : ""}
+` : `
+DOUBT CHECK-IN RULE:
+- Do NOT ask "Everything making sense so far?" or similar reassurance on a new topic or first answer.
+- Only use that kind of check-in when the child seems stuck or after several turns on the same topic.
+`}
 
 GRADE-LEVEL TEACHING RULES (Class ${gradeNum}):
 ${isElementary ? `- FOR CLASS ${gradeNum}: Use simple, vivid, concrete analogies (ball on a string, swinging water bucket, trampoline). Explain the full physical reason simply (forward speed + inward pull). NEVER ask dry quizzes or vocabulary tests. End with ONE gentle reasoning question PLUS 2-3 answer options (a) (b) (c) to help the child think. One option should be correct, the others plausible but wrong.`

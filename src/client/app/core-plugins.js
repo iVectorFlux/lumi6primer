@@ -670,6 +670,7 @@
     }
   }
   function hidePluginControl() {
+    if (!pluginPopover) return;
     if (pluginPopover.hidden) return;
     pluginPopover.hidden = true;
     pluginPopover.setAttribute("aria-hidden", "true");
@@ -693,6 +694,7 @@
     if (selected === "create") updatePluginAuthoringUi();
   }
   function showPluginControl() {
+    if (!pluginPopover) return;
     if (!pluginPopover.hidden) return;
     state.pluginDialogRestoreFocus = document.activeElement;
     pluginPopover.hidden = false;
@@ -924,9 +926,7 @@
   function invokeAIAction(action) {
     if (action === "voice") {
       closeRadialMenu();
-      if (window.atlasVoice && typeof window.atlasVoice.handleMicButtonClick === "function") {
-        window.atlasVoice.handleMicButtonClick();
-      }
+      if (typeof window.setAppViewMode === "function") window.setAppViewMode("talk");
       return;
     }
     cancelWidgetRefinement("manual-action");

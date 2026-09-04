@@ -13,10 +13,10 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Patrick+Hand&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="login.css?v=20260822e">
+  <link rel="stylesheet" href="css/login.css?v=20260904">
   <script src="/api/config.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script defer src="supabase-auth.js?v=20260822e"></script>
+  <script defer src="js/auth/supabase-auth.js?v=20260904"></script>
 </head>
 <body class="join-page">
   <main class="login-shell">
@@ -35,24 +35,9 @@
           <input id="loginPassword" name="password" type="password" required placeholder="Your password" autocomplete="current-password">
         </label>
         <button class="login-submit" type="submit">Sign in</button>
-        <button id="guestLoginBtn" class="login-submit" type="button" style="background:#f1f5f9; color:#475569; margin-top:8px; border:1px solid #cbd5e1;">Continue as Guest</button>
       </form>
       <div id="authNotice" class="login-notice" hidden role="status"></div>
     </section>
   </main>
-  <script>
-    function uuidv4() {
-      if (typeof crypto !== "undefined" && typeof crypto.randomUUID === "function") return crypto.randomUUID();
-      return "10000000-1000-4000-8000-100000000000".replace(/[018]/g, c =>
-        (c ^ (crypto.getRandomValues(new Uint8Array(1))[0] & 15 >> (c / 4))).toString(16)
-      );
-    }
-    document.getElementById("guestLoginBtn")?.addEventListener("click", () => {
-      localStorage.setItem("primerChildName", "Explorer");
-      localStorage.setItem("primerChildId", uuidv4());
-      localStorage.setItem("primerProfile", JSON.stringify({ name: "Explorer", grade: "4", age_years: 9, interests: ["Science", "Space"] }));
-      window.location.replace("/dashboard");
-    });
-  </script>
 </body>
 </html>

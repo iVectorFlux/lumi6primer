@@ -18,6 +18,48 @@
       .trim();
   }
 
+  const DOUBT_CHECK_RE = /everything making sense|any part you want me to explain|any doubts|anything unclear|want me to explain.+again|making sense so far/i;
+
+  function isDoubtCheck(sentence) {
+    return DOUBT_CHECK_RE.test(String(sentence || "").trim());
+  }
+
+  function isTeachingQuestion(sentence) {
+    const s = String(sentence || "").trim();
+    if (!s || isDoubtCheck(s)) return false;
+    return s.endsWith("?") || /^(what|how|why|can you|where|do you think|imagine|can you guess)\b/i.test(s);
+  }
+
+  function splitTeacherTurn(cleanSpoken) {
+    const sentences = String(cleanSpoken || "")
+      .split(/(?<=[.!?])\s+/)
+      .map((s) => s.trim())
+      .filter(Boolean)
+      .filter((s) => !isDoubtCheck(s));
+
+    const questions = sentences.filter(isTeachingQuestion);
+    const question = questions.length
+      ? (questions.find((s) => /\([a-c]\)/i.test(s)) || questions[questions.length - 1])
+      : "";
+    const teaching = sentences.filter((s) => s !== question);
+
+    let keyInsight = "";
+    let deeperExpl = "";
+    const candidateInsight = teaching.find((s) =>
+      s.length >= 32 &&
+      !s.endsWith("?") &&
+      !/^(hello|hey|hi|welcome|i'm|ready|sure|great|let's|glad|no problem|ok|okay)\b/i.test(s)
+    );
+    if (candidateInsight && teaching.length > 1) {
+      keyInsight = candidateInsight;
+      deeperExpl = teaching.filter((s) => s !== keyInsight).join(" ");
+    } else {
+      deeperExpl = teaching.join(" ");
+    }
+
+    return { keyInsight, deeperExpl, question };
+  }
+
   function setAppViewMode(mode, updateUrl = true) {
     currentAppViewMode = mode === "talk" ? "talk" : "draw";
     const drawBtns = document.querySelectorAll("#modeDrawBtn, #topbarModeDrawBtn");
@@ -76,6 +118,9 @@
       const scrollArea = document.querySelector("#talkScrollArea");
       if (scrollArea) scrollArea.scrollTop = scrollArea.scrollHeight;
     } else {
+      if (window.atlasVoice && typeof window.atlasVoice.turnOff === "function") {
+        window.atlasVoice.turnOff();
+      }
       render();
     }
   }
@@ -122,38 +167,24 @@
           .replace(/^([A-Za-z0-9_]+)[,!:]\s+(?=[A-Z])/i, "")
           .replace(/^(Hey|Hello|Hi|Welcome)\s*[,!.]\s*/i, "")
           .trim();
-        const sentences = cleanSpoken.split(/(?<=[.!?])\s+/).map(s => s.trim()).filter(Boolean);
-        const q = sentences.find(s => s.endsWith("?") || /^(what|how|why|can you|where|do you think|imagine|can you guess)\b/i.test(s));
-        const bodySentences = sentences.filter(s => s !== q);
-        if (bodySentences.length) current.explanation.push(bodySentences.join(" "));
-        if (q) current.question = q;
+        const { keyInsight, deeperExpl, question } = splitTeacherTurn(cleanSpoken);
+        if (deeperExpl || keyInsight) current.explanation.push([keyInsight, deeperExpl].filter(Boolean).join(" "));
+        if (question) current.question = question;
         if (turn.image) current.image = turn.image;
       }
     }
     if (current) pairs.push(current);
 
     feed.innerHTML = pairs.map((step, idx) => {
-      const stepNumber = idx + 1;
       const allSentences = (step.explanation || []).join(" ").split(/(?<=[.!?])\s+/).map(s => s.trim()).filter(Boolean);
-      
-      // A legitimate key insight must be a substantial educational statement (>= 32 chars, not a question, not a greeting)
-      let keyInsight = "";
-      let deeperExpl = "";
-      const candidateInsight = allSentences.find(s =>
-        s.length >= 32 &&
-        !s.endsWith("?") &&
-        !/^(hello|hey|hi|welcome|i'm|ready|sure|great|let's|glad|no problem|ok|okay|kamal|alex)\b/i.test(s)
-      );
-      if (candidateInsight && allSentences.length > 1) {
-        keyInsight = candidateInsight;
-        deeperExpl = allSentences.filter(s => s !== keyInsight).join(" ");
-      } else {
-        deeperExpl = allSentences.join(" ");
-      }
+      const parsed = splitTeacherTurn(allSentences.join(" "));
+      const keyInsight = parsed.keyInsight;
+      const deeperExpl = parsed.deeperExpl;
+      const question = step.question || parsed.question;
 
-      if (!allSentences.length && !step.question) {
+      if (!allSentences.length && !question) {
         return `
-        <article class="talk-turn-card" data-step="${stepNumber}">
+        <article class="talk-turn-card">
           ${step.asked ? `
             <div class="talk-child-prompt">
               <span class="talk-child-badge">You asked</span>
@@ -164,7 +195,6 @@
             <div class="talk-lumi6-header">
               ${LUMI6_AVATAR_HTML}
               <span class="talk-lumi6-name">Lumi6</span>
-              <span class="talk-step-badge">Step ${stepNumber}</span>
               <span class="talk-topic-pill talk-shimmer-pill">Exploring…</span>
             </div>
             <div class="talk-shimmer-content">
@@ -182,7 +212,7 @@
       }
 
       return `
-      <article class="talk-turn-card" data-step="${stepNumber}">
+      <article class="talk-turn-card">
         ${step.asked ? `
           <div class="talk-child-prompt">
             <span class="talk-child-badge">You asked</span>
@@ -193,7 +223,6 @@
           <div class="talk-lumi6-header">
             ${LUMI6_AVATAR_HTML}
             <span class="talk-lumi6-name">Lumi6</span>
-            <span class="talk-step-badge">Step ${stepNumber}</span>
             <span class="talk-topic-pill">${escapeHtml(titleText)}</span>
           </div>
 
@@ -229,12 +258,12 @@
             </div>
           ` : "")}
 
-          ${step.question ? `
+          ${question ? `
             <div class="talk-question-capsule">
               <div class="talk-question-icon">🤔</div>
               <div class="talk-question-content">
                 <span class="talk-question-tag">Your Turn</span>
-                <p class="talk-question-text">${escapeHtml(step.question)}</p>
+                <p class="talk-question-text">${escapeHtml(question)}</p>
               </div>
             </div>
           ` : ""}
