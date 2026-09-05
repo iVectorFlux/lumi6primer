@@ -657,8 +657,8 @@
     if (typeof window.Lumi6Lesson?.clear === "function") {
       window.Lumi6Lesson.clear();
     }
-    if (typeof window.atlasVoice?.resetSession === "function") {
-      window.atlasVoice.resetSession();
+    if (typeof window.primerVoice?.resetSession === "function") {
+      window.primerVoice.resetSession();
     }
     state.lastLessonNote = null;
     state.atlasDrawnBoxes = [];

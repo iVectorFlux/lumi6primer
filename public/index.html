@@ -15,8 +15,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,600;1,400&family=DM+Sans:wght@400;500;600;700&family=Inter:wght@400;500;600;700;800&family=Patrick+Hand&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="css/style.css?v=20260904">
-  <link rel="stylesheet" href="css/atlas-chat.css?v=20260904">
-  <link rel="stylesheet" href="css/atlas-voice.css?v=20260904">
+  <link rel="stylesheet" href="css/primer-voice.css?v=20260904">
   <link rel="stylesheet" href="css/supabase-auth.css?v=20260904">
   <link rel="stylesheet" href="css/lumi6-onboard.css?v=20260904">
   <link rel="stylesheet" href="css/mobile.css?v=20260904">
@@ -271,11 +270,11 @@
               </div>
             </div>
 
-            <div id="atlasGraphicLoader" class="atlas-graphic-loader" hidden>
-              <div class="atlas-graphic-stage">
-                <div class="atlas-graphic-shimmer" aria-hidden="true"></div>
-                <div id="atlasGraphicLoaderIcon" class="atlas-graphic-icon" aria-hidden="true"></div>
-                <span id="atlasGraphicLoaderText" class="atlas-graphic-caption">Illustrating picture…</span>
+            <div id="primerGraphicLoader" class="primer-graphic-loader" hidden>
+              <div class="primer-graphic-stage">
+                <div class="primer-graphic-shimmer" aria-hidden="true"></div>
+                <div id="primerGraphicLoaderIcon" class="primer-graphic-icon" aria-hidden="true"></div>
+                <span id="primerGraphicLoaderText" class="primer-graphic-caption">Illustrating picture…</span>
               </div>
             </div>
           </section>
@@ -383,9 +382,6 @@
       </div>
 
     </div><!-- /center-area -->
-
-    <!-- ═══ RIGHT: ATLAS CHAT PANEL ═══ -->
-    <div id="atlasChatSidebarMount" class="right-panel-mount" hidden></div>
 
   </main><!-- /app-shell -->
 
@@ -695,8 +691,8 @@
   <script src="js/canvas/summon.js?v=20260904"></script>
   <script src="js/canvas/app.js?v=20260904"></script>
   <script src="js/tutor/lumi6-canvas-adapter.js?v=20260904"></script>
-  <script src="js/tutor/atlas-chat.js?v=20260904"></script>
-  <script src="js/tutor/atlas-voice.js?v=20260904"></script>
+  <script src="js/tutor/primer-turn.js?v=20260904"></script>
+  <script src="js/tutor/primer-voice.js?v=20260904"></script>
   <script src="js/tutor/lesson-pdf.js?v=20260904"></script>
   <script src="js/tutor/lumi6-onboard.js?v=20260904"></script>
   <script src="js/auth/supabase-auth.js?v=20260904"></script>
@@ -714,11 +710,11 @@
       document.getElementById('fullscreenBtn')?.click();
     });
     (function () {
-      if (localStorage.getItem("atlas-sidebar-v") !== "2") {
-        localStorage.setItem("atlas-sidebar-v", "2");
-        localStorage.setItem("atlas-sidebar-collapsed", "0");
+      if (localStorage.getItem("primer-sidebar-v") !== "2") {
+        localStorage.setItem("primer-sidebar-v", "2");
+        localStorage.setItem("primer-sidebar-collapsed", "0");
       }
-      const collapsed = localStorage.getItem("atlas-sidebar-collapsed") === "1";
+      const collapsed = localStorage.getItem("primer-sidebar-collapsed") === "1";
       if (collapsed) document.body.classList.add("sidebar-collapsed");
       const menuBtn = document.getElementById("mobileMenuBtn");
       const backdrop = document.getElementById("sidebarBackdrop");
@@ -730,7 +726,7 @@
       };
       const setCollapsed = (on) => {
         document.body.classList.toggle("sidebar-collapsed", on);
-        localStorage.setItem("atlas-sidebar-collapsed", on ? "1" : "0");
+        localStorage.setItem("primer-sidebar-collapsed", on ? "1" : "0");
         const btn = document.getElementById("sidebarCollapseBtn");
         if (btn) {
           btn.setAttribute("aria-label", on ? "Open sidebar" : "Collapse sidebar");

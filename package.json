@@ -14,16 +14,11 @@
     "math",
     "lumi6"
   ],
-  "bin": {
-    "lumi6": "cli.js"
-  },
   "files": [
-    "cli.js",
     "server.js",
     "src/",
     "scripts/build-client.js",
     "public/",
-    "build/",
     "README.md",
     "LICENSE"
   ],
@@ -41,16 +36,12 @@
     "build:client": "node scripts/build-client.js",
     "check:client": "node scripts/build-client.js --check",
     "prepack": "npm run build:client",
-    "check": "npm run check:client && node --check cli.js && node --check server.js && node --check scripts/build-client.js && node --check src/cli/main.js && node --check src/cli/configure-ui.js && node --check src/cli/update.js && node --check src/server/main.js && node --check src/server/api-config.js && node --check src/server/typeset.js && node --check src/providers/kimi-cli.js && node --check src/providers/kimi-acp.js && node --check src/providers/codex-cli.js && node --check src/providers/claude-cli.js && node --check public/js/canvas/draw.js && node --check public/js/canvas/selection.js && node --check public/js/canvas/mixed-text.js && node --check public/js/canvas/animation.js && node --check public/js/canvas/summon.js && node --check public/vendor/lumi6-dom-renderer.js && node --check public/js/canvas/app.js"
+    "check": "npm run check:client && node --check server.js && node --check scripts/build-client.js && node --check src/server/main.js && node --check src/server/api-config.js && node --check src/server/typeset.js && node --check src/providers/kimi-cli.js && node --check src/providers/kimi-acp.js && node --check src/providers/codex-cli.js && node --check src/providers/claude-cli.js && node --check public/js/canvas/draw.js && node --check public/js/canvas/selection.js && node --check public/js/canvas/mixed-text.js && node --check public/js/canvas/animation.js && node --check public/js/canvas/summon.js && node --check public/js/tutor/primer-turn.js && node --check public/js/tutor/primer-voice.js && node --check public/js/canvas/app.js"
   },
   "engines": {
     "node": ">=20.3.0"
   },
   "dependencies": {
-    "@inquirer/prompts": "7.10.1",
     "sharp": "^0.34.5"
-  },
-  "devDependencies": {
-    "png2icons": "2.0.1"
   }
 }

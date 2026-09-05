@@ -24,7 +24,7 @@ This README is for running and shipping the product. Internal product notes live
 | Groq | Fast spoken replies |
 | OpenAI | Fallback talk, fallback images |
 | Deepgram / Cartesia | Text-to-speech voice synthesis |
-| Gemini / OpenAI | Lesson pictures and visual diagrams |
+| Wikimedia / OpenAI Images | Lesson pictures and visual diagrams |
 | Supabase | Auth and learner data |
 | AWS ECS | Production Node tasks |
 | CloudFront + ALB | HTTPS in front of ECS |
@@ -86,8 +86,8 @@ Copy `.env.example`. Names only — never paste real keys into git, chat, or scr
 
 **Pictures**
 
-- `GEMINI_API_KEY`, `GEMINI_IMAGE_MODEL`
-- OpenAI image models use `OPENAI_API_KEY`
+- Wikimedia / Wikipedia first, then OpenAI Images via `OPENAI_API_KEY`
+- Optional `OPENAI_IMAGE_MODEL` (defaults to `dall-e-3`, then `dall-e-2`)
 
 **Supabase**
 
@@ -128,7 +128,6 @@ Do not put these in a public README, ticket, or screenshot:
 ## Go live
 
 - [docs/DEPLOY.md](docs/DEPLOY.md) — Docker, ECS env vars, GitHub Actions  
-- [docs/VERCEL.md](docs/VERCEL.md) — Vercel is not for the full app (ECS instead)  
 - [docs/GO-LIVE.md](docs/GO-LIVE.md) — launch checklist  
 
 ## License

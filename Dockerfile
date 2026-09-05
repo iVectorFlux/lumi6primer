@@ -11,11 +11,10 @@ RUN apt-get update \
 COPY package.json package-lock.json ./
 RUN npm ci --omit=dev
 
-COPY cli.js server.js ./
+COPY server.js ./
 COPY src ./src
 COPY public ./public
 COPY scripts ./scripts
-COPY build ./build
 
 ENV NODE_ENV=production
 ENV HOST=0.0.0.0

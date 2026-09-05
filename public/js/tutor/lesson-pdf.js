@@ -103,12 +103,12 @@
     }
 
     // 4. Whiteboard Chat DOM
-    const nodes = document.querySelectorAll("#atlasMessages .atlas-msg");
+    const nodes = document.querySelectorAll("#primerMessages .primer-msg");
     if (nodes.length > 0) {
       const fromDom = [];
       nodes.forEach((el) => {
         const role = el.classList.contains("student") ? "student" : "teacher";
-        const text = String(el.querySelector(".atlas-msg-bubble")?.textContent || "").trim();
+        const text = String(el.querySelector(".primer-msg-bubble")?.textContent || "").trim();
         const image = el.dataset.image || "";
         if (!text && !image) return;
         if (/what concept would you like to explore|ask me something you want to understand/i.test(text)) return;

@@ -7,10 +7,6 @@ const { topicFromText, isWeakTopic } = require("../topic.js");
  * Autopilot still uses the same conversation. It chooses the next experience.
  */
 class Autopilot {
-  constructor(options = {}) {
-    this.nextBest = options.nextBest;
-  }
-
   detectMode(text, requestedMode, previousMode) {
     const t = String(text || "").toLowerCase();
     if (requestedMode === "autopilot" || requestedMode === "manual") return requestedMode;
@@ -45,23 +41,11 @@ class Autopilot {
       };
     }
 
-    if (state.mode !== "autopilot") {
-      return {
-        mode: "manual",
-        goal: "Follow the child's question.",
-        concept: understanding?.concept || state.currentConcept
-      };
-    }
-    const next = this.nextBest?.choose(child, state, understanding) || {
-      concept: state.currentConcept || understanding?.concept,
-      goal: "Stay with what they just reached for."
-    };
     return {
-      mode: "autopilot",
-      goal: next.goal,
-      concept: next.concept,
-      conceptId: next.conceptId,
-      reason: next.reason
+      mode: state.mode === "autopilot" ? "autopilot" : "manual",
+      goal: "Follow the child's question.",
+      concept: understanding?.concept || state.currentConcept,
+      reason: "follow"
     };
   }
 }

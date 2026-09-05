@@ -64,7 +64,6 @@ const PRIVATE_PLUGIN_DIRECTORY = process.env.LUMI6_PRIVATE_PLUGIN_DIR
   : STATE_DIRECTORY
     ? path.join(STATE_DIRECTORY, "plugins", "private")
     : path.join(PLUGIN_DIRECTORY, "private");
-const WIDGET_RENDERER = path.join(PUBLIC, "vendor", "lumi6-dom-renderer.js");
 const AI_PROVIDER = normalizeAiProvider(process.env.AI_PROVIDER);
 const API_BASE_URL = firstNonEmpty(process.env.AI_API_URL, process.env.OPENAI_API_URL);
 const API_FORMAT = firstNonEmpty(process.env.AI_API_FORMAT, process.env.OPENAI_API_FORMAT)?.toLowerCase();
@@ -577,7 +576,7 @@ function publicModelError(error, { clientError = false, timedOut = false, upstre
   if (clientError) return error?.message || "Invalid request.";
   if (LOCAL_CLI) {
     const message=error?.message||"Unable to process request.",diagnostic=visibleCliDiagnostic(error?.diagnostic);
-    return `${message}${diagnostic ? ` ${diagnostic}` : ""} Run \`lumi6 doctor --${LOCAL_CLI.doctor}\` for diagnostics.`;
+    return `${message}${diagnostic ? ` ${diagnostic}` : ""} Check the local CLI login and try again.`;
   }
   if (error?.name === "ModelOutputLimitError") return error.message;
   if (timedOut) return "AI service timed out before responding. Please retry.";
@@ -1920,11 +1919,6 @@ const server = http.createServer(async (req, res) => {
     res.writeHead(200, { "Content-Type":"text/html; charset=utf-8", "Cache-Control":"no-store", "Content-Security-Policy":policy, "Referrer-Policy":"no-referrer", "X-Content-Type-Options":"nosniff", "Cross-Origin-Resource-Policy":"same-origin" });
     if (req.method === "HEAD") return res.end();
     return fs.createReadStream(file).pipe(res);
-  }
-  if ((req.method === "GET" || req.method === "HEAD") && url.pathname === "/widget-renderer.js") {
-    res.writeHead(200, { "Content-Type":"application/javascript; charset=utf-8", "Cache-Control":"public, max-age=86400", "Access-Control-Allow-Origin":"*", "Cross-Origin-Resource-Policy":"cross-origin", "Referrer-Policy":"no-referrer", "X-Content-Type-Options":"nosniff" });
-    if (req.method === "HEAD") return res.end();
-    return fs.createReadStream(WIDGET_RENDERER).pipe(res);
   }
   if (req.method === "GET" && url.pathname === "/api/debug/log") {
     if (!DEBUG_ARTIFACTS || !isLoopback(req.socket.remoteAddress) || !isLoopbackHostname(requestHost(req)?.hostname) || localAccessMode !== "open" && !hasAiSession(req)) return send(res, 404, "Not found", "text/plain; charset=utf-8");

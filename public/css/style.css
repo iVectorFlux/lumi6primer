@@ -843,7 +843,7 @@ body.sidebar-collapsed .sidebar-user-avatar {
   background: var(--bg-canvas);
 }
 
-.atlas-graphic-loader {
+.primer-graphic-loader {
   position: absolute;
   right: max(20px, env(safe-area-inset-right));
   bottom: calc(90px + env(safe-area-inset-bottom));
@@ -856,11 +856,11 @@ body.sidebar-collapsed .sidebar-user-avatar {
   background: transparent;
 }
 
-.atlas-graphic-loader[hidden] {
+.primer-graphic-loader[hidden] {
   display: none !important;
 }
 
-.atlas-graphic-stage {
+.primer-graphic-stage {
   position: relative;
   overflow: hidden;
   display: flex;
@@ -875,7 +875,7 @@ body.sidebar-collapsed .sidebar-user-avatar {
   -webkit-backdrop-filter: blur(10px);
 }
 
-.atlas-graphic-icon {
+.primer-graphic-icon {
   position: relative;
   z-index: 1;
   width: 26px;
@@ -883,13 +883,13 @@ body.sidebar-collapsed .sidebar-user-avatar {
   animation: atlasGraphicOrb 1.6s ease-in-out infinite;
 }
 
-.atlas-graphic-icon svg {
+.primer-graphic-icon svg {
   width: 100%;
   height: 100%;
   filter: drop-shadow(0 2px 6px rgba(76, 29, 149, 0.2));
 }
 
-.atlas-graphic-caption {
+.primer-graphic-caption {
   font-family: "Patrick Hand", "Segoe Print", cursive, sans-serif;
   font-size: 16px;
   color: #4c1d95;
@@ -897,7 +897,7 @@ body.sidebar-collapsed .sidebar-user-avatar {
   white-space: nowrap;
 }
 
-.atlas-graphic-card {
+.primer-graphic-card {
   position: relative;
   overflow: hidden;
   display: flex;
@@ -914,7 +914,7 @@ body.sidebar-collapsed .sidebar-user-avatar {
   font-size: 20px;
 }
 
-.atlas-graphic-shimmer {
+.primer-graphic-shimmer {
   position: absolute;
   inset: 0;
   background: linear-gradient(110deg, transparent 0%, rgba(255, 255, 255, 0.0) 32%, rgba(255, 255, 255, 0.78) 50%, rgba(255, 255, 255, 0) 68%, transparent 100%);
@@ -922,7 +922,7 @@ body.sidebar-collapsed .sidebar-user-avatar {
   animation: atlasGraphicShine 1.35s ease-in-out infinite;
 }
 
-.atlas-graphic-orb {
+.primer-graphic-orb {
   flex-shrink: 0;
   width: 34px;
   height: 34px;

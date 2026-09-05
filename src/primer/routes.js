@@ -122,7 +122,7 @@ async function primerRoutes(req, res, url, options = {}) {
       return true;
     }
 
-    if (req.method === "POST" && (pathname === "/api/primer/tts" || pathname === "/api/atlas/tts")) {
+    if (req.method === "POST" && pathname === "/api/primer/tts") {
       const body = await readJsonBody(req);
       const text = String(body.text || body.transcript || body.message || "").trim();
       if (!text) {
@@ -214,8 +214,8 @@ async function primerRoutes(req, res, url, options = {}) {
 
     if (req.method === "GET" && pathname.startsWith("/api/primer/graphic/")) {
       const id = pathname.slice("/api/primer/graphic/".length).split("/")[0];
-      const geminiGraphic = require("./tools/gemini-graphic.js");
-      const hit = geminiGraphic.get(id);
+      const lessonGraphic = require("./tools/lesson-graphic.js");
+      const hit = lessonGraphic.get(id);
       if (!hit) {
         sendJson(res, 404, { error: "Graphic not found." });
         return true;

@@ -4,7 +4,7 @@
 // Groq what this key can actually use, so a dead name never costs every turn a
 // failed round trip plus a slow fallback provider.
 // Ordered by how well each one holds the lesson topic, measured with
-// scripts/compare-talk-models.js. The gpt-oss models drift badly.
+// The gpt-oss models drift badly.
 const PREFERRED_MODELS = [
   "groq/compound",
   "llama-3.3-70b-versatile",

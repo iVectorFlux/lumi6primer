@@ -55,8 +55,8 @@ Wire S3 into generate-graphic only after the bucket and IAM role exist. Until th
 - [ ] Groq key live; talk replies in a second or two
 - [ ] OpenAI key live as fallback for talk and images
 - [ ] Deepgram TTS: first sentence of a reply is audible
-- [ ] Gemini and/or OpenAI image: one picture on a new topic (including switching topics); leftover doodles must not block the image call; none on “yes / looks good”
-- [ ] Quota alerts on Groq, OpenAI, Deepgram, Gemini
+- [ ] Lesson picture: one picture on a new topic (including switching topics); leftover doodles must not block the image call; none on “yes / looks good”
+- [ ] Quota alerts on Groq, OpenAI, Deepgram
 
 ## 7. Product checks on the live URL
 

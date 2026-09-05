@@ -235,34 +235,21 @@ button,
     text-align: center;
   }
 
-  .atlas-graphic-loader {
+  .primer-graphic-loader {
     right: max(12px, env(safe-area-inset-right));
     bottom: calc(76px + env(safe-area-inset-bottom));
   }
 
-  .atlas-graphic-stage {
+  .primer-graphic-stage {
     width: auto;
     max-width: calc(100vw - 32px);
     padding: 6px 12px;
     gap: 8px;
   }
 
-  .atlas-graphic-icon {
+  .primer-graphic-icon {
     width: 22px;
     height: 22px;
-  }
-
-  #atlasChatSidebar {
-    z-index: 220 !important;
-    height: calc(100dvh - var(--keyboard-inset, 0px)) !important;
-    padding-bottom: max(env(safe-area-inset-bottom), 8px) !important;
-  }
-
-  body.atlas-chat-open .bottom-toolbar,
-  body.atlas-chat-open .zoom-controls,
-  body.atlas-chat-open .ai-embodiment {
-    visibility: hidden;
-    pointer-events: none;
   }
 
   .share-modal {
@@ -486,7 +473,7 @@ button,
   }
 
   /* Voice overlay — keep within viewport on mobile */
-  #atlasVoiceOverlay {
+  #primerVoiceOverlay {
     max-width: calc(100vw - 16px);
     width: calc(100vw - 16px);
     padding: 8px 10px;
@@ -495,23 +482,23 @@ button,
     bottom: calc(74px + env(safe-area-inset-bottom, 0px) + var(--keyboard-inset, 0px));
   }
 
-  body.mode-talk-active #atlasVoiceOverlay {
+  body.mode-talk-active #primerVoiceOverlay {
     bottom: calc(64px + env(safe-area-inset-bottom, 0px) + var(--keyboard-inset, 0px));
   }
 
-  .atlas-kid-orb {
+  .primer-kid-orb {
     width: 28px;
     height: 28px;
   }
 
-  .atlas-overlay-stop,
-  .atlas-overlay-mute {
+  .primer-overlay-stop,
+  .primer-overlay-mute {
     min-height: 28px;
     padding: 4px 10px;
     font-size: 11px;
   }
 
-  .atlas-kid-copy {
+  .primer-kid-copy {
     font-size: 14px;
   }
 }

@@ -1,19 +1,9 @@
 /**
- * ATLAS Voice Teaching Interface Component
- * 
- * Phase 2: Voice-first interface integrated with Lumi6.
- * Features:
- * - Speech Recognition (STT) for voice input
- * - Text-To-Speech (TTS) for spoken explanations
- * - Instant Interruption handling
- * - Live Whiteboard Drawing synchronization
- * - Minimal accessibility transcript overlay
- * - Hands-Free Continuous Conversation Mode
+ * Primer voice for Talk Mode: hold-to-talk STT, TTS, and lesson pictures.
  */
 (function () {
   "use strict";
 
-  const ATLAS_API_BASE = window.ATLAS_API_BASE || "/api/atlas";
   const PRIMER_API_BASE = window.PRIMER_API_BASE || "/api/primer";
 
   function readPrimerIds() {
@@ -142,7 +132,7 @@
 
         this.recognition.onerror = (e) => {
           if (e.error === "no-speech") return;
-          console.warn("[ATLAS STT] Recognition error:", e.error);
+          console.warn("[PRIMER STT] Recognition error:", e.error);
           if (this.onError) this.onError(e.error);
         };
 
@@ -240,9 +230,9 @@
           osc.start();
           osc.stop(ctx.currentTime + 0.01);
           this.unlocked = true;
-          console.log("[ATLAS Voice] AudioContext unlocked, state:", ctx.state);
+          console.log("[PRIMER Voice] AudioContext unlocked, state:", ctx.state);
         }
-      } catch (e) { console.warn("[ATLAS Voice] unlock error:", e.message); }
+      } catch (e) { console.warn("[PRIMER Voice] unlock error:", e.message); }
       try {
         const p = this.ensurePlayer();
         p.load();
@@ -740,11 +730,11 @@
 
       if (commands.length === 0) return;
 
-      if (window.Lumi6CanvasAdapter && typeof window.Lumi6CanvasAdapter.renderAtlasCommands === "function") {
+      if (window.Lumi6CanvasAdapter && typeof window.Lumi6CanvasAdapter.renderCommands === "function") {
         try {
-          await window.Lumi6CanvasAdapter.renderAtlasCommands(commands);
+          await window.Lumi6CanvasAdapter.renderCommands(commands);
         } catch (err) {
-          console.warn("ATLAS Whiteboard Syncer render error:", err);
+          console.warn("Primer Whiteboard Syncer render error:", err);
         }
       }
     }
@@ -753,7 +743,7 @@
   /**
    * Main Voice Controller with Continuous Conversation State Machine
    */
-  class AtlasVoiceController {
+  class PrimerVoiceController {
     constructor() {
       this.stt = new SpeechRecognizer({
         onResult: (text) => this.handleSttResult(text),
@@ -797,12 +787,12 @@
     }
 
     initUI() {
-      let toggleBtn = document.getElementById("atlasVoiceToggle");
-      let overlay = document.getElementById("atlasVoiceOverlay");
+      let toggleBtn = document.getElementById("primerVoiceToggle");
+      let overlay = document.getElementById("primerVoiceOverlay");
 
       if (!toggleBtn) {
         toggleBtn = document.createElement("button");
-        toggleBtn.id = "atlasVoiceToggle";
+        toggleBtn.id = "primerVoiceToggle";
         toggleBtn.type = "button";
         toggleBtn.title = "Lumi6 voice";
         toggleBtn.setAttribute("aria-label", "Toggle Lumi6 voice");
@@ -812,24 +802,24 @@
             <path d="M19 10v2a7 7 0 0 1-14 0v-2"/>
             <line x1="12" y1="19" x2="12" y2="22"/>
           </svg>
-          <span id="atlasVoiceLabel">Lumi6</span>
+          <span id="primerVoiceLabel">Lumi6</span>
         `;
         document.body.appendChild(toggleBtn);
       }
 
       if (!overlay) {
         overlay = document.createElement("div");
-        overlay.id = "atlasVoiceOverlay";
+        overlay.id = "primerVoiceOverlay";
         overlay.setAttribute("aria-live", "polite");
         overlay.innerHTML = `
-          <span class="atlas-kid-sparkle" aria-hidden="true"></span>
-          <span class="atlas-kid-orb" aria-hidden="true"></span>
-          <div class="atlas-kid-copy">
-            <span id="atlasOverlayBadge" class="atlas-badge listening">Listening</span>
-            <span id="atlasOverlayText" class="atlas-overlay-text">Hold to talk — release to send</span>
+          <span class="primer-kid-sparkle" aria-hidden="true"></span>
+          <span class="primer-kid-orb" aria-hidden="true"></span>
+          <div class="primer-kid-copy">
+            <span id="primerOverlayBadge" class="primer-badge listening">Listening</span>
+            <span id="primerOverlayText" class="primer-overlay-text">Hold to talk — release to send</span>
           </div>
-          <div class="atlas-kid-actions">
-            <button id="atlasVoiceStop" class="atlas-overlay-stop" type="button" aria-label="Cancel">Cancel</button>
+          <div class="primer-kid-actions">
+            <button id="primerVoiceStop" class="primer-overlay-stop" type="button" aria-label="Cancel">Cancel</button>
           </div>
         `;
         document.body.appendChild(overlay);
@@ -837,11 +827,11 @@
 
       this.elements = {
         toggleBtn,
-        label: toggleBtn.querySelector("#atlasVoiceLabel") || toggleBtn,
+        label: toggleBtn.querySelector("#primerVoiceLabel") || toggleBtn,
         overlay,
-        badge: overlay.querySelector("#atlasOverlayBadge"),
-        text: overlay.querySelector("#atlasOverlayText"),
-        stopBtn: overlay.querySelector("#atlasVoiceStop")
+        badge: overlay.querySelector("#primerOverlayBadge"),
+        text: overlay.querySelector("#primerOverlayText"),
+        stopBtn: overlay.querySelector("#primerVoiceStop")
       };
 
       this.bindMicTriggers(toggleBtn);
@@ -872,7 +862,7 @@
         this._isHolding = true;
         this._pushToTalkTurn = true;
         this._pressStartTime = Date.now();
-        btn.classList.add("atlas-holding");
+        btn.classList.add("primer-holding");
         try {
           if (e.pointerId && typeof btn.setPointerCapture === "function") {
             btn.setPointerCapture(e.pointerId);
@@ -885,7 +875,7 @@
       const endHold = (e) => {
         if (!this._isHolding) return;
         if (e && e.preventDefault) e.preventDefault();
-        btn.classList.remove("atlas-holding");
+        btn.classList.remove("primer-holding");
         this._isHolding = false;
         try {
           if (e && e.pointerId && typeof btn.releasePointerCapture === "function") {
@@ -897,7 +887,7 @@
 
       const cancelHold = () => {
         if (!this._isHolding) return;
-        btn.classList.remove("atlas-holding");
+        btn.classList.remove("primer-holding");
         this._isHolding = false;
         this.turnOff();
       };
@@ -948,7 +938,7 @@
     _syncVoiceButtonUI(stateName) {
       const btns = [this.elements?.toggleBtn, document.getElementById("talkModeMicBtn")].filter(Boolean);
       btns.forEach((btn) => {
-        btn.classList.remove("atlas-listening", "atlas-speaking", "atlas-processing", "atlas-holding");
+        btn.classList.remove("primer-listening", "primer-speaking", "primer-processing", "primer-holding");
         if (stateName) btn.classList.add(`atlas-${stateName}`);
       });
       if (this.elements?.label) {
@@ -1193,7 +1183,7 @@
       this._openingListen = false;
       this.tts.cancel();
       this._syncVoiceButtonUI(null);
-      this.elements.overlay.classList.remove("atlas-live");
+      this.elements.overlay.classList.remove("primer-live");
       this.autoHideOverlay(0);
     }
 
@@ -1287,7 +1277,7 @@
       if (this.state === "PROCESSING" || this.state === "SPEAKING") return;
       const heard = String(queryText || this.pendingHeard || "").trim();
       if (!heard || heard.length < 2) {
-        console.log("[ATLAS Voice] Ignored empty or noisy speech transcript.");
+        console.log("[PRIMER Voice] Ignored empty or noisy speech transcript.");
         if (this.isActive) {
           this.state = "LISTENING";
           this.scheduleAutoRestart(300);
@@ -1301,7 +1291,7 @@
       this.showOverlay("processing", "Got it — thinking...");
 
       if (/want me to explain|what are you curious|listening to your|listening for your next|click the ai orb|you('re| are) getting it|what should we explore|which part should we|or a new topic|what else are you wondering|should we zoom|say heart, lungs/i.test(heard) || this.isHeardEcho(heard)) {
-        console.log("[ATLAS Voice] Ignored echo of teacher prompt:", heard);
+        console.log("[PRIMER Voice] Ignored echo of teacher prompt:", heard);
         this.state = "LISTENING";
         this.scheduleAutoRestart(400);
         return;
@@ -1320,7 +1310,7 @@
         this.showOverlay("error", "Microphone blocked. Click the lock/tune icon in your address bar -> set Microphone to Allow.");
         this.turnOff();
       } else if (error !== "aborted") {
-        console.warn("[ATLAS Voice] Speech recognition error:", error);
+        console.warn("[PRIMER Voice] Speech recognition error:", error);
         if (this.isActive && this.state === "LISTENING") {
           this.scheduleAutoRestart(1000);
         }
@@ -1385,8 +1375,8 @@
             this.speakAndDraw(msg, queryText, { draw: false });
           },
           onGraphicLoading: (msg) => {
-            if (typeof window.showAtlasGraphicLoader === "function") {
-              window.showAtlasGraphicLoader(msg?.title, msg);
+            if (typeof window.showPrimerGraphicLoader === "function") {
+              window.showPrimerGraphicLoader(msg?.title, msg);
             }
           },
           onGraphic: (msg) => {
@@ -1415,8 +1405,8 @@
           this.speakAndDraw(data, queryText, { draw: true });
         } else {
           this.syncer.executeVisualPlan(data.visualPlan, data.drawingResult, data.canvasActions)
-            .catch((err) => console.error("[ATLAS Voice] Board draw failed:", err));
-          if (typeof window.hideAtlasGraphicLoader === "function") window.hideAtlasGraphicLoader();
+            .catch((err) => console.error("[PRIMER Voice] Board draw failed:", err));
+          if (typeof window.hidePrimerGraphicLoader === "function") window.hidePrimerGraphicLoader();
           this._holdListen = false;
           // If we did NOT speak, return to listening. If we ARE speaking (spoke === true),
           // speakAndDraw's finishTurn callback will handle transitioning to listening when playback completes.
@@ -1438,7 +1428,7 @@
           this.scheduleAutoRestart(2500);
         }
       } finally {
-        if (typeof window.hideAtlasGraphicLoader === "function") window.hideAtlasGraphicLoader();
+        if (typeof window.hidePrimerGraphicLoader === "function") window.hidePrimerGraphicLoader();
         this.queryInFlight = false;
       }
     }
@@ -1511,8 +1501,8 @@
       const speechText = this.cleanTextForSpeech(teacherText);
       this.lastSpoken = speechText || teacherText || "";
 
-      if (window.atlasChat && typeof window.atlasChat.ingestTurn === "function") {
-        window.atlasChat.ingestTurn(studentText, teacherText);
+      if (window.primerChat && typeof window.primerChat.ingestTurn === "function") {
+        window.primerChat.ingestTurn(studentText, teacherText);
       } else if (window.Lumi6Lesson && typeof window.Lumi6Lesson.record === "function") {
         if (studentText) window.Lumi6Lesson.record("student", studentText);
         if (teacherText) window.Lumi6Lesson.record("teacher", teacherText);
@@ -1523,7 +1513,7 @@
 
       const drawPromise = shouldDraw
         ? this.syncer.executeVisualPlan(data.visualPlan, data.drawingResult, data.canvasActions)
-          .catch((err) => console.error("[ATLAS Voice] Board draw failed:", err))
+          .catch((err) => console.error("[PRIMER Voice] Board draw failed:", err))
         : Promise.resolve();
 
       const finishTurn = () => {
@@ -1573,7 +1563,7 @@
       if (this.overlayTimeout) clearTimeout(this.overlayTimeout);
 
       if (this.elements.badge) {
-        this.elements.badge.className = `atlas-badge ${role}`;
+        this.elements.badge.className = `primer-badge ${role}`;
         this.elements.badge.textContent = role === "student" ? "You" : role === "teacher" ? "Lumi6" : role === "listening" ? "Listening" : role === "processing" ? "Thinking" : role;
       }
       if (this.elements.text) {
@@ -1581,8 +1571,8 @@
       }
       if (this.elements.overlay) {
         this.elements.overlay.dataset.mood = role;
-        this.elements.overlay.classList.add("atlas-visible");
-        this.elements.overlay.classList.toggle("atlas-live", this.isActive || this.paused);
+        this.elements.overlay.classList.add("primer-visible");
+        this.elements.overlay.classList.toggle("primer-live", this.isActive || this.paused);
         this.elements.overlay.classList.toggle("is-muted", this.micMuted);
       }
     }
@@ -1590,11 +1580,11 @@
     autoHideOverlay(delayMs = 8000) {
       if (this.overlayTimeout) clearTimeout(this.overlayTimeout);
       if (delayMs === 0) {
-        if (this.elements?.overlay) this.elements.overlay.classList.remove("atlas-visible");
+        if (this.elements?.overlay) this.elements.overlay.classList.remove("primer-visible");
         return;
       }
       this.overlayTimeout = setTimeout(() => {
-        if (this.elements?.overlay) this.elements.overlay.classList.remove("atlas-visible");
+        if (this.elements?.overlay) this.elements.overlay.classList.remove("primer-visible");
       }, delayMs);
     }
 
@@ -1606,9 +1596,9 @@
   // Initialize on DOM ready
   if (document.readyState === "loading") {
     document.addEventListener("DOMContentLoaded", () => {
-      window.atlasVoice = new AtlasVoiceController();
+      window.primerVoice = new PrimerVoiceController();
     });
   } else {
-    window.atlasVoice = new AtlasVoiceController();
+    window.primerVoice = new PrimerVoiceController();
   }
 })();

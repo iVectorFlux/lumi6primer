@@ -14,21 +14,16 @@ const { lastQuestion, questionsMatch, preventRepeatQuestion } = require("./teach
 const { LearnerModel } = require("../learner/learner-model.js");
 const MemoryService = require("../learner/memory-service.js");
 const EvidenceExtractor = require("../learner/evidence-extractor.js");
-const MasteryService = require("../learner/mastery-service.js");
 const MisconceptionService = require("../learner/misconception-service.js");
 const Autopilot = require("../planner/autopilot.js");
-const NextBestExperience = require("../planner/next-best-experience.js");
-const CurriculumGraph = require("../curriculum/graph.js");
 const ChildPolicy = require("../safety/child-policy.js");
 const ConversationGuard = require("../safety/conversation-guard.js");
 const Escalation = require("../safety/escalation.js");
 const Lumi6CanvasTool = require("../tools/lumi6-canvas.js");
-const VisionTool = require("../tools/vision.js");
-const HomeworkTool = require("../tools/homework.js");
 const RetrievalTool = require("../tools/retrieval.js");
-const SimulationTool = require("../tools/simulation.js");
+const groqTalk = require("../tools/groq-talk.js");
 const openaiTalk = require("../tools/openai-talk.js");
-const geminiGraphic = require("../tools/gemini-graphic.js");
+const lessonGraphic = require("../tools/lesson-graphic.js");
 const topicIcon = require("../tools/topic-icon.js");
 const graphicScene = require("../tools/graphic-scene.js");
 const boardMath = require("../tools/board-math.js");
@@ -166,15 +161,8 @@ class LearningOrchestrator {
     this.learnerModel = options.learnerModel || new LearnerModel();
     this.memory = options.memory || new MemoryService({ childModel: this.childModel });
     this.evidenceExtractor = options.evidenceExtractor || new EvidenceExtractor();
-    this.mastery = options.mastery || new MasteryService(this.learnerModel);
     this.misconceptions = options.misconceptions || new MisconceptionService();
-    this.graph = options.graph || new CurriculumGraph();
-    this.nextBest = options.nextBest || new NextBestExperience({
-      graph: this.graph,
-      mastery: this.mastery,
-      learnerModel: this.learnerModel
-    });
-    this.autopilot = options.autopilot || new Autopilot({ nextBest: this.nextBest });
+    this.autopilot = options.autopilot || new Autopilot();
     this.childPolicy = options.childPolicy || new ChildPolicy();
     this.guard = options.guard || new ConversationGuard(this.childPolicy);
     this.escalation = options.escalation || new Escalation();
@@ -182,10 +170,7 @@ class LearningOrchestrator {
       whiteboardController: this.whiteboardController,
       boardSummary: this.boardSummary
     });
-    this.vision = options.vision || new VisionTool();
-    this.homework = options.homework || new HomeworkTool();
     this.retrieval = options.retrieval || new RetrievalTool();
-    this.simulation = options.simulation || new SimulationTool();
     this._states = new Map();
   }
 
@@ -264,7 +249,7 @@ class LearningOrchestrator {
     state.tutorRole = role;
     state.action = action;
 
-    if (this.simulation.needed(understanding)) {
+    if (/\b(simulate|what happens if we (run|repeat)|over time|each step of the cycle)\b/i.test(spokenText)) {
       understanding.wantsSimulation = true;
     }
 
@@ -273,8 +258,8 @@ class LearningOrchestrator {
     if (this.retrieval.needed(preDecision, understanding) && understanding.intent === "fact") {
       retrievalContext = await this.retrieval.retrieve(spokenText);
     }
-    if (this.vision.needed(understanding, preDecision)) {
-      understanding.boardCaption = this.vision.caption(understanding);
+    if (understanding.refersToBoard) {
+      understanding.boardCaption = "Child is asking about their own marks. Transcribe handwritten math carefully: + is plus; × * or a small x between digits is multiply; ÷ / is divide. Compute the exact answer before you speak. Ignore printed tutor notes.";
     }
 
     const heuristicDecision = this.policy.validate({
@@ -434,8 +419,8 @@ class LearningOrchestrator {
     }
 
     if (graphicPlan.generate) {
-      if (!geminiGraphic.isConfigured()) {
-        console.warn("[PRIMER] Graphic skipped: no Gemini/OpenAI image key");
+      if (!lessonGraphic.isConfigured()) {
+        console.warn("[PRIMER] Graphic skipped: no image provider configured");
       } else {
         const iconSource = `${spokenText} ${graphicTitle}`;
         this._emitStream(input, {
@@ -444,7 +429,7 @@ class LearningOrchestrator {
           icon: topicIcon.pickIcon(iconSource, spoken),
           iconMarkup: topicIcon.iconMarkup(iconSource, spoken)
         });
-        const photo = await geminiGraphic.generate({
+        const photo = await lessonGraphic.generate({
           topic: graphicTitle,
           scene: graphicPlan.scene,
           previousScene: lastScene,
@@ -668,6 +653,19 @@ class LearningOrchestrator {
       console.log("[PRIMER] --- talk prompt ---\n", prompt.talkPrompt || prompt.systemPrompt);
       console.log("[PRIMER] --- user block ---\n", userText);
     }
+    if (!useVision && groqTalk.isConfigured()) {
+      try {
+        const groq = await groqTalk.complete({
+          systemPrompt: prompt.talkPrompt || prompt.systemPrompt,
+          userText,
+          timeoutMs,
+          temperature: options.mathMode ? 0.1 : 0.4
+        });
+        return parseProposal(groq.content) || { spoken: "" };
+      } catch (err) {
+        console.warn("[PRIMER] Groq talk failed, falling back:", err.message);
+      }
+    }
     if (!useVision && openaiTalk.isConfigured()) {
       try {
         const openai = await openaiTalk.complete({
@@ -750,6 +748,16 @@ End with exactly ONE warm, friendly thought experiment or check-in for Class ${g
 NEVER ask "what is this called", "what is your hypothesis", or dry vocabulary quizzes.
 Return JSON only: {"spoken":"spoken explanation here including the check question?"}`;
     const userText = `${systemPrompt}\n\nChild said: "${raw}"\nTeach: ${topic}`;
+    if (groqTalk.isConfigured()) {
+      try {
+        const groq = await groqTalk.complete({ systemPrompt, userText, timeoutMs: 16000 });
+        const parsed = parseProposal(groq.content);
+        const spoken = String(parsed?.spoken || "").trim();
+        if (spoken && !ResponsePolicy.isCannedSpeech(spoken)) return parsed;
+      } catch (err) {
+        console.warn("[PRIMER] Groq simple talk failed:", err.message);
+      }
+    }
     if (openaiTalk.isConfigured()) {
       try {
         const openai = await openaiTalk.complete({ systemPrompt, userText, timeoutMs: 16000 });

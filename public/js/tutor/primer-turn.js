@@ -1,14 +1,10 @@
 /**
- * ATLAS AI Teacher Chat Interface Component
- * 
- * Phase 2A: Browser-based chat panel integrated into Lumi6.
- * Stateless regarding conversation logic (Backend ConversationManager is source of truth).
+ * Primer turn client for Talk Mode.
+ * Streams /api/primer/turn and records lesson text + pictures.
  */
 (function () {
   "use strict";
 
-  // Configurable API base endpoint constant
-  const ATLAS_API_BASE = window.ATLAS_API_BASE || "/api/atlas";
   const PRIMER_API_BASE = window.PRIMER_API_BASE || "/api/primer";
 
   function readPrimerIds() {
@@ -44,16 +40,16 @@
       localStorage.removeItem("primerSessionId");
       sessionStorage.removeItem("primerRecentTurns");
       localStorage.removeItem("primerRecentTurns");
-      const msgs = document.querySelector("#atlasMessages");
+      const msgs = document.querySelector("#primerMessages");
       if (msgs) msgs.replaceChildren();
-      if (window.atlasChat && Array.isArray(window.atlasChat.messages)) {
-        window.atlasChat.messages = [];
+      if (window.primerChat && Array.isArray(window.primerChat.messages)) {
+        window.primerChat.messages = [];
       }
       if (window.Lumi6Lesson && typeof window.Lumi6Lesson.clear === "function") {
         window.Lumi6Lesson.clear();
       }
-      if (window.atlasVoice && typeof window.atlasVoice.resetSession === "function") {
-        window.atlasVoice.resetSession();
+      if (window.primerVoice && typeof window.primerVoice.resetSession === "function") {
+        window.primerVoice.resetSession();
       }
       const feed = document.getElementById("talkFeed");
       if (feed) feed.replaceChildren();
@@ -136,21 +132,21 @@
 
   const DEFAULT_TOPIC_ICON = '<svg viewBox="0 0 128 128" aria-hidden="true"><path fill="#fde68a" d="M64 18a32 32 0 0 1 18 58c-4 4-6 8-6 14H52c0-6-2-10-6-14A32 32 0 0 1 64 18Z"/><rect x="52" y="94" width="24" height="8" rx="3" fill="#f59e0b"/><rect x="56" y="104" width="16" height="8" rx="3" fill="#d97706"/></svg>';
 
-  function showAtlasGraphicLoader(title, extras = {}) {
-    window.__atlasGraphicLoading = true;
+  function showPrimerGraphicLoader(title, extras = {}) {
+    window.__primerGraphicLoading = true;
     if (typeof window.syncTalkModeFeed === "function") window.syncTalkModeFeed();
-    const el = document.getElementById("atlasGraphicLoader");
-    const text = document.getElementById("atlasGraphicLoaderText");
-    const icon = document.getElementById("atlasGraphicLoaderIcon");
+    const el = document.getElementById("primerGraphicLoader");
+    const text = document.getElementById("primerGraphicLoaderText");
+    const icon = document.getElementById("primerGraphicLoaderIcon");
     if (text) text.textContent = "Drawing a picture";
     if (icon) icon.innerHTML = extras.iconMarkup || extras.iconSvg || DEFAULT_TOPIC_ICON;
     if (el) el.hidden = false;
   }
 
-  function hideAtlasGraphicLoader() {
-    window.__atlasGraphicLoading = false;
+  function hidePrimerGraphicLoader() {
+    window.__primerGraphicLoading = false;
     if (typeof window.syncTalkModeFeed === "function") window.syncTalkModeFeed();
-    const el = document.getElementById("atlasGraphicLoader");
+    const el = document.getElementById("primerGraphicLoader");
     if (el) el.hidden = true;
   }
 
@@ -165,7 +161,7 @@
       if (typeof window.Lumi6Lesson?.attachImage === "function") {
         window.Lumi6Lesson.attachImage(imgSrc);
       }
-      const lastTeacher = document.querySelector("#atlasMessages .atlas-msg.teacher:last-of-type");
+      const lastTeacher = document.querySelector("#primerMessages .primer-msg.teacher:last-of-type");
       if (lastTeacher) lastTeacher.dataset.image = imgSrc;
     }
     if (typeof window.syncTalkModeFeed === "function") {
@@ -173,20 +169,20 @@
     }
     const hasImage = Boolean(photo);
     if (window.Lumi6CanvasAdapter) {
-      window.Lumi6CanvasAdapter.renderAtlasCommands(commands).then(() => {
-        if (hasImage) hideAtlasGraphicLoader();
+      window.Lumi6CanvasAdapter.renderCommands(commands).then(() => {
+        if (hasImage) hidePrimerGraphicLoader();
       }).catch((err) => {
         console.warn("[PRIMER] canvas render failed:", err);
-        if (hasImage) hideAtlasGraphicLoader();
+        if (hasImage) hidePrimerGraphicLoader();
       });
     } else if (hasImage) {
-      hideAtlasGraphicLoader();
+      hidePrimerGraphicLoader();
     }
     return true;
   }
 
-  window.showAtlasGraphicLoader = showAtlasGraphicLoader;
-  window.hideAtlasGraphicLoader = hideAtlasGraphicLoader;
+  window.showPrimerGraphicLoader = showPrimerGraphicLoader;
+  window.hidePrimerGraphicLoader = hidePrimerGraphicLoader;
   window.applyPrimerGraphic = applyPrimerGraphic;
 
   function isUnrelatedNewTopic(text) {
@@ -237,7 +233,7 @@
     return text;
   }
 
-  class AtlasChatController {
+  class PrimerTurnController {
     constructor() {
       this.isOpen = false;
       this.isSending = false;
@@ -251,9 +247,9 @@
      * Programmatically create and mount Chat UI DOM elements.
      */
     initUI() {
-      document.getElementById("atlasChatToggle")?.remove();
-      document.getElementById("atlasChatSidebar")?.remove();
-      document.body.classList.remove("atlas-chat-open");
+      document.getElementById("primerChatToggle")?.remove();
+      document.getElementById("primerChatSidebar")?.remove();
+      document.body.classList.remove("primer-chat-open");
       this.elements = {
         toggleBtn: null,
         sidebar: null,
@@ -271,9 +267,9 @@
     removeWelcomeIfNeeded() {
       const list = this.elements.messagesList;
       if (!list) return;
-      const first = list.querySelector(".atlas-msg.teacher");
-      if (!first || list.querySelectorAll(".atlas-msg").length > 1) return;
-      const bubble = first.querySelector(".atlas-msg-bubble");
+      const first = list.querySelector(".primer-msg.teacher");
+      if (!first || list.querySelectorAll(".primer-msg").length > 1) return;
+      const bubble = first.querySelector(".primer-msg-bubble");
       if (bubble && /what concept would you like to explore|ask me something you want to understand/i.test(bubble.textContent || "")) {
         first.remove();
       }
@@ -298,18 +294,18 @@
       this.removeWelcomeIfNeeded();
       if (this.elements.messagesList) {
         const msgDiv = document.createElement("div");
-        msgDiv.className = `atlas-msg ${role}`;
+        msgDiv.className = `primer-msg ${role}`;
 
         const author = document.createElement("div");
-        author.className = "atlas-msg-author";
+        author.className = "primer-msg-author";
         author.textContent = role === "teacher" ? "Lumi6" : "You";
 
         const bubble = document.createElement("div");
-        bubble.className = "atlas-msg-bubble";
+        bubble.className = "primer-msg-bubble";
         bubble.textContent = text;
 
         const timeSpan = document.createElement("div");
-        timeSpan.className = "atlas-msg-time";
+        timeSpan.className = "primer-msg-time";
         timeSpan.textContent = this.formatTime(new Date());
 
         msgDiv.appendChild(author);
@@ -331,11 +327,11 @@
       if (!list) return;
       const loadingDiv = document.createElement("div");
       loadingDiv.id = "atlasLoadingIndicator";
-      loadingDiv.className = "atlas-loading";
+      loadingDiv.className = "primer-loading";
       loadingDiv.innerHTML = `
-        <span class="atlas-dot"></span>
-        <span class="atlas-dot"></span>
-        <span class="atlas-dot"></span>
+        <span class="primer-dot"></span>
+        <span class="primer-dot"></span>
+        <span class="primer-dot"></span>
       `;
       list.appendChild(loadingDiv);
       this.scrollToBottom();
@@ -358,7 +354,7 @@
       const list = this.elements.messagesList;
       if (list) {
         const errorDiv = document.createElement("div");
-        errorDiv.className = "atlas-error-notice";
+        errorDiv.className = "primer-error-notice";
         errorDiv.textContent = `Error: ${errorText}`;
         list.appendChild(errorDiv);
         this.scrollToBottom();
@@ -426,7 +422,7 @@
             this.hideLoading();
             this.appendMessage("teacher", unwrapSpoken(msg.teacherResponse || msg.spokenResponse || msg.spoken));
           },
-          onGraphicLoading: (msg) => showAtlasGraphicLoader(msg?.title, msg),
+          onGraphicLoading: (msg) => showPrimerGraphicLoader(msg?.title, msg),
           onGraphic: (msg) => {
             graphicApplied = applyPrimerGraphic(msg) || graphicApplied;
           }
@@ -440,7 +436,7 @@
         }
 
         applyPrimerGraphic(data);
-        hideAtlasGraphicLoader();
+        hidePrimerGraphicLoader();
 
         // Notify registered response listeners
         this.notifyTeacherResponse(data);
@@ -448,7 +444,7 @@
         this.hideLoading();
         this.showError(err.message || "Unable to reach Lumi6.");
       } finally {
-        hideAtlasGraphicLoader();
+        hidePrimerGraphicLoader();
         this.isSending = false;
         if (this.elements.sendBtn) this.elements.sendBtn.disabled = false;
         this.elements.inputField?.focus();
@@ -473,13 +469,12 @@
           });
         }
         try { localStorage.removeItem("primerSessionId"); } catch {}
-        await fetch(`${ATLAS_API_BASE}/reset`, { method: "POST" });
         if (this.elements.messagesList) {
           this.elements.messagesList.innerHTML = `
-          <div class="atlas-msg teacher">
-            <div class="atlas-msg-author">Lumi6</div>
-            <div class="atlas-msg-bubble">Session reset. What new topic would you like to discuss?</div>
-            <div class="atlas-msg-time">${this.formatTime(new Date())}</div>
+          <div class="primer-msg teacher">
+            <div class="primer-msg-author">Lumi6</div>
+            <div class="primer-msg-bubble">Session reset. What new topic would you like to discuss?</div>
+            <div class="primer-msg-time">${this.formatTime(new Date())}</div>
           </div>
         `;
         }
@@ -489,7 +484,7 @@
     }
 
     /**
-     * Register a listener callback for ATLAS teacher responses (modular hook for Phase 2B).
+     * Register a listener for Primer teacher responses.
      */
     onTeacherResponse(callback) {
       if (typeof callback === "function") {
@@ -502,7 +497,7 @@
         try {
           listener(data);
         } catch (e) {
-          console.error("Error in ATLAS response listener:", e);
+          console.error("Error in Primer response listener:", e);
         }
       }
     }
@@ -511,9 +506,9 @@
   // Initialize on DOM ready
   if (document.readyState === "loading") {
     document.addEventListener("DOMContentLoaded", () => {
-      window.atlasChat = new AtlasChatController();
+      window.primerChat = new PrimerTurnController();
     });
   } else {
-    window.atlasChat = new AtlasChatController();
+    window.primerChat = new PrimerTurnController();
   }
 })();

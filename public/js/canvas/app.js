@@ -6535,8 +6535,8 @@ User writes "Show air quality for Tokyo", names a place, and points to an empty 
     if (typeof window.Lumi6Lesson?.clear === "function") {
       window.Lumi6Lesson.clear();
     }
-    if (typeof window.atlasVoice?.resetSession === "function") {
-      window.atlasVoice.resetSession();
+    if (typeof window.primerVoice?.resetSession === "function") {
+      window.primerVoice.resetSession();
     }
     state.lastLessonNote = null;
     state.atlasDrawnBoxes = [];
@@ -11846,8 +11846,8 @@ User writes "Show air quality for Tokyo", names a place, and points to an empty 
       const scrollArea = document.querySelector("#talkScrollArea");
       if (scrollArea) scrollArea.scrollTop = scrollArea.scrollHeight;
     } else {
-      if (window.atlasVoice && typeof window.atlasVoice.turnOff === "function") {
-        window.atlasVoice.turnOff();
+      if (window.primerVoice && typeof window.primerVoice.turnOff === "function") {
+        window.primerVoice.turnOff();
       }
       render();
     }
@@ -11977,7 +11977,7 @@ User writes "Show air quality for Tokyo", names a place, and points to an empty 
                 ${escapeHtml(titleText)}
               </figcaption>
             </div>
-          ` : (idx === pairs.length - 1 && window.__atlasGraphicLoading ? `
+          ` : (idx === pairs.length - 1 && window.__primerGraphicLoading ? `
             <div class="talk-image-wrapper talk-image-loading-wrapper">
               <div class="talk-image-loading-indicator">
                 <span class="talk-spinner">✦</span>
@@ -12020,8 +12020,8 @@ User writes "Show air quality for Tokyo", names a place, and points to an empty 
   bindModeBtn("#modeTalkBtn", "talk");
 
   const talkMic = document.querySelector("#talkModeMicBtn");
-  if (talkMic && window.atlasVoice && typeof window.atlasVoice.bindMicTriggers === "function") {
-    window.atlasVoice.bindMicTriggers(talkMic);
+  if (talkMic && window.primerVoice && typeof window.primerVoice.bindMicTriggers === "function") {
+    window.primerVoice.bindMicTriggers(talkMic);
   }
 
   document.querySelector("#talkModeForm")?.addEventListener("submit", (e) => {
@@ -12030,14 +12030,8 @@ User writes "Show air quality for Tokyo", names a place, and points to an empty 
     const val = input?.value?.trim();
     if (!val) return;
     input.value = "";
-    if (window.atlasChat && typeof window.atlasChat.sendMessage === "function") {
-      window.atlasChat.sendMessage(val);
-    } else {
-      const chatInput = document.querySelector("#atlasChatInput");
-      if (chatInput) {
-        chatInput.value = val;
-        document.querySelector("#atlasChatForm")?.dispatchEvent(new Event("submit", { cancelable: true, bubbles: true }));
-      }
+    if (window.primerChat && typeof window.primerChat.sendMessage === "function") {
+      window.primerChat.sendMessage(val);
     }
   });
 

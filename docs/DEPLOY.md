@@ -4,7 +4,7 @@
 
 **One URL on ECS** (Express mode is fine). The browser, APIs, voice, and pictures all stay on the same Node process.
 
-Do **not** split the board onto Vercel unless you are ready to add CORS, API base URLs, and proxy rules. See [VERCEL.md](./VERCEL.md).
+Do **not** split the board onto a static host. The browser, APIs, voice, and pictures stay on one Node process (ECS).
 
 ---
 
@@ -46,8 +46,7 @@ TTS_PROVIDER=deepgram
 DEEPGRAM_API_KEY=
 DEEPGRAM_TTS_MODEL=aura-2-thalia-en
 
-# Pictures (at least one)
-GEMINI_API_KEY=
+# Pictures (Wikimedia first, then OpenAI Images)
 OPENAI_API_KEY=
 
 # Supabase — server
@@ -61,13 +60,13 @@ SUPABASE_SERVICE_ROLE_KEY= # required so lessons persist across task restarts
 ```bash
 DEEPGRAM_TTS_SPEED=1
 DEEPGRAM_TTS_PAUSE_MS=500
-GEMINI_IMAGE_MODEL=
+OPENAI_IMAGE_MODEL=
 AI_EFFORT=medium
 ```
 
 ### Never put on the browser / Vercel
 
-- `GROQ_API_KEY`, `OPENAI_API_KEY`, `DEEPGRAM_API_KEY`, `GEMINI_API_KEY`
+- `GROQ_API_KEY`, `OPENAI_API_KEY`, `DEEPGRAM_API_KEY`
 - `SUPABASE_SERVICE_ROLE_KEY`
 
 ---
