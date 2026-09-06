@@ -2,10 +2,11 @@
 
 const { ROLE_PURPOSE, PHASE_INTENT } = require("../constants.js");
 const { lastQuestion, classifyReply } = require("./teaching-move.js");
+const { topicsRelated } = require("../topic.js");
 const { factsText } = require("../tools/board-math.js");
 
 class ContextBuilder {
-  build({ state, child, memorySnippets, understanding, decision, history, retrievalContext, boardMath }) {
+  build({ state, child, memorySnippets, understanding, decision, history, retrievalContext, boardMath, previousConcept }) {
     const name = child?.name || "the child";
     const age = child?.age_years ? `${child.age_years}` : "unknown";
     const role = decision?.role || state.tutorRole || "tutor";
@@ -51,11 +52,11 @@ CURRENT GOAL: ${state.currentGoal || "follow the child's question"}
 CURRENT CONCEPT: ${state.currentConcept || understanding?.concept || "the concept they asked about"}
 
 TOPIC FOCUS RULE (STRICT):
-- Current topic: "${state.currentConcept || understanding?.concept || '(none yet)'}".
-- NEVER teach a different topic unless the child explicitly asks about something new.
-- If the child asks about something new, switch FULLY to the new topic. Do NOT blend, mix, or reference old topics.
-- Do NOT bring up unrelated subjects to fill time or seem clever.
-- Stay deeply focused on ONE topic per thread.
+- Current topic THIS TURN: "${state.currentConcept || understanding?.concept || '(none yet)'}".
+- Kids ask new questions in the same chat. If this turn is a new question, follow THAT question fully.
+- Do not keep teaching the previous topic unless they are clearly answering you or asking to continue.
+- Do NOT blend, mix, or reference old topics once they have asked something new.
+- Do NOT bring up unrelated subjects to fill time.
 
 GRADE-LEVEL PEDAGOGICAL CALIBRATION (STRICT REQUIREMENT):
 ${isElementary ? `★ FOR CLASS ${gradeNum} (Elementary, Ages 8-10):
@@ -63,21 +64,19 @@ ${isElementary ? `★ FOR CLASS ${gradeNum} (Elementary, Ages 8-10):
 - LANGUAGE & ANALOGIES: Use vivid, tangible everyday analogies (balls spinning on strings, swinging buckets of water, jumping on trampolines, toy cars, ice cubes, shadows).
 - COMPLETE INTUITIVE EXPLANATION: Give the real, full physical intuition in simple words. (For example: if explaining orbits, do NOT just say 'gravity' — explain that the Moon is zooming forward super fast, and Earth's gravity gently pulls it sideways, perfectly curving its straight path into a circle, exactly like swinging a ball on a string!).
 - FORBIDDEN: NEVER use dry college/high-school jargon without clear visual grounding.
-- QUESTION LEVEL: End with ONE friendly reasoning question PLUS 2-3 answer options to help the child think.
-  Example: "What keeps the Moon going in a circle? (a) The Sun pushes it (b) It's falling but keeps missing Earth (c) Space wind blows it along"
-  The correct answer should be among the options. Make wrong options plausible but clearly distinct.`
+- QUESTION LEVEL: After a full explanation, end spoken with ONE short reasoning question. Do NOT put (a)(b)(c) in spoken text.
+  Put 2-3 short answer choices only in the JSON "choices" array.`
 : isMiddle ? `★ FOR CLASS ${gradeNum} (Middle School, Ages 11-13):
 - TEACHING STYLE: Engaging, curious science mentor.
 - LANGUAGE & ANALOGIES: Cause-and-effect physical mechanisms, balanced vs unbalanced forces, momentum, energy transformations, and real-life engineering.
-- QUESTION LEVEL: End with ONE cause-and-effect prediction question PLUS 2-3 answer options.
-  Example: "What happens if the inward pull suddenly stops? (a) The Moon keeps circling (b) The Moon flies off in a straight line (c) The Moon falls to Earth"`
+- QUESTION LEVEL: End spoken with ONE cause-and-effect question. Do NOT speak letter options. Put choices only in JSON "choices".`
 : `★ FOR CLASS ${gradeNum} (High School, Ages 14-18):
 - TEACHING STYLE: Rigorous academic mentor.
 - LANGUAGE: Accurate physical models, centripetal/gravitational vector balances, spacetime geometry, thermodynamics, and mathematical principles.
 - QUESTION LEVEL: Deep open-ended reasoning and counterfactual thought experiments. No answer options needed — they should reason independently.`}
 
 HUMAN TEACHER EMPATHY & CONVERSATIONAL MASTERY:
-1. CHECK FOR UNDERSTANDING & DOUBTS: Act like a supportive teacher. Acknowledge what the student asked with warmth. Offer clear mental models, and make the student feel comfortable asking any doubt.
+1. ANSWER FIRST: If they asked a question, teach it immediately. Never open with "Everything making sense so far?" or any check-in before you have taught something.
 2. DO NOT QUIZ TO KEEP BUSY: Never pepper the student with demanding or frustrating quizzes. Every question must be gentle, encouraging, and natural.
 3. ROBUST SPEECH-TO-TEXT REASONING: Speech-to-Text often mishears accents or words (e.g. 'Tarzan' for 'Darwin', 'mom' for 'warm', 'space sheep' for 'spaceship'). Reason from conversation context to deduce what the learner REALLY means!
 4. IF THE STUDENT ASKS FOR CLARIFICATION ("I don't understand" / "what do you mean?"):
@@ -89,10 +88,11 @@ HUMAN TEACHER EMPATHY & CONVERSATIONAL MASTERY:
 QUESTION QUALITY & CALIBRATION (CRITICAL):
 - NEVER ask dry definition quizzes ("What is this called?", "Can you name the force?", "What is your hypothesis...").
 - NEVER ask vague/lazy questions ("What do you think?", "Tell me more.").
-- Always end with exactly ONE short, warm reasoning question (under 20 words) tailored to Class ${gradeNum}.
-  ${isElementary ? `* For Class ${gradeNum}: After the question, give 2-3 answer options: (a) ... (b) ... (c) ... — one correct, others plausible but wrong. This scaffolds thinking.`
-  : isMiddle ? `* For Class ${gradeNum}: After the question, give 2-3 answer options: (a) ... (b) ... (c) ... — one correct, others plausible.`
-  : `* For Class ${gradeNum}: Ask an open-ended reasoning question. No answer options.`}
+- Teach in 5-6 spoken sentences so the mechanism is actually clear, not a one-line slogan.
+- Always end spoken with exactly ONE short reasoning question (under 18 words) tailored to Class ${gradeNum}.
+- NEVER put (a) (b) (c) or "option A" in spoken text. Voice must not read choices.
+  ${isElementary || isMiddle ? `* Put 2-3 short choices in JSON only: "choices":["...","...","..."]. One is right, the others plausible.`
+  : `* For Class ${gradeNum}: Open-ended question. No choices array.`}
 - Never markdown. No **bold**, no lists, no headings.
 - Never put JSON or labels in spoken text. Spoken is plain, warm human speech.
 
@@ -103,17 +103,20 @@ Return JSON:
 
     const lastCheck = lastQuestion(state?.conversationState?.lastTeacherSpoken) || state?.conversationState?.lastCheckQuestion || "";
     const sameStreak = Number(state?.conversationState?.sameQuestionStreak || 0);
-    const move = classifyReply({
-      childText: understanding?.raw,
-      askedBackLast: Boolean(state?.conversationState?.askedBackLast),
-      wantsExplain: understanding?.wantsExplain,
-      wantsReason: understanding?.wantsReason,
-      intent: understanding?.intent,
-      askedToLook: understanding?.askedToLook
-    });
-
-    const turnsSinceDoubtCheck = Number(state?.conversationState?.turnsSinceDoubtCheck || 0);
-    const shouldCheckDoubt = turnsSinceDoubtCheck >= 3 && !understanding?.confusion && !understanding?.voiceIssue;
+    const nextTopic = state.currentConcept || understanding?.concept || "";
+    const switched = Boolean(understanding?.askingNewTopic)
+      || Boolean(previousConcept && nextTopic && previousConcept !== nextTopic && !topicsRelated(previousConcept, nextTopic));
+    const move = switched
+      ? "new_lesson"
+      : classifyReply({
+        childText: understanding?.raw,
+        askedBackLast: Boolean(state?.conversationState?.askedBackLast),
+        wantsExplain: understanding?.wantsExplain,
+        wantsReason: understanding?.wantsReason,
+        intent: understanding?.intent,
+        askedToLook: understanding?.askedToLook,
+        askingNewTopic: understanding?.askingNewTopic
+      });
 
     const talkPrompt = `You are Lumi6 — a warm, empathetic human teacher sitting beside a Class ${gradeNum} student (age ~${age || gradeNum + 5}).
 Converse naturally with high emotional intelligence and age-appropriate pedagogical clarity.
@@ -123,44 +126,41 @@ ${likes ? `They like ${likes}. Use that world only if it fits THIS topic.` : ""}
 
 THEY JUST ASKED: "${String(understanding?.raw || "").replace(/"/g, "'")}"
 TOPIC THIS TURN: ${state.currentConcept || understanding?.concept || "whatever they just asked"}
-YOUR LAST LINE: ${String(state?.conversationState?.lastTeacherSpoken || "").slice(0, 280) || "(none yet)"}
-YOUR LAST QUESTION: ${lastCheck || "(none yet)"}
-${sameStreak >= 1 ? "You already asked that question. You MUST ask a different, warm, imaginative question." : ""}
+${switched ? `TOPIC SWITCH: They left "${previousConcept}" and asked about "${state.currentConcept || understanding?.concept}". Teach ONLY the new question. Do not answer your previous quiz. Do not mention the old topic.` : ""}
+YOUR LAST LINE: ${switched ? "(ignore — they asked a new question)" : (String(state?.conversationState?.lastTeacherSpoken || "").slice(0, 280) || "(none yet)")}
+YOUR LAST QUESTION: ${switched ? "(ignore — not a quiz answer)" : (lastCheck || "(none yet)")}
+${sameStreak >= 1 && !switched ? "You already asked that question. You MUST ask a different, warm, imaginative question." : ""}
 
 TOPIC FOCUS:
-- Current topic: "${state.currentConcept || understanding?.concept || '(none)'}".
-- NEVER teach a different topic unless the child explicitly asks. Stay deeply focused.
+- Current topic THIS TURN: "${state.currentConcept || understanding?.concept || '(none)'}".
+- If they asked a new question in this same chat, switch fully. Curiosity hops are normal.
 - Do NOT mix or blend multiple topics in one response.
-${shouldCheckDoubt ? `
-DOUBT CHECK-IN (it has been ${turnsSinceDoubtCheck} turns):
-- Before your main teaching, gently check: "Everything making sense so far? Any part you want me to explain again?"
-- If the child says they're fine, continue teaching the next layer. If they have a doubt, address it warmly.
-` : `
 DOUBT CHECK-IN RULE:
-- Do NOT ask "Everything making sense so far?" or similar reassurance on a new topic or first answer.
-- Only use that kind of check-in when the child seems stuck or after several turns on the same topic.
-`}
+- NEVER open with "Everything making sense so far?", "Does that make sense?", or "Any doubts?"
+- If they just asked a question, answer it first. A check-in before teaching is wrong.
+
 
 GRADE-LEVEL TEACHING RULES (Class ${gradeNum}):
-${isElementary ? `- FOR CLASS ${gradeNum}: Use simple, vivid, concrete analogies (ball on a string, swinging water bucket, trampoline). Explain the full physical reason simply (forward speed + inward pull). NEVER ask dry quizzes or vocabulary tests. End with ONE gentle reasoning question PLUS 2-3 answer options (a) (b) (c) to help the child think. One option should be correct, the others plausible but wrong.`
-: `- FOR CLASS ${gradeNum}: Explain physical models and forces clearly with step-by-step cause and effect. End with ONE thoughtful reasoning question${gradeNum <= 8 ? " PLUS 2-3 answer options (a) (b) (c)" : ""}.`}
+${isElementary ? `- FOR CLASS ${gradeNum}: Use simple, vivid, concrete analogies. Explain the full physical reason in 5-6 spoken sentences. End spoken with ONE short question. Put 2-3 choices in JSON "choices" only — never in spoken text.`
+: `- FOR CLASS ${gradeNum}: Explain physical models with cause and effect in 5-6 spoken sentences. End spoken with ONE question.${gradeNum <= 8 ? " Put choices in JSON only, never speak (a)(b)(c)." : ""}`}
 
 HUMAN TEACHER EMPATHY:
+- If they asked a question, teach it now. Do not check if they understand a lesson that has not started.
 - If they ask for clarification: Warmly reassure and explain with a brand NEW metaphor.
 - If they ask a new question: Focus 100% on the new question. Do NOT mention old topics!
 - Check for understanding warmly rather than quizzing aggressively.
 - Never markdown. Never JSON in spoken speech.
 
-${this._turnDirective(understanding, decision, Boolean(state?.conversationState?.askedBackLast), { lastCheck, move, boardMath, isElementary, gradeNum })}
+${this._turnDirective(understanding, decision, Boolean(state?.conversationState?.askedBackLast), { lastCheck, move, boardMath, isElementary, gradeNum, switched, previousConcept })}
 
-Return JSON only: {"spoken":"..."}`;
+Return JSON only: {"spoken":"explanation then one question?","choices":["...","...","..."]}`;
 
     const mathBlock = factsText(boardMath);
-    const userBlock = `${retrievalContext ? `REFERENCE NOTES (facts you may borrow; never the topic itself)\n${retrievalContext}\n\n` : ""}Recent conversation:
+    const userBlock = `${retrievalContext ? `REFERENCE NOTES (facts you may borrow; never the topic itself)\n${retrievalContext}\n\n` : ""}${switched ? `The child just switched topics. Older turns were about "${previousConcept}". Answer only the new question.\n\n` : ""}Recent conversation:
 ${this._history(history, state.currentConcept || understanding?.concept) || "(first turn on this topic)"}
 
 Child just said: "${understanding?.raw || ""}"
-${this._turnDirective(understanding, decision, Boolean(state?.conversationState?.askedBackLast), { lastCheck, move, boardMath, isElementary, gradeNum })}
+${this._turnDirective(understanding, decision, Boolean(state?.conversationState?.askedBackLast), { lastCheck, move, boardMath, isElementary, gradeNum, switched, previousConcept })}
 ${mathBlock ? `\n${mathBlock}\n` : ""}
 ${understanding?.askedToLook && understanding?.hasBoardImage ? "A photo of the CURRENT whiteboard is attached. Read the child's handwriting in that photo. Transcribe math marks carefully: + plus, × * or small x between digits = multiply, ÷ / = divide. If you see an unfinished equation, compute it exactly. Ignore printed blue tutor notes. Never say the photo is blank when ink is visible. Never invent a different answer than the exact arithmetic above." : ""}
 ${understanding?.boardCaption ? `Vision note: ${understanding.boardCaption}` : ""}
@@ -210,6 +210,12 @@ TEACH NOW: ${state.currentConcept || understanding?.concept || "what they just a
       intent: understanding.intent,
       askedToLook: understanding.askedToLook
     });
+    if (extras.switched || understanding.askingNewTopic) {
+      return `DIRECTIVE: NEW QUESTION in the same chat. They are not answering your last quiz.
+Teach "${understanding.concept || "what they just asked"}" from scratch for Class ${extras.gradeNum || 4}.
+${extras.previousConcept ? `Do not continue "${extras.previousConcept}". Do not mention it unless they ask.` : ""}
+Answer THIS question in 3-4 clear sentences, then one new thinking question about THIS topic only.`;
+    }
     if (understanding.voiceIssue) {
       return `DIRECTIVE: They cannot hear the voice. One short ack, then KEEP teaching${topic || " whatever they asked"}. Do not restart. Do not ask what they want if a topic is already set.`;
     }

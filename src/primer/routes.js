@@ -212,6 +212,24 @@ async function primerRoutes(req, res, url, options = {}) {
       return true;
     }
 
+    if (req.method === "GET" && pathname.startsWith("/api/primer/interactive/")) {
+      const slug = decodeURIComponent(pathname.slice("/api/primer/interactive/".length).split("/")[0] || "");
+      const lessonInteractive = require("./tools/lesson-interactive.js");
+      const hit = await lessonInteractive.getBySlug(slug, orchestrator.childModel.store);
+      if (!hit?.html) {
+        sendJson(res, 404, { error: "Interactive not found." });
+        return true;
+      }
+      res.writeHead(200, {
+        "Content-Type": "text/html; charset=utf-8",
+        "Cache-Control": "public, max-age=300",
+        "Content-Security-Policy": "frame-ancestors 'self'",
+        "X-Content-Type-Options": "nosniff"
+      });
+      res.end(lessonInteractive.embedHtml(hit.html));
+      return true;
+    }
+
     if (req.method === "GET" && pathname.startsWith("/api/primer/graphic/")) {
       const id = pathname.slice("/api/primer/graphic/".length).split("/")[0];
       const lessonGraphic = require("./tools/lesson-graphic.js");

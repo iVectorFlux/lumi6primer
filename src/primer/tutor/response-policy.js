@@ -10,7 +10,7 @@ const CHEESE = /^(great question|you're getting it|what should we explore next)/
 const CANNED = /here'?s a situation where|the everyday assumption|a relationship, not a fact|which assumption|usual picture is missing a relationship|strange part stops being magic|here'?s the heart of/i;
 const STALL = /let's take .+ slowly|what part feels hardest|i'm here\. what do you want to figure out|hey\. what do you want to learn\?|let's look at .+ with a simple example|hmm,? let me think about that differently|tell me more about what you're trying to understand|we were talking about/i;
 const PHRASE_COACH = /^(say[,:]?\s*["“]|try saying|you can also say|a better way to (ask|say)|you could say|for example,? say)/i;
-const DOUBT_CHECK = /everything making sense|any part you want me to explain|any doubts|anything unclear|want me to explain.+again|making sense so far/i;
+const DOUBT_CHECK = /everything making sense|does that make sense|does this make sense|any part you want me to explain|any doubts|anything unclear|want me to explain.+again|making sense so far|with me so far|any questions so far|are you following|got it so far|shall i (continue|go on)|want me to (continue|go on|keep going)/i;
 
 // Apologising for a mix-up and then teaching the mixed-up topic anyway is a
 // failed turn, not a recovery. Regenerate instead of speaking it.
@@ -33,6 +33,7 @@ class ResponsePolicy {
     text = this._stripMarkdown(text);
     text = this._stripBoardNarration(text);
     text = this._stripPhraseCoaching(text);
+    text = this._stripLeadingDoubtCheck(text);
     if (!hints.allowDoubtCheck) text = this._stripDoubtCheck(text);
     if (!text) text = this._fallback(decision, understanding, child);
     text = text.replace(/^sorry[,.]?\s*/i, "").trim();
@@ -118,13 +119,11 @@ class ResponsePolicy {
     if (understanding?.intent === "drawing") return "What did you want this diagram to show?";
 
     if (grade <= 5) {
-      // Elementary: Warm reasoning question with answer options
-      if (topic) return `What do you think makes ${topic} work that way? (a) Magic keeps it going (b) A push and pull are perfectly balanced (c) It just happens on its own`;
+      if (topic) return `What do you think makes ${topic} work that way?`;
       return "Does that picture make sense, or should we explore it from a different angle?";
     }
     if (grade <= 8) {
-      // Middle school: Cause-and-effect with options
-      if (topic) return `What would happen if the main force in ${topic} suddenly changed? (a) Everything stays the same (b) The motion changes direction (c) It stops completely`;
+      if (topic) return `What would happen if the main force in ${topic} suddenly changed?`;
       return "What do you predict happens next in this process?";
     }
     // High school: Open-ended physical reasoning, no options
@@ -158,6 +157,12 @@ class ResponsePolicy {
       .filter((s) => s.trim() && !DOUBT_CHECK.test(s))
       .join(" ")
       .trim();
+  }
+
+  _stripLeadingDoubtCheck(text) {
+    const parts = String(text || "").split(/(?<=[.!?])\s+/).filter((s) => s.trim());
+    while (parts.length && DOUBT_CHECK.test(parts[0])) parts.shift();
+    return parts.join(" ").trim();
   }
 
   _fallback(decision, understanding, child = {}) {

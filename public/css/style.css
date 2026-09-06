@@ -2752,6 +2752,59 @@ body.mode-talk-active .canvas-footer {
   display: block;
 }
 
+.talk-interactive-wrapper {
+  background: #f8fafc;
+  margin-left: -8px;
+  margin-right: -8px;
+}
+
+.talk-lesson-interactive {
+  display: block;
+  width: 100%;
+  height: min(82vh, 760px);
+  min-height: 560px;
+  border: 0;
+  background: #fff;
+}
+
+.talk-choice-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.talk-choice {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 10px 12px;
+  border-radius: 12px;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+}
+
+.talk-choice-letter {
+  flex: 0 0 26px;
+  width: 26px;
+  height: 26px;
+  border-radius: 999px;
+  background: #ede9fe;
+  color: #5b21b6;
+  font-size: 13px;
+  font-weight: 800;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.talk-choice-text {
+  font-size: 15px;
+  line-height: 1.4;
+  color: #1e293b;
+  font-weight: 550;
+}
+
 .talk-image-caption {
   padding: 10px 16px;
   font-size: 13.5px;

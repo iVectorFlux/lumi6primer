@@ -7,9 +7,10 @@ const RoleSelector = require("./role-selector.js");
 const ContextBuilder = require("./context-builder.js");
 const ResponsePolicy = require("./response-policy.js");
 const { understandLearner, historyFromTurns } = require("./understand.js");
-const { isWeakTopic, spokenCoversTopic, deniesTopic } = require("../topic.js");
+const { isWeakTopic, spokenCoversTopic, deniesTopic, topicsRelated, topicFromText } = require("../topic.js");
 const { shouldGrade, isNewAsk, explicitTopicSwitch } = require("./kid-intent.js");
 const { parseProposal, modelText, looksLikeJsonBlob } = require("./proposal.js");
+const { speechOnly } = require("./spoken-parts.js");
 const { lastQuestion, questionsMatch, preventRepeatQuestion } = require("./teaching-move.js");
 const { LearnerModel } = require("../learner/learner-model.js");
 const MemoryService = require("../learner/memory-service.js");
@@ -24,6 +25,7 @@ const RetrievalTool = require("../tools/retrieval.js");
 const groqTalk = require("../tools/groq-talk.js");
 const openaiTalk = require("../tools/openai-talk.js");
 const lessonGraphic = require("../tools/lesson-graphic.js");
+const lessonInteractive = require("../tools/lesson-interactive.js");
 const topicIcon = require("../tools/topic-icon.js");
 const graphicScene = require("../tools/graphic-scene.js");
 const boardMath = require("../tools/board-math.js");
@@ -214,12 +216,22 @@ class LearningOrchestrator {
       dependencyRisk: this.childPolicy.dependencyRisk(history)
     };
 
+    const previousConcept = state.currentConcept || "";
     const understanding = understandLearner(spokenText, {
       boardImage: input.boardImage,
       concept: state.currentConcept,
       askedBackLast: Boolean(state.conversationState?.askedBackLast),
       lastAskedToLook: Boolean(state.conversationState?.lastAskedToLook)
     });
+    if (understanding.askingNewTopic) {
+      state.conversationState = state.conversationState || {};
+      state.conversationState.lastGraphicScene = "";
+      state.conversationState.lastInteractiveSlug = "";
+      state.conversationState.lastCheckQuestion = "";
+      state.conversationState.askedBackLast = false;
+      state.conversationState.sameQuestionStreak = 0;
+      state.conversationState.turnsSinceDoubtCheck = 0;
+    }
     const plan = this.autopilot.plan(child, state, understanding);
     state.currentGoal = plan.goal;
     if (understanding.concept && !isWeakTopic(understanding.concept)) {
@@ -303,7 +315,8 @@ class LearningOrchestrator {
       decision: heuristicDecision,
       history,
       retrievalContext,
-      boardMath: mathFromTurn
+      boardMath: mathFromTurn,
+      previousConcept
     });
 
     const useVision = Boolean(askedToLook && input.boardImage && !mathFromTurn.hasExact);
@@ -316,6 +329,13 @@ class LearningOrchestrator {
     state.learningPhase = decision.phase;
     state.selectedTools = decision.tools;
     const named = String(proposal?.interpretation?.concept || "").trim();
+    // Only adopt the model's topic label when it is grounded in what the child
+    // said. Otherwise the model can invent a lesson nobody asked for.
+    const fromChild = Boolean(named) && (
+      spokenCoversTopic(spokenText, named)
+      || topicsRelated(named, understanding.concept)
+      || topicsRelated(named, topicFromText(spokenText))
+    );
     const wrongTopic = /\b(different question|different topic|not what i asked|i asked something else|wrong (topic|question|thing|subject)|i didn't ask that|i did not ask that)\b/i.test(spokenText);
     const hasNewAsk = isNewAsk(spokenText, understanding);
     const topicLocked = Boolean(state.currentConcept)
@@ -366,7 +386,15 @@ class LearningOrchestrator {
     }
 
     const turnsSinceDoubtCheck = Number(state.conversationState?.turnsSinceDoubtCheck || 0);
-    const allowDoubtCheck = turnsSinceDoubtCheck >= 3 && !understanding?.confusion && !understanding?.voiceIssue;
+    const taughtAlready = Boolean(String(state.conversationState?.lastTeacherSpoken || "").trim());
+    const openingAsk = understanding.askingNewTopic
+      || isNewAsk(spokenText, understanding)
+      || ["explain", "question", "goal", "what_if"].includes(understanding.intent);
+    const allowDoubtCheck = taughtAlready
+      && !openingAsk
+      && turnsSinceDoubtCheck >= 5
+      && !understanding?.confusion
+      && !understanding?.voiceIssue;
     decision.spokenHints = { ...(decision.spokenHints || {}), allowDoubtCheck };
 
     let spoken = this.responsePolicy.apply(
@@ -375,6 +403,10 @@ class LearningOrchestrator {
       understanding,
       child
     );
+    const extraChoices = Array.isArray(proposal?.choices) ? proposal.choices : decision?.choices;
+    if (Array.isArray(extraChoices) && extraChoices.length >= 2 && !/\(\s*a\s*\)/i.test(spoken)) {
+      spoken = `${spoken} ${extraChoices.map((choice, i) => `(${String.fromCharCode(97 + i)}) ${String(choice || "").trim()}`).filter((part) => /\).+\S/.test(part)).join(" ")}`.trim();
+    }
     spoken = boardMath.ensureResult(spoken, mathFromTurn);
     spoken = preventRepeatQuestion(
       spoken,
@@ -419,7 +451,31 @@ class LearningOrchestrator {
     }
 
     if (graphicPlan.generate) {
-      if (!lessonGraphic.isConfigured()) {
+      const interactiveHit = await lessonInteractive.match({
+        store: this.childModel.store,
+        concept: graphicTitle,
+        childText: spokenText,
+        spoken,
+        grade: child?.grade
+      }).catch(() => null);
+      const lastInteractive = String(state.conversationState?.lastInteractiveSlug || "");
+      if (interactiveHit?.slug && interactiveHit.slug === lastInteractive) {
+        console.log("[PRIMER] Interactive already showing:", interactiveHit.slug);
+        state.conversationState.lastGraphicScene = graphicPlan.scene;
+      } else if (interactiveHit?.slug) {
+        const widget = lessonInteractive.commandFor(interactiveHit);
+        commands.push(widget);
+        state.conversationState = state.conversationState || {};
+        state.conversationState.lastGraphicScene = graphicPlan.scene;
+        state.conversationState.lastGraphicKind = "interactive";
+        state.conversationState.lastInteractiveSlug = interactiveHit.slug;
+        this._emitStream(input, {
+          event: "graphic",
+          canvasActions: [widget],
+          visualPlan: { shouldDraw: true, commands: [widget] }
+        });
+        console.log("[PRIMER] Interactive matched:", interactiveHit.slug);
+      } else if (!lessonGraphic.isConfigured()) {
         console.warn("[PRIMER] Graphic skipped: no image provider configured");
       } else {
         const iconSource = `${spokenText} ${graphicTitle}`;
@@ -584,7 +640,7 @@ class LearningOrchestrator {
       spokenResponse: text,
       teacherResponse: text
     });
-    return this._kickOpenerTts(input, text);
+    return this._kickOpenerTts(input, speechOnly(text));
   }
 
   _kickOpenerTts(input, spoken) {
@@ -743,10 +799,11 @@ Use 6 to 10 parts. Types: circle, box, ellipse, arrow, line, beam, person, text.
     const systemPrompt = `You are Lumi6 — a warm, inspiring human teacher teaching a Class ${gradeNum} student (age ~${gradeNum + 5}).
 Teach "${topic}" from first principles. The child asked: "${raw}".
 Every sentence must be about "${topic}".
-Explain the full physical intuition in 3-4 simple, vivid spoken sentences using concrete everyday analogies (${isElem ? "spinning a ball on a string, swings, or water buckets" : "momentum and balanced forces"}).
-End with exactly ONE warm, friendly thought experiment or check-in for Class ${gradeNum} (under 14 words).
+Explain the full physical intuition in 5-6 simple, vivid spoken sentences using concrete everyday analogies (${isElem ? "spinning a ball on a string, swings, or water buckets" : "momentum and balanced forces"}).
+End spoken with exactly ONE warm check-in for Class ${gradeNum} (under 16 words).
+Do not put (a)(b)(c) in spoken text. If helpful, add JSON choices.
 NEVER ask "what is this called", "what is your hypothesis", or dry vocabulary quizzes.
-Return JSON only: {"spoken":"spoken explanation here including the check question?"}`;
+Return JSON only: {"spoken":"explanation then one question?","choices":["...","...","..."]}`;
     const userText = `${systemPrompt}\n\nChild said: "${raw}"\nTeach: ${topic}`;
     if (groqTalk.isConfigured()) {
       try {

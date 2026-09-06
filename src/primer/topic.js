@@ -52,8 +52,8 @@ function topicFromText(text) {
 
   // Strip conversational prefixes like "no i asked", "but i asked", "i want to know", "hey can you tell me"
   let clean = raw
-    .replace(/^(no,? |nope,? |nah,? |but |actually,? |wait,? |hey,? |look,? )+/gi, "")
-    .replace(/^i (just |already |never |did not |didn't )?(asked|said|want to know|mean)\s*(about|that|how|what|why)?\s*/gi, "")
+    .replace(/^(no,? |nope,? |nah,? |but |actually,? |wait,? |hey,? |look,? |ok(ay)?,? |also,? |and,? |so,? |now,? |plus,? |besides,? )+/gi, "")
+    .replace(/^i (just |already |never |did not |didn't )?(asked|said|want to know|mean|was wondering)\s*(about|that|how|what|why)?\s*/gi, "")
     .replace(/^(can you |could you |please |tell me )+/gi, "")
     .trim();
 
@@ -130,6 +130,14 @@ function isWeakTopic(topic) {
   return false;
 }
 
+function similarToken(a, b) {
+  if (a === b) return true;
+  if (a.length >= 4 && b.length >= 4 && (a + "s" === b || b + "s" === a || a + "es" === b || b + "es" === a)) {
+    return true;
+  }
+  return false;
+}
+
 function topicsRelated(a, b) {
   const words = (text) => new Set(
     String(text || "")
@@ -139,7 +147,11 @@ function topicsRelated(a, b) {
   );
   const left = words(a);
   if (!left.size) return false;
-  for (const word of words(b)) if (left.has(word)) return true;
+  for (const word of words(b)) {
+    for (const other of left) {
+      if (similarToken(word, other)) return true;
+    }
+  }
   return false;
 }
 

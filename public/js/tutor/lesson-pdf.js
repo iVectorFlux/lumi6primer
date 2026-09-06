@@ -39,7 +39,7 @@
       }
     }
 
-    turns.push({ role: cleanRole, text: spoken, image: "" });
+    turns.push({ role: cleanRole, text: spoken, image: "", interactive: null });
     try {
       sessionStorage.setItem("lumi6_lesson_turns", JSON.stringify(turns.slice(-30)));
     } catch {}
@@ -59,7 +59,32 @@
         return;
       }
     }
-    turns.push({ role: "teacher", text: "", image: url });
+    turns.push({ role: "teacher", text: "", image: url, interactive: null });
+    try {
+      sessionStorage.setItem("lumi6_lesson_turns", JSON.stringify(turns.slice(-30)));
+    } catch {}
+    if (typeof window.syncTalkModeFeed === "function") window.syncTalkModeFeed();
+  }
+
+  function attachInteractive(slug, title, href) {
+    const key = String(slug || "").trim();
+    if (!key) return;
+    const widget = {
+      slug: key,
+      title: String(title || "").trim(),
+      href: String(href || `/api/primer/interactive/${encodeURIComponent(key)}`).trim()
+    };
+    for (let i = turns.length - 1; i >= 0; i -= 1) {
+      if (turns[i].role === "teacher") {
+        turns[i].interactive = widget;
+        try {
+          sessionStorage.setItem("lumi6_lesson_turns", JSON.stringify(turns.slice(-30)));
+        } catch {}
+        if (typeof window.syncTalkModeFeed === "function") window.syncTalkModeFeed();
+        return;
+      }
+    }
+    turns.push({ role: "teacher", text: "", image: "", interactive: widget });
     try {
       sessionStorage.setItem("lumi6_lesson_turns", JSON.stringify(turns.slice(-30)));
     } catch {}
@@ -829,7 +854,7 @@
     }
   }
 
-  window.Lumi6Lesson = { record, attachImage, turns: turnsFromChat, clear };
+  window.Lumi6Lesson = { record, attachImage, attachInteractive, turns: turnsFromChat, clear };
   window.exportLessonPdf = exportLessonPdf;
   window.generateLessonPdfBlob = generateLessonPdfBlob;
   window.shareLessonOnWhatsApp = shareLessonOnWhatsApp;

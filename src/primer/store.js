@@ -345,6 +345,29 @@ class PrimerStore {
     );
   }
 
+  async listInteractives() {
+    if (!this.remoteEnabled) return [];
+    try {
+      const { data } = await this.request("GET", "lesson_interactives", {
+        query: "?enabled=eq.true&select=id,slug,title,summary,topics,grade_min,grade_max,html&order=title.asc"
+      });
+      return Array.isArray(data) ? data : [];
+    } catch (err) {
+      console.warn("[PRIMER] listInteractives:", err.message);
+      return [];
+    }
+  }
+
+  async upsertInteractives(rows) {
+    if (!this.remoteEnabled || !Array.isArray(rows) || !rows.length) return [];
+    const { data } = await this.request("POST", "lesson_interactives", {
+      query: "?on_conflict=slug",
+      body: rows,
+      prefer: "resolution=merge-duplicates,return=representation"
+    });
+    return Array.isArray(data) ? data : [];
+  }
+
   async getRecentEvents(childId, limit = 10) {
     return this.remoteOrMemory(
       async () => {

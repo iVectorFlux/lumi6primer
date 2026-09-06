@@ -18,6 +18,7 @@
     "server.js",
     "src/",
     "scripts/build-client.js",
+    "content/",
     "public/",
     "README.md",
     "LICENSE"
@@ -36,6 +37,7 @@
     "build:client": "node scripts/build-client.js",
     "check:client": "node scripts/build-client.js --check",
     "prepack": "npm run build:client",
+    "seed:interactives": "node scripts/seed-interactives.js",
     "check": "npm run check:client && node --check server.js && node --check scripts/build-client.js && node --check src/server/main.js && node --check src/server/api-config.js && node --check src/server/typeset.js && node --check src/providers/kimi-cli.js && node --check src/providers/kimi-acp.js && node --check src/providers/codex-cli.js && node --check src/providers/claude-cli.js && node --check public/js/canvas/draw.js && node --check public/js/canvas/selection.js && node --check public/js/canvas/mixed-text.js && node --check public/js/canvas/animation.js && node --check public/js/canvas/summon.js && node --check public/js/tutor/primer-turn.js && node --check public/js/tutor/primer-voice.js && node --check public/js/canvas/app.js"
   },
   "engines": {

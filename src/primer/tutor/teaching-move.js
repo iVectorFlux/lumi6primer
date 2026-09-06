@@ -81,10 +81,10 @@ function advanceQuestion() {
 
 const { isNewAsk, shouldGrade } = require("./kid-intent.js");
 
-function classifyReply({ childText, askedBackLast, wantsExplain, wantsReason, intent, askedToLook } = {}) {
+function classifyReply({ childText, askedBackLast, wantsExplain, wantsReason, intent, askedToLook, askingNewTopic } = {}) {
   const text = String(childText || "").trim();
   if (isPictureComment(text)) return "picture_comment";
-  const understanding = { raw: text, wantsExplain, wantsReason, intent, askedToLook };
+  const understanding = { raw: text, wantsExplain, wantsReason, intent, askedToLook, askingNewTopic };
   if (isNewAsk(text, understanding) || wantsExplain || intent === "explain") return "new_lesson";
   if (wantsReason || intent === "question" || (isDetailAsk(text) && text.length >= 18)) return "go_deeper";
   if (shouldGrade({ text, askedBackLast, understanding })) return "answer";

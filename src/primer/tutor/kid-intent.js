@@ -5,16 +5,19 @@
  * new question, a board, or a sum is never treated as a failed quiz answer.
  */
 
-const NEW_ASK = /^(wait,? |hey,? |tell me,? |can you |could you |please |i have a question,? |what if |is it |is |are |do |does |can |will |would |how |why |what |who |when |where)\b/i;
-const EXPLICIT_SWITCH = /\b(now teach|teach me|i want to learn|explain|instead|what about|look at|how about|can we learn)\b/i;
+const NEW_ASK = /^(wait,? |hey,? |ok(ay)?[,]?( but | so )?|also,? |and,? |so,? |now,? |plus,? |besides,? |tell me,? |can you |could you |please |i have (a |another )?question,? |another question|one more|what if |is it |is |are |do |does |can |will |would |how |why |what |who |when |where)\b/i;
+const EXPLICIT_SWITCH = /\b(now teach|teach me|i want to learn|explain|instead|what about|how about|can we learn|another question|different question|one more (thing|question)|i was wondering|besides)\b/i;
+const CURIOUS_PIVOT = /\b(what about|how about|another question|one more thing|also (why|how|what|can|do|is)|ok(ay)? but|wait,? (what|why|how|can)|now (tell|teach|what|why|how)|i was wondering)\b/i;
 
 function isNewAsk(text, understanding = {}) {
   const raw = String(text || understanding.raw || "").trim();
   if (!raw) return false;
   if (understanding.justAnswer) return true;
+  if (understanding.askingNewTopic) return true;
   const intent = understanding.intent;
   if (["explain", "question", "homework", "fact", "goal", "what_if"].includes(intent)) return true;
   if (NEW_ASK.test(raw)) return true;
+  if (CURIOUS_PIVOT.test(raw)) return true;
   if (/\?/.test(raw) && raw.length > 5) return true;
   if (/\b(teach me|i want to learn|look at (the |this )?(board|whiteboard)|is it correct|what('?s| is) the answer|what if|can (we|you|it)|why does|how does)\b/i.test(raw)) {
     return true;
@@ -50,5 +53,6 @@ module.exports = {
   isNewAsk,
   looksLikeQuizAnswer,
   shouldGrade,
-  explicitTopicSwitch
+  explicitTopicSwitch,
+  CURIOUS_PIVOT
 };

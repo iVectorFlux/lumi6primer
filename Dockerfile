@@ -15,6 +15,7 @@ COPY server.js ./
 COPY src ./src
 COPY public ./public
 COPY scripts ./scripts
+COPY content ./content
 
 ENV NODE_ENV=production
 ENV HOST=0.0.0.0

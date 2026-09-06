@@ -11738,6 +11738,48 @@ User writes "Show air quality for Tokyo", names a place, and points to an empty 
       .replace(/'/g, "&#039;");
   }
 
+  function talkVisualHtml(step, titleText, isLast) {
+    if (step.interactive && step.interactive.slug) {
+      const href = step.interactive.href || `/api/primer/interactive/${encodeURIComponent(step.interactive.slug)}`;
+      const label = step.interactive.title || titleText;
+      return `
+            <div class="talk-image-wrapper talk-interactive-wrapper">
+              <iframe
+                class="talk-lesson-interactive"
+                data-slug="${escapeHtml(step.interactive.slug)}"
+                src="${escapeHtml(href.includes("?") ? href : `${href}?embed=1`)}"
+                title="${escapeHtml(label)}"
+                sandbox="allow-scripts"
+                loading="lazy"
+              ></iframe>
+              <figcaption class="talk-image-caption">
+                <span class="talk-image-tag">Try it</span>
+                ${escapeHtml(label)}
+              </figcaption>
+            </div>`;
+    }
+    if (step.image) {
+      return `
+            <div class="talk-image-wrapper">
+              <img src="${escapeHtml(step.image)}" alt="Lesson illustration" class="talk-lesson-image" loading="lazy">
+              <figcaption class="talk-image-caption">
+                <span class="talk-image-tag">Visual Model</span>
+                ${escapeHtml(titleText)}
+              </figcaption>
+            </div>`;
+    }
+    if (isLast && window.__primerGraphicLoading) {
+      return `
+            <div class="talk-image-wrapper talk-image-loading-wrapper">
+              <div class="talk-image-loading-indicator">
+                <span class="talk-spinner">✦</span>
+                <span>Illustrating visual concept for this step…</span>
+              </div>
+            </div>`;
+    }
+    return "";
+  }
+
   function formatCleanLessonTitle(raw) {
     if (!raw || raw === "Untitled") return "Science Discovery";
     return String(raw)
@@ -11746,46 +11788,49 @@ User writes "Show air quality for Tokyo", names a place, and points to an empty 
       .trim();
   }
 
-  const DOUBT_CHECK_RE = /everything making sense|any part you want me to explain|any doubts|anything unclear|want me to explain.+again|making sense so far/i;
+  const DOUBT_CHECK_RE = /everything making sense|does that make sense|does this make sense|any part you want me to explain|any doubts|anything unclear|want me to explain.+again|making sense so far|with me so far|any questions so far/i;
 
   function isDoubtCheck(sentence) {
     return DOUBT_CHECK_RE.test(String(sentence || "").trim());
   }
 
-  function isTeachingQuestion(sentence) {
-    const s = String(sentence || "").trim();
-    if (!s || isDoubtCheck(s)) return false;
-    return s.endsWith("?") || /^(what|how|why|can you|where|do you think|imagine|can you guess)\b/i.test(s);
+  function extractSpokenParts(text) {
+    let raw = String(text || "").replace(/\s+/g, " ").trim();
+    const choices = [];
+    let blockStart = raw.search(/\(\s*[aA]\s*\)/);
+    if (blockStart < 0) blockStart = raw.search(/(?:^|\s)[aA][).]\s+\S/);
+    if (blockStart >= 0) {
+      const block = raw.slice(blockStart);
+      const re = /\(\s*([a-c])\s*\)\s*([^]+?)(?=\s*\(\s*[a-c]\s*\)|$)/gi;
+      let match;
+      while ((match = re.exec(block))) {
+        const choice = String(match[2] || "").replace(/\s+/g, " ").trim().replace(/[.;]+$/, "");
+        if (choice) choices.push({ letter: match[1].toLowerCase(), text: choice });
+      }
+      if (choices.length >= 2) raw = raw.slice(0, blockStart).replace(/\s+/g, " ").trim();
+      else choices.length = 0;
+    }
+
+    const sentences = raw.split(/(?<=[.!?])\s+/).map((s) => s.trim()).filter(Boolean).filter((s) => !isDoubtCheck(s));
+    let question = "";
+    const teaching = [];
+    for (const sentence of sentences) {
+      const isQuestion = sentence.endsWith("?")
+        || /^(what|how|why|can you|where|do you think|imagine|can you guess)\b/i.test(sentence);
+      if (isQuestion) question = sentence;
+      else teaching.push(sentence);
+    }
+    return { teaching: teaching.join(" "), question, choices };
   }
 
   function splitTeacherTurn(cleanSpoken) {
-    const sentences = String(cleanSpoken || "")
-      .split(/(?<=[.!?])\s+/)
-      .map((s) => s.trim())
-      .filter(Boolean)
-      .filter((s) => !isDoubtCheck(s));
-
-    const questions = sentences.filter(isTeachingQuestion);
-    const question = questions.length
-      ? (questions.find((s) => /\([a-c]\)/i.test(s)) || questions[questions.length - 1])
-      : "";
-    const teaching = sentences.filter((s) => s !== question);
-
-    let keyInsight = "";
-    let deeperExpl = "";
-    const candidateInsight = teaching.find((s) =>
-      s.length >= 32 &&
-      !s.endsWith("?") &&
-      !/^(hello|hey|hi|welcome|i'm|ready|sure|great|let's|glad|no problem|ok|okay)\b/i.test(s)
-    );
-    if (candidateInsight && teaching.length > 1) {
-      keyInsight = candidateInsight;
-      deeperExpl = teaching.filter((s) => s !== keyInsight).join(" ");
-    } else {
-      deeperExpl = teaching.join(" ");
-    }
-
-    return { keyInsight, deeperExpl, question };
+    const parts = extractSpokenParts(cleanSpoken);
+    return {
+      keyInsight: "",
+      deeperExpl: parts.teaching,
+      question: parts.question,
+      choices: parts.choices
+    };
   }
 
   function setAppViewMode(mode, updateUrl = true) {
@@ -11887,30 +11932,36 @@ User writes "Show air quality for Tokyo", names a place, and points to an empty 
     for (const turn of turns) {
       if (turn.role === "student") {
         if (current) pairs.push(current);
-        current = { asked: turn.text, explanation: [], image: turn.image || "", question: "" };
+        current = { asked: turn.text, explanation: [], image: turn.image || "", interactive: turn.interactive || null, question: "", choices: [] };
       } else {
-        if (!current) current = { asked: "", explanation: [], image: turn.image || "", question: "" };
+        if (!current) current = { asked: "", explanation: [], image: turn.image || "", interactive: turn.interactive || null, question: "", choices: [] };
         const cleanSpoken = String(turn.text || "")
           .replace(/^(Hey|Hello|Hi|Welcome back|Welcome|Good morning|Good afternoon)\s+[A-Za-z0-9_]+[.,!?:-]*\s*/i, "")
           .replace(/^([A-Za-z0-9_]+)[,!:]\s+(?=[A-Z])/i, "")
           .replace(/^(Hey|Hello|Hi|Welcome)\s*[,!.]\s*/i, "")
           .trim();
-        const { keyInsight, deeperExpl, question } = splitTeacherTurn(cleanSpoken);
-        if (deeperExpl || keyInsight) current.explanation.push([keyInsight, deeperExpl].filter(Boolean).join(" "));
+        const { deeperExpl, question, choices } = splitTeacherTurn(cleanSpoken);
+        if (deeperExpl) current.explanation.push(deeperExpl);
         if (question) current.question = question;
+        if (choices && choices.length) current.choices = choices;
         if (turn.image) current.image = turn.image;
+        if (turn.interactive) current.interactive = turn.interactive;
       }
     }
     if (current) pairs.push(current);
 
+    const liveFrames = [];
+    feed.querySelectorAll("iframe.talk-lesson-interactive").forEach((frame) => {
+      liveFrames.push({ slug: frame.dataset.slug, node: frame });
+    });
+
     feed.innerHTML = pairs.map((step, idx) => {
-      const allSentences = (step.explanation || []).join(" ").split(/(?<=[.!?])\s+/).map(s => s.trim()).filter(Boolean);
-      const parsed = splitTeacherTurn(allSentences.join(" "));
-      const keyInsight = parsed.keyInsight;
+      const parsed = splitTeacherTurn((step.explanation || []).join(" ") + (step.question ? ` ${step.question}` : ""));
       const deeperExpl = parsed.deeperExpl;
       const question = step.question || parsed.question;
+      const choices = (step.choices && step.choices.length) ? step.choices : parsed.choices;
 
-      if (!allSentences.length && !question) {
+      if (!deeperExpl && !question) {
         return `
         <article class="talk-turn-card">
           ${step.asked ? `
@@ -11954,44 +12005,30 @@ User writes "Show air quality for Tokyo", names a place, and points to an empty 
             <span class="talk-topic-pill">${escapeHtml(titleText)}</span>
           </div>
 
-          ${keyInsight ? `
-            <div class="talk-concept-card">
-              <div class="talk-concept-icon">💡</div>
-              <div class="talk-concept-text">
-                <strong>Key Discovery:</strong> ${escapeHtml(keyInsight)}
-              </div>
-            </div>
-          ` : ""}
-
           ${deeperExpl ? `
             <div class="talk-explanation-body">
               <p>${escapeHtml(deeperExpl)}</p>
             </div>
           ` : ""}
 
-          ${step.image ? `
-            <div class="talk-image-wrapper">
-              <img src="${escapeHtml(step.image)}" alt="Lesson illustration" class="talk-lesson-image" loading="lazy">
-              <figcaption class="talk-image-caption">
-                <span class="talk-image-tag">Visual Model</span>
-                ${escapeHtml(titleText)}
-              </figcaption>
-            </div>
-          ` : (idx === pairs.length - 1 && window.__primerGraphicLoading ? `
-            <div class="talk-image-wrapper talk-image-loading-wrapper">
-              <div class="talk-image-loading-indicator">
-                <span class="talk-spinner">✦</span>
-                <span>Illustrating visual concept for this step…</span>
-              </div>
-            </div>
-          ` : "")}
+          ${talkVisualHtml(step, titleText, idx === pairs.length - 1)}
 
-          ${question ? `
+          ${question || (choices && choices.length) ? `
             <div class="talk-question-capsule">
               <div class="talk-question-icon">🤔</div>
               <div class="talk-question-content">
                 <span class="talk-question-tag">Your Turn</span>
-                <p class="talk-question-text">${escapeHtml(question)}</p>
+                ${question ? `<p class="talk-question-text">${escapeHtml(question)}</p>` : ""}
+                ${choices && choices.length ? `
+                  <div class="talk-choice-list" role="list">
+                    ${choices.map((choice) => `
+                      <div class="talk-choice" role="listitem">
+                        <span class="talk-choice-letter">${escapeHtml((choice.letter || "").toUpperCase())}</span>
+                        <span class="talk-choice-text">${escapeHtml(choice.text)}</span>
+                      </div>
+                    `).join("")}
+                  </div>
+                ` : ""}
               </div>
             </div>
           ` : ""}
@@ -11999,6 +12036,11 @@ User writes "Show air quality for Tokyo", names a place, and points to an empty 
       </article>
       `;
     }).join("");
+
+    feed.querySelectorAll("iframe.talk-lesson-interactive").forEach((frame) => {
+      const kept = liveFrames.find((item) => item.slug && item.slug === frame.dataset.slug);
+      if (kept?.node && kept.node !== frame) frame.replaceWith(kept.node);
+    });
 
     const scrollArea = document.querySelector("#talkScrollArea");
     if (scrollArea) scrollArea.scrollTop = scrollArea.scrollHeight;

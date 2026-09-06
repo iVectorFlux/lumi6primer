@@ -155,6 +155,17 @@
       ? msg.visualPlan.commands
       : (Array.isArray(msg?.canvasActions) ? msg.canvasActions : (msg?.tool ? [msg] : []));
     if (!commands.length) return false;
+    const interactive = commands.find((cmd) => cmd && cmd.tool === "lesson_interactive" && cmd.slug);
+    if (interactive) {
+      if (typeof window.Lumi6Lesson?.attachInteractive === "function") {
+        window.Lumi6Lesson.attachInteractive(interactive.slug, interactive.title, interactive.href);
+      }
+      const lastTeacher = document.querySelector("#primerMessages .primer-msg.teacher:last-of-type");
+      if (lastTeacher) {
+        lastTeacher.dataset.interactive = interactive.slug;
+        lastTeacher.dataset.interactiveTitle = interactive.title || "";
+      }
+    }
     const photo = commands.find((cmd) => cmd && (cmd.tool === "place_photo" || cmd.tool === "svg_picture") && (cmd.href || cmd.svg));
     const imgSrc = photo?.href || (photo?.svg ? `data:image/svg+xml;utf8,${encodeURIComponent(photo.svg)}` : "");
     if (imgSrc) {

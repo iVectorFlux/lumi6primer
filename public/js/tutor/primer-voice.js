@@ -1482,6 +1482,8 @@
 
       // Collapse multiple whitespace
       text = text.replace(/\s+/g, " ").trim();
+      const choiceStart = text.search(/\(\s*[aA]\s*\)/);
+      if (choiceStart >= 0) text = text.slice(0, choiceStart).replace(/\s+/g, " ").trim();
       return text;
     }
 

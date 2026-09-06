@@ -3,7 +3,7 @@
 const { topicFromText, isWeakTopic, topicsRelated } = require("../topic.js");
 const { isPictureComment } = require("./teaching-move.js");
 const boardMath = require("../tools/board-math.js");
-const { explicitTopicSwitch } = require("./kid-intent.js");
+const { explicitTopicSwitch, isNewAsk, CURIOUS_PIVOT } = require("./kid-intent.js");
 
 const FACT = /^(what is|what's|who (is|was|invented)|when (was|did)|where is|how (tall|old|high|long|many)|capital of)\b/i;
 
@@ -47,8 +47,14 @@ function understandLearner(raw, extras = {}) {
   const wantsReason = /\b(how is that possible|how is that|how does that|why is that|why does that|how can that|how does|understand how|why only|why not)\b/.test(t)
     || /^(how|why)\b/.test(t);
   const pushback = /\b(come on|i asked you|just explain|answer me|what are you asking|you're not answering|stop asking|i want you to explain|not what real teaching|just writing|only text|the hell|what the hell|wtf|are you talking about|who asked|i did not ask|i didn't ask|i never asked|you are not able|not able to understand)\b/i.test(t);
-  const confused = /\b(i don't understand|i do not understand|don't understand|dont understand|huh\??$|i'm confused|i am confused|that doesn't make sense|what do you mean|what does that mean|why are you talking about|clarify|can you clarify|what does .* mean|i didn't get that|i didn't understand|could you explain again|repeat that|say that again|what do you mean by|i'm lost|i am lost|not getting it|didn't get it|did not get it|explain again|tell me again|can you explain that|i still don't get|i don't get it|what are you saying|hard to understand|too complicated|simpler|explain simply|in simple words|make it simpler)\b/i.test(t)
+  const guessed = guessConcept(text);
+  const prior = String(extras.concept || "").trim();
+  const askingNewTopic = Boolean(guessed) && !isWeakTopic(guessed) && Boolean(prior) && !topicsRelated(prior, guessed);
+  const curiousPivot = CURIOUS_PIVOT.test(t) || askingNewTopic;
+
+  const confusedAboutThis = /\b(i don't understand|i do not understand|don't understand|dont understand|huh\??$|i'm confused|i am confused|that doesn't make sense|what do you mean|what does that mean|why are you talking about|clarify|can you clarify|i didn't get that|i didn't understand|could you explain again|repeat that|say that again|what do you mean by|i'm lost|i am lost|not getting it|didn't get it|did not get it|explain again|tell me again|can you explain that|i still don't get|i don't get it|what are you saying|hard to understand|too complicated|simpler|explain simply|in simple words|make it simpler)\b/i.test(t)
     || /^(what|huh|pardon|sorry|repeat)\??$/i.test(t);
+  const confused = confusedAboutThis && !askingNewTopic && !curiousPivot;
 
   const isContinue = /^(please )?(continue|keep going|go on|resume|carry on|tell me more|what next|continue explaining)[\s.!?]*$/i.test(text)
     || /\b(please continue|keep going|carry on)\b/i.test(t);
@@ -70,6 +76,8 @@ function understandLearner(raw, extras = {}) {
     intent = "greeting";
   } else if (confused) {
     intent = "dont_understand";
+  } else if (askingNewTopic || curiousPivot) {
+    intent = wantsExplain ? "explain" : "question";
   } else if (wantsExplain || /\b(let's learn|what should i learn|start (a )?lesson)\b/.test(t)) {
     intent = wantsExplain ? "explain" : "goal";
   } else if (/\b(homework|this problem|check my work|i got stuck on)\b/.test(t) || (askedToLook && /\b(solve|equals|=|correct|right)\b/.test(t)) || spokenFacts.length > 0) {
@@ -80,7 +88,16 @@ function understandLearner(raw, extras = {}) {
     intent = "attempt";
   } else if (isPictureComment(text)) {
     intent = "chat";
-  } else if (extras.askedBackLast && !wantsExplain && !askedToLook && !wantsReason && !/^(teach|what is|how does|who is|where is)\b/i.test(t)) {
+  } else if (
+    extras.askedBackLast
+    && !wantsExplain
+    && !askedToLook
+    && !wantsReason
+    && !askingNewTopic
+    && !curiousPivot
+    && !isNewAsk(text, { raw: text, wantsExplain, wantsReason, askingNewTopic })
+    && !/^(teach|what is|how does|who is|where is|what about|how about)\b/i.test(t)
+  ) {
     intent = "attempt";
   } else if (/\b(let me try|i think (it'?s|the answer)|maybe it'?s|maybe it is|try again)\b/.test(t) && !wantsExplain) {
     intent = /\btry again|instead\b/.test(t) ? "revision" : "attempt";
@@ -92,13 +109,11 @@ function understandLearner(raw, extras = {}) {
     intent = "question";
   }
 
-  const confusion = intent === "dont_understand" || /\b(confused|stuck|lost)\b/.test(t);
-  const guessed = guessConcept(text);
-  const prior = String(extras.concept || "").trim();
+  const confusion = intent === "dont_understand" || (/\b(confused|stuck|lost)\b/.test(t) && !askingNewTopic);
   const bareTeach = /^(can you |could you |please )?(teach|explain)( me)?[\s.!?]*$/i.test(t);
   const wrongTopic = /\b(different question|different topic|not what i asked|i asked something else|wrong (topic|question|thing|subject)|i didn't ask that|i did not ask that)\b/i.test(t);
-  const isQuestionAsk = wantsExplain || wantsReason || intent === "question" || intent === "explain" || /^(how|why|what|who|when|where|tell me)\b/i.test(t);
-  const explicitSwitch = explicitTopicSwitch(text) || wrongTopic || (Boolean(guessed) && isQuestionAsk && !topicsRelated(prior, guessed));
+  const isQuestionAsk = wantsExplain || wantsReason || askingNewTopic || curiousPivot || intent === "question" || intent === "explain" || /^(how|why|what|who|when|where|tell me)\b/i.test(t);
+  const explicitSwitch = explicitTopicSwitch(text) || wrongTopic || askingNewTopic || (Boolean(guessed) && isQuestionAsk && !topicsRelated(prior, guessed));
 
   const namedTopic = !isContinue && Boolean(guessed) && !isWeakTopic(guessed) && (
     !prior
@@ -108,7 +123,7 @@ function understandLearner(raw, extras = {}) {
     || !topicsRelated(prior, guessed)
   );
 
-  const keepPrior = isContinue || (Boolean(prior) && !isGreeting && !wrongTopic && !explicitSwitch && !namedTopic && (
+  const keepPrior = !askingNewTopic && (isContinue || (Boolean(prior) && !isGreeting && !wrongTopic && !explicitSwitch && !namedTopic && (
     intent === "attempt"
     || intent === "revision"
     || (wantsDraw && !wantsExplain)
@@ -118,7 +133,7 @@ function understandLearner(raw, extras = {}) {
     || confusion
     || intent === "dont_understand"
     || bareTeach
-  ));
+  )));
 
   const concept = isContinue
     ? prior
@@ -139,6 +154,7 @@ function understandLearner(raw, extras = {}) {
     wantsExplain: wantsExplain || bareTeach,
     justAnswer,
     wantsReason,
+    askingNewTopic,
     pushback,
     pictureComment: isPictureComment(text),
     voiceIssue,

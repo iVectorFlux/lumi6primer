@@ -285,7 +285,7 @@ class PedagogicalPolicy {
       || understanding?.pictureComment
       || (understanding?.pushback && /\b(stop asking|don't ask|do not ask)\b/i.test(String(understanding?.raw || "")))
     );
-    const maxSentences = answering || phase === "learn" || action === "diagnose" ? 5 : 3;
+    const maxSentences = answering || phase === "learn" || action === "diagnose" ? 7 : 4;
     const mustAskQuestion = !skipQuestion && action !== "answer";
     return {
       maxSentences,
