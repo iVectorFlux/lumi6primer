@@ -47,6 +47,7 @@ class PedagogicalPolicy {
     if (
       Number(state?.conversationState?.consecutiveExplanations || 0) >= 2
       && action === "explain"
+      && understanding?.intent !== "attempt"
       && !understanding?.wantsExplain
       && !understanding?.wantsReason
       && !understanding?.pushback
@@ -168,7 +169,8 @@ class PedagogicalPolicy {
         return "thinking_partner";
       }
       if (understanding?.intent === "attempt" && proposed === "tutor") {
-        return "editor";
+        reasons.push("a quiz answer stays with the tutor, not the editor");
+        return "tutor";
       }
       if (understanding?.intent === "fact" && proposed === "tutor") {
         return "librarian";

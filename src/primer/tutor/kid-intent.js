@@ -8,10 +8,17 @@
 const NEW_ASK = /^(wait,? |hey,? |ok(ay)?[,]?( but | so )?|also,? |and,? |so,? |now,? |plus,? |besides,? |tell me,? |can you |could you |please |i have (a |another )?question,? |another question|one more|what if |is it |is |are |do |does |can |will |would |how |why |what |who |when |where)\b/i;
 const EXPLICIT_SWITCH = /\b(now teach|teach me|i want to learn|explain|instead|what about|how about|can we learn|another question|different question|one more (thing|question)|i was wondering|besides)\b/i;
 const CURIOUS_PIVOT = /\b(what about|how about|another question|one more thing|also (why|how|what|can|do|is)|ok(ay)? but|wait,? (what|why|how|can)|now (tell|teach|what|why|how)|i was wondering)\b/i;
+const CHOICE_REPLY = /^(you asked\s*:|i choose\b|i pick\b|my answer is\b|option\s*[a-c]\b|\(?\s*[a-c]\s*\)\s+\S)/i;
+const ANSWER_LEAD = /^(because|since|maybe|i think|i guess|the answer|it'?s because)\b/i;
+
+function isChoiceReply(text) {
+  return CHOICE_REPLY.test(String(text || "").trim());
+}
 
 function isNewAsk(text, understanding = {}) {
   const raw = String(text || understanding.raw || "").trim();
   if (!raw) return false;
+  if (isChoiceReply(raw)) return false;
   if (understanding.justAnswer) return true;
   if (understanding.askingNewTopic) return true;
   const intent = understanding.intent;
@@ -27,13 +34,16 @@ function isNewAsk(text, understanding = {}) {
 
 function looksLikeQuizAnswer(text) {
   const raw = String(text || "").trim();
-  if (!raw || raw.length > 80) return false;
+  if (!raw) return false;
+  if (isChoiceReply(raw)) return true;
+  if (raw.length > 80) return false;
   if (NEW_ASK.test(raw) || /\?/.test(raw)) return false;
   if (/\b(teach me|explain|look at|whiteboard)\b/i.test(raw)) return false;
   return true;
 }
 
 function shouldGrade({ text, askedBackLast, understanding } = {}) {
+  if (isChoiceReply(text)) return true;
   if (!askedBackLast) return false;
   if (isNewAsk(text, understanding)) return false;
   const intent = understanding?.intent;
@@ -54,5 +64,7 @@ module.exports = {
   looksLikeQuizAnswer,
   shouldGrade,
   explicitTopicSwitch,
+  isChoiceReply,
+  ANSWER_LEAD,
   CURIOUS_PIVOT
 };

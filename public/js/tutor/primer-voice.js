@@ -190,6 +190,7 @@
       this.audioCtx = null;
       this._sourceNode = null;
       this._openerBlob = null;
+      this._openerText = "";
       this._openerWaiters = [];
       if ("speechSynthesis" in window) {
         this.pickVoice();
@@ -262,6 +263,7 @@
       this.cancel();
       const generation = ++this.generation;
       this._openerBlob = null;
+      this._openerText = "";
       this._openerWaiters = [];
       let finished = false;
       const startOnce = () => {
@@ -395,15 +397,11 @@
         if (!part) continue;
         if (!parts.length) {
           parts.push(part);
-        } else if (parts[parts.length - 1].length + part.length < 120 || parts[parts.length - 1].length < 35) {
+        } else if (!/[.!?]$/.test(parts[parts.length - 1]) && parts[parts.length - 1].length + part.length < 120) {
           parts[parts.length - 1] = `${parts[parts.length - 1]} ${part}`;
         } else {
           parts.push(part);
         }
-      }
-      if (parts.length > 1 && parts[0].length < 35) {
-        parts[0] = `${parts[0]} ${parts[1]}`;
-        parts.splice(1, 1);
       }
       return parts.length ? parts : [String(text || "").trim()].filter(Boolean);
     }
@@ -422,9 +420,12 @@
 
     acceptOpenerAudio(msg) {
       if (!msg || !msg.audioBase64) return;
+      if (msg.opener === false || Number(msg.chunkIndex || 0) > 0) return;
+      if (this._openerBlob) return;
       const blob = this.blobFromBase64(msg.audioBase64, msg.audioContentType);
       if (!blob) return;
       this._openerBlob = blob;
+      this._openerText = String(msg.text || "");
       const waiters = this._openerWaiters.splice(0);
       for (const wait of waiters) wait(blob);
     }
@@ -447,15 +448,23 @@
     }
 
     async firstAudioBlob(text) {
-      const fetchPromise = this.fetchTtsBlob(text, 12000).catch((err) => {
+      const chunk = String(text || "").replace(/\s+/g, " ").trim();
+      const openerNorm = String(this._openerText || "").replace(/\s+/g, " ").trim().toLowerCase();
+      const chunkNorm = chunk.toLowerCase();
+      if (this._openerBlob && openerNorm && (chunkNorm === openerNorm || chunkNorm.startsWith(openerNorm))) {
+        return this._openerBlob;
+      }
+      const fetchPromise = this.fetchTtsBlob(chunk, 12000).catch((err) => {
         console.warn("[Lumi6 Voice] opener fetch failed:", err.message);
         return null;
       });
-      const openerPromise = this.waitOpenerAudio(6000);
+      const openerPromise = openerNorm && chunkNorm && !(chunkNorm === openerNorm || chunkNorm.startsWith(openerNorm))
+        ? Promise.resolve(null)
+        : this.waitOpenerAudio(6000);
       const raced = await Promise.race([openerPromise, fetchPromise]);
       if (raced && raced.size >= 32) return raced;
       const [opener, fetched] = await Promise.all([openerPromise, fetchPromise]);
-      const blob = opener || fetched;
+      const blob = fetched || opener;
       if (blob && blob.size >= 32) return blob;
       throw new Error("No opener TTS audio");
     }
@@ -703,6 +712,7 @@
     cancel() {
       this.generation += 1;
       this._openerBlob = null;
+      this._openerText = "";
       if (this._speechHeartbeat) {
         clearInterval(this._speechHeartbeat);
         this._speechHeartbeat = null;
@@ -1484,7 +1494,14 @@
       text = text.replace(/\s+/g, " ").trim();
       const choiceStart = text.search(/\(\s*[aA]\s*\)/);
       if (choiceStart >= 0) text = text.slice(0, choiceStart).replace(/\s+/g, " ").trim();
-      return text;
+      const sentences = text.split(/(?<=[.!?])\s+/).filter(Boolean);
+      const unique = [];
+      for (const sentence of sentences) {
+        const key = sentence.toLowerCase().replace(/[^a-z0-9]+/g, " ").trim();
+        const prev = (unique[unique.length - 1] || "").toLowerCase().replace(/[^a-z0-9]+/g, " ").trim();
+        if (key && key !== prev) unique.push(sentence);
+      }
+      return unique.join(" ");
     }
 
     /**

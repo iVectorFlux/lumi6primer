@@ -377,6 +377,10 @@
     }
 
     scrollToBottom() {
+      if (typeof window.scrollTalkToLatest === "function") {
+        window.scrollTalkToLatest();
+        return;
+      }
       const list = this.elements.messagesList;
       if (!list) return;
       list.scrollTop = list.scrollHeight;

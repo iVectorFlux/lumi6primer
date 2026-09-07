@@ -1,5 +1,6 @@
 // ── 7. DRAW MODE & TALK MODE INTERACTIVE CONTROLLER ─────────────
   let currentAppViewMode = "draw";
+  let talkPlaygroundSlug = "";
 
   function escapeHtml(str) {
     return String(str || "")
@@ -10,20 +11,57 @@
       .replace(/'/g, "&#039;");
   }
 
+  function childPromptHtml(text) {
+    const raw = String(text || "").trim();
+    if (!raw) return "";
+    const choice = parseChildChoice(raw);
+    if (choice) {
+      return `
+            <div class="talk-child-prompt">
+              <span class="talk-child-badge">You answered</span>
+              <p class="talk-child-text">${escapeHtml(choice)}</p>
+            </div>`;
+    }
+    return `
+            <div class="talk-child-prompt">
+              <span class="talk-child-badge">You asked</span>
+              <p class="talk-child-text">${escapeHtml(raw)}</p>
+            </div>`;
+  }
+
+  function parseChildChoice(text) {
+    const raw = String(text || "").trim();
+    const match = raw.match(/(?:i choose|i pick|my answer is)\s*\(?\s*([a-c])\s*\)?\s*(.*)$/i)
+      || raw.match(/^you asked:.*?\bi choose\s*\(?\s*([a-c])\s*\)?\s*(.*)$/i);
+    if (!match) return "";
+    const letter = String(match[1] || "").toUpperCase();
+    const rest = String(match[2] || "")
+      .replace(/^[:\-–]\s*/, "")
+      .replace(/[,;:\s]+or\.?$/i, "")
+      .replace(/[.;]+$/, "")
+      .trim();
+    return rest ? `${letter} — ${rest}` : letter;
+  }
+
   function talkVisualHtml(step, titleText, isLast) {
     if (step.interactive && step.interactive.slug) {
       const href = step.interactive.href || `/api/primer/interactive/${encodeURIComponent(step.interactive.slug)}`;
       const label = step.interactive.title || titleText;
       return `
-            <div class="talk-image-wrapper talk-interactive-wrapper">
-              <iframe
-                class="talk-lesson-interactive"
-                data-slug="${escapeHtml(step.interactive.slug)}"
-                src="${escapeHtml(href.includes("?") ? href : `${href}?embed=1`)}"
-                title="${escapeHtml(label)}"
-                sandbox="allow-scripts"
-                loading="lazy"
-              ></iframe>
+            <div class="talk-image-wrapper talk-interactive-wrapper" data-interactive-slug="${escapeHtml(step.interactive.slug)}">
+              <div class="talk-interactive-stage">
+                <iframe
+                  class="talk-lesson-interactive"
+                  data-slug="${escapeHtml(step.interactive.slug)}"
+                  src="${escapeHtml(href.includes("?") ? href : `${href}?embed=1`)}"
+                  title="${escapeHtml(label)}"
+                  sandbox="allow-scripts"
+                  loading="lazy"
+                ></iframe>
+                <button type="button" class="talk-interactive-expand" data-expand-interactive aria-label="Open playground">
+                  Open playground
+                </button>
+              </div>
               <figcaption class="talk-image-caption">
                 <span class="talk-image-tag">Try it</span>
                 ${escapeHtml(label)}
@@ -76,7 +114,13 @@
       const re = /\(\s*([a-c])\s*\)\s*([^]+?)(?=\s*\(\s*[a-c]\s*\)|$)/gi;
       let match;
       while ((match = re.exec(block))) {
-        const choice = String(match[2] || "").replace(/\s+/g, " ").trim().replace(/[.;]+$/, "");
+        const choice = String(match[2] || "")
+          .replace(/\s+/g, " ")
+          .trim()
+          .replace(/[,;:\s]+or\.?$/i, "")
+          .replace(/^[.,;:\s]+/, "")
+          .replace(/[.;]+$/, "")
+          .trim();
         if (choice) choices.push({ letter: match[1].toLowerCase(), text: choice });
       }
       if (choices.length >= 2) raw = raw.slice(0, blockStart).replace(/\s+/g, " ").trim();
@@ -159,9 +203,7 @@
     }
 
     if (currentAppViewMode === "talk") {
-      syncTalkModeFeed();
-      const scrollArea = document.querySelector("#talkScrollArea");
-      if (scrollArea) scrollArea.scrollTop = scrollArea.scrollHeight;
+      syncTalkModeFeed({ scroll: true });
     } else {
       if (window.primerVoice && typeof window.primerVoice.turnOff === "function") {
         window.primerVoice.turnOff();
@@ -170,7 +212,7 @@
     }
   }
 
-  function syncTalkModeFeed() {
+  function syncTalkModeFeed(options = {}) {
     const feed = document.querySelector("#talkFeed");
     if (!feed) return;
 
@@ -222,8 +264,9 @@
     }
     if (current) pairs.push(current);
 
+    const playgroundOpen = Boolean(talkPlaygroundSlug) && !document.getElementById("talkPlayground")?.hidden;
     const liveFrames = [];
-    feed.querySelectorAll("iframe.talk-lesson-interactive").forEach((frame) => {
+    document.querySelectorAll("iframe.talk-lesson-interactive").forEach((frame) => {
       liveFrames.push({ slug: frame.dataset.slug, node: frame });
     });
 
@@ -236,12 +279,7 @@
       if (!deeperExpl && !question) {
         return `
         <article class="talk-turn-card">
-          ${step.asked ? `
-            <div class="talk-child-prompt">
-              <span class="talk-child-badge">You asked</span>
-              <p class="talk-child-text">${escapeHtml(step.asked)}</p>
-            </div>
-          ` : ""}
+          ${step.asked ? childPromptHtml(step.asked) : ""}
           <div class="talk-lumi6-box talk-shimmer-box">
             <div class="talk-lumi6-header">
               ${LUMI6_AVATAR_HTML}
@@ -264,13 +302,8 @@
 
       return `
       <article class="talk-turn-card">
-        ${step.asked ? `
-          <div class="talk-child-prompt">
-            <span class="talk-child-badge">You asked</span>
-            <p class="talk-child-text">${escapeHtml(step.asked)}</p>
-          </div>
-        ` : ""}
-        <div class="talk-lumi6-box">
+        ${step.asked ? childPromptHtml(step.asked) : ""}
+        <div class="talk-lumi6-box${(step.interactive || step.image || (idx === pairs.length - 1 && window.__primerGraphicLoading)) ? " has-visual" : ""}">
           <div class="talk-lumi6-header">
             ${LUMI6_AVATAR_HTML}
             <span class="talk-lumi6-name">Lumi6</span>
@@ -294,10 +327,10 @@
                 ${choices && choices.length ? `
                   <div class="talk-choice-list" role="list">
                     ${choices.map((choice) => `
-                      <div class="talk-choice" role="listitem">
+                      <button type="button" class="talk-choice" role="listitem" data-choice-letter="${escapeHtml((choice.letter || "").toUpperCase())}" data-choice-text="${escapeHtml(choice.text)}">
                         <span class="talk-choice-letter">${escapeHtml((choice.letter || "").toUpperCase())}</span>
                         <span class="talk-choice-text">${escapeHtml(choice.text)}</span>
-                      </div>
+                      </button>
                     `).join("")}
                   </div>
                 ` : ""}
@@ -314,11 +347,104 @@
       if (kept?.node && kept.node !== frame) frame.replaceWith(kept.node);
     });
 
-    const scrollArea = document.querySelector("#talkScrollArea");
-    if (scrollArea) scrollArea.scrollTop = scrollArea.scrollHeight;
+    bindTalkChoices(feed);
+    bindTalkPlayground(feed);
+    if (playgroundOpen && talkPlaygroundSlug) {
+      const home = feed.querySelector(`.talk-interactive-wrapper[data-interactive-slug="${CSS.escape(talkPlaygroundSlug)}"]`);
+      const frame = home?.querySelector("iframe.talk-lesson-interactive");
+      if (frame) openTalkPlayground(frame);
+    }
+    if (options.scroll !== false) scrollTalkToLatest(options.scroll === true);
   }
 
-  window.syncTalkModeFeed = syncTalkModeFeed;
+  let lastTalkScrollKey = "";
+
+  function talkScrollKey() {
+    const turns = typeof window.Lumi6Lesson?.turns === "function" ? window.Lumi6Lesson.turns() : [];
+    const last = turns[turns.length - 1] || {};
+    return `${turns.length}:${last.role || ""}:${String(last.text || "").slice(0, 80)}`;
+  }
+
+  function scrollTalkToLatest(force) {
+    const scrollArea = document.querySelector("#talkScrollArea");
+    const last = document.querySelector("#talkFeed .talk-turn-card:last-of-type");
+    if (!scrollArea || !last) return;
+    const key = talkScrollKey();
+    if (!force && key === lastTalkScrollKey) return;
+    lastTalkScrollKey = key;
+    const areaRect = scrollArea.getBoundingClientRect();
+    const cardRect = last.getBoundingClientRect();
+    const top = scrollArea.scrollTop + (cardRect.top - areaRect.top) - 10;
+    scrollArea.scrollTo({ top: Math.max(0, top), behavior: "smooth" });
+  }
+
+  function bindTalkChoices(feed) {
+    const cards = feed.querySelectorAll(".talk-turn-card");
+    const last = cards[cards.length - 1];
+    if (!last) return;
+    const list = last.querySelector(".talk-choice-list");
+    if (!list) return;
+    const question = last.querySelector(".talk-question-text")?.textContent?.trim() || "";
+    list.querySelectorAll(".talk-choice").forEach((btn) => {
+      btn.addEventListener("click", () => sendTalkChoice(btn, question, list));
+    });
+  }
+
+  function sendTalkChoice(btn, question, list) {
+    if (!btn || list?.classList.contains("is-locked")) return;
+    const letter = btn.getAttribute("data-choice-letter") || "";
+    const choice = btn.getAttribute("data-choice-text") || btn.querySelector(".talk-choice-text")?.textContent?.trim() || "";
+    if (!choice) return;
+    list.classList.add("is-locked");
+    btn.classList.add("is-selected");
+    const payload = `I choose (${letter}) ${choice.replace(/[,;:\s]+or\.?$/i, "").trim()}.`;
+    if (window.primerChat && typeof window.primerChat.sendMessage === "function") {
+      window.primerChat.sendMessage(payload);
+    }
+  }
+
+  function bindTalkPlayground(feed) {
+    feed.querySelectorAll("[data-expand-interactive]").forEach((btn) => {
+      btn.addEventListener("click", () => {
+        const frame = btn.closest(".talk-interactive-wrapper")?.querySelector("iframe.talk-lesson-interactive");
+        if (frame) openTalkPlayground(frame);
+      });
+    });
+  }
+
+  function openTalkPlayground(frame) {
+    const sheet = document.getElementById("talkPlayground");
+    const stage = document.getElementById("talkPlaygroundStage");
+    const title = document.getElementById("talkPlaygroundTitle");
+    const home = frame.closest(".talk-interactive-stage") || frame.parentElement;
+    if (!sheet || !stage || !home) return;
+    talkPlaygroundSlug = frame.dataset.slug || "";
+    home.dataset.playgroundHome = "1";
+    if (title) title.textContent = frame.getAttribute("title") || "Playground";
+    stage.replaceChildren(frame);
+    sheet.hidden = false;
+    document.body.classList.add("talk-playground-open");
+  }
+
+  function closeTalkPlayground() {
+    const sheet = document.getElementById("talkPlayground");
+    const stage = document.getElementById("talkPlaygroundStage");
+    const frame = stage?.querySelector("iframe.talk-lesson-interactive");
+    const home = document.querySelector(".talk-interactive-stage[data-playground-home]")
+      || document.querySelector(`.talk-interactive-wrapper[data-interactive-slug="${CSS.escape(talkPlaygroundSlug)}"] .talk-interactive-stage`);
+    if (frame && home) {
+      const expand = home.querySelector("[data-expand-interactive]");
+      if (expand) home.insertBefore(frame, expand);
+      else home.prepend(frame);
+      delete home.dataset.playgroundHome;
+    }
+    if (sheet) sheet.hidden = true;
+    document.body.classList.remove("talk-playground-open");
+    talkPlaygroundSlug = "";
+  }
+
+  window.syncTalkModeFeed = (options) => syncTalkModeFeed(options);
+  window.scrollTalkToLatest = () => scrollTalkToLatest(true);
   window.setAppViewMode = setAppViewMode;
 
   const bindModeBtn = (selector, mode) => {
@@ -337,6 +463,13 @@
   if (talkMic && window.primerVoice && typeof window.primerVoice.bindMicTriggers === "function") {
     window.primerVoice.bindMicTriggers(talkMic);
   }
+
+  document.getElementById("talkPlaygroundClose")?.addEventListener("click", closeTalkPlayground);
+  document.addEventListener("keydown", (e) => {
+    if (e.key === "Escape" && document.body.classList.contains("talk-playground-open")) {
+      closeTalkPlayground();
+    }
+  });
 
   document.querySelector("#talkModeForm")?.addEventListener("submit", (e) => {
     e.preventDefault();

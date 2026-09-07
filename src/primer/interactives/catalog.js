@@ -149,6 +149,76 @@ const ITEMS = [
       "fraction", "fractions", "decimal", "decimals",
       "tenths", "hundredths", "numerator"
     ]
+  },
+  {
+    slug: "human-body-systems",
+    title: "Human Body Systems",
+    summary: "Choose a body system and see how it works with another.",
+    grade_min: 4,
+    grade_max: 7,
+    topics: [
+      "human body", "body systems", "body system",
+      "circulatory", "respiratory", "digestive",
+      "nervous system", "muscular system", "skeletal",
+      "organs", "heart and lungs"
+    ]
+  },
+  {
+    slug: "magnetism",
+    title: "Magnetism",
+    summary: "Increase magnet strength and watch iron and steel get pulled in.",
+    grade_min: 3,
+    grade_max: 6,
+    topics: [
+      "magnetism", "magnet", "magnets", "magnetic",
+      "north pole", "iron filings"
+    ]
+  },
+  {
+    slug: "moon-phases",
+    title: "Moon Phases",
+    summary: "Move the Moon around Earth and see why it looks like it changes shape.",
+    grade_min: 3,
+    grade_max: 6,
+    topics: [
+      "moon phases", "phases of the moon", "lunar phases",
+      "full moon", "new moon", "crescent", "waxing", "waning",
+      "why the moon changes"
+    ]
+  },
+  {
+    slug: "solar-system",
+    title: "Our Solar System",
+    summary: "Watch the planets orbit the Sun and tap one to learn about it.",
+    grade_min: 3,
+    grade_max: 6,
+    topics: [
+      "solar system", "planets", "orbit the sun",
+      "mercury venus", "jupiter saturn", "the planets"
+    ]
+  },
+  {
+    slug: "electricity-circuits",
+    title: "Electricity & Simple Circuits",
+    summary: "Close the switch and watch current complete the path to the bulb.",
+    grade_min: 4,
+    grade_max: 7,
+    topics: [
+      "electricity", "simple circuit", "simple circuits",
+      "electric circuit", "close the switch", "light the bulb",
+      "open circuit", "closed circuit"
+    ]
+  },
+  {
+    slug: "heat-temperature",
+    title: "Heat & Temperature",
+    summary: "Heat moves from the hotter object to the cooler one.",
+    grade_min: 3,
+    grade_max: 6,
+    topics: [
+      "heat and temperature", "heat transfer", "temperature difference",
+      "hotter and cooler", "heat moves", "conduction"
+    ]
   }
 ];
 

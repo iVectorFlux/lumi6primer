@@ -9,6 +9,7 @@ const BOARD_NARRATION = /whiteboard (is blank|shows|says|has)|the board (shows|s
 const CHEESE = /^(great question|you're getting it|what should we explore next)/i;
 const CANNED = /here'?s a situation where|the everyday assumption|a relationship, not a fact|which assumption|usual picture is missing a relationship|strange part stops being magic|here'?s the heart of/i;
 const STALL = /let's take .+ slowly|what part feels hardest|i'm here\. what do you want to figure out|hey\. what do you want to learn\?|let's look at .+ with a simple example|hmm,? let me think about that differently|tell me more about what you're trying to understand|we were talking about/i;
+const LAZY_QUESTION = /what were you trying to explore|what would you like to (explore|discover|learn)|tell me more|what part of this are you most curious|what do you want to figure out/i;
 const PHRASE_COACH = /^(say[,:]?\s*["“]|try saying|you can also say|a better way to (ask|say)|you could say|for example,? say)/i;
 const DOUBT_CHECK = /everything making sense|does that make sense|does this make sense|any part you want me to explain|any doubts|anything unclear|want me to explain.+again|making sense so far|with me so far|any questions so far|are you following|got it so far|shall i (continue|go on)|want me to (continue|go on|keep going)/i;
 
@@ -47,6 +48,7 @@ class ResponsePolicy {
     }
 
     text = this._limitSentences(text, hints.maxSentences || 5);
+    text = this._replaceLazyQuestion(text, decision, understanding, child);
 
     if (hints.mustAskQuestion && !/\?/.test(text)) {
       text = `${text} ${this._questionFor(decision, understanding, child)}`.trim();
@@ -114,7 +116,15 @@ class ResponsePolicy {
     const grade = this._gradeNumber(child);
     if (understanding?.voiceIssue) return topic ? `Want me to keep going with ${topic}?` : "What do you want to learn?";
     if (understanding?.refersToBoard) return "What happens if we change one of YOUR numbers?";
-    if (decision?.role === "editor") return "What were you trying to explore?";
+    if (understanding?.intent === "attempt" || understanding?.intent === "revision") {
+      if (topic) return `If that path is broken, can ${topic} still reach the thing it is supposed to power?`;
+      return "If the path is not a complete loop, what happens next?";
+    }
+    if (decision?.role === "editor") {
+      return topic
+        ? `What happens if we change one number in this ${topic} problem?`
+        : "Which number should we try first?";
+    }
     if (decision?.role === "advisor" && !topic) return "What would you like to explore today?";
     if (understanding?.intent === "drawing") return "What did you want this diagram to show?";
 
@@ -240,10 +250,22 @@ class ResponsePolicy {
       .trim();
   }
 
+  _replaceLazyQuestion(text, decision, understanding, child) {
+    const parts = String(text || "").split(/(?<=[.!?])\s+/).filter((s) => s.trim());
+    if (!parts.length) return String(text || "").trim();
+    const last = parts[parts.length - 1];
+    if (!/\?/.test(last) || !LAZY_QUESTION.test(last)) return parts.join(" ").trim();
+    parts[parts.length - 1] = this._questionFor(decision, understanding, child);
+    return parts.join(" ").trim();
+  }
+
   _limitSentences(text, max) {
-    const parts = text.split(/(?<=[.!?])\s+/).filter(Boolean);
-    if (parts.length <= max) return text;
-    return parts.slice(0, max).join(" ").trim();
+    const parts = String(text || "").split(/(?<=[.!?])\s+/).filter(Boolean);
+    if (parts.length <= max) return String(text || "").trim();
+    const kept = parts.slice(0, max);
+    const laterQuestion = parts.slice(max).find((part) => /\?/.test(part));
+    if (laterQuestion && !kept.some((part) => /\?/.test(part))) kept[kept.length - 1] = laterQuestion;
+    return kept.join(" ").trim();
   }
 
   _looksLikeUnsolicitedHindi(text, understanding) {

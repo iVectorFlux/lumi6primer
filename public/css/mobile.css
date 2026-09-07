@@ -415,12 +415,27 @@ button,
   }
 
   .talk-lesson-image {
-    max-height: 260px;
+    max-height: 220px;
+    object-fit: contain;
+  }
+
+  .talk-interactive-wrapper {
+    margin: 0 -6px;
   }
 
   .talk-lesson-interactive {
-    height: min(78vh, 640px);
-    min-height: 480px;
+    height: min(38dvh, 280px);
+    min-height: 210px;
+  }
+
+  .talk-interactive-expand {
+    left: 10px;
+    right: 10px;
+    bottom: 8px;
+    width: auto;
+    text-align: center;
+    padding: 10px 14px;
+    font-size: 14px;
   }
 
   .talk-image-caption {

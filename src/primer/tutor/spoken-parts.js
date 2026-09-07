@@ -1,5 +1,15 @@
 "use strict";
 
+function cleanChoiceText(text) {
+  return String(text || "")
+    .replace(/\s+/g, " ")
+    .trim()
+    .replace(/[,;:\s]+or\.?$/i, "")
+    .replace(/^[.,;:\s]+/, "")
+    .replace(/[.;]+$/, "")
+    .trim();
+}
+
 function extractSpokenParts(text) {
   let raw = String(text || "").replace(/\s+/g, " ").trim();
   const choices = [];
@@ -11,7 +21,7 @@ function extractSpokenParts(text) {
     const re = /\(\s*([a-c])\s*\)\s*([^]+?)(?=\s*\(\s*[a-c]\s*\)|$)/gi;
     let match;
     while ((match = re.exec(block))) {
-      const choice = String(match[2] || "").replace(/\s+/g, " ").trim().replace(/[.;]+$/, "");
+      const choice = cleanChoiceText(match[2]);
       if (choice) choices.push({ letter: match[1].toLowerCase(), text: choice });
     }
     if (choices.length >= 2) {
@@ -31,7 +41,7 @@ function extractSpokenParts(text) {
     else teaching.push(sentence);
   }
 
-  const speech = [...teaching, question].filter(Boolean).join(" ");
+  const speech = dedupeSentences([...teaching, question].filter(Boolean).join(" "));
   return {
     teaching: teaching.join(" "),
     question,
@@ -40,8 +50,27 @@ function extractSpokenParts(text) {
   };
 }
 
-function speechOnly(text) {
-  return extractSpokenParts(text).speech || String(text || "").trim();
+function dedupeSentences(text) {
+  const parts = String(text || "").replace(/\s+/g, " ").trim().split(/(?<=[.!?])\s+/).filter(Boolean);
+  const out = [];
+  for (const part of parts) {
+    const key = part.toLowerCase().replace(/[^a-z0-9]+/g, " ").trim();
+    const prev = (out[out.length - 1] || "").toLowerCase().replace(/[^a-z0-9]+/g, " ").trim();
+    if (!key || key === prev) continue;
+    out.push(part);
+  }
+  return out.join(" ");
 }
 
-module.exports = { extractSpokenParts, speechOnly };
+function speechOnly(text) {
+  return extractSpokenParts(text).speech || dedupeSentences(text);
+}
+
+function dedupeSpokenKeepChoices(text) {
+  const raw = String(text || "").replace(/\s+/g, " ").trim();
+  const idx = raw.search(/\(\s*a\s*\)/i);
+  if (idx < 0) return dedupeSentences(raw);
+  return `${dedupeSentences(raw.slice(0, idx))} ${raw.slice(idx)}`.replace(/\s+/g, " ").trim();
+}
+
+module.exports = { extractSpokenParts, speechOnly, dedupeSentences, dedupeSpokenKeepChoices, cleanChoiceText };

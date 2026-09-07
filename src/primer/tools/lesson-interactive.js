@@ -81,12 +81,18 @@ html,body{height:100%;margin:0;overflow:hidden}
 body{display:flex;flex-direction:column}
 .wrap,.app,.playground{flex:1;display:flex;flex-direction:column;max-width:none!important;width:100%!important;margin:0!important;padding:8px 10px!important;min-height:0!important;height:100%!important;box-shadow:none!important;border-radius:0!important}
 h1{font-size:17px!important;margin:0 0 2px!important;letter-spacing:0!important}
-.sub,.subtitle,header p,.hero p{display:none!important}
+.sub,.subtitle,.intro,header p,.hero p{display:none!important}
 header{padding:4px 0 6px!important;border:0!important;background:transparent!important}
 main{flex:1;display:flex;flex-direction:column;min-height:0;padding:0!important;gap:8px!important}
-.stage{flex:1 1 auto;height:auto!important;min-height:220px!important;max-height:none!important}
-canvas{width:100%!important;height:100%!important;min-height:220px!important;max-height:none!important}
-.controls,.try,.question,.readout{flex:0 0 auto;margin-top:6px!important;padding:8px 10px!important;font-size:13px!important}
+canvas{width:100%!important;height:100%!important;min-height:160px!important;max-height:none!important}
+.stage{flex:1 1 auto;height:auto!important;min-height:160px!important;max-height:none!important}
+@media(max-width:700px){
+  h1{font-size:15px!important}
+  .controls,.try,.question,.readout,.read{padding:6px 8px!important;font-size:12px!important}
+  .control{min-width:0!important;flex-basis:100%!important}
+  .readout{min-width:0!important;max-width:calc(100% - 16px)!important;left:8px!important;right:8px!important}
+}
+.controls,.try,.question,.readout,.read{flex:0 0 auto;margin-top:6px!important;padding:8px 10px!important;font-size:13px!important}
 .try span,.hint,.question span:not(.feedback){display:none!important}
 .tabs{margin-bottom:8px!important}
 `;

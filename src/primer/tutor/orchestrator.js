@@ -10,7 +10,7 @@ const { understandLearner, historyFromTurns } = require("./understand.js");
 const { isWeakTopic, spokenCoversTopic, deniesTopic, topicsRelated, topicFromText } = require("../topic.js");
 const { shouldGrade, isNewAsk, explicitTopicSwitch } = require("./kid-intent.js");
 const { parseProposal, modelText, looksLikeJsonBlob } = require("./proposal.js");
-const { speechOnly } = require("./spoken-parts.js");
+const { speechOnly, dedupeSpokenKeepChoices } = require("./spoken-parts.js");
 const { lastQuestion, questionsMatch, preventRepeatQuestion } = require("./teaching-move.js");
 const { LearnerModel } = require("../learner/learner-model.js");
 const MemoryService = require("../learner/memory-service.js");
@@ -407,6 +407,7 @@ class LearningOrchestrator {
     if (Array.isArray(extraChoices) && extraChoices.length >= 2 && !/\(\s*a\s*\)/i.test(spoken)) {
       spoken = `${spoken} ${extraChoices.map((choice, i) => `(${String.fromCharCode(97 + i)}) ${String(choice || "").trim()}`).filter((part) => /\).+\S/.test(part)).join(" ")}`.trim();
     }
+    spoken = dedupeSpokenKeepChoices(spoken);
     spoken = boardMath.ensureResult(spoken, mathFromTurn);
     spoken = preventRepeatQuestion(
       spoken,

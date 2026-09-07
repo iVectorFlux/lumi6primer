@@ -2470,7 +2470,7 @@ button, a, .btool, .topbar-icon-btn, .zoom-btn, .share-btn, .nav-item {
   flex: 1 1 auto;
   overflow-y: auto;
   overflow-x: hidden;
-  padding: 84px 24px 130px;
+  padding: 84px 20px 130px;
   scroll-behavior: smooth;
   background:
     radial-gradient(ellipse at 50% 0%, rgba(245, 243, 255, 0.7) 0%, rgba(255, 255, 255, 1) 65%);
@@ -2491,7 +2491,8 @@ body.mode-talk-active .canvas-footer {
 }
 
 .talk-container {
-  max-width: 820px;
+  max-width: min(1360px, 100%);
+  width: 100%;
   margin: 0 auto;
   display: flex;
   flex-direction: column;
@@ -2747,24 +2748,74 @@ body.mode-talk-active .canvas-footer {
 
 .talk-lesson-image {
   width: 100%;
-  max-height: 520px;
-  object-fit: cover;
+  max-height: min(58vh, 560px);
+  object-fit: contain;
+  object-position: center;
   display: block;
+  background: #fff;
 }
 
 .talk-interactive-wrapper {
   background: #f8fafc;
-  margin-left: -8px;
-  margin-right: -8px;
+  min-width: 0;
+}
+
+.talk-interactive-stage {
+  position: relative;
+  background: #fff;
 }
 
 .talk-lesson-interactive {
   display: block;
   width: 100%;
-  height: min(82vh, 760px);
-  min-height: 560px;
+  height: min(72vh, 720px);
+  min-height: 480px;
   border: 0;
   background: #fff;
+}
+
+.talk-interactive-expand {
+  position: absolute;
+  right: 10px;
+  bottom: 10px;
+  z-index: 2;
+  border: 0;
+  border-radius: 999px;
+  padding: 8px 14px;
+  background: rgba(15, 23, 42, 0.88);
+  color: #fff;
+  font: 700 13px/1 inherit;
+  cursor: pointer;
+  box-shadow: 0 4px 14px rgba(15, 23, 42, 0.25);
+}
+
+.talk-interactive-expand:hover,
+.talk-interactive-expand:focus-visible {
+  background: #4c1d95;
+  outline: none;
+}
+
+@media (min-width: 1100px) {
+  .talk-lumi6-box.has-visual {
+    display: grid;
+    grid-template-columns: minmax(320px, 0.92fr) minmax(420px, 1.35fr);
+    grid-template-areas:
+      "header header"
+      "text visual"
+      "ask visual";
+    align-items: start;
+    column-gap: 22px;
+    row-gap: 16px;
+  }
+
+  .talk-lumi6-box.has-visual > .talk-lumi6-header { grid-area: header; }
+  .talk-lumi6-box.has-visual > .talk-explanation-body { grid-area: text; }
+  .talk-lumi6-box.has-visual > .talk-image-wrapper { grid-area: visual; margin: 0; }
+  .talk-lumi6-box.has-visual > .talk-question-capsule { grid-area: ask; }
+  .talk-lumi6-box.has-visual .talk-lesson-interactive {
+    height: min(78vh, 820px);
+    min-height: 560px;
+  }
 }
 
 .talk-choice-list {
@@ -2782,6 +2833,31 @@ body.mode-talk-active .canvas-footer {
   border-radius: 12px;
   background: #f8fafc;
   border: 1px solid #e2e8f0;
+  cursor: pointer;
+  text-align: left;
+  width: 100%;
+  font: inherit;
+  appearance: none;
+}
+
+.talk-choice:hover,
+.talk-choice:focus-visible {
+  border-color: #c4b5fd;
+  background: #f5f3ff;
+  outline: none;
+}
+
+.talk-choice.is-selected {
+  border-color: #7c3aed;
+  background: #ede9fe;
+}
+
+.talk-choice-list.is-locked .talk-choice {
+  pointer-events: none;
+}
+
+.talk-choice-list.is-locked .talk-choice:not(.is-selected) {
+  opacity: 0.55;
 }
 
 .talk-choice-letter {
@@ -2896,7 +2972,8 @@ body.mode-talk-active .canvas-footer {
 }
 
 .talk-bar-container {
-  max-width: 820px;
+  max-width: min(1360px, 100%);
+  width: 100%;
   margin: 0 auto;
   display: flex;
   align-items: center;
@@ -2974,4 +3051,65 @@ body.mode-talk-active .canvas-footer {
 
 .talk-send-action-btn:hover {
   background: #6d28d9;
+}
+
+.talk-playground {
+  position: fixed;
+  inset: 0;
+  z-index: 120;
+  display: flex;
+  flex-direction: column;
+  background: #0f172a;
+}
+
+.talk-playground[hidden] {
+  display: none !important;
+}
+
+.talk-playground-bar {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 14px calc(10px + env(safe-area-inset-top, 0px));
+  padding-top: calc(10px + env(safe-area-inset-top, 0px));
+  background: rgba(15, 23, 42, 0.96);
+  color: #fff;
+}
+
+.talk-playground-close {
+  border: 0;
+  border-radius: 999px;
+  padding: 8px 14px;
+  background: #8b5cf6;
+  color: #fff;
+  font: 700 14px inherit;
+  cursor: pointer;
+}
+
+.talk-playground-title {
+  font-weight: 700;
+  font-size: 15px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.talk-playground-stage {
+  flex: 1 1 auto;
+  min-height: 0;
+  background: #fff;
+}
+
+.talk-playground-stage .talk-lesson-interactive {
+  height: 100%;
+  min-height: 0;
+}
+
+body.talk-playground-open {
+  overflow: hidden;
+}
+
+body.talk-playground-open .talk-bottom-bar {
+  visibility: hidden;
 }
