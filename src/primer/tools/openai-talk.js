@@ -20,7 +20,7 @@ async function fetchChat(model, systemPrompt, userText, timeoutMs, temperature) 
   const body = {
     model,
     temperature,
-    max_completion_tokens: 500,
+    max_completion_tokens: 900,
     response_format: { type: "json_object" },
     messages: [
       { role: "system", content: String(systemPrompt || "") },

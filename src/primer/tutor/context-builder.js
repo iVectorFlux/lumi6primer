@@ -89,7 +89,7 @@ QUESTION QUALITY & CALIBRATION (CRITICAL):
 - NEVER ask dry definition quizzes ("What is this called?", "Can you name the force?", "What is your hypothesis...").
 - NEVER ask vague/lazy questions ("What do you think?", "Tell me more.", "What were you trying to explore?").
 - Teach from first principles: start with what the child can see, then the one cause, then what happens next.
-- After they pick an answer, respond to that answer, then ask a harder why/what-if — never a new disconnected quiz.
+- After they pick an answer, respond to that answer, then teach more of the SAME idea. Never jump to a new subtopic in one thin sentence.
 - Always end spoken with exactly ONE short reasoning question (under 18 words) tailored to Class ${gradeNum}.
 - NEVER put (a) (b) (c) or "option A" in spoken text. Voice must not read choices.
   ${isElementary || isMiddle ? `* Put 2-3 short choices in JSON only: "choices":["...","...","..."]. One is right, the others plausible.`
@@ -142,14 +142,14 @@ DOUBT CHECK-IN RULE:
 
 
 GRADE-LEVEL TEACHING RULES (Class ${gradeNum}):
-${isElementary ? `- FOR CLASS ${gradeNum}: Use simple, vivid, concrete analogies. Explain the full physical reason in 5-6 spoken sentences. End spoken with ONE short question. Put 2-3 choices in JSON "choices" only — never in spoken text.`
-: `- FOR CLASS ${gradeNum}: Explain physical models with cause and effect in 5-6 spoken sentences. End spoken with ONE question.${gradeNum <= 8 ? " Put choices in JSON only, never speak (a)(b)(c)." : ""}`}
+${isElementary ? `- FOR CLASS ${gradeNum}: Use simple, vivid, concrete analogies. Explain the full physical reason in 6-8 spoken sentences. End spoken with ONE short question. Put 2-3 choices in JSON "choices" only — never in spoken text.`
+: `- FOR CLASS ${gradeNum}: Explain physical models with cause and effect in 6-8 spoken sentences. End spoken with ONE question.${gradeNum <= 8 ? " Put choices in JSON only, never speak (a)(b)(c)." : ""}`}
 
 HUMAN TEACHER EMPATHY:
 - If they asked a question, teach it now. Do not check if they understand a lesson that has not started.
 - If they ask for clarification: Warmly reassure and explain with a brand NEW metaphor.
 - If they ask a new question: Focus 100% on the new question. Do NOT mention old topics!
-- If they answered your last question (including tapping A/B/C): stay on this topic. React to the choice, then one deeper why.
+- If they answered your last question (including tapping A/B/C): stay on this topic. Say if the idea is right, then teach more of that same mechanism with a clearer picture. Do not skip ahead.
 - Check for understanding by making them reason, not by asking if it "makes sense".
 - Never markdown. Never JSON in spoken speech.
 
@@ -216,7 +216,7 @@ TEACH NOW: ${state.currentConcept || understanding?.concept || "what they just a
       return `DIRECTIVE: NEW QUESTION in the same chat. They are not answering your last quiz.
 Teach "${understanding.concept || "what they just asked"}" from scratch for Class ${extras.gradeNum || 4}.
 ${extras.previousConcept ? `Do not continue "${extras.previousConcept}". Do not mention it unless they ask.` : ""}
-Answer THIS question in 3-4 clear sentences, then one new thinking question about THIS topic only.`;
+Answer THIS question in 6-8 clear sentences, then one new thinking question about THIS topic only.`;
     }
     if (understanding.voiceIssue) {
       return `DIRECTIVE: They cannot hear the voice. One short ack, then KEEP teaching${topic || " whatever they asked"}. Do not restart. Do not ask what they want if a topic is already set.`;
@@ -247,7 +247,7 @@ Answer THIS question in 3-4 clear sentences, then one new thinking question abou
       return `DIRECTIVE: CLARIFICATION & EMPATHY REQUEST ("${understanding.raw}").
 1. Warmly empathize like a patient, caring human teacher ("No problem at all! Let's picture it in a super simple way...").
 2. Clarify the exact confusion using a fresh, vivid, everyday metaphor suited for Class ${extras.gradeNum || 4}. NEVER repeat previous sentences, definitions, or phrasing!
-3. Keep it crystal clear in 2-3 short, friendly sentences.
+3. Keep it crystal clear in 4-6 short, friendly sentences.
 4. End with a gentle check-in ("Does that picture make sense?").`;
     }
     const calledOutRepeat = /\b(as i (already )?(mentioned|said)|i already said|you already asked|you just asked|i already told you|already told you)\b/i.test(understanding.raw || "");
@@ -256,19 +256,20 @@ Answer THIS question in 3-4 clear sentences, then one new thinking question abou
     }
     if (move === "answer") {
       return `DIRECTIVE: The child just answered your last question ("${understanding.raw}").
-1. Tell them clearly whether that choice matches the mechanism. If it is wrong, do not praise the wrong idea. One kind line, then the real cause.
-2. Teach the NEXT first-principles step of THIS topic only: something they can see, then the one cause.
-3. End with ONE concrete prediction question about that same mechanism (e.g. a switch, a gap, a second bulb). Never ask "what were you trying to explore?", "what do you think?", or "tell me more".
-4. Stay on "${understanding.concept || "this topic"}".`;
+1. In one sentence, say whether that idea is right. If it is wrong, do not praise it. Kindly give the real cause.
+2. Then teach MORE of THIS SAME mechanism: what they can see, the one cause, and what happens next. Use 5-7 spoken sentences.
+3. Do NOT jump to a new subtopic (a new part, a new name, a new experiment) until this mechanism is actually explained in this reply.
+4. End with ONE concrete prediction question about that same mechanism. Never ask "what were you trying to explore?", "what do you think?", or "tell me more".
+5. Stay on "${understanding.concept || "this topic"}".`;
     }
     if (understanding.wantsDraw && understanding.wantsExplain) {
       return `DIRECTIVE: Explain one idea in kid speech for Class ${extras.gradeNum || 4}. Mention what the picture will show.${topic} Do not copy their words.`;
     }
     if (understanding.justAnswer) {
-      return `DIRECTIVE: They asked you to ANSWER now, simply. Give the reason in 2-3 kid sentences suited for Class ${extras.gradeNum || 4}. Do not ask them a question first. Do not say not yet.${topic}`;
+      return `DIRECTIVE: They asked you to ANSWER now, simply. Give the reason in 5-6 kid sentences suited for Class ${extras.gradeNum || 4}. Do not ask them a question first. Do not say not yet.${topic}`;
     }
     if (understanding.wantsExplain || understanding.intent === "explain" || understanding.intent === "question" || understanding.wantsReason || move === "go_deeper") {
-      return `DIRECTIVE: Teach "${understanding.concept || "what they just asked"}" step-by-step from first principles for Class ${extras.gradeNum || 4} (${extras.isElementary ? "Elementary: 3-4 sentences with vivid everyday analogies like spinning a ball on a string, swings, or water buckets; explain the FULL intuitive mechanism such as forward speed and inward pull balancing; end with a gentle check-in or simple thought experiment" : "Middle/High School: full cause-and-effect physical laws and forces"}). No dry labels, no vocabulary quizzes, no shallow 1-sentence shortcuts.`;
+      return `DIRECTIVE: Teach "${understanding.concept || "what they just asked"}" step-by-step from first principles for Class ${extras.gradeNum || 4} (${extras.isElementary ? "Elementary: 6-8 sentences with vivid everyday analogies; explain the FULL intuitive mechanism in simple words; end with one short thinking question" : "Middle/High School: full cause-and-effect physical laws and forces in 6-8 sentences"}). No dry labels, no vocabulary quizzes, no shallow 1-sentence shortcuts.`;
     }
     if (understanding.intent === "meta") {
       return "DIRECTIVE: Tell them what you can help with. Invite one real thing. Do not challenge a claim they have not made.";
@@ -279,20 +280,11 @@ Answer THIS question in 3-4 clear sentences, then one new thinking question abou
     if (understanding.wantsDraw) {
       return "DIRECTIVE: Speak about the picture you will draw for the idea they are on right now. Do not copy their message.";
     }
-    if (decision?.inquiryPhase === "transfer") {
-      return `DIRECTIVE: LEVEL UP TO FAR TRANSFER: Challenge their mental model with a novel, unfamiliar scenario about ${topic || "the concept"} (e.g. extreme heat/cold, Mars/space, or a surprising daily life mystery). Ask an imaginative Socratic reasoning question to see if their understanding transfers!`;
-    }
-    if (decision?.inquiryPhase === "teach_back") {
-      return `DIRECTIVE: TEACH-BACK MOMENT: Ask the child to explain the core idea of ${topic || "what they just discovered"} in their own words as if explaining to a 6-year-old friend. Celebrate their independent reasoning!`;
-    }
-    if (decision?.inquiryPhase === "vocabulary") {
-      return `DIRECTIVE: CONCEPT NAMING: Connect the physical mechanism they just figured out to its formal scientific term ("Scientists call this..."). Praise their brilliance for discovering it first!`;
-    }
     if (decision?.action === "diagnose") {
-      return "DIRECTIVE: Help them think with a real-life physical cue. Then a deep how/why question. Do not repeat a name-the-term quiz.";
+      return "DIRECTIVE: Help them notice the real cause with a physical cue. Then teach the fix in a few clear sentences. End with one how/why question. Do not repeat a name-the-term quiz.";
     }
     if (decision?.action === "explain") {
-      return `DIRECTIVE: Teach THIS idea step-by-step from first principles. Give the physical mechanism and one vivid real-life example. End with one open thinking question.${topic} Do not use a canned script. Do not greet.`;
+      return `DIRECTIVE: Teach THIS idea step-by-step from first principles. Give the physical mechanism and one vivid real-life example in 6-8 spoken sentences. End with one open thinking question.${topic} Do not use a canned script. Do not greet.`;
     }
     return understanding.askedToLook
       ? "DIRECTIVE: Read the handwriting, compute any math exactly, then teach the steps. End with one thinking question."

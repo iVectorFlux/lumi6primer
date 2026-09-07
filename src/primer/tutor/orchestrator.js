@@ -412,7 +412,8 @@ class LearningOrchestrator {
     spoken = preventRepeatQuestion(
       spoken,
       state.conversationState?.lastCheckQuestion,
-      Number(state.conversationState?.sameQuestionStreak || 0)
+      Number(state.conversationState?.sameQuestionStreak || 0),
+      state.currentConcept || understanding.concept
     );
     if (state.safetyState.dependencyRisk === "high") {
       spoken = `${spoken} Try the next bit without me first — then tell me what you did.`.replace(/\s+/g, " ");
@@ -647,11 +648,10 @@ class LearningOrchestrator {
   _kickOpenerTts(input, spoken) {
     const sentences = String(spoken || "").replace(/\s+/g, " ").trim()
       .match(/[^.!?]+[.!?]+(?:[\"\u201D\u2019])?|[^.!?]+$/g) || [];
-    const chunks = sentences.map(s => s.trim()).filter(s => s.length > 3).slice(0, 2);
+    const chunks = sentences.map(s => s.trim()).filter(s => s.length > 3).slice(0, 3);
     if (!chunks.length) return Promise.resolve(null);
-    // Synthesize first 2 sentences in parallel for faster audio start
     const promises = chunks.map((text, i) =>
-      synthesizeCartesiaSpeech(text.slice(0, 220))
+      synthesizeCartesiaSpeech(text.slice(0, 280))
         .then((audio) => {
           const payload = audioToPayload(audio);
           if (!payload.audioBase64) return null;
@@ -659,7 +659,7 @@ class LearningOrchestrator {
             event: "audio",
             opener: i === 0,
             chunkIndex: i,
-            text: text.slice(0, 220),
+            text: text.slice(0, 280),
             ...payload
           });
           return payload;
@@ -800,7 +800,7 @@ Use 6 to 10 parts. Types: circle, box, ellipse, arrow, line, beam, person, text.
     const systemPrompt = `You are Lumi6 — a warm, inspiring human teacher teaching a Class ${gradeNum} student (age ~${gradeNum + 5}).
 Teach "${topic}" from first principles. The child asked: "${raw}".
 Every sentence must be about "${topic}".
-Explain the full physical intuition in 5-6 simple, vivid spoken sentences using concrete everyday analogies (${isElem ? "spinning a ball on a string, swings, or water buckets" : "momentum and balanced forces"}).
+Explain the full physical intuition in 6-8 simple, vivid spoken sentences using concrete everyday analogies (${isElem ? "spinning a ball on a string, swings, or water buckets" : "momentum and balanced forces"}).
 End spoken with exactly ONE warm check-in for Class ${gradeNum} (under 16 words).
 Do not put (a)(b)(c) in spoken text. If helpful, add JSON choices.
 NEVER ask "what is this called", "what is your hypothesis", or dry vocabulary quizzes.

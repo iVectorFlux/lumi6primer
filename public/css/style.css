@@ -2637,8 +2637,8 @@ body.mode-talk-active .canvas-footer {
 
 /* Explanation Body */
 .talk-explanation-body {
-  font-size: 18px;
-  line-height: 1.68;
+  font-size: 20px;
+  line-height: 1.7;
   color: #1e293b;
 }
 
@@ -2768,54 +2768,50 @@ body.mode-talk-active .canvas-footer {
 .talk-lesson-interactive {
   display: block;
   width: 100%;
-  height: min(72vh, 720px);
-  min-height: 480px;
+  height: min(42vh, 380px);
+  min-height: 260px;
   border: 0;
   background: #fff;
 }
 
+.talk-image-caption {
+  padding: 10px 16px;
+  font-size: 13.5px;
+  font-weight: 500;
+  color: #64748b;
+  background: #f8fafc;
+  border-top: 1px solid rgba(226, 232, 240, 0.6);
+  text-align: left;
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.talk-image-caption-title {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
 .talk-interactive-expand {
-  position: absolute;
-  right: 10px;
-  bottom: 10px;
-  z-index: 2;
+  display: inline-flex;
+  align-items: center;
+  margin-left: auto;
   border: 0;
   border-radius: 999px;
-  padding: 8px 14px;
-  background: rgba(15, 23, 42, 0.88);
+  padding: 7px 12px;
+  background: #4c1d95;
   color: #fff;
-  font: 700 13px/1 inherit;
+  font: 700 12.5px/1 inherit;
   cursor: pointer;
-  box-shadow: 0 4px 14px rgba(15, 23, 42, 0.25);
+  white-space: nowrap;
 }
 
 .talk-interactive-expand:hover,
 .talk-interactive-expand:focus-visible {
-  background: #4c1d95;
+  background: #5b21b6;
   outline: none;
-}
-
-@media (min-width: 1100px) {
-  .talk-lumi6-box.has-visual {
-    display: grid;
-    grid-template-columns: minmax(320px, 0.92fr) minmax(420px, 1.35fr);
-    grid-template-areas:
-      "header header"
-      "text visual"
-      "ask visual";
-    align-items: start;
-    column-gap: 22px;
-    row-gap: 16px;
-  }
-
-  .talk-lumi6-box.has-visual > .talk-lumi6-header { grid-area: header; }
-  .talk-lumi6-box.has-visual > .talk-explanation-body { grid-area: text; }
-  .talk-lumi6-box.has-visual > .talk-image-wrapper { grid-area: visual; margin: 0; }
-  .talk-lumi6-box.has-visual > .talk-question-capsule { grid-area: ask; }
-  .talk-lumi6-box.has-visual .talk-lesson-interactive {
-    height: min(78vh, 820px);
-    min-height: 560px;
-  }
 }
 
 .talk-choice-list {
@@ -2881,20 +2877,6 @@ body.mode-talk-active .canvas-footer {
   font-weight: 550;
 }
 
-.talk-image-caption {
-  padding: 10px 16px;
-  font-size: 13.5px;
-  font-weight: 500;
-  color: #64748b;
-  background: #f8fafc;
-  border-top: 1px solid rgba(226, 232, 240, 0.6);
-  text-align: center;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-}
-
 .talk-image-tag {
   display: inline-block;
   font-size: 10.5px;
@@ -2949,10 +2931,10 @@ body.mode-talk-active .canvas-footer {
 
 .talk-question-text {
   margin: 0;
-  font-size: 17.5px;
+  font-size: 18.5px;
   font-weight: 600;
   color: #2e1065;
-  line-height: 1.45;
+  line-height: 1.5;
 }
 
 /* Bottom Talk Bar */
@@ -3059,6 +3041,10 @@ body.mode-talk-active .canvas-footer {
   z-index: 120;
   display: flex;
   flex-direction: column;
+  width: 100%;
+  height: 100dvh;
+  max-height: 100dvh;
+  overflow: hidden;
   background: #0f172a;
 }
 
@@ -3098,12 +3084,16 @@ body.mode-talk-active .canvas-footer {
 .talk-playground-stage {
   flex: 1 1 auto;
   min-height: 0;
+  overflow: hidden;
   background: #fff;
 }
 
 .talk-playground-stage .talk-lesson-interactive {
+  display: block;
+  width: 100%;
   height: 100%;
   min-height: 0;
+  border: 0;
 }
 
 body.talk-playground-open {

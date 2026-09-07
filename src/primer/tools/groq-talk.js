@@ -77,7 +77,7 @@ async function callGroq(model, systemPrompt, userText, temperature, signal) {
   const body = {
     model,
     temperature: typeof temperature === "number" ? temperature : 0.45,
-    max_tokens: 480,
+    max_tokens: 900,
     response_format: { type: "json_object" },
     messages: [
       { role: "system", content: String(systemPrompt || "") },

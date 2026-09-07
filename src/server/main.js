@@ -302,8 +302,8 @@ function providerRequest(key, model, text, atlasImage = null, effort = API_EFFOR
           : boardRead
           ? "\n\nReply with compact JSON only: {\"transcription\":\"line by line\",\"expressions\":[{\"text\":\"12 × 4\"}]}."
           : fastTalk
-          ? "\n\nReply with compact JSON only: {\"spoken\":\"2-4 short kid sentences including one check question\"}."
-          : "\n\nReply with compact JSON only. spoken must be 2-4 short kid sentences. Do not copy the student's words.";
+          ? "\n\nReply with compact JSON only: {\"spoken\":\"6-8 clear kid sentences that actually teach the idea, then one short check question\"}."
+          : "\n\nReply with compact JSON only. spoken must be 6-8 clear kid sentences that teach the idea. Do not copy the student's words.";
       }
     } catch {}
   }
@@ -338,7 +338,7 @@ function providerRequest(key, model, text, atlasImage = null, effort = API_EFFOR
   const reasoningParam = !omitReasoningEffort && isReasoningModel && normEffort && validReasoningEfforts.has(normEffort)
     ? { reasoning_effort: normEffort }
     : {};
-  const maxOut = teacherMode ? (pictureOnly ? 900 : fastTalk ? 360 : 1400) : (atlasImage && !teacherMode ? anthropicResponseMaxTokens(effort) : 4096);
+  const maxOut = teacherMode ? (pictureOnly ? 900 : fastTalk ? 900 : 1400) : (atlasImage && !teacherMode ? anthropicResponseMaxTokens(effort) : 4096);
   return {
     headers: { "Content-Type": "application/json", Authorization: `Bearer ${key}` },
     body: JSON.stringify({

@@ -260,11 +260,20 @@
         if (onEnd) onEnd();
         return;
       }
-      this.cancel();
+      if (this._sourceNode) { try { this._sourceNode.stop(); } catch (e) {} this._sourceNode = null; }
+      if (this.player) { try { this.player.pause(); } catch (e) {} }
+      if ("speechSynthesis" in window) { try { window.speechSynthesis.cancel(); } catch (e) {} }
       const generation = ++this.generation;
-      this._openerBlob = null;
-      this._openerText = "";
-      this._openerWaiters = [];
+      const first = this.ttsChunks(text)[0] || "";
+      const openerNorm = String(this._openerText || "").replace(/\s+/g, " ").trim().toLowerCase();
+      const keepOpener = Boolean(this._openerBlob && openerNorm && first.toLowerCase() === openerNorm);
+      if (!keepOpener) {
+        const oldWaiters = (this._openerWaiters || []).splice(0);
+        for (const wait of oldWaiters) wait(null);
+        this._openerBlob = null;
+        this._openerText = "";
+        this._openerWaiters = [];
+      }
       let finished = false;
       const startOnce = () => {
         if (generation !== this.generation) return;
@@ -279,7 +288,7 @@
         if (generation !== this.generation) return;
         console.warn("[Lumi6 Voice] TTS watchdog — releasing mic");
         endOnce();
-      }, 45000);
+      }, 90000);
       const wrapEnd = () => {
         clearTimeout(watchdog);
         endOnce();
@@ -390,20 +399,16 @@
     }
 
     ttsChunks(text) {
-      const chunks = String(text || "").match(/[^.!?]+[.!?]+(?:["”'])?|[^.!?]+$/g) || [text];
+      const chunks = String(text || "").replace(/\s+/g, " ").trim()
+        .match(/[^.!?]+[.!?]+(?:["”'])?|[^.!?]+$/g) || [String(text || "").trim()];
       const parts = [];
       for (const chunk of chunks) {
         const part = String(chunk || "").replace(/\s+/g, " ").trim();
         if (!part) continue;
-        if (!parts.length) {
-          parts.push(part);
-        } else if (!/[.!?]$/.test(parts[parts.length - 1]) && parts[parts.length - 1].length + part.length < 120) {
-          parts[parts.length - 1] = `${parts[parts.length - 1]} ${part}`;
-        } else {
-          parts.push(part);
-        }
+        if (parts.length && parts[parts.length - 1] === part) continue;
+        parts.push(part);
       }
-      return parts.length ? parts : [String(text || "").trim()].filter(Boolean);
+      return parts;
     }
 
     blobFromBase64(base64, contentType) {
@@ -445,41 +450,6 @@
         const timer = setTimeout(() => finish(this._openerBlob), timeoutMs);
         this._openerWaiters.push(notify);
       });
-    }
-
-    async firstAudioBlob(text) {
-      const chunk = String(text || "").replace(/\s+/g, " ").trim();
-      const openerNorm = String(this._openerText || "").replace(/\s+/g, " ").trim().toLowerCase();
-      const chunkNorm = chunk.toLowerCase();
-      if (this._openerBlob && openerNorm && (chunkNorm === openerNorm || chunkNorm.startsWith(openerNorm))) {
-        return this._openerBlob;
-      }
-      const fetchPromise = this.fetchTtsBlob(chunk, 12000).catch((err) => {
-        console.warn("[Lumi6 Voice] opener fetch failed:", err.message);
-        return null;
-      });
-      const openerPromise = openerNorm && chunkNorm && !(chunkNorm === openerNorm || chunkNorm.startsWith(openerNorm))
-        ? Promise.resolve(null)
-        : this.waitOpenerAudio(6000);
-      const raced = await Promise.race([openerPromise, fetchPromise]);
-      if (raced && raced.size >= 32) return raced;
-      const [opener, fetched] = await Promise.all([openerPromise, fetchPromise]);
-      const blob = fetched || opener;
-      if (blob && blob.size >= 32) return blob;
-      throw new Error("No opener TTS audio");
-    }
-
-    splitTeachAndAsk(text) {
-      const raw = String(text || "").replace(/\s+/g, " ").trim();
-      const idx = raw.lastIndexOf("?");
-      if (idx < 24) return { teach: raw, ask: "" };
-      const before = raw.slice(0, idx + 1);
-      const breakAt = Math.max(before.lastIndexOf(". "), before.lastIndexOf("! "));
-      if (breakAt < 18) return { teach: raw, ask: "" };
-      const teach = before.slice(0, breakAt + 1).trim();
-      const ask = `${before.slice(breakAt + 1).trim()} ${raw.slice(idx + 1).trim()}`.trim();
-      if (teach.length < 24 || ask.length < 8) return { teach: raw, ask: "" };
-      return { teach, ask };
     }
 
     pause(ms, generation) {
@@ -541,48 +511,31 @@
     }
 
     async speakNeural(text, generation, onStart, onEnd) {
-      const { teach, ask } = this.splitTeachAndAsk(text);
-      const parts = this.ttsChunks(teach).concat(ask ? [ask] : []);
-      const askIndex = ask ? parts.length - 1 : -1;
+      const parts = this.ttsChunks(text);
       if (!parts.length) {
         if (onEnd) onEnd();
         return;
       }
-      let started = false;
-      // Prefetch first chunk (may come from server opener TTS)
-      let pending = this.firstAudioBlob(parts[0]);
-      // Also prefetch chunk 2 in parallel if available
-      let pending2 = parts.length > 1 ? this.fetchTtsBlob(parts[1], 8000).catch(() => null) : null;
-      const firstBlob = await pending.catch(() => null);
-      if (!firstBlob) {
-        console.warn("[Lumi6 Voice] First audio chunk unavailable, falling back to browser speech");
-        if (generation === this.generation) {
-          this.speakBrowser(text, onStart, onEnd);
-        }
-        return;
+      if (!this._openerBlob) {
+        await this.waitOpenerAudio(1800);
       }
+      let started = false;
+      const cache = parts.map((part, i) => (
+        i < 2 ? this.audioForChunk(part, i === 0) : null
+      ));
       for (let i = 0; i < parts.length; i++) {
         if (generation !== this.generation) return;
-        if (i === askIndex && i > 0) await this.pause(350, generation);
-        if (generation !== this.generation) return;
-        let blob;
-        if (i === 0) blob = firstBlob;
-        else if (i === 1 && pending2) blob = await pending2;
-        else blob = await pending.catch(() => null);
+        if (i + 2 < parts.length && !cache[i + 2]) {
+          cache[i + 2] = this.audioForChunk(parts[i + 2], false);
+        }
+        if (!cache[i]) cache[i] = this.audioForChunk(parts[i], i === 0);
+        let blob = await cache[i].catch(() => null);
+        if (!blob) blob = await this.fetchTtsBlob(parts[i], 12000).catch(() => null);
         if (!blob) {
           if (generation === this.generation) {
-            this.speakBrowser(parts.slice(i).join(" "), onStart, onEnd);
+            this.speakBrowser(parts.slice(i).join(" "), started ? null : onStart, onEnd);
           }
           return;
-        }
-        // Prefetch next 2 chunks ahead in parallel
-        if (i + 1 < parts.length) {
-          pending = this.fetchTtsBlob(parts[i + 1], 8000).catch(() => null);
-        }
-        if (i + 2 < parts.length) {
-          pending2 = this.fetchTtsBlob(parts[i + 2], 8000).catch(() => null);
-        } else {
-          pending2 = null;
         }
         await this.playBlobAsync(blob, generation, () => {
           if (started || generation !== this.generation) return;
@@ -591,6 +544,15 @@
         });
       }
       if (generation === this.generation && onEnd) onEnd();
+    }
+
+    audioForChunk(text, allowOpener) {
+      const chunk = String(text || "").replace(/\s+/g, " ").trim();
+      const openerNorm = String(this._openerText || "").replace(/\s+/g, " ").trim().toLowerCase();
+      if (allowOpener && this._openerBlob && openerNorm && chunk.toLowerCase() === openerNorm) {
+        return Promise.resolve(this._openerBlob);
+      }
+      return this.fetchTtsBlob(chunk, 12000);
     }
 
     async speakCartesia(text, generation, onStart, onEnd) {
@@ -949,7 +911,7 @@
       const btns = [this.elements?.toggleBtn, document.getElementById("talkModeMicBtn")].filter(Boolean);
       btns.forEach((btn) => {
         btn.classList.remove("primer-listening", "primer-speaking", "primer-processing", "primer-holding");
-        if (stateName) btn.classList.add(`atlas-${stateName}`);
+        if (stateName) btn.classList.add(`primer-${stateName}`);
       });
       if (this.elements?.label) {
         this.elements.label.textContent = stateName === "speaking" ? "Speaking..." : stateName === "listening" ? "Listening..." : stateName === "processing" ? "Thinking..." : "Lumi6";
@@ -1028,7 +990,7 @@
     speakThenListen(line) {
       if (!this.isActive || !line) return;
       this.lastSpoken = line;
-      this.showOverlay("teacher", line);
+      this.showOverlay("speaking", line);
       this.state = "SPEAKING";
       this._syncVoiceButtonUI("speaking");
       if (this._welcomeWatch) {
@@ -1505,6 +1467,25 @@
     }
 
     /**
+     * Speak a Talk Mode reply even when the mic is not held.
+     */
+    speakLesson(data) {
+      if (!this.isTalkModeActive()) return;
+      const teacherText = data?.spokenResponse || data?.teacherResponse || data?.spoken;
+      const speechText = this.cleanTextForSpeech(teacherText);
+      if (!speechText || !this.tts) return;
+      if (typeof this.tts.unlockPlayback === "function") this.tts.unlockPlayback();
+      this.showOverlay("speaking", "Speaking...");
+      this.tts.speak(
+        speechText,
+        () => this.showOverlay("speaking", "Speaking..."),
+        () => {
+          if (!this.isActive) this.hideOverlay();
+        }
+      );
+    }
+
+    /**
      * Speak teacher response and synchronously execute whiteboard drawing plan.
      */
     speakAndDraw(data, studentText = "", { draw = true } = {}) {
@@ -1529,6 +1510,7 @@
 
       this.stt.stop();
       this._syncVoiceButtonUI("speaking");
+      this.showOverlay("speaking", "Speaking...");
 
       const drawPromise = shouldDraw
         ? this.syncer.executeVisualPlan(data.visualPlan, data.drawingResult, data.canvasActions)
@@ -1564,6 +1546,8 @@
         speechText,
         () => {
           this.stt.stop();
+          this._syncVoiceButtonUI("speaking");
+          this.showOverlay("speaking", "Speaking...");
         },
         () => {
           drawPromise.finally(finishTurn);
@@ -1583,7 +1567,7 @@
 
       if (this.elements.badge) {
         this.elements.badge.className = `primer-badge ${role}`;
-        this.elements.badge.textContent = role === "student" ? "You" : role === "teacher" ? "Lumi6" : role === "listening" ? "Listening" : role === "processing" ? "Thinking" : role;
+        this.elements.badge.textContent = role === "student" ? "You" : role === "teacher" ? "Lumi6" : role === "listening" ? "Listening" : role === "processing" ? "Thinking" : role === "speaking" ? "Speaking" : role;
       }
       if (this.elements.text) {
         this.elements.text.textContent = text;

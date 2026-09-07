@@ -385,8 +385,28 @@ button,
   }
 
   .talk-explanation-body {
-    font-size: 15.5px;
-    line-height: 1.58;
+    font-size: 17px;
+    line-height: 1.62;
+  }
+
+  .talk-lesson-image {
+    max-height: min(42vh, 320px);
+    object-fit: contain;
+  }
+
+  .talk-interactive-wrapper {
+    margin: 0;
+  }
+
+  .talk-lesson-interactive {
+    height: min(32dvh, 260px);
+    min-height: 180px;
+  }
+
+  .talk-interactive-expand {
+    display: inline-flex;
+    font-size: 11.5px;
+    padding: 6px 10px;
   }
 
   .talk-question-capsule {
@@ -412,30 +432,6 @@ button,
 
   .talk-image-wrapper {
     border-radius: 14px;
-  }
-
-  .talk-lesson-image {
-    max-height: 220px;
-    object-fit: contain;
-  }
-
-  .talk-interactive-wrapper {
-    margin: 0 -6px;
-  }
-
-  .talk-lesson-interactive {
-    height: min(38dvh, 280px);
-    min-height: 210px;
-  }
-
-  .talk-interactive-expand {
-    left: 10px;
-    right: 10px;
-    bottom: 8px;
-    width: auto;
-    text-align: center;
-    padding: 10px 14px;
-    font-size: 14px;
   }
 
   .talk-image-caption {

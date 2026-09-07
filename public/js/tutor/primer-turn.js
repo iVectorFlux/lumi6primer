@@ -428,18 +428,36 @@
         };
         const boardImage = await captureBoardIfNeeded(text);
         if (boardImage) primerBody.boardImage = boardImage;
+        const voice = window.primerVoice;
+        if (voice && voice.tts && typeof voice.tts.unlockPlayback === "function") {
+          voice.tts.unlockPlayback();
+        }
         let spokenShown = false;
         let graphicApplied = false;
+        let spokenAloud = false;
+        const speakTalk = (msg) => {
+          if (spokenAloud || !msg) return;
+          if (!voice || typeof voice.speakLesson !== "function") return;
+          if (voice.state === "SPEAKING") return;
+          spokenAloud = true;
+          voice.speakLesson(msg);
+        };
         const data = await primerTurn(primerBody, {
           onSpoken: (msg) => {
             if (spokenShown) return;
             spokenShown = true;
             this.hideLoading();
             this.appendMessage("teacher", unwrapSpoken(msg.teacherResponse || msg.spokenResponse || msg.spoken));
+            speakTalk(msg);
           },
           onGraphicLoading: (msg) => showPrimerGraphicLoader(msg?.title, msg),
           onGraphic: (msg) => {
             graphicApplied = applyPrimerGraphic(msg) || graphicApplied;
+          },
+          onAudio: (msg) => {
+            if (voice && voice.tts && typeof voice.tts.acceptOpenerAudio === "function") {
+              voice.tts.acceptOpenerAudio(msg);
+            }
           }
         });
 
@@ -449,6 +467,7 @@
             this.appendMessage("teacher", unwrapSpoken(data.teacherResponse || data.spokenResponse || data.spoken));
           }
         }
+        speakTalk(data);
 
         applyPrimerGraphic(data);
         hidePrimerGraphicLoader();

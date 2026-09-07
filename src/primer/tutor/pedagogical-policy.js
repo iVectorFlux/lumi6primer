@@ -45,12 +45,14 @@ class PedagogicalPolicy {
     }
 
     if (
-      Number(state?.conversationState?.consecutiveExplanations || 0) >= 2
+      Number(state?.conversationState?.consecutiveExplanations || 0) >= 5
       && action === "explain"
       && understanding?.intent !== "attempt"
+      && understanding?.intent !== "revision"
       && !understanding?.wantsExplain
       && !understanding?.wantsReason
       && !understanding?.pushback
+      && !state?.conversationState?.askedBackLast
     ) {
       action = "ask_back";
       role = "thinking_partner";
@@ -87,26 +89,14 @@ class PedagogicalPolicy {
       return { phase: "mechanism", skill: "causal_reasoning", action: "explain_mechanism" };
     }
 
-    if (intent === "continue") {
+    if (intent === "continue" || intent === "attempt" || intent === "revision") {
       return { phase: "mechanism", skill: "causal_reasoning", action: "advance_mechanism" };
     }
 
-    if (prior === "hook") {
-      return { phase: "hypothesis", skill: "hypothesis_generation", action: "elicit_hypothesis" };
+    if (prior === "hook" || prior === "hypothesis") {
+      return { phase: "mechanism", skill: "causal_reasoning", action: "explain_mechanism" };
     }
-    if (prior === "hypothesis") {
-      return { phase: "mechanism", skill: "causal_reasoning", action: "counterexample_mechanism" };
-    }
-    if (prior === "mechanism") {
-      return { phase: "vocabulary", skill: "concept_naming", action: "name_discovery" };
-    }
-    if (prior === "vocabulary") {
-      return { phase: "transfer", skill: "far_transfer", action: "transfer_challenge" };
-    }
-    if (prior === "transfer") {
-      return { phase: "teach_back", skill: "metacognition", action: "teach_back_reflection" };
-    }
-    return { phase: "transfer", skill: "far_transfer", action: "transfer_challenge" };
+    return { phase: "mechanism", skill: "causal_reasoning", action: "advance_mechanism" };
   }
 
   _normalizeProposal(proposal) {
@@ -164,13 +154,13 @@ class PedagogicalPolicy {
       if (understanding?.wantsDraw || understanding?.wantsExplain || understanding?.pushback || understanding?.wantsReason) {
         return "tutor";
       }
+      if (understanding?.intent === "attempt" || understanding?.intent === "revision") {
+        reasons.push("a quiz answer stays with the tutor, not the editor");
+        return "tutor";
+      }
       if (understanding?.intent === "meta") return "advisor";
       if ((understanding?.intent === "insight" || phase === "become") && !understanding?.wantsExplain) {
         return "thinking_partner";
-      }
-      if (understanding?.intent === "attempt" && proposed === "tutor") {
-        reasons.push("a quiz answer stays with the tutor, not the editor");
-        return "tutor";
       }
       if (understanding?.intent === "fact" && proposed === "tutor") {
         return "librarian";
@@ -209,8 +199,12 @@ class PedagogicalPolicy {
       && understanding?.intent !== "voice"
     ) {
       if (understanding?.intent === "dont_understand") return "reinterpret";
-      reasons.push("assess their answer before teaching more");
-      return "diagnose";
+      if (understanding?.intent === "homework" || understanding?.intent === "misconception") {
+        reasons.push("assess their work before teaching more");
+        return "diagnose";
+      }
+      reasons.push("after they answer, teach the next layer of the same idea");
+      return "explain";
     }
     if (ACTIONS.includes(proposed)) {
       if (proposed === "reinterpret" && understanding?.intent !== "dont_understand") {
@@ -280,14 +274,16 @@ class PedagogicalPolicy {
       understanding?.wantsExplain
       || understanding?.wantsReason
       || understanding?.pushback
-      || ["explain", "answer", "situate", "plan"].includes(action)
+      || understanding?.intent === "attempt"
+      || understanding?.intent === "revision"
+      || ["explain", "answer", "situate", "plan", "diagnose"].includes(action)
     );
     const skipQuestion = Boolean(
       understanding?.intent === "meta"
       || understanding?.pictureComment
       || (understanding?.pushback && /\b(stop asking|don't ask|do not ask)\b/i.test(String(understanding?.raw || "")))
     );
-    const maxSentences = answering || phase === "learn" || action === "diagnose" ? 7 : 4;
+    const maxSentences = answering || phase === "learn" ? 10 : 6;
     const mustAskQuestion = !skipQuestion && action !== "answer";
     return {
       maxSentences,

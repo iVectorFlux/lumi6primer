@@ -34,16 +34,16 @@ const LEARNER_DIMENSIONS = Object.freeze({
 const ROLE_PURPOSE = Object.freeze({
   advisor: "Ask what they want to learn, in kid words.",
   librarian: "Bring one simple fact if it helps.",
-  tutor: "Teach one idea in short kid words, with a real-life example.",
+  tutor: "Teach the idea clearly, step by step, with a real-life example. Then one check question.",
   editor: "Help them fix their work, kindly.",
-  thinking_partner: "Ask one small thinking question."
+  thinking_partner: "Ask one small thinking question after you have taught something."
 });
 
 const PHASE_INTENT = Object.freeze({
   story: "Say hello in kid words. Ask what they want to know. Do not lecture.",
-  think: "Listen. Ask one small question. Do not dump a lesson.",
-  learn: "Teach one idea in simple words, with a real-life example. Then ask an open thinking question.",
-  think_again: "They try again. Help them notice. Ask one more small question.",
+  think: "If they asked to learn something, teach it. Otherwise ask one small question.",
+  learn: "Teach the idea fully in simple words, with a real-life example. Then ask one thinking question.",
+  think_again: "React to their answer, then teach the next layer of the SAME idea.",
   become: "Name what they just figured out, in their words. Then remember it."
 });
 

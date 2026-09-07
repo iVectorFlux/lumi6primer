@@ -27,7 +27,8 @@ class RoleSelector {
     if (need === "diagnosis" || intent === "homework" || intent === "misconception") return "editor";
     if (intent === "dont_understand") return "tutor";
     if (intent === "what_if" || intent === "insight" || phase === "become") return "thinking_partner";
-    if (intent === "attempt" || intent === "revision" || intent === "drawing") return "editor";
+    if (intent === "drawing") return "editor";
+    if (intent === "attempt" || intent === "revision") return "tutor";
     if (phase === "story") return "advisor";
     if (phase === "learn") return "tutor";
     if (phase === "think_again") return "thinking_partner";
@@ -42,7 +43,8 @@ class RoleSelector {
       return "knowledge";
     }
     if (intent === "fact") return "evidence";
-    if (intent === "homework" || intent === "misconception" || intent === "attempt") return "diagnosis";
+    if (intent === "homework" || intent === "misconception") return "diagnosis";
+    if (intent === "attempt" || intent === "revision") return "knowledge";
     if (intent === "dont_understand") return "knowledge";
     if (intent === "what_if" || intent === "insight") return "challenge";
     if (state?.learningPhase === "learn") return "knowledge";
@@ -62,7 +64,8 @@ class RoleSelector {
     if (intent === "homework") return "explain";
     if (askedBackLast && !understanding?.pushback && !isNewAsk(understanding?.raw, understanding)
       && intent !== "meta" && intent !== "goal" && intent !== "dont_understand" && intent !== "voice") {
-      return "diagnose";
+      if (intent === "homework" || intent === "misconception") return "diagnose";
+      return "explain";
     }
     if (intent === "dont_understand") return "reinterpret";
     if (intent === "homework") return "explain";

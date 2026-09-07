@@ -47,7 +47,7 @@ class ResponsePolicy {
       text = this._stripDependency(text);
     }
 
-    text = this._limitSentences(text, hints.maxSentences || 5);
+    text = this._limitSentences(text, hints.maxSentences || 10);
     text = this._replaceLazyQuestion(text, decision, understanding, child);
 
     if (hints.mustAskQuestion && !/\?/.test(text)) {
@@ -117,8 +117,8 @@ class ResponsePolicy {
     if (understanding?.voiceIssue) return topic ? `Want me to keep going with ${topic}?` : "What do you want to learn?";
     if (understanding?.refersToBoard) return "What happens if we change one of YOUR numbers?";
     if (understanding?.intent === "attempt" || understanding?.intent === "revision") {
-      if (topic) return `If that path is broken, can ${topic} still reach the thing it is supposed to power?`;
-      return "If the path is not a complete loop, what happens next?";
+      if (topic) return `What would happen to ${topic} if we changed just one part of that setup?`;
+      return "What would happen if we changed just one part of that setup?";
     }
     if (decision?.role === "editor") {
       return topic

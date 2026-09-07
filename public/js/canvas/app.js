@@ -11786,13 +11786,13 @@ User writes "Show air quality for Tokyo", names a place, and points to an empty 
                   sandbox="allow-scripts"
                   loading="lazy"
                 ></iframe>
-                <button type="button" class="talk-interactive-expand" data-expand-interactive aria-label="Open playground">
-                  Open playground
-                </button>
               </div>
               <figcaption class="talk-image-caption">
                 <span class="talk-image-tag">Try it</span>
-                ${escapeHtml(label)}
+                <span class="talk-image-caption-title">${escapeHtml(label)}</span>
+                <button type="button" class="talk-interactive-expand" data-expand-interactive>
+                  Open playground
+                </button>
               </figcaption>
             </div>`;
     }
@@ -11859,8 +11859,7 @@ User writes "Show air quality for Tokyo", names a place, and points to an empty 
     let question = "";
     const teaching = [];
     for (const sentence of sentences) {
-      const isQuestion = sentence.endsWith("?")
-        || /^(what|how|why|can you|where|do you think|imagine|can you guess)\b/i.test(sentence);
+      const isQuestion = sentence.endsWith("?");
       if (isQuestion) question = sentence;
       else teaching.push(sentence);
     }
@@ -11961,7 +11960,7 @@ User writes "Show air quality for Tokyo", names a place, and points to an empty 
               <span class="talk-lumi6-name">Lumi6</span>
             </div>
             <div class="talk-explanation-body">
-              <p>Welcome! Tap <strong>Talk</strong> below or type a question to start exploring.</p>
+              <p>Welcome! Press and hold <strong>Talk</strong> below, then release to send — or type a question to start exploring.</p>
             </div>
           </div>
         </article>
@@ -12152,6 +12151,10 @@ User writes "Show air quality for Tokyo", names a place, and points to an empty 
     stage.replaceChildren(frame);
     sheet.hidden = false;
     document.body.classList.add("talk-playground-open");
+    requestAnimationFrame(() => {
+      frame.style.width = "100%";
+      frame.style.height = "100%";
+    });
   }
 
   function closeTalkPlayground() {
@@ -12161,9 +12164,9 @@ User writes "Show air quality for Tokyo", names a place, and points to an empty 
     const home = document.querySelector(".talk-interactive-stage[data-playground-home]")
       || document.querySelector(`.talk-interactive-wrapper[data-interactive-slug="${CSS.escape(talkPlaygroundSlug)}"] .talk-interactive-stage`);
     if (frame && home) {
-      const expand = home.querySelector("[data-expand-interactive]");
-      if (expand) home.insertBefore(frame, expand);
-      else home.prepend(frame);
+      frame.style.width = "";
+      frame.style.height = "";
+      home.prepend(frame);
       delete home.dataset.playgroundHome;
     }
     if (sheet) sheet.hidden = true;

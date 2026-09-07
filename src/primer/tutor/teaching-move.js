@@ -65,18 +65,10 @@ function replaceLastQuestion(spoken, nextQuestion) {
   return String(spoken || "").replace(current, nextQuestion).replace(/\s+/g, " ").trim();
 }
 
-function advanceQuestion() {
-  const options = [
-    "What if you could shrink tiny and peek inside?",
-    "Can you guess what would happen next?",
-    "Imagine you could time-travel — what would you see?",
-    "What if we tried that on the Moon?",
-    "What do you think would change if it got super cold?",
-    "Can you guess why that happens?",
-    "What would you build if you knew this secret?",
-    "Imagine you could see the atoms — what are they doing?"
-  ];
-  return options[Math.floor(Math.random() * options.length)];
+function advanceQuestion(topic) {
+  const name = String(topic || "").trim();
+  if (name) return `What would change if we took away one part of ${name}?`;
+  return "What would happen if we changed one thing in that setup?";
 }
 
 const { isNewAsk, shouldGrade } = require("./kid-intent.js");
@@ -91,15 +83,15 @@ function classifyReply({ childText, askedBackLast, wantsExplain, wantsReason, in
   return "continue";
 }
 
-function preventRepeatQuestion(spoken, lastCheckQuestion, sameQuestionStreak = 0) {
+function preventRepeatQuestion(spoken, lastCheckQuestion, sameQuestionStreak = 0, topic = "") {
   let text = String(spoken || "").replace(/\s+/g, " ").trim();
   const asked = lastQuestion(text);
   const repeat = Boolean(asked && lastCheckQuestion && questionsMatch(asked, lastCheckQuestion));
   const closed = isClosedQuiz(text);
   if ((repeat || (closed && sameQuestionStreak >= 1)) && asked) {
-    text = replaceLastQuestion(text, advanceQuestion());
+    text = replaceLastQuestion(text, advanceQuestion(topic));
   } else if (closed && !lastCheckQuestion) {
-    text = replaceLastQuestion(text, "Have you ever seen something like this happen around you?");
+    text = replaceLastQuestion(text, advanceQuestion(topic));
   }
   return text;
 }

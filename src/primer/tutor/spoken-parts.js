@@ -35,8 +35,7 @@ function extractSpokenParts(text) {
   let question = "";
   const teaching = [];
   for (const sentence of sentences) {
-    const isQuestion = sentence.endsWith("?")
-      || /^(what|how|why|can you|where|do you think|imagine|can you guess)\b/i.test(sentence);
+    const isQuestion = sentence.endsWith("?");
     if (isQuestion) question = sentence;
     else teaching.push(sentence);
   }

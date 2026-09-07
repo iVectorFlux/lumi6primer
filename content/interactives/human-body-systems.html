@@ -6,8 +6,8 @@
 <style>
 *{box-sizing:border-box}body{margin:0;background:#f7f8f5;color:#17211b;font-family:Arial,Helvetica,sans-serif}
 .wrap{width:min(1120px,96vw);margin:22px auto 30px}h1{margin:0 0 6px;font-size:clamp(28px,4vw,42px)}
-.intro{margin:0 0 16px;color:#59645d}.stage{background:#fff;border:1px solid #dce3dc;border-radius:18px;overflow:hidden;box-shadow:0 8px 24px rgba(20,35,25,.06)}
-canvas{display:block;width:100%;height:min(62vw,650px);min-height:470px;background:#fcfcfa}
+.intro{margin:0 0 16px;color:#59645d}.stage{background:#fff;border:1px solid #dce3dc;border-radius:18px;overflow:hidden;box-shadow:0 8px 24px rgba(20,35,25,.06);display:flex;flex-direction:column;min-height:0}
+canvas{display:block;width:100%;height:auto;flex:1 1 auto;min-height:0;background:#fcfcfa}
 .controls{padding:15px 20px 20px;border-top:1px solid #e5e9e5}.row{display:flex;gap:9px;align-items:center;flex-wrap:wrap}
 button{border:1px solid #cfd8d0;background:#fff;padding:9px 13px;border-radius:9px;font-weight:700;cursor:pointer}button.active{background:#e8f1ea;border-color:#91ad98}
 .read{margin-top:12px;padding:11px 13px;border-radius:10px;background:#f1f5f1;font-weight:700}
@@ -31,7 +31,7 @@ const data={
 Object.keys(data).forEach(n=>{const b=document.createElement("button");b.textContent=n;b.onclick=()=>{selected=n;update();};buttons.appendChild(b)});
 function update(){[...buttons.children].forEach(b=>b.classList.toggle("active",b.textContent===selected));read.textContent=data[selected].desc}
 update();
-function resize(){let r=c.getBoundingClientRect();D=Math.min(2,devicePixelRatio||1);W=Math.max(700,r.width);H=Math.max(470,r.height);c.width=W*D;c.height=H*D;ctx.setTransform(D,0,0,D,0,0)}addEventListener("resize",resize);resize();
+function resize(){let r=c.getBoundingClientRect();D=Math.min(2,devicePixelRatio||1);W=Math.max(1,r.width);H=Math.max(1,r.height);c.width=W*D;c.height=H*D;ctx.setTransform(D,0,0,D,0,0)}addEventListener("resize",resize);resize();
 
 function line(points,w,color,alpha=1){ctx.save();ctx.strokeStyle=color;ctx.globalAlpha=alpha;ctx.lineWidth=w;ctx.lineCap="round";ctx.lineJoin="round";ctx.beginPath();points.forEach((p,i)=>i?ctx.lineTo(p[0],p[1]):ctx.moveTo(p[0],p[1]));ctx.stroke();ctx.restore()}
 function circle(x,y,r,color,alpha=1){ctx.save();ctx.globalAlpha=alpha;ctx.fillStyle=color;ctx.beginPath();ctx.arc(x,y,r,0,Math.PI*2);ctx.fill();ctx.restore()}
@@ -71,16 +71,18 @@ function selectedAnimation(x){
 }
 
 function draw(){
+ ctx.setTransform(D,0,0,D,0,0);
  ctx.clearRect(0,0,W,H);ctx.fillStyle="#fcfcfa";ctx.fillRect(0,0,W,H);
- const x=W*.38, panelX=W*.66;
+ const VW=900,VH=540,s=Math.min(W/VW,H/VH);
+ ctx.save();
+ ctx.translate((W-VW*s)/2,(H-VH*s)/2);
+ ctx.scale(s,s);
+ const x=VW*.38, panelX=VW*.66;
  drawPerson(x);
- // draw all systems, but selected is strong and others are only faint context
  skeleton(x,organAlpha("Skeletal"));muscles(x,organAlpha("Muscular"));lungs(x,organAlpha("Respiratory"));heart(x,organAlpha("Circulatory"));digestive(x,organAlpha("Digestive"));nervous(x,organAlpha("Nervous"));
  selectedAnimation(x);
- // labels around body
  ctx.fillStyle="#59645d";ctx.font="bold 13px Arial";ctx.textAlign="center";
- ctx.fillText("SELECT A SYSTEM",x,H-18);
- // explanation area
+ ctx.fillText("SELECT A SYSTEM",x,VH-18);
  ctx.textAlign="left";ctx.fillStyle="#17211b";ctx.font="bold 23px Arial";ctx.fillText(selected,panelX,95);
  ctx.font="15px Arial";wrap(data[selected].desc,panelX,128,280,22);
  ctx.fillStyle="#59645d";ctx.font="bold 15px Arial";ctx.fillText("WORKS WITH",panelX,245);
@@ -88,6 +90,7 @@ function draw(){
  ctx.font="14px Arial";wrap(data[selected].partnerText,panelX,300,280,21);
  ctx.fillStyle="#59645d";ctx.font="bold 14px Arial";ctx.fillText("Watch the highlighted system",panelX,410);
  ctx.font="14px Arial";ctx.fillText("animate to show its job.",panelX,432);
+ ctx.restore();
  t+=.02;requestAnimationFrame(draw);
 }
 function wrap(s,x,y,max,lineH){let words=s.split(" "),lineText="";for(const w of words){let test=lineText?lineText+" "+w:w;if(ctx.measureText(test).width>max&&lineText){ctx.fillText(lineText,x,y);lineText=w;y+=lineH}else lineText=test}if(lineText)ctx.fillText(lineText,x,y)}

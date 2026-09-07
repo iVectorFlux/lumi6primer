@@ -206,7 +206,9 @@ const ITEMS = [
     topics: [
       "electricity", "simple circuit", "simple circuits",
       "electric circuit", "close the switch", "light the bulb",
-      "open circuit", "closed circuit"
+      "open circuit", "closed circuit",
+      "electromagnetism", "electromagnet", "electromagnets",
+      "solenoid", "coil of wire", "electric magnet"
     ]
   },
   {
@@ -236,11 +238,15 @@ function gradeNumber(grade) {
 }
 
 function scoreItem(item, hay) {
+  const padded = ` ${hay} `;
   let score = 0;
   for (const alias of item.topics || []) {
     const phrase = normalize(alias);
     if (!phrase || phrase.length < 4) continue;
-    if (!hay.includes(phrase)) continue;
+    const hit = phrase.includes(" ")
+      ? hay.includes(phrase)
+      : padded.includes(` ${phrase} `);
+    if (!hit) continue;
     const words = phrase.split(" ").filter(Boolean);
     score += 4 + words.length * 3 + Math.min(8, phrase.length / 3);
   }
