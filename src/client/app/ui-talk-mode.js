@@ -138,6 +138,16 @@
     return { teaching: teaching.join(" "), question, choices };
   }
 
+  function explanationParagraphs(text) {
+    const sentences = String(text || "").split(/(?<=[.!?])\s+/).map((s) => s.trim()).filter(Boolean);
+    if (!sentences.length) return "";
+    const paras = [];
+    for (let i = 0; i < sentences.length; i += 2) {
+      paras.push(sentences.slice(i, i + 2).join(" "));
+    }
+    return paras.map((para) => `<p>${escapeHtml(para)}</p>`).join("");
+  }
+
   function splitTeacherTurn(cleanSpoken) {
     const parts = extractSpokenParts(cleanSpoken);
     return {
@@ -311,7 +321,7 @@
 
           ${deeperExpl ? `
             <div class="talk-explanation-body">
-              <p>${escapeHtml(deeperExpl)}</p>
+              ${explanationParagraphs(deeperExpl)}
             </div>
           ` : ""}
 
@@ -490,10 +500,11 @@
   }
   try {
     const urlParams = new URLSearchParams(window.location.search);
-    const initialMode = (urlParams.get("mode") === "talk" || window.location.hash === "#talk") ? "talk" : "draw";
+    const hash = String(window.location.hash || "").toLowerCase();
+    const initialMode = (urlParams.get("mode") === "draw" || hash === "#draw") ? "draw" : "talk";
     setAppViewMode(initialMode, false);
   } catch {
-    setAppViewMode("draw", false);
+    setAppViewMode("talk", false);
   }
   requestAnimationFrame(() => requestAnimationFrame(maybeStartOnboarding));
 })();

@@ -95,6 +95,7 @@ QUESTION QUALITY & CALIBRATION (CRITICAL):
   ${isElementary || isMiddle ? `* Put 2-3 short choices in JSON only: "choices":["...","...","..."]. One is right, the others plausible.`
   : `* For Class ${gradeNum}: Open-ended question. No choices array.`}
 - Never markdown. No **bold**, no lists, no headings.
+- Sprinkle 3 to 6 kid-friendly emojis next to the real things you name (magnet 🧲, wire 🔌, electricity ⚡, marble 🔵, bulb 💡, moon 🌙). Keep the sentences readable.
 - Never put JSON or labels in spoken text. Spoken is plain, warm human speech.
 
 When a picture is needed, return picture with simple shapes for THIS idea. Any subject. 900 by 620. 6 to 14 parts. Types: circle, box, ellipse, arrow, line, beam, person, text.
@@ -152,6 +153,7 @@ HUMAN TEACHER EMPATHY:
 - If they answered your last question (including tapping A/B/C): stay on this topic. Say if the idea is right, then teach more of that same mechanism with a clearer picture. Do not skip ahead.
 - Check for understanding by making them reason, not by asking if it "makes sense".
 - Never markdown. Never JSON in spoken speech.
+- Sprinkle 3 to 6 friendly emojis next to named objects (⚡ 🧲 🔌 💡 🔵). Do not make a sentence out of emojis only.
 
 ${this._turnDirective(understanding, decision, Boolean(state?.conversationState?.askedBackLast), { lastCheck, move, boardMath, isElementary, gradeNum, switched, previousConcept })}
 

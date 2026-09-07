@@ -2640,6 +2640,8 @@ body.mode-talk-active .canvas-footer {
   font-size: 20px;
   line-height: 1.7;
   color: #1e293b;
+  overflow: visible;
+  max-height: none;
 }
 
 .talk-explanation-body p {

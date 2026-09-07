@@ -1411,6 +1411,7 @@
     cleanTextForSpeech(rawText) {
       if (!rawText) return "";
       let text = rawText;
+      text = text.replace(/[\u{1F300}-\u{1FAFF}\u{2600}-\u{27BF}\u{FE0F}\u{200D}]/gu, " ");
 
       // Remove visual annotations and note banners
       text = text.replace(/\[Visual Drawn on Whiteboard: "[^"]*"\]/g, "");

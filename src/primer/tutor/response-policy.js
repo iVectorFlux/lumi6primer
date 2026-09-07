@@ -3,6 +3,7 @@
 const { isWeakTopic } = require("../topic.js");
 const { extractSpoken, looksLikeJsonBlob } = require("./proposal.js");
 const { isNewAsk } = require("./kid-intent.js");
+const { enrichWithEmojis } = require("./emoji-enrich.js");
 
 const DEPENDENCY = /you (need|depend on) me|only i can (help|teach)|don't think (without|on your own)|i'll always be here to think for you/i;
 const BOARD_NARRATION = /whiteboard (is blank|shows|says|has)|the board (shows|says|has)|photo of the whiteboard|no handwriting visible|board par|halki grid/i;
@@ -74,7 +75,8 @@ class ResponsePolicy {
       text = text.replace(/^(not yet|right|almost)[,.]?\s+/i, "").replace(/^but\s+/i, "").trim();
     }
 
-    return text.replace(/\s+/g, " ").replace(/\s+\./g, ".").trim();
+    text = enrichWithEmojis(text.replace(/\s+/g, " ").replace(/\s+\./g, ".").trim());
+    return text;
   }
 
   _shouldNotGrade(understanding) {

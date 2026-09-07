@@ -14,11 +14,11 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,600;1,400&family=DM+Sans:wght@400;500;600;700&family=Inter:wght@400;500;600;700;800&family=Patrick+Hand&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="css/style.css?v=20260904">
-  <link rel="stylesheet" href="css/primer-voice.css?v=20260904">
+  <link rel="stylesheet" href="css/style.css?v=20260907">
+  <link rel="stylesheet" href="css/primer-voice.css?v=20260907">
   <link rel="stylesheet" href="css/supabase-auth.css?v=20260904">
   <link rel="stylesheet" href="css/lumi6-onboard.css?v=20260904">
-  <link rel="stylesheet" href="css/mobile.css?v=20260904">
+  <link rel="stylesheet" href="css/mobile.css?v=20260907">
   <script src="js/lib/mathjax-config.js"></script>
   <script
     defer
@@ -29,7 +29,7 @@
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script defer src="https://cdn.jsdelivr.net/npm/html2pdf.js@0.10.1/dist/html2pdf.bundle.min.js"></script>
 </head>
-<body data-theme="studio">
+<body data-theme="studio" class="mode-talk-active">
   <!-- ═══════════════════════════════════════════ -->
   <!-- APP SHELL                                   -->
   <!-- ═══════════════════════════════════════════ -->
@@ -58,11 +58,11 @@
       </div>
 
       <nav class="sidebar-nav" aria-label="Main navigation">
-        <button class="nav-item active" id="modeDrawBtn" type="button" aria-pressed="true" data-mode="draw">
+        <button class="nav-item" id="modeDrawBtn" type="button" aria-pressed="false" data-mode="draw">
           <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 3v18"/></svg>
           <span>Draw Mode</span>
         </button>
-        <button class="nav-item" id="modeTalkBtn" type="button" aria-pressed="false" data-mode="talk">
+        <button class="nav-item active" id="modeTalkBtn" type="button" aria-pressed="true" data-mode="talk">
           <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/><line x1="9" y1="9" x2="15" y2="9"/><line x1="9" y1="13" x2="13" y2="13"/></svg>
           <span>Talk Mode</span>
         </button>
@@ -160,7 +160,7 @@
       </header>
 
       <!-- CANVAS WORKSPACE -->
-      <div class="canvas-workspace">
+      <div class="canvas-workspace" hidden>
         <!-- AI Tools (hidden, kept for JS compatibility) -->
         <div class="hidden-ai-tools" hidden>
           <div id="aiToolsSection" class="ai-tools-section" role="group" aria-label="AI tools">
@@ -354,7 +354,7 @@
       </div>
 
       <!-- ═══ TALK MODE WORKSPACE (Rich, breathable, structured story webpage) ═══ -->
-      <div id="talkModeWorkspace" class="talk-mode-workspace" hidden>
+      <div id="talkModeWorkspace" class="talk-mode-workspace">
         <div class="talk-scroll-area" id="talkScrollArea">
           <div class="talk-container">
             <!-- Dynamic Feed of Structured Lesson Turns -->
@@ -697,10 +697,10 @@
   <script src="js/canvas/mixed-text.js?v=20260904"></script>
   <script src="js/canvas/animation.js?v=20260904"></script>
   <script src="js/canvas/summon.js?v=20260904"></script>
-  <script src="js/canvas/app.js?v=20260904"></script>
+  <script src="js/canvas/app.js?v=20260907"></script>
   <script src="js/tutor/lumi6-canvas-adapter.js?v=20260904"></script>
-  <script src="js/tutor/primer-turn.js?v=20260904"></script>
-  <script src="js/tutor/primer-voice.js?v=20260904"></script>
+  <script src="js/tutor/primer-turn.js?v=20260907"></script>
+  <script src="js/tutor/primer-voice.js?v=20260907"></script>
   <script src="js/tutor/lesson-pdf.js?v=20260904"></script>
   <script src="js/tutor/lumi6-onboard.js?v=20260904"></script>
   <script src="js/auth/supabase-auth.js?v=20260904"></script>
