@@ -57,15 +57,17 @@
   }
   function keepTextEditorVisible(editor) {
     const viewport = textEditorViewportSize(),
-      inset = 8,
+      inset = 12,
       scale = Math.max(0.03, state.scale),
       point = textEditorScreenPoint(editor),
-      maxLeft = Math.max(inset, viewport.width - editor.widthCss - inset),
-      maxTop = Math.max(inset, viewport.height - editor.heightCss - inset),
+      widthCss = Math.max(TEXT_EDITOR_MIN_WIDTH, editor.widthCss),
+      heightCss = Math.max(TEXT_EDITOR_MIN_HEIGHT, editor.heightCss),
+      maxLeft = Math.max(inset, viewport.width - widthCss - inset),
+      maxTop = Math.max(inset, viewport.height - heightCss - inset),
       canvasLeft = state.panX,
       canvasTop = state.panY,
-      canvasRight = state.panX + SIZE * scale - editor.widthCss,
-      canvasBottom = state.panY + SIZE * scale - editor.heightCss,
+      canvasRight = state.panX + SIZE * scale - widthCss,
+      canvasBottom = state.panY + SIZE * scale - heightCss,
       minLeft = Math.max(inset, canvasLeft),
       minTop = Math.max(inset, canvasTop),
       boundedMaxLeft = Math.min(maxLeft, canvasRight),
@@ -75,6 +77,24 @@
     if (Math.abs(left - point.left) > 0.5) editor.x = (left - state.panX) / scale;
     if (Math.abs(top - point.top) > 0.5) editor.y = (top - state.panY) / scale;
     keepTextEditorInsideCanvas(editor);
+  }
+  function panToRevealTextEditor(editor) {
+    if (!editor) return;
+    const viewport = textEditorViewportSize(),
+      pad = 16,
+      point = textEditorScreenPoint(editor);
+    let dx = 0,
+      dy = 0;
+    if (point.left < pad) dx = pad - point.left;
+    else if (point.left + editor.widthCss > viewport.width - pad) dx = viewport.width - pad - (point.left + editor.widthCss);
+    if (point.top < pad) dy = pad - point.top;
+    else if (point.top + editor.heightCss > viewport.height - pad) dy = viewport.height - pad - (point.top + editor.heightCss);
+    if (!dx && !dy) return;
+    state.panX += dx;
+    state.panY += dy;
+    updateCoordinates();
+    requestRender();
+    keepTextEditorVisible(editor);
   }
   function positionTextEditors() {
     const visible = state.textEditors.size > 0;
@@ -326,7 +346,8 @@
     const textarea = editor?.textarea;
     if (!textarea) return;
     textarea.style.height = "0px";
-    editor.heightCss = Math.max(TEXT_EDITOR_MIN_HEIGHT, Math.ceil(textarea.scrollHeight) + 20);
+    const line = Math.ceil((editor.fontCss || TEXT_EDITOR_FONT_CSS) * 1.35);
+    editor.heightCss = Math.max(TEXT_EDITOR_MIN_HEIGHT, line + 28, Math.ceil(textarea.scrollHeight) + 28);
     textarea.style.height = "100%";
   }
 
@@ -532,6 +553,8 @@
     keepTextEditorInsideCanvas(editor);
     state.textEditors.set(editor.id, editor);
     fitTextEditorToContent(editor);
+    keepTextEditorVisible(editor);
+    panToRevealTextEditor(editor);
     focusTextEditor(editor, true);
     positionTextEditors();
     return editor;
@@ -566,6 +589,32 @@
     positionTextEditors();
     setStatusKey("ready");
     render();
+    return true;
+  }
+  function pendingReplyBox(itemIndex = null) {
+    const pending = state.pending;
+    if (!pending) return null;
+    if (pending.items) {
+      const item = Number.isInteger(itemIndex) ? pending.items[itemIndex] : pending.items.find((entry) => entry?.textCommand) || pending.items[pending.selectedIndex] || pending.items[0];
+      return item ? pendingItemBounds(item) : null;
+    }
+    return draftBounds(pending);
+  }
+  function openBoardReplyFromPending(itemIndex = null) {
+    const box = pendingReplyBox(itemIndex);
+    if (!box) return false;
+    const gap = 20 / Math.max(0.03, state.scale),
+      point = {
+        x: box.x,
+        y: Math.min(SIZE - 80, box.y + box.h + gap),
+      },
+      editor = createTextEditor(point, {
+        returnMode: state.mode === "text" ? "" : state.mode,
+      });
+    if (!editor) return false;
+    panToRevealTextEditor(editor);
+    positionTextEditors();
+    setStatusKey("boardReplyHint");
     return true;
   }
   function setCanvasCursor(cursor) {

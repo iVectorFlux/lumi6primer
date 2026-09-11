@@ -1346,8 +1346,14 @@
     for (const item of visibleTextBoxes(probe)) bounds = SELECT.unionBox(bounds, textBoxBox(item));
     return bounds;
   }
+  function imageBoundsInRegion(probe) {
+    if (!probe) return null;
+    let bounds = null;
+    for (const item of visibleImages(probe)) bounds = SELECT.unionBox(bounds, imageBox(item));
+    return bounds;
+  }
   function contentBoundsInRegion(probe) {
-    return SELECT.unionBox(inkBoundsInRegion(probe), textBoxBoundsInRegion(probe));
+    return SELECT.unionBox(SELECT.unionBox(inkBoundsInRegion(probe), textBoxBoundsInRegion(probe)), imageBoundsInRegion(probe));
   }
   function textBoxHitsSelection(item, points, box) {
     const tb = textBoxBox(item),
@@ -1370,6 +1376,30 @@
     }
     return lifted;
   }
+  function liftImagesForSelection(points, box, fragments) {
+    const lifted = [];
+    for (let index = state.images.length - 1; index >= 0; index--) {
+      const item = state.images[index];
+      if (!item?.image || !textBoxHitsSelection(item, points, box)) continue;
+      fragments.push({ image: item.image, x: item.x, y: item.y, w: item.w, h: item.h, boardImage: item });
+      lifted.push(item);
+      recordImagesBefore();
+      state.images.splice(index, 1);
+    }
+    return lifted;
+  }
+  function absorbOverlappingPending(box) {
+    const pending = state.pending;
+    if (!pending || !box) return;
+    if (pending.items) {
+      for (let index = pending.items.length - 1; index >= 0; index--) {
+        const itemBox = pendingItemBounds(pending.items[index]);
+        if (itemBox && intersection(itemBox, box)) acceptPendingItem(index);
+      }
+      return;
+    }
+    if (intersection(draftBounds(pending), box)) acceptPending({ restoreMode: false });
+  }
   function captureBoxSelection(box, options) {
     if (!box || box.w < 1 || box.h < 1) return false;
     return captureSelection(rectPathForBox(box), options);
@@ -1385,7 +1415,13 @@
         h: hitPad * 2,
       },
       textHit = textBoxAtPoint(point),
+      imageHit = imageAtPoint(point),
       inkHit = inkBoundsInRegion(probe);
+    if (imageHit && !textHit) {
+      const box = imageBox(imageHit);
+      rememberInkBox(box);
+      return captureBoxSelection(box, { quiet: true, allowSmall: true });
+    }
     if (textHit && !inkHit) {
       const box = textBoxBox(textHit);
       rememberInkBox(box);
@@ -1465,7 +1501,9 @@
       },
       false,
     );
+    absorbOverlappingPending(box);
     const liftedTextBoxes = liftTextBoxesForSelection(points, box, fragments);
+    const liftedImages = liftImagesForSelection(points, box, fragments);
     if (!fragments.length) {
       state.selection = null;
       if (!options.quiet) setStatusKey("selectionEmpty");
@@ -1525,6 +1563,7 @@
       contentBox: selectionContentBounds({ fragments, originalBox: tight, box: tight }),
       beforeTiles,
       liftedTextBoxes,
+      liftedImages,
       color: null,
     };
     state.selectionGesture = null;
@@ -1540,6 +1579,9 @@
     }
     for (const item of selection.liftedTextBoxes || []) {
       if (item && !state.textBoxes.some((existing) => existing.id === item.id)) state.textBoxes.push(item);
+    }
+    for (const item of selection.liftedImages || []) {
+      if (item && !state.images.some((existing) => existing.id === item.id)) state.images.push(item);
     }
     state.historyBefore.clear();
     state.textBoxHistoryBefore = null;
@@ -1590,6 +1632,17 @@
         item.fontSize = Math.max(1, item.fontSize * Math.min(scaleX, scaleY));
         item.maxWidth = Math.max(item.fontSize * 3, item.maxWidth * scaleX);
         if (!state.textBoxes.some((existing) => existing.id === item.id)) state.textBoxes.push(item);
+        continue;
+      }
+      if (fragment.boardImage && !selection.color) {
+        const item = fragment.boardImage,
+          scaleX = target.w / Math.max(1, fragment.w),
+          scaleY = target.h / Math.max(1, fragment.h);
+        item.x = target.x;
+        item.y = target.y;
+        item.w = target.w;
+        item.h = target.h;
+        if (!state.images.some((existing) => existing.id === item.id)) state.images.push(item);
         continue;
       }
       blitSized(fragment.renderImage || fragment.image, target.x, target.y, target.w, target.h);

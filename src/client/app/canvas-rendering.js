@@ -420,6 +420,7 @@
     cancel:'<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg>',
     copy:'<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="8" y="8" width="11" height="11" rx="2"/><path d="M16 8V6a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h2"/></svg>',
     refine:'<svg viewBox="0 0 24 24" aria-hidden="true"><path d="m12 3 1.3 4.2L17.5 8.5l-4.2 1.3L12 14l-1.3-4.2-4.2-1.3 4.2-1.3L12 3Z"/><path d="m18.5 14 .7 2.3 2.3.7-2.3.7-.7 2.3-.7-2.3-2.3-.7 2.3-.7.7-2.3Z"/></svg>',
+    reply:'<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 6h14M12 6v14M8 20h8"/></svg>',
   });
   function screenObjectBox(box) {
     return {
@@ -533,6 +534,7 @@
     if (kind === "cancel") return t("cancel");
     if (kind === "copy") return t("copyText");
     if (kind === "refine") return t("widgetRefine");
+    if (kind === "reply") return t("boardReply");
     return t("hand");
   }
   function beginObjectChromeMove(event, spec) {
@@ -572,7 +574,7 @@
     button.type = "button";
     button.className = `object-chrome-button ${kind}`;
     button.dataset.objectChromeKey = key;
-    button.innerHTML = ["copy", "refine"].includes(kind) ? `${OBJECT_CHROME_ICONS[kind]}<span></span>` : OBJECT_CHROME_ICONS[kind];
+    button.innerHTML = ["copy", "refine", "reply"].includes(kind) ? `${OBJECT_CHROME_ICONS[kind]}<span></span>` : OBJECT_CHROME_ICONS[kind];
     ensureObjectChromeStyleRule(button);
     button.addEventListener("pointerdown", (event) => {
       event.stopPropagation();
@@ -621,18 +623,32 @@
       specs.push({ key:`${key}:cancel`, kind:"cancel", box, activate:() => itemIndex === null ? rejectPending() : rejectPendingItem(itemIndex), priority:5 });
       specs.push({ key:`${key}:accept`, kind:"accept", box, activate:() => itemIndex === null ? acceptPending() : acceptPendingItem(itemIndex), priority:5 });
       if (pendingCopyable(target)) specs.push({ key:`${key}:copy`, kind:"copy", box, activate:() => void copyPendingText(itemIndex), priority:5 });
+      if (target?.textCommand || pendingCopyable(target)) specs.push({
+        key:`${key}:reply`,
+        kind:"reply",
+        box,
+        label: t("boardReply"),
+        widgetTool: true,
+        widgetToolGroup: `${key}-reply`,
+        groupBaseWidth: widgetToolLabelWidth(t("boardReply"), 86),
+        groupOffset: 0,
+        baseWidth: widgetToolLabelWidth(t("boardReply"), 86),
+        baseHeight: 34,
+        activate: () => openBoardReplyFromPending(itemIndex),
+        priority: 7,
+      });
     };
     if (pending.items) pending.items.forEach((item, index) => add(`pending-item:${index}`, pendingItemBounds(item), index, item));
     else add("pending", draftBounds(pending));
   }
   function objectChromeSpecs() {
+    const specs = [];
+    pendingChromeSpecs(specs, state.pending);
     if (state.mode !== "hand") {
-      const specs = [],
-        candidate = currentWidgetRefineCandidate();
+      const candidate = currentWidgetRefineCandidate();
       if (candidate) addWidgetToolSpecs(specs, candidate.widget, { refine:candidate });
       return specs;
     }
-    const specs = [];
     for (const image of visibleImages()) specs.push({ key:`image:${image.id}:move`, kind:"move", box:imageBox(image), target:"image", object:image, priority:1 });
     for (const animation of visibleAnimations()) specs.push({ key:`animation:${animation.id}:move`, kind:"move", box:animationBox(animation), target:"animation", object:animation, priority:1 });
     for (const widget of visibleWidgets()) specs.push({ key:`widget:${widget.id}:move`, kind:"move", box:widgetBox(widget), target:"widget", object:widget, priority:2 });
@@ -653,7 +669,6 @@
         addWidgetToolSpecs(specs, widget, { copy:true });
       }
     }
-    pendingChromeSpecs(specs, state.pending);
     if (state.pendingWidget) {
       const widget = state.pendingWidget,
         box = widgetBox(widget);
@@ -681,7 +696,7 @@
       else delete button.dataset.widgetToolGroup;
       button.setAttribute("aria-label", label);
       button.title = spec.kind === "refine" ? t("widgetRefineHint") : label;
-      if (["copy", "refine"].includes(spec.kind)) button.querySelector("span").textContent = label;
+      if (["copy", "refine", "reply"].includes(spec.kind)) button.querySelector("span").textContent = label;
       declaration?.setProperty("--object-control-x", `${position.x.toFixed(1)}px`);
       declaration?.setProperty("--object-control-y", `${position.y.toFixed(1)}px`);
       declaration?.setProperty("--object-control-scale", String(position.scale || 1));

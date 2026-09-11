@@ -124,10 +124,10 @@
   const SUMMON = window.LUMI6_SUMMON || {};
   const EFFORT_LEVELS = ["none", "low", "medium", "high", "max"],
     EFFORT_OPTIONS = ["config", ...EFFORT_LEVELS],
-    TEXT_EDITOR_DEFAULT_WIDTH = 280,
-    TEXT_EDITOR_DEFAULT_HEIGHT = 76,
-    TEXT_EDITOR_MIN_WIDTH = 88,
-    TEXT_EDITOR_MIN_HEIGHT = 44,
+    TEXT_EDITOR_DEFAULT_WIDTH = 320,
+    TEXT_EDITOR_DEFAULT_HEIGHT = 96,
+    TEXT_EDITOR_MIN_WIDTH = 160,
+    TEXT_EDITOR_MIN_HEIGHT = 72,
     TEXT_EDITOR_FONT_CSS = 32,
     TEXT_EDITOR_PREVIEW_INTERVAL_MS = 80,
     TEXT_EDITOR_FONT_FAMILY = '"Patrick Hand", "Segoe Print", "Comic Sans MS", cursive',
@@ -224,7 +224,9 @@ User writes "Show air quality for Tokyo", names a place, and points to an empty 
       textPreview: "Markdown and LaTeX preview",
       textConfirm: "Confirm text",
       textCancel: "Discard text",
-      textPlaceholder: "",
+      textPlaceholder: "Type here",
+      boardReply: "Reply",
+      boardReplyHint: "Type your answer in the text box",
       textConfirmHint: "to confirm",
       textEmpty: "Enter some text first",
       textMixedModeError: "Mixed formatting was unavailable; plain text was inserted",
@@ -4867,6 +4869,7 @@ User writes "Show air quality for Tokyo", names a place, and points to an empty 
     cancel:'<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg>',
     copy:'<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="8" y="8" width="11" height="11" rx="2"/><path d="M16 8V6a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h2"/></svg>',
     refine:'<svg viewBox="0 0 24 24" aria-hidden="true"><path d="m12 3 1.3 4.2L17.5 8.5l-4.2 1.3L12 14l-1.3-4.2-4.2-1.3 4.2-1.3L12 3Z"/><path d="m18.5 14 .7 2.3 2.3.7-2.3.7-.7 2.3-.7-2.3-2.3-.7 2.3-.7.7-2.3Z"/></svg>',
+    reply:'<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 6h14M12 6v14M8 20h8"/></svg>',
   });
   function screenObjectBox(box) {
     return {
@@ -4980,6 +4983,7 @@ User writes "Show air quality for Tokyo", names a place, and points to an empty 
     if (kind === "cancel") return t("cancel");
     if (kind === "copy") return t("copyText");
     if (kind === "refine") return t("widgetRefine");
+    if (kind === "reply") return t("boardReply");
     return t("hand");
   }
   function beginObjectChromeMove(event, spec) {
@@ -5019,7 +5023,7 @@ User writes "Show air quality for Tokyo", names a place, and points to an empty 
     button.type = "button";
     button.className = `object-chrome-button ${kind}`;
     button.dataset.objectChromeKey = key;
-    button.innerHTML = ["copy", "refine"].includes(kind) ? `${OBJECT_CHROME_ICONS[kind]}<span></span>` : OBJECT_CHROME_ICONS[kind];
+    button.innerHTML = ["copy", "refine", "reply"].includes(kind) ? `${OBJECT_CHROME_ICONS[kind]}<span></span>` : OBJECT_CHROME_ICONS[kind];
     ensureObjectChromeStyleRule(button);
     button.addEventListener("pointerdown", (event) => {
       event.stopPropagation();
@@ -5068,18 +5072,32 @@ User writes "Show air quality for Tokyo", names a place, and points to an empty 
       specs.push({ key:`${key}:cancel`, kind:"cancel", box, activate:() => itemIndex === null ? rejectPending() : rejectPendingItem(itemIndex), priority:5 });
       specs.push({ key:`${key}:accept`, kind:"accept", box, activate:() => itemIndex === null ? acceptPending() : acceptPendingItem(itemIndex), priority:5 });
       if (pendingCopyable(target)) specs.push({ key:`${key}:copy`, kind:"copy", box, activate:() => void copyPendingText(itemIndex), priority:5 });
+      if (target?.textCommand || pendingCopyable(target)) specs.push({
+        key:`${key}:reply`,
+        kind:"reply",
+        box,
+        label: t("boardReply"),
+        widgetTool: true,
+        widgetToolGroup: `${key}-reply`,
+        groupBaseWidth: widgetToolLabelWidth(t("boardReply"), 86),
+        groupOffset: 0,
+        baseWidth: widgetToolLabelWidth(t("boardReply"), 86),
+        baseHeight: 34,
+        activate: () => openBoardReplyFromPending(itemIndex),
+        priority: 7,
+      });
     };
     if (pending.items) pending.items.forEach((item, index) => add(`pending-item:${index}`, pendingItemBounds(item), index, item));
     else add("pending", draftBounds(pending));
   }
   function objectChromeSpecs() {
+    const specs = [];
+    pendingChromeSpecs(specs, state.pending);
     if (state.mode !== "hand") {
-      const specs = [],
-        candidate = currentWidgetRefineCandidate();
+      const candidate = currentWidgetRefineCandidate();
       if (candidate) addWidgetToolSpecs(specs, candidate.widget, { refine:candidate });
       return specs;
     }
-    const specs = [];
     for (const image of visibleImages()) specs.push({ key:`image:${image.id}:move`, kind:"move", box:imageBox(image), target:"image", object:image, priority:1 });
     for (const animation of visibleAnimations()) specs.push({ key:`animation:${animation.id}:move`, kind:"move", box:animationBox(animation), target:"animation", object:animation, priority:1 });
     for (const widget of visibleWidgets()) specs.push({ key:`widget:${widget.id}:move`, kind:"move", box:widgetBox(widget), target:"widget", object:widget, priority:2 });
@@ -5100,7 +5118,6 @@ User writes "Show air quality for Tokyo", names a place, and points to an empty 
         addWidgetToolSpecs(specs, widget, { copy:true });
       }
     }
-    pendingChromeSpecs(specs, state.pending);
     if (state.pendingWidget) {
       const widget = state.pendingWidget,
         box = widgetBox(widget);
@@ -5128,7 +5145,7 @@ User writes "Show air quality for Tokyo", names a place, and points to an empty 
       else delete button.dataset.widgetToolGroup;
       button.setAttribute("aria-label", label);
       button.title = spec.kind === "refine" ? t("widgetRefineHint") : label;
-      if (["copy", "refine"].includes(spec.kind)) button.querySelector("span").textContent = label;
+      if (["copy", "refine", "reply"].includes(spec.kind)) button.querySelector("span").textContent = label;
       declaration?.setProperty("--object-control-x", `${position.x.toFixed(1)}px`);
       declaration?.setProperty("--object-control-y", `${position.y.toFixed(1)}px`);
       declaration?.setProperty("--object-control-scale", String(position.scale || 1));
@@ -5280,15 +5297,17 @@ User writes "Show air quality for Tokyo", names a place, and points to an empty 
   }
   function keepTextEditorVisible(editor) {
     const viewport = textEditorViewportSize(),
-      inset = 8,
+      inset = 12,
       scale = Math.max(0.03, state.scale),
       point = textEditorScreenPoint(editor),
-      maxLeft = Math.max(inset, viewport.width - editor.widthCss - inset),
-      maxTop = Math.max(inset, viewport.height - editor.heightCss - inset),
+      widthCss = Math.max(TEXT_EDITOR_MIN_WIDTH, editor.widthCss),
+      heightCss = Math.max(TEXT_EDITOR_MIN_HEIGHT, editor.heightCss),
+      maxLeft = Math.max(inset, viewport.width - widthCss - inset),
+      maxTop = Math.max(inset, viewport.height - heightCss - inset),
       canvasLeft = state.panX,
       canvasTop = state.panY,
-      canvasRight = state.panX + SIZE * scale - editor.widthCss,
-      canvasBottom = state.panY + SIZE * scale - editor.heightCss,
+      canvasRight = state.panX + SIZE * scale - widthCss,
+      canvasBottom = state.panY + SIZE * scale - heightCss,
       minLeft = Math.max(inset, canvasLeft),
       minTop = Math.max(inset, canvasTop),
       boundedMaxLeft = Math.min(maxLeft, canvasRight),
@@ -5298,6 +5317,24 @@ User writes "Show air quality for Tokyo", names a place, and points to an empty 
     if (Math.abs(left - point.left) > 0.5) editor.x = (left - state.panX) / scale;
     if (Math.abs(top - point.top) > 0.5) editor.y = (top - state.panY) / scale;
     keepTextEditorInsideCanvas(editor);
+  }
+  function panToRevealTextEditor(editor) {
+    if (!editor) return;
+    const viewport = textEditorViewportSize(),
+      pad = 16,
+      point = textEditorScreenPoint(editor);
+    let dx = 0,
+      dy = 0;
+    if (point.left < pad) dx = pad - point.left;
+    else if (point.left + editor.widthCss > viewport.width - pad) dx = viewport.width - pad - (point.left + editor.widthCss);
+    if (point.top < pad) dy = pad - point.top;
+    else if (point.top + editor.heightCss > viewport.height - pad) dy = viewport.height - pad - (point.top + editor.heightCss);
+    if (!dx && !dy) return;
+    state.panX += dx;
+    state.panY += dy;
+    updateCoordinates();
+    requestRender();
+    keepTextEditorVisible(editor);
   }
   function positionTextEditors() {
     const visible = state.textEditors.size > 0;
@@ -5549,7 +5586,8 @@ User writes "Show air quality for Tokyo", names a place, and points to an empty 
     const textarea = editor?.textarea;
     if (!textarea) return;
     textarea.style.height = "0px";
-    editor.heightCss = Math.max(TEXT_EDITOR_MIN_HEIGHT, Math.ceil(textarea.scrollHeight) + 20);
+    const line = Math.ceil((editor.fontCss || TEXT_EDITOR_FONT_CSS) * 1.35);
+    editor.heightCss = Math.max(TEXT_EDITOR_MIN_HEIGHT, line + 28, Math.ceil(textarea.scrollHeight) + 28);
     textarea.style.height = "100%";
   }
 
@@ -5755,6 +5793,8 @@ User writes "Show air quality for Tokyo", names a place, and points to an empty 
     keepTextEditorInsideCanvas(editor);
     state.textEditors.set(editor.id, editor);
     fitTextEditorToContent(editor);
+    keepTextEditorVisible(editor);
+    panToRevealTextEditor(editor);
     focusTextEditor(editor, true);
     positionTextEditors();
     return editor;
@@ -5789,6 +5829,32 @@ User writes "Show air quality for Tokyo", names a place, and points to an empty 
     positionTextEditors();
     setStatusKey("ready");
     render();
+    return true;
+  }
+  function pendingReplyBox(itemIndex = null) {
+    const pending = state.pending;
+    if (!pending) return null;
+    if (pending.items) {
+      const item = Number.isInteger(itemIndex) ? pending.items[itemIndex] : pending.items.find((entry) => entry?.textCommand) || pending.items[pending.selectedIndex] || pending.items[0];
+      return item ? pendingItemBounds(item) : null;
+    }
+    return draftBounds(pending);
+  }
+  function openBoardReplyFromPending(itemIndex = null) {
+    const box = pendingReplyBox(itemIndex);
+    if (!box) return false;
+    const gap = 20 / Math.max(0.03, state.scale),
+      point = {
+        x: box.x,
+        y: Math.min(SIZE - 80, box.y + box.h + gap),
+      },
+      editor = createTextEditor(point, {
+        returnMode: state.mode === "text" ? "" : state.mode,
+      });
+    if (!editor) return false;
+    panToRevealTextEditor(editor);
+    positionTextEditors();
+    setStatusKey("boardReplyHint");
     return true;
   }
   function setCanvasCursor(cursor) {
@@ -7260,8 +7326,14 @@ User writes "Show air quality for Tokyo", names a place, and points to an empty 
     for (const item of visibleTextBoxes(probe)) bounds = SELECT.unionBox(bounds, textBoxBox(item));
     return bounds;
   }
+  function imageBoundsInRegion(probe) {
+    if (!probe) return null;
+    let bounds = null;
+    for (const item of visibleImages(probe)) bounds = SELECT.unionBox(bounds, imageBox(item));
+    return bounds;
+  }
   function contentBoundsInRegion(probe) {
-    return SELECT.unionBox(inkBoundsInRegion(probe), textBoxBoundsInRegion(probe));
+    return SELECT.unionBox(SELECT.unionBox(inkBoundsInRegion(probe), textBoxBoundsInRegion(probe)), imageBoundsInRegion(probe));
   }
   function textBoxHitsSelection(item, points, box) {
     const tb = textBoxBox(item),
@@ -7284,6 +7356,30 @@ User writes "Show air quality for Tokyo", names a place, and points to an empty 
     }
     return lifted;
   }
+  function liftImagesForSelection(points, box, fragments) {
+    const lifted = [];
+    for (let index = state.images.length - 1; index >= 0; index--) {
+      const item = state.images[index];
+      if (!item?.image || !textBoxHitsSelection(item, points, box)) continue;
+      fragments.push({ image: item.image, x: item.x, y: item.y, w: item.w, h: item.h, boardImage: item });
+      lifted.push(item);
+      recordImagesBefore();
+      state.images.splice(index, 1);
+    }
+    return lifted;
+  }
+  function absorbOverlappingPending(box) {
+    const pending = state.pending;
+    if (!pending || !box) return;
+    if (pending.items) {
+      for (let index = pending.items.length - 1; index >= 0; index--) {
+        const itemBox = pendingItemBounds(pending.items[index]);
+        if (itemBox && intersection(itemBox, box)) acceptPendingItem(index);
+      }
+      return;
+    }
+    if (intersection(draftBounds(pending), box)) acceptPending({ restoreMode: false });
+  }
   function captureBoxSelection(box, options) {
     if (!box || box.w < 1 || box.h < 1) return false;
     return captureSelection(rectPathForBox(box), options);
@@ -7299,7 +7395,13 @@ User writes "Show air quality for Tokyo", names a place, and points to an empty 
         h: hitPad * 2,
       },
       textHit = textBoxAtPoint(point),
+      imageHit = imageAtPoint(point),
       inkHit = inkBoundsInRegion(probe);
+    if (imageHit && !textHit) {
+      const box = imageBox(imageHit);
+      rememberInkBox(box);
+      return captureBoxSelection(box, { quiet: true, allowSmall: true });
+    }
     if (textHit && !inkHit) {
       const box = textBoxBox(textHit);
       rememberInkBox(box);
@@ -7379,7 +7481,9 @@ User writes "Show air quality for Tokyo", names a place, and points to an empty 
       },
       false,
     );
+    absorbOverlappingPending(box);
     const liftedTextBoxes = liftTextBoxesForSelection(points, box, fragments);
+    const liftedImages = liftImagesForSelection(points, box, fragments);
     if (!fragments.length) {
       state.selection = null;
       if (!options.quiet) setStatusKey("selectionEmpty");
@@ -7439,6 +7543,7 @@ User writes "Show air quality for Tokyo", names a place, and points to an empty 
       contentBox: selectionContentBounds({ fragments, originalBox: tight, box: tight }),
       beforeTiles,
       liftedTextBoxes,
+      liftedImages,
       color: null,
     };
     state.selectionGesture = null;
@@ -7454,6 +7559,9 @@ User writes "Show air quality for Tokyo", names a place, and points to an empty 
     }
     for (const item of selection.liftedTextBoxes || []) {
       if (item && !state.textBoxes.some((existing) => existing.id === item.id)) state.textBoxes.push(item);
+    }
+    for (const item of selection.liftedImages || []) {
+      if (item && !state.images.some((existing) => existing.id === item.id)) state.images.push(item);
     }
     state.historyBefore.clear();
     state.textBoxHistoryBefore = null;
@@ -7504,6 +7612,17 @@ User writes "Show air quality for Tokyo", names a place, and points to an empty 
         item.fontSize = Math.max(1, item.fontSize * Math.min(scaleX, scaleY));
         item.maxWidth = Math.max(item.fontSize * 3, item.maxWidth * scaleX);
         if (!state.textBoxes.some((existing) => existing.id === item.id)) state.textBoxes.push(item);
+        continue;
+      }
+      if (fragment.boardImage && !selection.color) {
+        const item = fragment.boardImage,
+          scaleX = target.w / Math.max(1, fragment.w),
+          scaleY = target.h / Math.max(1, fragment.h);
+        item.x = target.x;
+        item.y = target.y;
+        item.w = target.w;
+        item.h = target.h;
+        if (!state.images.some((existing) => existing.id === item.id)) state.images.push(item);
         continue;
       }
       blitSized(fragment.renderImage || fragment.image, target.x, target.y, target.w, target.h);
@@ -9341,7 +9460,10 @@ User writes "Show air quality for Tokyo", names a place, and points to an empty 
         [prefix + "cancel"]: { x: clampX(box.x - s * 0.62), y: actionY },
         [prefix + "accept"]: { x: clampX(box.x + box.w + s * 0.62), y: actionY },
       };
-    if (includeCopy) actions[prefix + "copy"] = { x: clampX(box.x + box.w / 2), y: actionY };
+    if (includeCopy) {
+      actions[prefix + "copy"] = { x: clampX(box.x + box.w / 2 - s * 0.95), y: actionY };
+      actions[prefix + "reply"] = { x: clampX(box.x + box.w / 2 + s * 0.95), y: actionY };
+    }
     return actions;
   }
   function drawDraftActions(context, box, s, includeCopy = false, single = false) {
@@ -9351,7 +9473,7 @@ User writes "Show air quality for Tokyo", names a place, and points to an empty 
     context.lineCap = context.lineJoin = "round";
     for (const [action, point] of Object.entries(actions)) {
       const kind = action.replace(/^item-/, ""),
-        accent = kind === "cancel" ? "#fb7185" : kind === "accept" ? "#4ade80" : "#60a5fa";
+        accent = kind === "cancel" ? "#fb7185" : kind === "accept" ? "#4ade80" : kind === "reply" ? "#a78bfa" : "#60a5fa";
       context.fillStyle = "#111827f2";
       context.strokeStyle = "#ffffffd9";
       context.lineWidth = 1.15 / state.scale;
@@ -9374,6 +9496,12 @@ User writes "Show air quality for Tokyo", names a place, and points to an empty 
         context.moveTo(point.x - radius * 0.42, point.y);
         context.lineTo(point.x - radius * 0.1, point.y + radius * 0.3);
         context.lineTo(point.x + radius * 0.46, point.y - radius * 0.38);
+      } else if (kind === "reply") {
+        context.moveTo(point.x - radius * 0.32, point.y + radius * 0.3);
+        context.lineTo(point.x - radius * 0.32, point.y - radius * 0.26);
+        context.lineTo(point.x + radius * 0.32, point.y - radius * 0.26);
+        context.moveTo(point.x, point.y - radius * 0.26);
+        context.lineTo(point.x, point.y + radius * 0.34);
       } else {
         const size = radius * 0.72,
           offset = radius * 0.2,
@@ -9817,6 +9945,7 @@ User writes "Show air quality for Tokyo", names a place, and points to an empty 
     requestAnimationLayerRender();
     if (pendingAnimationControlTarget()) showAnimationControls();
     releaseSelectionAITransformLock();
+    maybeOfferBoardReply(p);
   }
   function startPending(image, x, y, revision, meta, command) {
     return new Promise((resolve) => {
@@ -9870,7 +9999,10 @@ User writes "Show air quality for Tokyo", names a place, and points to an empty 
         p.revealProgress = Math.min(1, (now - started) / duration);
         render();
         if (p.revealProgress < 1) requestAnimationFrame(step);
-        else setStatusKey("draftReady");
+        else {
+          setStatusKey("draftReady");
+          maybeOfferBoardReply(p);
+        }
       }
       requestAnimationFrame(step);
     });
@@ -9900,7 +10032,22 @@ User writes "Show air quality for Tokyo", names a place, and points to an empty 
       render();
       requestAnimationLayerRender();
       if (pendingAnimationControlTarget()) showAnimationControls();
+      maybeOfferBoardReply(state.pending);
     });
+  }
+  function pendingTextIsQuestion(target) {
+    const text = String(pendingCopyValue(target) || target?.textCommand?.text || target?.command?.text || "");
+    return /[?？]/.test(text) || /\b(what do you want|what should i|how can i help|tell me what|want me to)\b/i.test(text);
+  }
+  function maybeOfferBoardReply(pending) {
+    if (!pending || state.textEditors.size) return;
+    const items = pending.items || (pending.textCommand ? [pending] : []);
+    const index = items.findIndex((item) => item?.textCommand && pendingTextIsQuestion(item));
+    if (index < 0) return;
+    window.setTimeout(() => {
+      if (state.pending !== pending || state.textEditors.size) return;
+      openBoardReplyFromPending(pending.items ? index : null);
+    }, 280);
   }
   function commitPendingBatch(p) {
     for (const item of p.items) commitPendingItem(item);
@@ -10656,10 +10803,6 @@ User writes "Show air quality for Tokyo", names a place, and points to an empty 
       return;
     }
     if (state.mode === "select") {
-      if (state.pending) {
-        setStatusKey("pendingConfirm");
-        return;
-      }
       if (!valid(point)) {
         setStatusKey("outsideCanvas");
         return;
@@ -10733,18 +10876,11 @@ User writes "Show air quality for Tokyo", names a place, and points to an empty 
       setNavigating(true);
       return;
     }
+    const downPoint = clientPoint(e);
+    if (handlePendingPointerDown(e, downPoint)) return;
     if (state.mode !== "hand") {
       beginCanvasPointerAction(e, clientPoint(e));
       return;
-    }
-    if (state.pending) {
-      const result = pendingHit(state.pending, e, state.pending.revealProgress < 1),
-        hit = typeof result === "string" ? result : result?.hit,
-        itemIndex = result && typeof result === "object" ? result.itemIndex : null;
-      if (["resize", "width", "height", "batch-resize"].includes(hit)) {
-        beginPendingGesture(e, hit, itemIndex);
-        return;
-      }
     }
     const point = clientPoint(e);
     const widgetResult = widgetRuntimeEnabled() && valid(point) ? widgetPointerHit(point, e.pointerType, false) : null;
@@ -10768,6 +10904,45 @@ User writes "Show air quality for Tokyo", names a place, and points to an empty 
     }
     beginCanvasPointerAction(e, point);
   });
+  function pendingActionName(hit) {
+    return String(hit || "").replace(/^item-/, "");
+  }
+  function handlePendingPointerDown(event, point) {
+    if (!state.pending) return false;
+    const result = pendingHit(state.pending, event, state.pending.revealProgress < 1);
+    if (!result) return false;
+    const hit = typeof result === "string" ? result : result.hit,
+      itemIndex = result && typeof result === "object" ? result.itemIndex : null,
+      action = pendingActionName(hit);
+    if (action === "accept") {
+      if (itemIndex == null) acceptPending();
+      else acceptPendingItem(itemIndex);
+      return true;
+    }
+    if (action === "cancel") {
+      if (itemIndex == null) rejectPending();
+      else rejectPendingItem(itemIndex);
+      return true;
+    }
+    if (action === "copy") return armPendingCopy(event, hit, itemIndex);
+    if (action === "reply") return openBoardReplyFromPending(itemIndex);
+    if (state.mode === "select" && (hit === "move" || hit === "batch-move")) {
+      const box = itemIndex == null
+        ? draftBounds(state.pending)
+        : pendingItemBounds(state.pending.items[itemIndex]);
+      if (itemIndex == null) acceptPending({ restoreMode: false });
+      else acceptPendingItem(itemIndex);
+      if (box) captureBoxSelection(box, { quiet: true, allowSmall: true });
+      const next = state.selection;
+      if (next?.phase === "active") beginSelectionTransform(event, "move");
+      return true;
+    }
+    if (["resize", "width", "height", "batch-resize", "move", "batch-move"].includes(hit)) {
+      beginPendingGesture(event, hit, itemIndex);
+      return true;
+    }
+    return false;
+  }
   screen.addEventListener("pointermove", (e) => {
     e.preventDefault();
     const old = state.pointers.get(e.pointerId);

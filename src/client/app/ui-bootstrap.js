@@ -54,10 +54,6 @@
       return;
     }
     if (state.mode === "select") {
-      if (state.pending) {
-        setStatusKey("pendingConfirm");
-        return;
-      }
       if (!valid(point)) {
         setStatusKey("outsideCanvas");
         return;
@@ -131,18 +127,11 @@
       setNavigating(true);
       return;
     }
+    const downPoint = clientPoint(e);
+    if (handlePendingPointerDown(e, downPoint)) return;
     if (state.mode !== "hand") {
       beginCanvasPointerAction(e, clientPoint(e));
       return;
-    }
-    if (state.pending) {
-      const result = pendingHit(state.pending, e, state.pending.revealProgress < 1),
-        hit = typeof result === "string" ? result : result?.hit,
-        itemIndex = result && typeof result === "object" ? result.itemIndex : null;
-      if (["resize", "width", "height", "batch-resize"].includes(hit)) {
-        beginPendingGesture(e, hit, itemIndex);
-        return;
-      }
     }
     const point = clientPoint(e);
     const widgetResult = widgetRuntimeEnabled() && valid(point) ? widgetPointerHit(point, e.pointerType, false) : null;
@@ -166,6 +155,45 @@
     }
     beginCanvasPointerAction(e, point);
   });
+  function pendingActionName(hit) {
+    return String(hit || "").replace(/^item-/, "");
+  }
+  function handlePendingPointerDown(event, point) {
+    if (!state.pending) return false;
+    const result = pendingHit(state.pending, event, state.pending.revealProgress < 1);
+    if (!result) return false;
+    const hit = typeof result === "string" ? result : result.hit,
+      itemIndex = result && typeof result === "object" ? result.itemIndex : null,
+      action = pendingActionName(hit);
+    if (action === "accept") {
+      if (itemIndex == null) acceptPending();
+      else acceptPendingItem(itemIndex);
+      return true;
+    }
+    if (action === "cancel") {
+      if (itemIndex == null) rejectPending();
+      else rejectPendingItem(itemIndex);
+      return true;
+    }
+    if (action === "copy") return armPendingCopy(event, hit, itemIndex);
+    if (action === "reply") return openBoardReplyFromPending(itemIndex);
+    if (state.mode === "select" && (hit === "move" || hit === "batch-move")) {
+      const box = itemIndex == null
+        ? draftBounds(state.pending)
+        : pendingItemBounds(state.pending.items[itemIndex]);
+      if (itemIndex == null) acceptPending({ restoreMode: false });
+      else acceptPendingItem(itemIndex);
+      if (box) captureBoxSelection(box, { quiet: true, allowSmall: true });
+      const next = state.selection;
+      if (next?.phase === "active") beginSelectionTransform(event, "move");
+      return true;
+    }
+    if (["resize", "width", "height", "batch-resize", "move", "batch-move"].includes(hit)) {
+      beginPendingGesture(event, hit, itemIndex);
+      return true;
+    }
+    return false;
+  }
   screen.addEventListener("pointermove", (e) => {
     e.preventDefault();
     const old = state.pointers.get(e.pointerId);

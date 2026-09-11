@@ -1030,9 +1030,46 @@ body.mode-draw-active .topbar-status-area {
   pointer-events: none;
 }
 
-.object-chrome-layer,
+.object-chrome-layer {
+  display: block;
+  position: absolute;
+  z-index: 7;
+  inset: 0;
+  overflow: visible;
+  pointer-events: none;
+}
 .object-chrome-button {
-  display: none !important;
+  display: none;
+}
+.object-chrome-button.reply {
+  display: inline-flex !important;
+  position: absolute;
+  left: var(--object-control-x, 0px);
+  top: var(--object-control-y, 0px);
+  z-index: 8;
+  width: var(--object-control-width, 88px);
+  height: var(--object-control-height, 34px);
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 0 10px;
+  pointer-events: auto;
+  color: #1e1b4b;
+  border: 1px solid #c4b5fd;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.96);
+  box-shadow: 0 6px 16px rgba(26, 25, 21, 0.12);
+  font: 650 .78rem/1 system-ui, sans-serif;
+  transform: scale(var(--object-control-scale, 1));
+  transform-origin: top left;
+  cursor: pointer;
+}
+.object-chrome-button.reply svg {
+  width: 14px;
+  height: 14px;
+  stroke: currentColor;
+  fill: none;
+  stroke-width: 2;
 }
 
 /* ── 9. BOTTOM FLOATING TOOLBAR ───────────────────────────────── */
@@ -1980,7 +2017,7 @@ body.mode-draw-active .selection-toolbar-button[hidden] {
   display: none !important;
 }
 
-#textEditorLayer { position: absolute; z-index: 6; inset: 0; pointer-events: none; overflow: hidden; }
+#textEditorLayer { position: absolute; z-index: 6; inset: 0; pointer-events: none; overflow: visible; }
 .text-editor-layer[aria-hidden="true"], .text-editor-layer:empty { display: none; }
 .text-editor {
   --text-editor-font-size: 32px;
@@ -1996,7 +2033,7 @@ body.mode-draw-active .selection-toolbar-button[hidden] {
   color: var(--text-editor-ink);
   border: 1.5px dashed #3b82f6;
   border-radius: 2px;
-  background: transparent;
+  background: rgba(255, 255, 255, 0.82);
 }
 .text-editor.active { border-color: #2563eb; }
 .text-editor.committing { pointer-events: none; opacity: .7; }
