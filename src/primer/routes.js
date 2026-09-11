@@ -60,7 +60,7 @@ function profileFromBody(body, userId) {
 
 async function primerRoutes(req, res, url, options = {}) {
   const orchestrator = options.orchestrator;
-  const pathname = url.pathname;
+  const pathname = String(url.pathname || "").replace(/\/+$/, "") || "/";
   if (!pathname.startsWith("/api/primer")) return false;
   const needsTutor = pathname === "/api/primer/turn"
     || pathname === "/api/primer/teach"
