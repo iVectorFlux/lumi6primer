@@ -297,8 +297,39 @@ async function tryOne(label, fn) {
   }
 }
 
+async function inferTopicFromImage(dataUrl) {
+  const key = openaiKey();
+  if (!key.startsWith("sk-") || typeof dataUrl !== "string" || !dataUrl.startsWith("data:image")) return "";
+  const result = await fetchJson("https://api.openai.com/v1/chat/completions", {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${key}`,
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify({
+      model: String(process.env.OPENAI_VISION_MODEL || "gpt-4o-mini").trim() || "gpt-4o-mini",
+      max_tokens: 40,
+      temperature: 0,
+      messages: [{
+        role: "user",
+        content: [
+          { type: "text", text: "This is a child's handwriting or doodle. Reply with only the topic to illustrate, 1 to 6 words. No quotes. Examples: zebra, water cycle, volcano." },
+          { type: "image_url", image_url: { url: dataUrl } }
+        ]
+      }]
+    })
+  }, 20000);
+  const text = result.json?.choices?.[0]?.message?.content || "";
+  return String(text).replace(/^["'\s]+|["'\s.]+$/g, "").trim().slice(0, 80);
+}
+
 async function generate(input = {}) {
-  const topic = input.topic || input.scene || input.spoken || "";
+  let topic = String(input.topic || input.scene || input.spoken || "").replace(/\s+/g, " ").trim();
+  if (topic.length < 2 && input.image) {
+    topic = await inferTopicFromImage(input.image);
+  }
+  if (topic.length < 2) return null;
+  input = { ...input, topic, spoken: input.spoken || topic, scene: input.scene || topic };
 
   // 1. Try instant educational image search first (Wikimedia / Wikipedia scientific diagrams)
   try {

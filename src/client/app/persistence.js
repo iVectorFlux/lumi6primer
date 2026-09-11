@@ -1374,17 +1374,18 @@
     if (!box || box.w < 1 || box.h < 1) return false;
     return captureSelection(rectPathForBox(box), options);
   }
-  function selectInkAtPoint(point) {
-    const scale = Math.max(state.scale, 0.05);
-    const hitPad = 8 / scale;
-    const probe = {
-      x: point.x - hitPad,
-      y: point.y - hitPad,
-      w: hitPad * 2,
-      h: hitPad * 2,
-    };
-    const textHit = textBoxAtPoint(point);
-    const inkHit = inkBoundsInRegion(probe);
+  function selectInkAtPoint(point, options) {
+    options ||= {};
+    const scale = Math.max(state.scale, 0.05),
+      hitPad = (options.hitCss || 22) / scale,
+      probe = {
+        x: point.x - hitPad,
+        y: point.y - hitPad,
+        w: hitPad * 2,
+        h: hitPad * 2,
+      },
+      textHit = textBoxAtPoint(point),
+      inkHit = inkBoundsInRegion(probe);
     if (textHit && !inkHit) {
       const box = textBoxBox(textHit);
       rememberInkBox(box);
@@ -1406,6 +1407,25 @@
     }
     rememberInkBox(bounds);
     return captureBoxSelection(bounds, { quiet: true, allowSmall: true });
+  }
+  function selectNearestContent(point) {
+    if (selectInkAtPoint(point, { hitCss: 28 })) return true;
+    const scale = Math.max(state.scale, 0.05),
+      last = state.lastInkBox;
+    if (last) {
+      const pad = 48 / scale;
+      if (point.x >= last.x - pad && point.x <= last.x + last.w + pad && point.y >= last.y - pad && point.y <= last.y + last.h + pad) {
+        return captureBoxSelection(last, { quiet: true, allowSmall: true });
+      }
+    }
+    for (const css of [40, 72, 120]) {
+      const pad = css / scale,
+        bounds = contentBoundsInRegion({ x: point.x - pad, y: point.y - pad, w: pad * 2, h: pad * 2 });
+      if (!bounds) continue;
+      rememberInkBox(bounds);
+      if (captureBoxSelection(bounds, { quiet: true, allowSmall: true })) return true;
+    }
+    return false;
   }
   function captureSelection(points, options) {
     options ||= {};
@@ -1590,26 +1610,55 @@
     setStatusKey("selectionRecolored");
     return true;
   }
+  function selectionHasTypesetDraft(selection = state.selection) {
+    const pending = state.pending;
+    return Boolean(selection && pending && pending.isolatedSelection && (pending.selection === selection || !pending.selection));
+  }
+  function dismissSelectionKeepInkRemoved(selection = state.selection) {
+    if (!selection) return;
+    if (state.selection === selection) {
+      state.selection = null;
+      state.selectionGesture = null;
+    }
+    state.historyBefore.clear();
+    state.textBoxHistoryBefore = null;
+    updateSelectionToolbar();
+    requestRender();
+  }
   function updateSelectionToolbar() {
     if (!selectionOverlayLayer || !selectionToolbar) return;
     const selection = state.selection,
-      active = selection?.phase === "active";
+      typesetting = selectionIsTypesetting(selection),
+      draftReady = selectionHasTypesetDraft(selection),
+      active = selection?.phase === "active" && !typesetting;
     selectionOverlayLayer.hidden = !active;
     selectionOverlayLayer.setAttribute("aria-hidden", String(!active));
     if (!active) return;
     const viewport = view.getBoundingClientRect(),
-      box = selection.box,
-      toolbarStyle = runtimeElementStyle(selectionToolbar, "selection-toolbar"),
-      selectionBusy = selectionAIBusy(selection),
-      isTypesetting = selectionIsTypesetting(selection);
+      pendingBox = draftReady
+        ? (state.pending.items ? pendingItemBounds(state.pending.items[0]) : draftBounds(state.pending))
+        : null,
+      box = pendingBox || selection.box,
+      toolbarStyle = runtimeElementStyle(selectionToolbar, "selection-toolbar");
     selectionToolbar.hidden = false;
-    selectionToolbar.setAttribute("aria-busy", String(selectionBusy));
+    selectionToolbar.setAttribute("aria-busy", "false");
     if (selectionTypesetButton) {
+      selectionTypesetButton.hidden = false;
       selectionTypesetButton.disabled = false;
-      selectionTypesetButton.setAttribute("aria-busy", String(isTypesetting));
-      selectionTypesetButton.textContent = t(isTypesetting ? "selectionTypesetting" : "selectionTypeset");
+      selectionTypesetButton.setAttribute("aria-busy", "false");
+      selectionTypesetButton.textContent = t(draftReady ? "selectionKeep" : "selectionTypeset");
     }
-    if (selectionDeleteButton) selectionDeleteButton.disabled = selectionBusy;
+    if (selectionVisualizeButton) {
+      selectionVisualizeButton.hidden = draftReady;
+      selectionVisualizeButton.disabled = Boolean(state.visualizingSelection);
+      selectionVisualizeButton.setAttribute("aria-busy", String(Boolean(state.visualizingSelection)));
+      selectionVisualizeButton.textContent = t(state.visualizingSelection ? "selectionVisualizing" : "selectionVisualize");
+    }
+    if (selectionDeleteButton) {
+      selectionDeleteButton.hidden = draftReady;
+      selectionDeleteButton.disabled = false;
+    }
+    if (selectionCancelButton) selectionCancelButton.textContent = t(draftReady ? "selectionDiscard" : "selectionCancel");
     const width = selectionToolbar.offsetWidth || 280,
       height = selectionToolbar.offsetHeight || 36,
       left = box.x * state.scale + state.panX,
@@ -1665,6 +1714,81 @@
     const packed = buildSelectionTypesetRequest(selection);
     if (!packed) return false;
     return requestSelectionAI("normalize", selection, packed);
+  }
+  function selectionTopicHint(selection) {
+    return (selection?.fragments || [])
+      .map((fragment) => String(fragment.textBox?.text || "").trim())
+      .filter(Boolean)
+      .join(" ")
+      .replace(/\s+/g, " ")
+      .trim()
+      .slice(0, 160);
+  }
+  function compactSelectionImage(dataUrl) {
+    return new Promise((resolve) => {
+      if (typeof dataUrl !== "string" || !dataUrl.startsWith("data:image")) {
+        resolve("");
+        return;
+      }
+      const image = new Image();
+      image.onload = () => {
+        const scale = Math.min(1, 768 / Math.max(1, image.width, image.height));
+        const canvas = document.createElement("canvas");
+        canvas.width = Math.max(1, Math.round(image.width * scale));
+        canvas.height = Math.max(1, Math.round(image.height * scale));
+        canvas.getContext("2d").drawImage(image, 0, 0, canvas.width, canvas.height);
+        resolve(canvas.toDataURL("image/jpeg", 0.74));
+      };
+      image.onerror = () => resolve(dataUrl);
+      image.src = dataUrl;
+    });
+  }
+  async function visualizeSelection() {
+    const selection = state.selection;
+    if (!selection || selection.phase !== "active" || state.visualizingSelection || selectionHasTypesetDraft(selection)) return false;
+    const packed = buildSelectionImage(selection);
+    if (!packed?.atlasImage) {
+      setStatusKey("selectionEmpty");
+      return false;
+    }
+    state.visualizingSelection = true;
+    updateSelectionToolbar();
+    try {
+      const image = await compactSelectionImage(packed.atlasImage);
+      const response = await fetch("/api/primer/visualize", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          topic: selectionTopicHint(selection),
+          image,
+        }),
+      });
+      const data = await response.json().catch(() => ({}));
+      if (!response.ok || !data.href) {
+        setStatusKey("selectionVisualizeFailed");
+        return false;
+      }
+      const fileResponse = await fetch(data.href);
+      if (!fileResponse.ok) {
+        setStatusKey("selectionVisualizeFailed");
+        return false;
+      }
+      const blob = await fileResponse.blob();
+      const file = new File([blob], `${String(data.title || "picture").replace(/\s+/g, "-")}.png`, { type: blob.type || "image/png" });
+      const placed = await addGeneratedImageBelow(selection.box, file, data.title || "Visualize");
+      if (!placed) {
+        setStatusKey("selectionVisualizeFailed");
+        return false;
+      }
+      setStatusKey("imageAdded");
+      return true;
+    } catch {
+      setStatusKey("selectionVisualizeFailed");
+      return false;
+    } finally {
+      state.visualizingSelection = false;
+      updateSelectionToolbar();
+    }
   }
   function selectionHit(selection, event) {
     const point = clientPoint(event),
@@ -1743,10 +1867,17 @@
         const point = SELECT.clipPoint(clientPoint(event), SIZE);
         addLassoPoint(selection, point, 0.5 / state.scale);
       }
-      const points = selection?.points || [];
+      const points = selection?.points || [],
+        start = selection?.marqueeStart,
+        box = selection?.box,
+        smallMarquee = Boolean(box && box.w * state.scale < 32 && box.h * state.scale < 32);
       state.selection = null;
-      if (event.type !== "pointercancel") captureSelection(points);
-      else requestRender();
+      if (event.type === "pointercancel") {
+        requestRender();
+        return true;
+      }
+      if (smallMarquee && start && selectNearestContent(start)) return true;
+      if (!captureSelection(points) && start) selectNearestContent(start);
       return true;
     }
     if (selection) {
@@ -1775,7 +1906,7 @@
       }
       commitSelection();
     } else if (selection) cancelSelection(true);
-    if (selectInkAtPoint(point)) {
+    if (selectNearestContent(point)) {
       const next = state.selection;
       if (next?.phase === "active") beginSelectionTransform(event, "move");
       return true;

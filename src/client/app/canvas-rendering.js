@@ -212,18 +212,19 @@
 
     const candidates = [];
 
-    // 1. Try placing below each occupied box
+    // Prefer below occupied content so portrait phones can scroll down to the result.
     for (const b of occupied) {
       const candY = b.y + b.h + gap;
       candidates.push(clamp(start.x, candY));
       candidates.push(clamp(b.x, candY));
     }
 
-    // 2. Try placing to the right of each occupied box
-    for (const b of occupied) {
-      const candX = b.x + b.w + gap;
-      candidates.push(clamp(candX, start.y));
-      candidates.push(clamp(candX, b.y));
+    if (!(view && view.clientHeight > view.clientWidth * 1.05)) {
+      for (const b of occupied) {
+        const candX = b.x + b.w + gap;
+        candidates.push(clamp(candX, start.y));
+        candidates.push(clamp(candX, b.y));
+      }
     }
 
     // 3. Ring search around preferred position

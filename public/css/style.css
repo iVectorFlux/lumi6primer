@@ -657,6 +657,10 @@ body.sidebar-collapsed .sidebar-user-avatar {
   align-items: center;
   gap: 6px;
 }
+.topbar-status-area[hidden],
+body.mode-draw-active .topbar-status-area {
+  display: none !important;
+}
 
 #status {
   position: relative;
@@ -1642,8 +1646,10 @@ body.mode-draw-active .sketch-tool-group {
   position: absolute;
   z-index: 40;
   bottom: 56px;
-  right: 50%;
-  transform: translateX(50%);
+  left: 50%;
+  right: auto;
+  margin-left: -36px;
+  transform: none;
   width: 72px;
   height: 72px;
   pointer-events: none;
@@ -1969,6 +1975,9 @@ body.mode-draw-active .selection-context-toolbar {
 }
 body.mode-draw-active .selection-scope-notice {
   display: none;
+}
+body.mode-draw-active .selection-toolbar-button[hidden] {
+  display: none !important;
 }
 
 #textEditorLayer { position: absolute; z-index: 6; inset: 0; pointer-events: none; overflow: hidden; }

@@ -65,6 +65,7 @@
     selectionOverlayLayer = document.querySelector("#selectionOverlayLayer"),
     selectionToolbar = document.querySelector("#selectionToolbar"),
     selectionTypesetButton = document.querySelector("#selectionTypesetBtn"),
+    selectionVisualizeButton = document.querySelector("#selectionVisualizeBtn"),
     selectionDeleteButton = document.querySelector("#selectionDeleteBtn"),
     selectionCancelButton = document.querySelector("#selectionCancelBtn"),
     imagePickerButton = document.querySelector("#imagePickerBtn"),
@@ -481,8 +482,13 @@ User writes "Show air quality for Tokyo", names a place, and points to an empty 
       selectionTools: "Selection tools",
       selectionScopeNotice: "AI answers use only this selected region",
       selectionTypeset: "Typeset",
+      selectionVisualize: "Visualize",
+      selectionVisualizing: "Visualizing...",
+      selectionVisualizeFailed: "Could not make a picture from that selection",
       selectionDelete: "Delete",
       selectionCancel: "Cancel",
+      selectionKeep: "Keep",
+      selectionDiscard: "Discard",
       selectionTypesetting: "Typesetting selection...",
       selectionDeleted: "Selected region deleted",
       pendingConfirm: "Confirm or discard the current AI draft first",
@@ -2488,8 +2494,9 @@ User writes "Show air quality for Tokyo", names a place, and points to an empty 
     aiRadial.setAttribute("aria-hidden", "false");
     document.querySelectorAll(".radial-action").forEach((button) => button.setAttribute("tabindex", "0"));
   }
-  function closeRadialMenu() {
-    if (state.radialGesture) return;
+  function closeRadialMenu(force = false) {
+    if (state.radialGesture && !force) return;
+    state.radialGesture = null;
     embodiment.classList.remove("menu-open");
     aiOrb.setAttribute("aria-expanded", "false");
     aiRadial.setAttribute("aria-hidden", "true");
@@ -3096,6 +3103,33 @@ User writes "Show air quality for Tokyo", names a place, and points to an empty 
       imagePickerButton.disabled = false;
       imagePickerInput.value = "";
     }
+  }
+  function placementBelowBox(source, naturalW, naturalH) {
+    const gap = Math.max(28, 18 / Math.max(0.03, state.scale)),
+      maxW = Math.max(160, Math.min(source.w * 1.35, 720 / Math.max(0.03, state.scale), SIZE * 0.42)),
+      factor = Math.min(maxW / Math.max(1, naturalW), (640 / Math.max(0.03, state.scale)) / Math.max(1, naturalH)),
+      w = Math.max(80, naturalW * factor),
+      h = Math.max(80, naturalH * factor),
+      x = Math.max(0, Math.min(SIZE - w, source.x)),
+      y = Math.max(0, Math.min(SIZE - h, source.y + source.h + gap));
+    return { x, y, w, h };
+  }
+  async function addGeneratedImageBelow(sourceBox, file, sourceName = "") {
+    if (!sourceBox || state.images.length >= MAX_VISIBLE_IMAGES) return false;
+    const prepared = await prepareImportedImage(file);
+    recordImagesBefore();
+    const item = imageRecord({
+      id: `image-${state.nextImageId++}`,
+      ...placementBelowBox(sourceBox, prepared.naturalW, prepared.naturalH),
+      ...prepared,
+      sourceName,
+    });
+    if (!item) return false;
+    state.images.push(item);
+    state.userRevision++;
+    save();
+    requestRender();
+    return true;
   }
   function widgetBox(widget) {
     return { x: widget.x, y: widget.y, w: widget.w, h: widget.h };
@@ -4625,18 +4659,19 @@ User writes "Show air quality for Tokyo", names a place, and points to an empty 
 
     const candidates = [];
 
-    // 1. Try placing below each occupied box
+    // Prefer below occupied content so portrait phones can scroll down to the result.
     for (const b of occupied) {
       const candY = b.y + b.h + gap;
       candidates.push(clamp(start.x, candY));
       candidates.push(clamp(b.x, candY));
     }
 
-    // 2. Try placing to the right of each occupied box
-    for (const b of occupied) {
-      const candX = b.x + b.w + gap;
-      candidates.push(clamp(candX, start.y));
-      candidates.push(clamp(candX, b.y));
+    if (!(view && view.clientHeight > view.clientWidth * 1.05)) {
+      for (const b of occupied) {
+        const candX = b.x + b.w + gap;
+        candidates.push(clamp(candX, start.y));
+        candidates.push(clamp(candX, b.y));
+      }
     }
 
     // 3. Ring search around preferred position
@@ -7253,17 +7288,18 @@ User writes "Show air quality for Tokyo", names a place, and points to an empty 
     if (!box || box.w < 1 || box.h < 1) return false;
     return captureSelection(rectPathForBox(box), options);
   }
-  function selectInkAtPoint(point) {
-    const scale = Math.max(state.scale, 0.05);
-    const hitPad = 8 / scale;
-    const probe = {
-      x: point.x - hitPad,
-      y: point.y - hitPad,
-      w: hitPad * 2,
-      h: hitPad * 2,
-    };
-    const textHit = textBoxAtPoint(point);
-    const inkHit = inkBoundsInRegion(probe);
+  function selectInkAtPoint(point, options) {
+    options ||= {};
+    const scale = Math.max(state.scale, 0.05),
+      hitPad = (options.hitCss || 22) / scale,
+      probe = {
+        x: point.x - hitPad,
+        y: point.y - hitPad,
+        w: hitPad * 2,
+        h: hitPad * 2,
+      },
+      textHit = textBoxAtPoint(point),
+      inkHit = inkBoundsInRegion(probe);
     if (textHit && !inkHit) {
       const box = textBoxBox(textHit);
       rememberInkBox(box);
@@ -7285,6 +7321,25 @@ User writes "Show air quality for Tokyo", names a place, and points to an empty 
     }
     rememberInkBox(bounds);
     return captureBoxSelection(bounds, { quiet: true, allowSmall: true });
+  }
+  function selectNearestContent(point) {
+    if (selectInkAtPoint(point, { hitCss: 28 })) return true;
+    const scale = Math.max(state.scale, 0.05),
+      last = state.lastInkBox;
+    if (last) {
+      const pad = 48 / scale;
+      if (point.x >= last.x - pad && point.x <= last.x + last.w + pad && point.y >= last.y - pad && point.y <= last.y + last.h + pad) {
+        return captureBoxSelection(last, { quiet: true, allowSmall: true });
+      }
+    }
+    for (const css of [40, 72, 120]) {
+      const pad = css / scale,
+        bounds = contentBoundsInRegion({ x: point.x - pad, y: point.y - pad, w: pad * 2, h: pad * 2 });
+      if (!bounds) continue;
+      rememberInkBox(bounds);
+      if (captureBoxSelection(bounds, { quiet: true, allowSmall: true })) return true;
+    }
+    return false;
   }
   function captureSelection(points, options) {
     options ||= {};
@@ -7469,26 +7524,55 @@ User writes "Show air quality for Tokyo", names a place, and points to an empty 
     setStatusKey("selectionRecolored");
     return true;
   }
+  function selectionHasTypesetDraft(selection = state.selection) {
+    const pending = state.pending;
+    return Boolean(selection && pending && pending.isolatedSelection && (pending.selection === selection || !pending.selection));
+  }
+  function dismissSelectionKeepInkRemoved(selection = state.selection) {
+    if (!selection) return;
+    if (state.selection === selection) {
+      state.selection = null;
+      state.selectionGesture = null;
+    }
+    state.historyBefore.clear();
+    state.textBoxHistoryBefore = null;
+    updateSelectionToolbar();
+    requestRender();
+  }
   function updateSelectionToolbar() {
     if (!selectionOverlayLayer || !selectionToolbar) return;
     const selection = state.selection,
-      active = selection?.phase === "active";
+      typesetting = selectionIsTypesetting(selection),
+      draftReady = selectionHasTypesetDraft(selection),
+      active = selection?.phase === "active" && !typesetting;
     selectionOverlayLayer.hidden = !active;
     selectionOverlayLayer.setAttribute("aria-hidden", String(!active));
     if (!active) return;
     const viewport = view.getBoundingClientRect(),
-      box = selection.box,
-      toolbarStyle = runtimeElementStyle(selectionToolbar, "selection-toolbar"),
-      selectionBusy = selectionAIBusy(selection),
-      isTypesetting = selectionIsTypesetting(selection);
+      pendingBox = draftReady
+        ? (state.pending.items ? pendingItemBounds(state.pending.items[0]) : draftBounds(state.pending))
+        : null,
+      box = pendingBox || selection.box,
+      toolbarStyle = runtimeElementStyle(selectionToolbar, "selection-toolbar");
     selectionToolbar.hidden = false;
-    selectionToolbar.setAttribute("aria-busy", String(selectionBusy));
+    selectionToolbar.setAttribute("aria-busy", "false");
     if (selectionTypesetButton) {
+      selectionTypesetButton.hidden = false;
       selectionTypesetButton.disabled = false;
-      selectionTypesetButton.setAttribute("aria-busy", String(isTypesetting));
-      selectionTypesetButton.textContent = t(isTypesetting ? "selectionTypesetting" : "selectionTypeset");
+      selectionTypesetButton.setAttribute("aria-busy", "false");
+      selectionTypesetButton.textContent = t(draftReady ? "selectionKeep" : "selectionTypeset");
     }
-    if (selectionDeleteButton) selectionDeleteButton.disabled = selectionBusy;
+    if (selectionVisualizeButton) {
+      selectionVisualizeButton.hidden = draftReady;
+      selectionVisualizeButton.disabled = Boolean(state.visualizingSelection);
+      selectionVisualizeButton.setAttribute("aria-busy", String(Boolean(state.visualizingSelection)));
+      selectionVisualizeButton.textContent = t(state.visualizingSelection ? "selectionVisualizing" : "selectionVisualize");
+    }
+    if (selectionDeleteButton) {
+      selectionDeleteButton.hidden = draftReady;
+      selectionDeleteButton.disabled = false;
+    }
+    if (selectionCancelButton) selectionCancelButton.textContent = t(draftReady ? "selectionDiscard" : "selectionCancel");
     const width = selectionToolbar.offsetWidth || 280,
       height = selectionToolbar.offsetHeight || 36,
       left = box.x * state.scale + state.panX,
@@ -7544,6 +7628,81 @@ User writes "Show air quality for Tokyo", names a place, and points to an empty 
     const packed = buildSelectionTypesetRequest(selection);
     if (!packed) return false;
     return requestSelectionAI("normalize", selection, packed);
+  }
+  function selectionTopicHint(selection) {
+    return (selection?.fragments || [])
+      .map((fragment) => String(fragment.textBox?.text || "").trim())
+      .filter(Boolean)
+      .join(" ")
+      .replace(/\s+/g, " ")
+      .trim()
+      .slice(0, 160);
+  }
+  function compactSelectionImage(dataUrl) {
+    return new Promise((resolve) => {
+      if (typeof dataUrl !== "string" || !dataUrl.startsWith("data:image")) {
+        resolve("");
+        return;
+      }
+      const image = new Image();
+      image.onload = () => {
+        const scale = Math.min(1, 768 / Math.max(1, image.width, image.height));
+        const canvas = document.createElement("canvas");
+        canvas.width = Math.max(1, Math.round(image.width * scale));
+        canvas.height = Math.max(1, Math.round(image.height * scale));
+        canvas.getContext("2d").drawImage(image, 0, 0, canvas.width, canvas.height);
+        resolve(canvas.toDataURL("image/jpeg", 0.74));
+      };
+      image.onerror = () => resolve(dataUrl);
+      image.src = dataUrl;
+    });
+  }
+  async function visualizeSelection() {
+    const selection = state.selection;
+    if (!selection || selection.phase !== "active" || state.visualizingSelection || selectionHasTypesetDraft(selection)) return false;
+    const packed = buildSelectionImage(selection);
+    if (!packed?.atlasImage) {
+      setStatusKey("selectionEmpty");
+      return false;
+    }
+    state.visualizingSelection = true;
+    updateSelectionToolbar();
+    try {
+      const image = await compactSelectionImage(packed.atlasImage);
+      const response = await fetch("/api/primer/visualize", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          topic: selectionTopicHint(selection),
+          image,
+        }),
+      });
+      const data = await response.json().catch(() => ({}));
+      if (!response.ok || !data.href) {
+        setStatusKey("selectionVisualizeFailed");
+        return false;
+      }
+      const fileResponse = await fetch(data.href);
+      if (!fileResponse.ok) {
+        setStatusKey("selectionVisualizeFailed");
+        return false;
+      }
+      const blob = await fileResponse.blob();
+      const file = new File([blob], `${String(data.title || "picture").replace(/\s+/g, "-")}.png`, { type: blob.type || "image/png" });
+      const placed = await addGeneratedImageBelow(selection.box, file, data.title || "Visualize");
+      if (!placed) {
+        setStatusKey("selectionVisualizeFailed");
+        return false;
+      }
+      setStatusKey("imageAdded");
+      return true;
+    } catch {
+      setStatusKey("selectionVisualizeFailed");
+      return false;
+    } finally {
+      state.visualizingSelection = false;
+      updateSelectionToolbar();
+    }
   }
   function selectionHit(selection, event) {
     const point = clientPoint(event),
@@ -7622,10 +7781,17 @@ User writes "Show air quality for Tokyo", names a place, and points to an empty 
         const point = SELECT.clipPoint(clientPoint(event), SIZE);
         addLassoPoint(selection, point, 0.5 / state.scale);
       }
-      const points = selection?.points || [];
+      const points = selection?.points || [],
+        start = selection?.marqueeStart,
+        box = selection?.box,
+        smallMarquee = Boolean(box && box.w * state.scale < 32 && box.h * state.scale < 32);
       state.selection = null;
-      if (event.type !== "pointercancel") captureSelection(points);
-      else requestRender();
+      if (event.type === "pointercancel") {
+        requestRender();
+        return true;
+      }
+      if (smallMarquee && start && selectNearestContent(start)) return true;
+      if (!captureSelection(points) && start) selectNearestContent(start);
       return true;
     }
     if (selection) {
@@ -7654,7 +7820,7 @@ User writes "Show air quality for Tokyo", names a place, and points to an empty 
       }
       commitSelection();
     } else if (selection) cancelSelection(true);
-    if (selectInkAtPoint(point)) {
+    if (selectNearestContent(point)) {
       const next = state.selection;
       if (next?.phase === "active") beginSelectionTransform(event, "move");
       return true;
@@ -7877,6 +8043,10 @@ User writes "Show air quality for Tokyo", names a place, and points to an empty 
       if (action === "normalize")
         for (let index = commands.length - 1; index >= 0; index--)
           if (!["write_text", "draw_formula", "plot_function"].includes(commands[index].tool)) commands.splice(index, 1);
+      if (isolatedSelection && action === "normalize") {
+        const relocated = relocateIsolatedTypesetCommands(commands, requestOptions.selection || run.selection);
+        commands.splice(0, commands.length, ...relocated);
+      }
       debug("ai-response", {
         ...meta,
         intent: data.intent || "none",
@@ -8276,6 +8446,39 @@ User writes "Show air quality for Tokyo", names a place, and points to an empty 
     const size = matchedFontSize(value),
       characters = Array.from(String(text).replace(/\s/g, "")).length;
     return characters < 10 ? size : Math.max(24, size * 0.5);
+  }
+  function portraitCanvasView() {
+    return Boolean(view && view.clientHeight > view.clientWidth * 1.05);
+  }
+  function relocateIsolatedTypesetCommands(commands, selection) {
+    if (!selection?.box || !Array.isArray(commands) || !commands.length) return commands;
+    const source = selection.box,
+      gap = Math.max(28, 18 / Math.max(0.03, state.scale)),
+      below = portraitCanvasView() || window.matchMedia("(max-width: 900px)").matches;
+    let y = source.y + source.h + gap,
+      x = source.x + source.w + gap;
+    return commands.map((command) => {
+      if (!["write_text", "draw_formula", "plot_function", "draw"].includes(command.tool)) return command;
+      const next = { ...command },
+        width = next.tool === "write_text" ? next.maxWidth : Number(next.w) || next.fontSize || 240,
+        lines = next.tool === "write_text" ? Math.max(1, String(next.text || "").split("\n").length) : 1,
+        height = next.tool === "draw_formula"
+          ? (next.fontSize || 48) * 1.8
+          : next.tool === "write_text"
+            ? (next.fontSize || 32) * (next.lineHeight || 1.35) * lines
+            : Number(next.h) || 200;
+      if (below) {
+        next.x = Math.max(0, Math.min(SIZE - Math.min(width, SIZE), source.x));
+        next.y = Math.max(0, Math.min(SIZE - Math.min(height, SIZE), y));
+        y = next.y + height + gap;
+      } else {
+        next.x = Math.max(0, Math.min(SIZE - Math.min(width, SIZE), x));
+        next.y = Math.max(0, Math.min(SIZE - Math.min(height, SIZE), source.y));
+        x = next.x + width + gap;
+      }
+      if (next.tool === "write_text") next.maxWidth = Math.max(next.fontSize, Math.min(next.maxWidth, SIZE - next.x));
+      return next;
+    });
   }
   function normalizeCommandPlacements(commands, packed, latestBox) {
     if (commands.length !== 1) return commands;
@@ -9427,6 +9630,7 @@ User writes "Show air quality for Tokyo", names a place, and points to an empty 
     render();
     setStatusKey("merged");
     resolvePending(p, p.items ? { acceptedCount } : true);
+    if (p.isolatedSelection) dismissSelectionKeepInkRemoved(p.selection);
     if (restoreMode) finishAIDraftHandMode();
   }
   function acceptPendingItem(index) {
@@ -9499,6 +9703,17 @@ User writes "Show air quality for Tokyo", names a place, and points to an empty 
     const accepted = Boolean(p.acceptedItems);
     setStatusKey(accepted ? "merged" : "draftRejected");
     resolvePending(p, p.acceptedItems ? { acceptedCount: p.acceptedItems } : false);
+    if (p.isolatedSelection && p.selection) {
+      if (accepted) dismissSelectionKeepInkRemoved(p.selection);
+      else {
+        restoreSelectionSource(p.selection);
+        if (state.selection === p.selection) {
+          state.selection = null;
+          state.selectionGesture = null;
+        }
+        updateSelectionToolbar();
+      }
+    }
     finishAIDraftHandMode();
   }
   function rejectPending(options) {
@@ -9515,6 +9730,15 @@ User writes "Show air quality for Tokyo", names a place, and points to an empty 
     const accepted = Boolean(p.acceptedItems);
     setStatusKey(accepted ? "merged" : "draftRejected");
     resolvePending(p, p.items && p.acceptedItems ? { acceptedCount: p.acceptedItems } : false);
+    if (p.isolatedSelection && p.selection && !p.selection.acceptedDraft) {
+      restoreSelectionSource(p.selection);
+      if (state.selection === p.selection) {
+        state.selection = null;
+        state.selectionGesture = null;
+      }
+      updateSelectionToolbar();
+      render();
+    }
     if (restoreMode) finishAIDraftHandMode();
   }
   function notePendingContinuedInput(drawing) {
@@ -10989,9 +11213,16 @@ User writes "Show air quality for Tokyo", names a place, and points to an empty 
     event.preventDefault();
     void importClipboardPayload(clipboardPayloadFromDataTransfer(event.clipboardData));
   });
-  if (selectionTypesetButton) selectionTypesetButton.onclick = normalizeSelectionForAI;
+  if (selectionTypesetButton) selectionTypesetButton.onclick = () => {
+    if (selectionHasTypesetDraft()) acceptPending();
+    else normalizeSelectionForAI();
+  };
+  if (selectionVisualizeButton) selectionVisualizeButton.onclick = () => void visualizeSelection();
   if (selectionDeleteButton) selectionDeleteButton.onclick = deleteSelection;
-  if (selectionCancelButton) selectionCancelButton.onclick = () => cancelSelection();
+  if (selectionCancelButton) selectionCancelButton.onclick = () => {
+    if (selectionHasTypesetDraft()) rejectPending();
+    else cancelSelection();
+  };
   [animationPlayPause, animationRestart, animationDelete].forEach((button) => button.addEventListener("pointerdown", (event) => event.stopPropagation()));
   animationPlayPause.onclick = toggleSelectedAnimationPlayback;
   animationRestart.onclick = restartSelectedAnimation;
@@ -11638,8 +11869,9 @@ User writes "Show air quality for Tokyo", names a place, and points to an empty 
   aiOrb.addEventListener("pointerdown", (e) => {
     e.preventDefault();
     e.stopPropagation();
-    openRadialMenu();
-    state.radialGesture = { id: e.pointerId, moved: false, selected: null };
+    const wasOpen = embodiment.classList.contains("menu-open");
+    if (!wasOpen) openRadialMenu();
+    state.radialGesture = { id: e.pointerId, moved: false, selected: null, wasOpen };
     try {
       aiOrb.setPointerCapture(e.pointerId);
     } catch {}
@@ -11664,25 +11896,27 @@ User writes "Show air quality for Tokyo", names a place, and points to an empty 
     state.radialSuppressClickUntil = performance.now() + 450;
     if (selected) {
       invokeAIAction(selected.dataset.aiAction);
-      closeRadialMenu();
+      closeRadialMenu(true);
       return;
     }
-    if (gesture.moved) {
-      closeRadialMenu();
+    if (gesture.wasOpen && !gesture.moved) {
+      closeRadialMenu(true);
+      return;
     }
+    if (gesture.moved) closeRadialMenu(true);
   }
   aiOrb.addEventListener("pointerup", finishRadialGesture);
   aiOrb.addEventListener("pointercancel", (e) => {
     if (state.radialGesture?.id !== e.pointerId) return;
     state.radialGesture = null;
     state.radialSuppressClickUntil = performance.now() + 450;
-    closeRadialMenu();
+    closeRadialMenu(true);
   });
   aiOrb.addEventListener("click", (e) => {
     e.preventDefault();
     e.stopPropagation();
     if (performance.now() < state.radialSuppressClickUntil) return;
-    if (embodiment.classList.contains("menu-open")) closeRadialMenu();
+    if (embodiment.classList.contains("menu-open")) closeRadialMenu(true);
     else openRadialMenu();
   });
   document.querySelectorAll(".radial-action").forEach((button) => {

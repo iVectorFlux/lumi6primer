@@ -198,41 +198,48 @@ button,
   }
 
   .ai-embodiment {
-    right: max(12px, env(safe-area-inset-right));
-    left: auto;
-    bottom: calc(22px + env(safe-area-inset-bottom));
+    left: 50%;
+    right: auto;
+    width: 72px;
+    height: 72px;
+    margin-left: -36px;
     transform: none;
+    bottom: calc(22px + env(safe-area-inset-bottom));
   }
 
   .ai-embodiment.menu-open .ai-radial {
     position: fixed;
     left: max(12px, env(safe-area-inset-left));
     right: max(12px, env(safe-area-inset-right));
-    bottom: calc(88px + env(safe-area-inset-bottom));
+    bottom: calc(96px + env(safe-area-inset-bottom));
     width: auto;
-    max-width: 440px;
+    max-width: 420px;
     margin: 0 auto;
     transform: none;
     z-index: 86;
-    display: flex;
-    flex-wrap: wrap;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
     gap: 8px;
-    padding: 10px 12px;
+    padding: 12px;
     border-radius: 20px;
-    background: rgba(255, 255, 255, 0.94);
+    background: rgba(255, 255, 255, 0.96);
     box-shadow: 0 12px 36px rgba(76, 29, 149, 0.18), 0 2px 8px rgba(0, 0, 0, 0.08);
     backdrop-filter: blur(12px);
     -webkit-backdrop-filter: blur(12px);
   }
 
   .radial-action {
-    flex: 1 1 calc(33.333% - 8px);
-    min-height: 38px;
-    padding: 6px 10px;
-    font-size: 12.5px;
-    border-radius: 12px;
+    flex: none;
+    width: auto;
+    min-width: 0;
+    min-height: 42px;
+    padding: 8px 10px;
+    font-size: 14px;
+    border-radius: 14px;
     justify-content: center;
     text-align: center;
+    overflow: hidden;
+    text-overflow: ellipsis;
   }
 
   .primer-graphic-loader {
@@ -498,6 +505,10 @@ button,
   body.mode-draw-active .topbar-left {
     order: 0;
     flex: 0 0 auto;
+    gap: 0;
+    padding-right: 8px;
+    margin-right: 2px;
+    border-right: 1px solid var(--border);
   }
 
   body.mode-draw-active .topbar-right {
@@ -524,17 +535,18 @@ button,
     display: flex;
     width: auto;
     max-width: 100%;
-    justify-content: center;
+    justify-content: flex-start;
     overflow: visible;
     padding: 0;
+    margin-left: 6px;
   }
 
   body.mode-draw-active .sketch-tool-group {
     flex-wrap: nowrap;
     width: auto;
     min-width: 0;
-    justify-content: center;
-    gap: 1px;
+    justify-content: flex-start;
+    gap: 0;
   }
 
   body.mode-draw-active #clearCanvasBtn {
@@ -552,10 +564,11 @@ button,
   }
 
   body.mode-draw-active .ai-embodiment {
-    right: 50%;
-    left: auto;
+    left: 50%;
+    right: auto;
+    margin-left: -36px;
+    transform: none;
     bottom: calc(18px + env(safe-area-inset-bottom));
-    transform: translateX(50%);
   }
 
   .sketch-size-rail {
@@ -634,15 +647,20 @@ button,
   }
 
   body.mode-draw-active .sketch-topbar-tools .btool {
-    width: 34px;
-    height: 34px;
-    flex-basis: 34px;
+    width: 32px;
+    height: 32px;
+    flex-basis: 32px;
   }
 
   body.mode-draw-active .app-topbar {
-    gap: 4px;
-    padding-left: 6px;
-    padding-right: 6px;
+    gap: 6px;
+    padding-left: 8px;
+    padding-right: 8px;
+  }
+
+  body.mode-draw-active .mobile-menu-btn {
+    margin-left: 0;
+    margin-right: 2px;
   }
 
   body.mode-draw-active .sketch-more-wrap {
@@ -718,7 +736,7 @@ button,
   }
 
   .ai-embodiment.menu-open .ai-radial {
-    bottom: calc(20px + env(safe-area-inset-bottom));
+    bottom: calc(72px + env(safe-area-inset-bottom));
   }
 }
 

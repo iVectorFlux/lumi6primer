@@ -611,9 +611,16 @@
     event.preventDefault();
     void importClipboardPayload(clipboardPayloadFromDataTransfer(event.clipboardData));
   });
-  if (selectionTypesetButton) selectionTypesetButton.onclick = normalizeSelectionForAI;
+  if (selectionTypesetButton) selectionTypesetButton.onclick = () => {
+    if (selectionHasTypesetDraft()) acceptPending();
+    else normalizeSelectionForAI();
+  };
+  if (selectionVisualizeButton) selectionVisualizeButton.onclick = () => void visualizeSelection();
   if (selectionDeleteButton) selectionDeleteButton.onclick = deleteSelection;
-  if (selectionCancelButton) selectionCancelButton.onclick = () => cancelSelection();
+  if (selectionCancelButton) selectionCancelButton.onclick = () => {
+    if (selectionHasTypesetDraft()) rejectPending();
+    else cancelSelection();
+  };
   [animationPlayPause, animationRestart, animationDelete].forEach((button) => button.addEventListener("pointerdown", (event) => event.stopPropagation()));
   animationPlayPause.onclick = toggleSelectedAnimationPlayback;
   animationRestart.onclick = restartSelectedAnimation;
@@ -1260,8 +1267,9 @@
   aiOrb.addEventListener("pointerdown", (e) => {
     e.preventDefault();
     e.stopPropagation();
-    openRadialMenu();
-    state.radialGesture = { id: e.pointerId, moved: false, selected: null };
+    const wasOpen = embodiment.classList.contains("menu-open");
+    if (!wasOpen) openRadialMenu();
+    state.radialGesture = { id: e.pointerId, moved: false, selected: null, wasOpen };
     try {
       aiOrb.setPointerCapture(e.pointerId);
     } catch {}
@@ -1286,25 +1294,27 @@
     state.radialSuppressClickUntil = performance.now() + 450;
     if (selected) {
       invokeAIAction(selected.dataset.aiAction);
-      closeRadialMenu();
+      closeRadialMenu(true);
       return;
     }
-    if (gesture.moved) {
-      closeRadialMenu();
+    if (gesture.wasOpen && !gesture.moved) {
+      closeRadialMenu(true);
+      return;
     }
+    if (gesture.moved) closeRadialMenu(true);
   }
   aiOrb.addEventListener("pointerup", finishRadialGesture);
   aiOrb.addEventListener("pointercancel", (e) => {
     if (state.radialGesture?.id !== e.pointerId) return;
     state.radialGesture = null;
     state.radialSuppressClickUntil = performance.now() + 450;
-    closeRadialMenu();
+    closeRadialMenu(true);
   });
   aiOrb.addEventListener("click", (e) => {
     e.preventDefault();
     e.stopPropagation();
     if (performance.now() < state.radialSuppressClickUntil) return;
-    if (embodiment.classList.contains("menu-open")) closeRadialMenu();
+    if (embodiment.classList.contains("menu-open")) closeRadialMenu(true);
     else openRadialMenu();
   });
   document.querySelectorAll(".radial-action").forEach((button) => {

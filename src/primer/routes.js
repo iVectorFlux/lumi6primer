@@ -230,6 +230,33 @@ async function primerRoutes(req, res, url, options = {}) {
       return true;
     }
 
+    if (req.method === "POST" && pathname === "/api/primer/visualize") {
+      const body = await readJsonBody(req);
+      const topic = String(body.topic || body.spoken || body.text || "").trim().slice(0, 160);
+      const image = typeof body.image === "string" && /^data:image\/(png|jpe?g|webp);base64,/i.test(body.image)
+        ? body.image
+        : null;
+      if (!topic && !image) {
+        sendJson(res, 400, { error: "A topic or selection image is required." });
+        return true;
+      }
+      const lessonGraphic = require("./tools/lesson-graphic.js");
+      const command = await lessonGraphic.generate({
+        topic,
+        spoken: topic,
+        scene: topic,
+        image,
+        age: body.age,
+        grade: body.grade
+      });
+      if (!command?.href) {
+        sendJson(res, 422, { error: "Could not visualize that selection." });
+        return true;
+      }
+      sendJson(res, 200, { href: command.href, title: command.title || topic || "Picture" });
+      return true;
+    }
+
     if (req.method === "GET" && pathname.startsWith("/api/primer/graphic/")) {
       const id = pathname.slice("/api/primer/graphic/".length).split("/")[0];
       const lessonGraphic = require("./tools/lesson-graphic.js");

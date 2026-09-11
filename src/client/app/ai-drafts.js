@@ -491,6 +491,7 @@
     render();
     setStatusKey("merged");
     resolvePending(p, p.items ? { acceptedCount } : true);
+    if (p.isolatedSelection) dismissSelectionKeepInkRemoved(p.selection);
     if (restoreMode) finishAIDraftHandMode();
   }
   function acceptPendingItem(index) {
@@ -563,6 +564,17 @@
     const accepted = Boolean(p.acceptedItems);
     setStatusKey(accepted ? "merged" : "draftRejected");
     resolvePending(p, p.acceptedItems ? { acceptedCount: p.acceptedItems } : false);
+    if (p.isolatedSelection && p.selection) {
+      if (accepted) dismissSelectionKeepInkRemoved(p.selection);
+      else {
+        restoreSelectionSource(p.selection);
+        if (state.selection === p.selection) {
+          state.selection = null;
+          state.selectionGesture = null;
+        }
+        updateSelectionToolbar();
+      }
+    }
     finishAIDraftHandMode();
   }
   function rejectPending(options) {
@@ -579,6 +591,15 @@
     const accepted = Boolean(p.acceptedItems);
     setStatusKey(accepted ? "merged" : "draftRejected");
     resolvePending(p, p.items && p.acceptedItems ? { acceptedCount: p.acceptedItems } : false);
+    if (p.isolatedSelection && p.selection && !p.selection.acceptedDraft) {
+      restoreSelectionSource(p.selection);
+      if (state.selection === p.selection) {
+        state.selection = null;
+        state.selectionGesture = null;
+      }
+      updateSelectionToolbar();
+      render();
+    }
     if (restoreMode) finishAIDraftHandMode();
   }
   function notePendingContinuedInput(drawing) {

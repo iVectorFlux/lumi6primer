@@ -992,8 +992,9 @@
     aiRadial.setAttribute("aria-hidden", "false");
     document.querySelectorAll(".radial-action").forEach((button) => button.setAttribute("tabindex", "0"));
   }
-  function closeRadialMenu() {
-    if (state.radialGesture) return;
+  function closeRadialMenu(force = false) {
+    if (state.radialGesture && !force) return;
+    state.radialGesture = null;
     embodiment.classList.remove("menu-open");
     aiOrb.setAttribute("aria-expanded", "false");
     aiRadial.setAttribute("aria-hidden", "true");

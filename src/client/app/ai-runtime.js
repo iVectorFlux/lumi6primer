@@ -213,6 +213,10 @@
       if (action === "normalize")
         for (let index = commands.length - 1; index >= 0; index--)
           if (!["write_text", "draw_formula", "plot_function"].includes(commands[index].tool)) commands.splice(index, 1);
+      if (isolatedSelection && action === "normalize") {
+        const relocated = relocateIsolatedTypesetCommands(commands, requestOptions.selection || run.selection);
+        commands.splice(0, commands.length, ...relocated);
+      }
       debug("ai-response", {
         ...meta,
         intent: data.intent || "none",
@@ -612,6 +616,39 @@
     const size = matchedFontSize(value),
       characters = Array.from(String(text).replace(/\s/g, "")).length;
     return characters < 10 ? size : Math.max(24, size * 0.5);
+  }
+  function portraitCanvasView() {
+    return Boolean(view && view.clientHeight > view.clientWidth * 1.05);
+  }
+  function relocateIsolatedTypesetCommands(commands, selection) {
+    if (!selection?.box || !Array.isArray(commands) || !commands.length) return commands;
+    const source = selection.box,
+      gap = Math.max(28, 18 / Math.max(0.03, state.scale)),
+      below = portraitCanvasView() || window.matchMedia("(max-width: 900px)").matches;
+    let y = source.y + source.h + gap,
+      x = source.x + source.w + gap;
+    return commands.map((command) => {
+      if (!["write_text", "draw_formula", "plot_function", "draw"].includes(command.tool)) return command;
+      const next = { ...command },
+        width = next.tool === "write_text" ? next.maxWidth : Number(next.w) || next.fontSize || 240,
+        lines = next.tool === "write_text" ? Math.max(1, String(next.text || "").split("\n").length) : 1,
+        height = next.tool === "draw_formula"
+          ? (next.fontSize || 48) * 1.8
+          : next.tool === "write_text"
+            ? (next.fontSize || 32) * (next.lineHeight || 1.35) * lines
+            : Number(next.h) || 200;
+      if (below) {
+        next.x = Math.max(0, Math.min(SIZE - Math.min(width, SIZE), source.x));
+        next.y = Math.max(0, Math.min(SIZE - Math.min(height, SIZE), y));
+        y = next.y + height + gap;
+      } else {
+        next.x = Math.max(0, Math.min(SIZE - Math.min(width, SIZE), x));
+        next.y = Math.max(0, Math.min(SIZE - Math.min(height, SIZE), source.y));
+        x = next.x + width + gap;
+      }
+      if (next.tool === "write_text") next.maxWidth = Math.max(next.fontSize, Math.min(next.maxWidth, SIZE - next.x));
+      return next;
+    });
   }
   function normalizeCommandPlacements(commands, packed, latestBox) {
     if (commands.length !== 1) return commands;

@@ -397,3 +397,30 @@
       imagePickerInput.value = "";
     }
   }
+  function placementBelowBox(source, naturalW, naturalH) {
+    const gap = Math.max(28, 18 / Math.max(0.03, state.scale)),
+      maxW = Math.max(160, Math.min(source.w * 1.35, 720 / Math.max(0.03, state.scale), SIZE * 0.42)),
+      factor = Math.min(maxW / Math.max(1, naturalW), (640 / Math.max(0.03, state.scale)) / Math.max(1, naturalH)),
+      w = Math.max(80, naturalW * factor),
+      h = Math.max(80, naturalH * factor),
+      x = Math.max(0, Math.min(SIZE - w, source.x)),
+      y = Math.max(0, Math.min(SIZE - h, source.y + source.h + gap));
+    return { x, y, w, h };
+  }
+  async function addGeneratedImageBelow(sourceBox, file, sourceName = "") {
+    if (!sourceBox || state.images.length >= MAX_VISIBLE_IMAGES) return false;
+    const prepared = await prepareImportedImage(file);
+    recordImagesBefore();
+    const item = imageRecord({
+      id: `image-${state.nextImageId++}`,
+      ...placementBelowBox(sourceBox, prepared.naturalW, prepared.naturalH),
+      ...prepared,
+      sourceName,
+    });
+    if (!item) return false;
+    state.images.push(item);
+    state.userRevision++;
+    save();
+    requestRender();
+    return true;
+  }
