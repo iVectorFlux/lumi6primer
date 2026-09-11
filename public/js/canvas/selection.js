@@ -70,8 +70,17 @@
     return false;
   }
 
+  function validBox(box) {
+    return Boolean(box)
+      && Number.isFinite(box.x)
+      && Number.isFinite(box.y)
+      && Number.isFinite(box.w)
+      && Number.isFinite(box.h);
+  }
+
   function unionBox(current, next) {
-    if (!current) return { ...next };
+    if (!validBox(next)) return validBox(current) ? { x: current.x, y: current.y, w: current.w, h: current.h } : null;
+    if (!validBox(current)) return { x: next.x, y: next.y, w: next.w, h: next.h };
     const x = Math.min(current.x, next.x),
       y = Math.min(current.y, next.y),
       right = Math.max(current.x + current.w, next.x + next.w),
