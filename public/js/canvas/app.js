@@ -6795,8 +6795,45 @@ User writes "Show air quality for Tokyo", names a place, and points to an empty 
     }
     return true;
   }
+  function flattenTextBoxesHitByEraser(a, b, size) {
+    if (!state.textBoxes.length) return;
+    const pad = size / 2 + 2,
+      hit = {
+        x: Math.min(a.x, b.x) - pad,
+        y: Math.min(a.y, b.y) - pad,
+        w: Math.abs(a.x - b.x) + pad * 2,
+        h: Math.abs(a.y - b.y) + pad * 2,
+      };
+    for (let index = state.textBoxes.length - 1; index >= 0; index--) {
+      const item = state.textBoxes[index];
+      if (!item?.image || item.id === state.selectedTextBoxId) continue;
+      const box = textBoxBox(item);
+      if (box.x >= hit.x + hit.w || hit.x >= box.x + box.w || box.y >= hit.y + hit.h || hit.y >= box.y + box.h) continue;
+      if (!lineIntersectsRect(a, b, { x: box.x - pad, y: box.y - pad, w: box.w + pad * 2, h: box.h + pad * 2 })) continue;
+      recordTextBoxesBefore();
+      invalidateSharpOverlays(box);
+      const x0 = Math.max(0, Math.floor(box.x / TILE)),
+        y0 = Math.max(0, Math.floor(box.y / TILE)),
+        x1 = Math.min(Math.ceil(SIZE / TILE) - 1, Math.ceil((box.x + box.w) / TILE) - 1),
+        y1 = Math.min(Math.ceil(SIZE / TILE) - 1, Math.ceil((box.y + box.h) / TILE) - 1);
+      for (let ty = y0; ty <= y1; ty++)
+        for (let tx = x0; tx <= x1; tx++) {
+          recordBefore(tx, ty);
+          const canvas = tile(tx, ty);
+          canvas.getContext("2d").drawImage(item.image, item.x - tx * TILE, item.y - ty * TILE, item.w, item.h);
+          extendInkBounds(key(tx, ty), {
+            x: Math.max(0, item.x - tx * TILE),
+            y: Math.max(0, item.y - ty * TILE),
+            w: Math.min(TILE, item.x + item.w - tx * TILE) - Math.max(0, item.x - tx * TILE),
+            h: Math.min(TILE, item.y + item.h - ty * TILE) - Math.max(0, item.y - ty * TILE),
+          });
+        }
+      state.textBoxes.splice(index, 1);
+    }
+  }
   function stroke(a, b, erase = false, size = state.pen, userChange = false) {
     if (!valid(a) || !valid(b)) return;
+    if (erase) flattenTextBoxesHitByEraser(a, b, size);
     const pad = size / 2 + 2,
       x = Math.min(a.x, b.x) - pad,
       y = Math.min(a.y, b.y) - pad,
@@ -7182,6 +7219,36 @@ User writes "Show air quality for Tokyo", names a place, and points to an empty 
     );
     return bounds;
   }
+  function textBoxBoundsInRegion(probe) {
+    if (!probe) return null;
+    let bounds = null;
+    for (const item of visibleTextBoxes(probe)) bounds = SELECT.unionBox(bounds, textBoxBox(item));
+    return bounds;
+  }
+  function contentBoundsInRegion(probe) {
+    return SELECT.unionBox(inkBoundsInRegion(probe), textBoxBoundsInRegion(probe));
+  }
+  function textBoxHitsSelection(item, points, box) {
+    const tb = textBoxBox(item),
+      overlap = intersection(tb, box);
+    if (!overlap) return false;
+    const overlapArea = overlap.w * overlap.h,
+      textArea = Math.max(1, tb.w * tb.h);
+    if (overlapArea / textArea >= 0.2) return true;
+    return SELECT.pointInPolygon({ x: tb.x + tb.w / 2, y: tb.y + tb.h / 2 }, points);
+  }
+  function liftTextBoxesForSelection(points, box, fragments) {
+    const lifted = [];
+    for (let index = state.textBoxes.length - 1; index >= 0; index--) {
+      const item = state.textBoxes[index];
+      if (!item?.image || item.id === state.selectedTextBoxId || !textBoxHitsSelection(item, points, box)) continue;
+      fragments.push({ image: item.image, x: item.x, y: item.y, w: item.w, h: item.h, textBox: item });
+      lifted.push(item);
+      recordTextBoxesBefore();
+      state.textBoxes.splice(index, 1);
+    }
+    return lifted;
+  }
   function captureBoxSelection(box, options) {
     if (!box || box.w < 1 || box.h < 1) return false;
     return captureSelection(rectPathForBox(box), options);
@@ -7189,16 +7256,24 @@ User writes "Show air quality for Tokyo", names a place, and points to an empty 
   function selectInkAtPoint(point) {
     const scale = Math.max(state.scale, 0.05);
     const hitPad = 8 / scale;
-    let bounds = inkBoundsInRegion({
+    const probe = {
       x: point.x - hitPad,
       y: point.y - hitPad,
       w: hitPad * 2,
       h: hitPad * 2,
-    });
+    };
+    const textHit = textBoxAtPoint(point);
+    const inkHit = inkBoundsInRegion(probe);
+    if (textHit && !inkHit) {
+      const box = textBoxBox(textHit);
+      rememberInkBox(box);
+      return captureBoxSelection(box, { quiet: true, allowSmall: true });
+    }
+    let bounds = SELECT.unionBox(inkHit, textHit ? textBoxBox(textHit) : textBoxBoundsInRegion(probe));
     if (!bounds) return false;
     const grow = 6 / scale;
     for (let i = 0; i < 8; i += 1) {
-      const next = inkBoundsInRegion(padInkBox(bounds, grow));
+      const next = contentBoundsInRegion(padInkBox(bounds, grow));
       if (!next) break;
       if (
         Math.abs(next.x - bounds.x) < 1
@@ -7209,12 +7284,16 @@ User writes "Show air quality for Tokyo", names a place, and points to an empty 
       bounds = next;
     }
     rememberInkBox(bounds);
-    return captureBoxSelection(bounds, { quiet: true });
+    return captureBoxSelection(bounds, { quiet: true, allowSmall: true });
   }
   function captureSelection(points, options) {
     options ||= {};
     const box = SELECT.polygonBounds(points, SIZE);
-    if (!box || points.length < 3 || SELECT.pathLength(points, state.scale) < 12 || box.w * state.scale < 4 || box.h * state.scale < 4) {
+    if (!box || points.length < 3) {
+      if (!options.quiet) setStatusKey("selectionTooSmall");
+      return false;
+    }
+    if (!options.allowSmall && (SELECT.pathLength(points, state.scale) < 12 || box.w * state.scale < 4 || box.h * state.scale < 4)) {
       if (!options.quiet) setStatusKey("selectionTooSmall");
       return false;
     }
@@ -7245,6 +7324,7 @@ User writes "Show air quality for Tokyo", names a place, and points to an empty 
       },
       false,
     );
+    const liftedTextBoxes = liftTextBoxesForSelection(points, box, fragments);
     if (!fragments.length) {
       state.selection = null;
       if (!options.quiet) setStatusKey("selectionEmpty");
@@ -7303,6 +7383,7 @@ User writes "Show air quality for Tokyo", names a place, and points to an empty 
       fragments,
       contentBox: selectionContentBounds({ fragments, originalBox: tight, box: tight }),
       beforeTiles,
+      liftedTextBoxes,
       color: null,
     };
     state.selectionGesture = null;
@@ -7316,7 +7397,11 @@ User writes "Show air quality for Tokyo", names a place, and points to an empty 
       else tiles.delete(tileKey);
       state.inkBounds.delete(tileKey);
     }
+    for (const item of selection.liftedTextBoxes || []) {
+      if (item && !state.textBoxes.some((existing) => existing.id === item.id)) state.textBoxes.push(item);
+    }
     state.historyBefore.clear();
+    state.textBoxHistoryBefore = null;
   }
   function cancelSelection(silent = false) {
     const selection = state.selection;
@@ -7353,6 +7438,19 @@ User writes "Show air quality for Tokyo", names a place, and points to an empty 
     state.selectionGesture = null;
     for (const fragment of selection.fragments) {
       const target = SELECT.mapFragment(fragment, selection.originalBox, selection.box);
+      if (fragment.textBox && !selection.color) {
+        const item = fragment.textBox,
+          scaleX = target.w / Math.max(1, fragment.w),
+          scaleY = target.h / Math.max(1, fragment.h);
+        item.x = target.x;
+        item.y = target.y;
+        item.w = target.w;
+        item.h = target.h;
+        item.fontSize = Math.max(1, item.fontSize * Math.min(scaleX, scaleY));
+        item.maxWidth = Math.max(item.fontSize * 3, item.maxWidth * scaleX);
+        if (!state.textBoxes.some((existing) => existing.id === item.id)) state.textBoxes.push(item);
+        continue;
+      }
       blitSized(fragment.renderImage || fragment.image, target.x, target.y, target.w, target.h);
     }
     state.userRevision++;
