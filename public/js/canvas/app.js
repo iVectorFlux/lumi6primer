@@ -123,11 +123,11 @@
   const SUMMON = window.LUMI6_SUMMON || {};
   const EFFORT_LEVELS = ["none", "low", "medium", "high", "max"],
     EFFORT_OPTIONS = ["config", ...EFFORT_LEVELS],
-    TEXT_EDITOR_DEFAULT_WIDTH = 320,
-    TEXT_EDITOR_DEFAULT_HEIGHT = 112,
-    TEXT_EDITOR_MIN_WIDTH = 170,
-    TEXT_EDITOR_MIN_HEIGHT = 96,
-    TEXT_EDITOR_FONT_CSS = 17,
+    TEXT_EDITOR_DEFAULT_WIDTH = 240,
+    TEXT_EDITOR_DEFAULT_HEIGHT = 52,
+    TEXT_EDITOR_MIN_WIDTH = 72,
+    TEXT_EDITOR_MIN_HEIGHT = 36,
+    TEXT_EDITOR_FONT_CSS = 24,
     TEXT_EDITOR_PREVIEW_INTERVAL_MS = 80,
     TEXT_EDITOR_FONT_FAMILY = "ui-rounded, system-ui, sans-serif",
     TEXT_INPUT_GUARD_MS = 500,
@@ -223,7 +223,7 @@ User writes "Show air quality for Tokyo", names a place, and points to an empty 
       textPreview: "Markdown and LaTeX preview",
       textConfirm: "Confirm text",
       textCancel: "Discard text",
-      textPlaceholder: "Type text or a formula",
+      textPlaceholder: "",
       textConfirmHint: "to confirm",
       textEmpty: "Enter some text first",
       textMixedModeError: "Mixed formatting was unavailable; plain text was inserted",
@@ -5196,18 +5196,46 @@ User writes "Show air quality for Tokyo", names a place, and points to an empty 
   function resizeTextEditorDimensions(gesture, hit, dx, dy, minWidth, minHeight, maxWidth, maxHeight) {
     const startWidth = gesture.startWidth,
       startHeight = gesture.startHeight,
-      startFontCss = gesture.startFontCss;
-    if (hit === "width") {
-      return { widthCss: Math.max(minWidth, Math.min(maxWidth, startWidth + dx)), heightCss: startHeight, fontCss: startFontCss };
+      startFontCss = gesture.startFontCss,
+      scale = Math.max(0.03, state.scale);
+    let widthCss = startWidth,
+      heightCss = startHeight,
+      fontCss = startFontCss,
+      x = gesture.startX,
+      y = gesture.startY,
+      autoHeight = false;
+    const clampW = (value) => Math.max(minWidth, Math.min(maxWidth, value));
+    const clampH = (value) => Math.max(minHeight, Math.min(maxHeight, value));
+    const applyWest = (width) => { x = gesture.startX + (startWidth - width) / scale; };
+    const applyNorth = (height) => { y = gesture.startY + (startHeight - height) / scale; };
+    if (hit === "e" || hit === "width") {
+      widthCss = clampW(startWidth + dx);
+      autoHeight = true;
+    } else if (hit === "w") {
+      widthCss = clampW(startWidth - dx);
+      applyWest(widthCss);
+      autoHeight = true;
+    } else if (hit === "s" || hit === "height") {
+      heightCss = clampH(startHeight + dy);
+      fontCss = Math.max(12, Math.min(96, startFontCss * (heightCss / Math.max(1, startHeight))));
+    } else if (hit === "n") {
+      heightCss = clampH(startHeight - dy);
+      fontCss = Math.max(12, Math.min(96, startFontCss * (heightCss / Math.max(1, startHeight))));
+      applyNorth(heightCss);
+    } else {
+      const sx = hit.includes("w") ? -1 : 1;
+      const sy = hit.includes("n") ? -1 : 1;
+      const requested = Math.max((startWidth + sx * dx) / Math.max(1, startWidth), (startHeight + sy * dy) / Math.max(1, startHeight));
+      const minimumScale = Math.max(minWidth / startWidth, minHeight / startHeight, 12 / startFontCss);
+      const maximumScale = Math.max(minimumScale, Math.min(maxWidth / startWidth, maxHeight / startHeight, 96 / startFontCss));
+      const factor = Math.max(minimumScale, Math.min(maximumScale, requested));
+      widthCss = startWidth * factor;
+      heightCss = startHeight * factor;
+      fontCss = startFontCss * factor;
+      if (hit.includes("w")) applyWest(widthCss);
+      if (hit.includes("n")) applyNorth(heightCss);
     }
-    if (hit === "height") {
-      return { widthCss: startWidth, heightCss: Math.max(minHeight, Math.min(maxHeight, startHeight + dy)), fontCss: startFontCss };
-    }
-    const minimumScale = Math.max(minWidth / startWidth, minHeight / startHeight),
-      maximumScale = Math.max(minimumScale, Math.min(maxWidth / startWidth, maxHeight / startHeight)),
-      requestedScale = Math.max((startWidth + dx) / startWidth, (startHeight + dy) / startHeight),
-      scale = Math.max(minimumScale, Math.min(maximumScale, requestedScale));
-    return { widthCss: startWidth * scale, heightCss: startHeight * scale, fontCss: startFontCss * scale };
+    return { widthCss, heightCss, fontCss, x, y, autoHeight };
   }
   function keepTextEditorInsideCanvas(editor) {
     const logicalWidth = editor.widthCss / Math.max(0.03, state.scale),
@@ -5333,8 +5361,11 @@ User writes "Show air quality for Tokyo", names a place, and points to an empty 
       editor.widthCss = next.widthCss;
       editor.heightCss = next.heightCss;
       editor.fontCss = next.fontCss;
+      editor.x = next.x;
+      editor.y = next.y;
       editor.resized = true;
-      if (editor.mixedMode && (gesture.hit === "width" || gesture.hit === "corner")) scheduleTextEditorPreview(editor);
+      if (next.autoHeight) fitTextEditorToContent(editor);
+      if (editor.mixedMode && (gesture.hit === "width" || gesture.hit === "e" || gesture.hit === "w" || gesture.hit === "corner" || /[ne]/.test(gesture.hit))) scheduleTextEditorPreview(editor);
     }
     positionTextEditors();
   }
@@ -5475,11 +5506,15 @@ User writes "Show air quality for Tokyo", names a place, and points to an empty 
     textHelpInvoker = null;
     if (invoker?.isConnected && !invoker.disabled) invoker.focus({ preventScroll: true });
   }
-  function textEditorContentOffset(editor) {
-    const body = editor?.body || editor?.element?.querySelector(".text-editor-body"),
-      left = body?.offsetLeft || 0,
-      top = body?.offsetTop || 22;
-    return { x: left + 8, y: top + 8 };
+  function textEditorContentOffset() {
+    return { x: 12, y: 10 };
+  }
+  function fitTextEditorToContent(editor) {
+    const textarea = editor?.textarea;
+    if (!textarea) return;
+    textarea.style.height = "0px";
+    editor.heightCss = Math.max(TEXT_EDITOR_MIN_HEIGHT, Math.ceil(textarea.scrollHeight) + 20);
+    textarea.style.height = "100%";
   }
 
   async function confirmTextEditor(editor) {
@@ -5622,62 +5657,49 @@ User writes "Show air quality for Tokyo", names a place, and points to an empty 
         color:typeof options.color === "string" ? options.color : state.inkColor,
       },
       root = document.createElement("section"),
-      header = document.createElement("header"),
-      title = document.createElement("span"),
       mixedModeButton = document.createElement("button"),
-      body = document.createElement("div"),
       textarea = document.createElement("textarea");
     editor.element = root;
     editor.textarea = textarea;
     editor.preview = null;
-    editor.body = body;
+    editor.body = null;
     editor.mixedModeButton = mixedModeButton;
     root.className = "text-editor active";
     root.dataset.editorId = String(editor.id);
     root.dataset.i18nAria = "text";
     root.setAttribute("role", "dialog");
     root.setAttribute("aria-label", t("text"));
-    header.className = "text-editor-header";
-    title.className = "text-editor-title";
-    title.dataset.i18n = "text";
-    title.textContent = t("text");
     mixedModeButton.hidden = true;
-    header.append(title);
-    body.className = "text-editor-body";
     textarea.className = "text-editor-input";
-    textarea.rows = 3;
+    textarea.rows = 1;
     textarea.maxLength = TEXT_INPUT_MAX_LENGTH;
     textarea.dataset.i18nPlaceholder = "textPlaceholder";
     textarea.dataset.i18nAria = "text";
     textarea.placeholder = t("textPlaceholder");
     textarea.setAttribute("aria-label", t("text"));
     textarea.value = typeof options.text === "string" ? options.text.slice(0, TEXT_INPUT_MAX_LENGTH) : "";
-    body.append(textarea);
-    root.append(header, body);
-    for (const kind of ["width", "height", "corner"]) {
+    root.append(textarea);
+    for (const kind of ["n", "ne", "e", "se", "s", "sw", "w", "nw"]) {
       const handle = document.createElement("span");
       handle.className = `text-editor-handle ${kind}`;
       handle.dataset.textHandle = kind;
       root.append(handle);
       handle.addEventListener("pointerdown", (event) => textEditorPointerDown(event, editor, kind));
     }
-    header.addEventListener("pointerdown", (event) => {
-      if (event.target.closest("button")) return;
-      textEditorPointerDown(event, editor, "move");
-    });
     root.addEventListener("pointerdown", (event) => {
-      if (event.target === textarea || event.target.closest("button") || event.target.closest(".text-editor-preview") || event.target.closest(".text-editor-handle")) return;
-      textEditorPointerDown(event, editor, "body");
+      if (event.target === textarea || event.target.closest(".text-editor-handle")) return;
+      textEditorPointerDown(event, editor, "move");
     });
     root.addEventListener("pointermove", (event) => updateTextEditorGesture(event, editor));
     root.addEventListener("pointerup", (event) => finishTextEditorGesture(event, editor));
     root.addEventListener("pointercancel", (event) => finishTextEditorGesture(event, editor));
     textarea.addEventListener("focus", () => focusTextEditor(editor));
+    textarea.addEventListener("input", () => {
+      fitTextEditorToContent(editor);
+      positionTextEditors();
+    });
     textarea.addEventListener("keydown", (event) => {
-      if (event.key === "Enter" && !event.shiftKey && !event.isComposing) {
-        event.preventDefault();
-        confirmTextEditor(editor);
-      } else if (event.key === "Escape") {
+      if (event.key === "Escape") {
         event.preventDefault();
         cancelTextEditor(editor);
       }
@@ -5696,6 +5718,7 @@ User writes "Show air quality for Tokyo", names a place, and points to an empty 
     updateTextEditorMixedMode(editor);
     keepTextEditorInsideCanvas(editor);
     state.textEditors.set(editor.id, editor);
+    fitTextEditorToContent(editor);
     focusTextEditor(editor, true);
     positionTextEditors();
     return editor;
@@ -5710,7 +5733,7 @@ User writes "Show air quality for Tokyo", names a place, and points to an empty 
       editor = createTextEditor({ x:item.x, y:item.y }, {
         text:item.text,
         widthCss:Math.max(TEXT_EDITOR_MIN_WIDTH, item.maxWidth * scale + 16),
-        heightCss:Math.max(TEXT_EDITOR_MIN_HEIGHT, item.h * scale + 48),
+        heightCss:Math.max(TEXT_EDITOR_MIN_HEIGHT, item.h * scale + 20),
         fontCss:Math.max(8, item.fontSize * scale),
         sourceTextBoxId:item.id,
         sourceX:item.x,

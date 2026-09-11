@@ -541,37 +541,6 @@ button,
     margin-left: 0;
   }
 
-  body.mode-draw-active .sketch-more-wrap {
-    display: block;
-    position: relative;
-    flex: 0 0 auto;
-    z-index: 30;
-  }
-
-  body.mode-draw-active .sketch-more-btn {
-    display: grid;
-  }
-
-  body.mode-draw-active .sketch-more-panel {
-    display: none;
-    position: absolute;
-    top: calc(100% + 6px);
-    right: 0;
-    flex-direction: row;
-    flex-wrap: nowrap;
-    gap: 2px;
-    padding: 6px;
-    border-radius: 14px;
-    background: rgba(255, 255, 255, 0.96);
-    border: 1px solid var(--border);
-    box-shadow: 0 10px 24px rgba(26, 25, 21, 0.12);
-    z-index: 40;
-  }
-
-  body.mode-draw-active .sketch-more-wrap.open .sketch-more-panel {
-    display: flex;
-  }
-
   body.mode-draw-active .sketch-ink-control.open .color-orbit {
     position: fixed !important;
     top: calc(env(safe-area-inset-top) + 56px);
@@ -674,6 +643,37 @@ button,
     gap: 4px;
     padding-left: 6px;
     padding-right: 6px;
+  }
+
+  body.mode-draw-active .sketch-more-wrap {
+    display: block;
+    position: relative;
+    flex: 0 0 auto;
+    z-index: 30;
+  }
+
+  body.mode-draw-active .sketch-more-btn {
+    display: grid;
+  }
+
+  body.mode-draw-active .sketch-more-panel {
+    display: none;
+    position: absolute;
+    top: calc(100% + 6px);
+    right: 0;
+    flex-direction: row;
+    flex-wrap: nowrap;
+    gap: 2px;
+    padding: 6px;
+    border-radius: 14px;
+    background: rgba(255, 255, 255, 0.96);
+    border: 1px solid var(--border);
+    box-shadow: 0 10px 24px rgba(26, 25, 21, 0.12);
+    z-index: 40;
+  }
+
+  body.mode-draw-active .sketch-more-wrap.open .sketch-more-panel {
+    display: flex;
   }
 
   .bottom-tool-group .btool-divider:last-of-type,
