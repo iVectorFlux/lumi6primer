@@ -729,6 +729,7 @@
     interactionCtx.rect(0, 0, SIZE, SIZE);
     interactionCtx.clip();
     if (state.drawing?.preview) drawPreview(state.drawing.preview, interactionCtx);
+    if (typeof window.__drawSketchShapePreview === "function") window.__drawSketchShapePreview(interactionCtx);
     drawPointerPreview(interactionCtx);
     if (state.selection) drawSelection(state.selection, interactionCtx);
     drawHandModeOutlines(interactionCtx);

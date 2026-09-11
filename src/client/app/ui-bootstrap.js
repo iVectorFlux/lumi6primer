@@ -44,7 +44,16 @@
       createTextEditor(point);
       return;
     }
-    if (state.mode === "select" && e.pointerType !== "touch") {
+    if (state.mode === "shape") {
+      if (!valid(point)) {
+        setStatusKey("outsideCanvas");
+        return;
+      }
+      state.shapeGesture = { id: e.pointerId, start: point, end: point };
+      requestInteractionLayerRender();
+      return;
+    }
+    if (state.mode === "select") {
       if (state.pending) {
         setStatusKey("pendingConfirm");
         return;
@@ -180,6 +189,12 @@
       updateAnimationGesture(e);
       return;
     }
+    if (state.shapeGesture?.id === e.pointerId) {
+      const p = clientPoint(e);
+      if (valid(p)) state.shapeGesture.end = p;
+      requestInteractionLayerRender();
+      return;
+    }
     if (state.selectionGesture?.id === e.pointerId) {
       updateSelectionGesture(e);
       coords.textContent = `${Math.round(state.scale * 100)}%`;
@@ -264,6 +279,13 @@
     }
     if (state.animationGesture?.id === e.pointerId) {
       finishAnimationGesture(e);
+      return;
+    }
+    if (state.shapeGesture?.id === e.pointerId) {
+      const gesture = state.shapeGesture;
+      state.shapeGesture = null;
+      if (e.type !== "pointercancel") stampSketchShape(gesture.start, gesture.end);
+      requestInteractionLayerRender();
       return;
     }
     if (state.selectionGesture?.id === e.pointerId) {
@@ -398,9 +420,8 @@
       item.setAttribute("aria-pressed", String(item === button));
     });
     resetCanvasCursor();
-    const penTray = document.querySelector("#penTray");
-    if (penTray && mode !== "pen") penTray.hidden = true;
-    else if (penTray && options.showTray) penTray.hidden = false;
+    const shapeSheet = document.querySelector("#sketchShapeSheet");
+    if (shapeSheet) shapeSheet.hidden = mode !== "shape";
     requestInteractionLayerRender();
     if (mode === "hand") setNavigating(true);
     if (deferredSelectionCommit) queueMicrotask(() => {
@@ -413,30 +434,36 @@
         event.stopPropagation();
         if (event.type === "pointerdown" && event.pointerType === "mouse" && event.button !== 0) return;
       }
-      if (button.dataset.mode === "pen") {
-        const penTray = document.querySelector("#penTray");
-        if (state.mode === "pen") {
-          if (penTray) {
-            penTray.hidden = !penTray.hidden;
-            if (!penTray.hidden) closeRadialMenu();
-          }
-          return;
-        }
-        setCanvasMode("pen", { showTray: true });
-        if (penTray) {
-          penTray.hidden = false;
-          closeRadialMenu();
-        }
+      if (button.dataset.mode === "shape") {
+        setCanvasMode("shape");
+        const sheet = document.querySelector("#sketchShapeSheet");
+        if (sheet) sheet.hidden = false;
         return;
       }
-      const penTray = document.querySelector("#penTray");
-      if (penTray && button.dataset.mode !== "pen") penTray.hidden = true;
       setCanvasMode(button.dataset.mode);
     };
 
     button.addEventListener("pointerdown", handleModeSwitch);
     button.addEventListener("click", (e) => e.stopPropagation());
   });
+
+  const sketchHudEl = document.querySelector("#sketchHud");
+  if (sketchHudEl) {
+    sketchHudEl.addEventListener("pointerdown", (e) => {
+      if (e.target === sketchHudEl) return;
+      e.stopPropagation();
+    });
+    sketchHudEl.addEventListener("touchstart", (e) => {
+      if (e.target === sketchHudEl) return;
+      e.stopPropagation();
+    }, { passive: true });
+  }
+
+  const sketchTopbarEl = document.querySelector("#sketchTopbarTools");
+  if (sketchTopbarEl) {
+    sketchTopbarEl.addEventListener("pointerdown", (e) => e.stopPropagation());
+    sketchTopbarEl.addEventListener("touchstart", (e) => e.stopPropagation(), { passive: true });
+  }
 
   const bottomToolbarEl = document.querySelector(".bottom-toolbar");
   if (bottomToolbarEl) {
@@ -447,6 +474,7 @@
   const penTrayEl = document.querySelector("#penTray");
   if (penTrayEl) {
     penTrayEl.addEventListener("pointerdown", (e) => e.stopPropagation());
+    penTrayEl.addEventListener("click", (e) => e.stopPropagation());
     penTrayEl.addEventListener("touchstart", (e) => e.stopPropagation(), { passive: true });
   }
   [selectionTypesetButton, selectionDeleteButton, selectionCancelButton].filter(Boolean).forEach((button) => {
@@ -593,21 +621,319 @@
   animationControls.addEventListener("click", (event) => event.stopPropagation());
   animationControls.addEventListener("pointerdown", (event) => event.stopPropagation());
 
-  document.querySelector("#penSize").oninput = (e) => {
-    state.pen = +e.target.value;
-    document.querySelector("#penSizeValue").textContent = `${state.pen} px`;
+  const penSizeInput = document.querySelector("#penSize");
+  const sketchSizeRail = document.querySelector("#sketchSizeRail");
+  const sketchSizeKnob = document.querySelector("#sketchSizeKnob");
+  function syncSketchPenSizeUi() {
+    if (!penSizeInput || !sketchSizeRail || !sketchSizeKnob) return;
+    const min = Number(penSizeInput.min) || 2;
+    const max = Number(penSizeInput.max) || 16;
+    const value = Number(penSizeInput.value) || min;
+    const t = (value - min) / (max - min || 1);
+    const railH = sketchSizeRail.clientHeight || 220;
+    const inset = 10;
+    const y = inset + (1 - t) * Math.max(0, railH - inset * 2);
+    sketchSizeKnob.style.top = `${y}px`;
+    sketchSizeRail.setAttribute("aria-valuenow", String(value));
+    state.pen = value;
+  }
+  function setSketchPenSizeFromClientY(clientY) {
+    if (!penSizeInput || !sketchSizeRail) return;
+    const rect = sketchSizeRail.getBoundingClientRect();
+    const inset = 10;
+    const usable = Math.max(1, rect.height - inset * 2);
+    const y = (clientY - rect.top - inset) / usable;
+    const t = Math.max(0, Math.min(1, 1 - y));
+    const min = Number(penSizeInput.min) || 2;
+    const max = Number(penSizeInput.max) || 16;
+    penSizeInput.value = String(Math.round(min + t * (max - min)));
+    syncSketchPenSizeUi();
+  }
+  if (sketchSizeRail && penSizeInput) {
+    sketchSizeRail.addEventListener("pointerdown", (event) => {
+      if (event.button != null && event.button !== 0) return;
+      event.preventDefault();
+      event.stopPropagation();
+      sketchSizeRail.setPointerCapture(event.pointerId);
+      setSketchPenSizeFromClientY(event.clientY);
+    });
+    sketchSizeRail.addEventListener("pointermove", (event) => {
+      if (!sketchSizeRail.hasPointerCapture(event.pointerId)) return;
+      event.preventDefault();
+      setSketchPenSizeFromClientY(event.clientY);
+    });
+    sketchSizeRail.addEventListener("pointerup", (event) => {
+      if (sketchSizeRail.hasPointerCapture(event.pointerId)) sketchSizeRail.releasePointerCapture(event.pointerId);
+    });
+    sketchSizeRail.addEventListener("keydown", (event) => {
+      const min = Number(penSizeInput.min) || 2;
+      const max = Number(penSizeInput.max) || 16;
+      let value = Number(penSizeInput.value) || min;
+      if (event.key === "ArrowUp" || event.key === "ArrowRight") value += 1;
+      else if (event.key === "ArrowDown" || event.key === "ArrowLeft") value -= 1;
+      else return;
+      event.preventDefault();
+      penSizeInput.value = String(Math.max(min, Math.min(max, value)));
+      syncSketchPenSizeUi();
+    });
+  }
+  syncSketchPenSizeUi();
+  syncSketchInkWell(state.inkColor);
+  const sketchMoreWrap = document.querySelector("#sketchMoreWrap");
+  const sketchMoreBtn = document.querySelector("#sketchMoreBtn");
+  function closeSketchMore() {
+    if (!sketchMoreWrap || !sketchMoreBtn) return;
+    sketchMoreWrap.classList.remove("open");
+    sketchMoreBtn.setAttribute("aria-expanded", "false");
+  }
+  if (sketchMoreBtn && sketchMoreWrap) {
+    sketchMoreBtn.addEventListener("click", (event) => {
+      event.preventDefault();
+      event.stopPropagation();
+      const open = !sketchMoreWrap.classList.contains("open");
+      sketchMoreWrap.classList.toggle("open", open);
+      sketchMoreBtn.setAttribute("aria-expanded", String(open));
+    });
+    sketchMoreWrap.addEventListener("click", (event) => {
+      if (event.target.closest(".btool") && event.target.closest("#sketchMorePanel")) closeSketchMore();
+    });
+    document.addEventListener("click", (event) => {
+      if (!sketchMoreWrap.contains(event.target)) closeSketchMore();
+    });
+  }
+
+  function sketchShapePoints(kind, a, b) {
+    const x = Math.min(a.x, b.x), y = Math.min(a.y, b.y);
+    const w = Math.max(Math.abs(b.x - a.x), 1), h = Math.max(Math.abs(b.y - a.y), 1);
+    const cx = x + w / 2, cy = y + h / 2;
+    const ellipse = (rx, ry, n = 36) => {
+      const pts = [];
+      for (let i = 0; i <= n; i += 1) {
+        const t = (i / n) * Math.PI * 2;
+        pts.push({ x: cx + rx * Math.cos(t), y: cy + ry * Math.sin(t) });
+      }
+      return pts;
+    };
+    const polygon = (n, rot = -Math.PI / 2) => {
+      const pts = [];
+      for (let i = 0; i <= n; i += 1) {
+        const t = rot + (i / n) * Math.PI * 2;
+        pts.push({ x: cx + (w / 2) * Math.cos(t), y: cy + (h / 2) * Math.sin(t) });
+      }
+      return pts;
+    };
+    if (kind === "line") return [a, b];
+    if (kind === "minus") return [{ x, y: cy }, { x: x + w, y: cy }];
+    if (kind === "plus") return [
+      [{ x: cx, y }, { x: cx, y: y + h }],
+      [{ x, y: cy }, { x: x + w, y: cy }],
+    ];
+    if (kind === "cross") return [
+      [{ x, y }, { x: x + w, y: y + h }],
+      [{ x: x + w, y }, { x, y: y + h }],
+    ];
+    if (kind === "arrow") {
+      const ang = Math.atan2(b.y - a.y, b.x - a.x);
+      const head = Math.max(18 / Math.max(state.scale, 0.05), Math.hypot(w, h) * 0.18);
+      return [
+        a, b,
+        { x: b.x - head * Math.cos(ang - 0.45), y: b.y - head * Math.sin(ang - 0.45) },
+        b,
+        { x: b.x - head * Math.cos(ang + 0.45), y: b.y - head * Math.sin(ang + 0.45) },
+      ];
+    }
+    if (kind === "double-arrow") {
+      const ang = Math.atan2(b.y - a.y, b.x - a.x);
+      const head = Math.max(16 / Math.max(state.scale, 0.05), Math.hypot(w, h) * 0.16);
+      return [
+        { x: a.x + head * Math.cos(ang - 0.45), y: a.y + head * Math.sin(ang - 0.45) },
+        a,
+        { x: a.x + head * Math.cos(ang + 0.45), y: a.y + head * Math.sin(ang + 0.45) },
+        a, b,
+        { x: b.x - head * Math.cos(ang - 0.45), y: b.y - head * Math.sin(ang - 0.45) },
+        b,
+        { x: b.x - head * Math.cos(ang + 0.45), y: b.y - head * Math.sin(ang + 0.45) },
+      ];
+    }
+    if (kind === "rect") return [{ x, y }, { x: x + w, y }, { x: x + w, y: y + h }, { x, y: y + h }, { x, y }];
+    if (kind === "roundrect") {
+      const r = Math.min(w, h) * 0.22;
+      return [
+        { x: x + r, y }, { x: x + w - r, y }, { x: x + w, y: y + r }, { x: x + w, y: y + h - r },
+        { x: x + w - r, y: y + h }, { x: x + r, y: y + h }, { x, y: y + h - r }, { x, y: y + r }, { x: x + r, y },
+      ];
+    }
+    if (kind === "triangle") return [{ x: cx, y }, { x: x + w, y: y + h }, { x, y: y + h }, { x: cx, y }];
+    if (kind === "diamond") return [{ x: cx, y }, { x: x + w, y: cy }, { x: cx, y: y + h }, { x, y: cy }, { x: cx, y }];
+    if (kind === "pentagon") return polygon(5);
+    if (kind === "hexagon") return polygon(6, 0);
+    if (kind === "ellipse") return ellipse(w / 2, h / 2);
+    if (kind === "star") {
+      const pts = [];
+      for (let i = 0; i <= 10; i += 1) {
+        const t = -Math.PI / 2 + (i / 10) * Math.PI * 2;
+        const r = i % 2 === 0 ? 1 : 0.42;
+        pts.push({ x: cx + (w / 2) * r * Math.cos(t), y: cy + (h / 2) * r * Math.sin(t) });
+      }
+      return pts;
+    }
+    if (kind === "heart") {
+      const pts = [];
+      for (let i = 0; i <= 40; i += 1) {
+        const t = (i / 40) * Math.PI * 2;
+        const hx = 16 * Math.sin(t) ** 3;
+        const hy = 13 * Math.cos(t) - 5 * Math.cos(2 * t) - 2 * Math.cos(3 * t) - Math.cos(4 * t);
+        pts.push({ x: cx + (hx / 34) * w, y: y + h * 0.42 - (hy / 34) * h });
+      }
+      return pts;
+    }
+    if (kind === "cloud") {
+      return [
+        ellipse(w * 0.28, h * 0.28, 20).map((p) => ({ x: p.x - w * 0.18, y: p.y + h * 0.08 })),
+        ellipse(w * 0.34, h * 0.32, 20).map((p) => ({ x: p.x + w * 0.02, y: p.y - h * 0.08 })),
+        ellipse(w * 0.26, h * 0.26, 20).map((p) => ({ x: p.x + w * 0.2, y: p.y + h * 0.1 })),
+      ];
+    }
+    if (kind === "lightning") {
+      return [
+        { x: x + w * 0.58, y }, { x: x + w * 0.28, y: y + h * 0.46 }, { x: x + w * 0.52, y: y + h * 0.46 },
+        { x: x + w * 0.38, y: y + h }, { x: x + w * 0.72, y: y + h * 0.52 }, { x: x + w * 0.48, y: y + h * 0.52 },
+        { x: x + w * 0.58, y },
+      ];
+    }
+    if (kind === "speech") {
+      return [
+        { x: x + w * 0.12, y }, { x: x + w * 0.88, y }, { x: x + w, y: y + h * 0.12 },
+        { x: x + w, y: y + h * 0.62 }, { x: x + w * 0.88, y: y + h * 0.74 },
+        { x: x + w * 0.38, y: y + h * 0.74 }, { x: x + w * 0.18, y: y + h },
+        { x: x + w * 0.28, y: y + h * 0.74 }, { x: x + w * 0.12, y: y + h * 0.74 },
+        { x, y: y + h * 0.62 }, { x, y: y + h * 0.12 }, { x: x + w * 0.12, y },
+      ];
+    }
+    if (kind === "chevron") return [{ x, y }, { x: x + w, y: cy }, { x, y: y + h }];
+    if (kind === "parallelogram") return [
+      { x: x + w * 0.28, y }, { x: x + w, y }, { x: x + w * 0.72, y: y + h }, { x, y: y + h }, { x: x + w * 0.28, y },
+    ];
+    if (kind === "trapezoid") return [
+      { x: x + w * 0.22, y }, { x: x + w * 0.78, y }, { x: x + w, y: y + h }, { x, y: y + h }, { x: x + w * 0.22, y },
+    ];
+    if (kind === "brace") {
+      return [
+        { x: x + w * 0.7, y }, { x: x + w * 0.45, y }, { x: x + w * 0.45, y: cy - h * 0.08 },
+        { x: x + w * 0.2, y: cy }, { x: x + w * 0.45, y: cy + h * 0.08 }, { x: x + w * 0.45, y: y + h },
+        { x: x + w * 0.7, y: y + h },
+      ];
+    }
+    if (kind === "house") {
+      return [
+        { x, y: y + h * 0.42 }, { x: cx, y }, { x: x + w, y: y + h * 0.42 }, { x: x + w * 0.82, y: y + h * 0.42 },
+        { x: x + w * 0.82, y: y + h }, { x: x + w * 0.18, y: y + h }, { x: x + w * 0.18, y: y + h * 0.42 }, { x, y: y + h * 0.42 },
+      ];
+    }
+    if (kind === "person") {
+      const headR = Math.min(w, h) * 0.16;
+      return [
+        ellipse(headR, headR, 18).map((p) => ({ x: p.x, y: y + h * 0.22 + (p.y - cy) })),
+        [{ x: cx, y: y + h * 0.38 }, { x: cx, y: y + h * 0.72 }],
+        [{ x: x + w * 0.18, y: y + h * 0.52 }, { x: x + w * 0.82, y: y + h * 0.52 }],
+        [{ x: cx, y: y + h * 0.72 }, { x: x + w * 0.22, y: y + h }],
+        [{ x: cx, y: y + h * 0.72 }, { x: x + w * 0.78, y: y + h }],
+      ];
+    }
+    return [a, b];
+  }
+
+  function sketchShapePolylines(kind, a, b) {
+    const pts = sketchShapePoints(kind, a, b);
+    if (!pts.length) return [];
+    return Array.isArray(pts[0]) ? pts : [pts];
+  }
+
+  function stampSketchShape(start, end) {
+    if (!start || !end) return;
+    if (Math.hypot(end.x - start.x, end.y - start.y) < 8 / Math.max(state.scale, 0.05)) return;
+    const polylines = sketchShapePolylines(state.shapeKind || "rect", start, end);
+    const size = logicalWidth(state.pen);
+    state.userRevision++;
+    let bounds = null;
+    for (const points of polylines) {
+      for (let i = 1; i < points.length; i += 1) stroke(points[i - 1], points[i], false, size, true);
+      for (const point of points) bounds = SELECT.unionBox(bounds, { x: point.x, y: point.y, w: 1, h: 1 });
+    }
+    if (bounds) rememberInkBox(bounds);
+    save();
+    requestRender();
+  }
+
+  window.__drawSketchShapePreview = function (context) {
+    const gesture = state.shapeGesture;
+    if (!gesture || state.mode !== "shape") return;
+    const polylines = sketchShapePolylines(state.shapeKind || "rect", gesture.start, gesture.end);
+    context.save();
+    context.strokeStyle = state.inkColor;
+    context.lineWidth = logicalWidth(state.pen);
+    context.lineCap = "round";
+    context.lineJoin = "round";
+    for (const points of polylines) {
+      if (points.length < 2) continue;
+      context.beginPath();
+      context.moveTo(points[0].x, points[0].y);
+      for (let i = 1; i < points.length; i += 1) context.lineTo(points[i].x, points[i].y);
+      context.stroke();
+    }
+    context.restore();
   };
-  document.querySelector("#aiFont").onchange = (e) => {
+
+  document.querySelectorAll("#sketchShapeSheet [data-shape]").forEach((button) => {
+    button.addEventListener("click", (event) => {
+      event.stopPropagation();
+      state.shapeKind = button.dataset.shape || "rect";
+      document.querySelectorAll("#sketchShapeSheet [data-shape]").forEach((item) => {
+        item.classList.toggle("active", item === button);
+      });
+      setCanvasMode("shape");
+    });
+  });
+
+  document.querySelector("#sketchCustomColor")?.addEventListener("input", (event) => {
+    const color = event.target.value;
+    if (!color) return;
+    state.inkColor = color;
+    document.querySelectorAll("[data-ink-color]").forEach((swatch) => swatch.classList.remove("active"));
+    syncSketchInkWell(color);
+  });
+
+  function lightenInkColor(hex, amount = 0.58) {
+    const raw = String(hex || "#1d4ed8").replace("#", "");
+    if (raw.length < 6) return "#93c5fd";
+    const r = parseInt(raw.slice(0, 2), 16);
+    const g = parseInt(raw.slice(2, 4), 16);
+    const b = parseInt(raw.slice(4, 6), 16);
+    if (![r, g, b].every(Number.isFinite)) return "#93c5fd";
+    const mix = (c) => Math.round(c + (255 - c) * amount);
+    return `rgb(${mix(r)}, ${mix(g)}, ${mix(b)})`;
+  }
+  function syncSketchInkWell(color) {
+    const next = color || state.inkColor || "#1d4ed8";
+    const dot = document.querySelector("#sketchInkDot");
+    if (dot) dot.style.background = next;
+    const rail = document.querySelector("#sketchSizeRail");
+    if (rail) rail.style.setProperty("--sketch-wedge", lightenInkColor(next));
+  }
+  const aiFont = document.querySelector("#aiFont");
+  if (aiFont) aiFont.onchange = (e) => {
     state.aiFont = e.target.value;
   };
   function closeColorOrbs(except = null) {
     document.querySelectorAll("[data-color-control]").forEach((control) => {
       if (control === except) return;
-      const trigger = control.querySelector(".color-orb-trigger"),
-        focusedInside = control.contains(document.activeElement) && document.activeElement !== trigger;
+      const trigger = control.querySelector(".color-orb-trigger");
+      const orbit = control.querySelector(".color-orbit");
+      if (!trigger || !orbit) return;
+      const focusedInside = control.contains(document.activeElement) && document.activeElement !== trigger;
       control.classList.remove("open");
       trigger.setAttribute("aria-expanded", "false");
-      control.querySelector(".color-orbit").setAttribute("aria-hidden", "true");
+      orbit.setAttribute("aria-hidden", "true");
       control.querySelectorAll(".orbit-swatch").forEach((button) => button.setAttribute("tabindex", "-1"));
       if (focusedInside) trigger.focus();
     });
@@ -616,6 +942,7 @@
     const trigger = control.querySelector(".color-orb-trigger"),
       orbit = control.querySelector(".color-orbit"),
       type = control.dataset.colorControl;
+    if (!trigger || !orbit) return;
     trigger.onclick = (event) => {
       event.stopPropagation();
       const open = !control.classList.contains("open");
@@ -634,6 +961,7 @@
           applySelectionColor(color);
           positionTextEditors();
           for (const editor of state.textEditors.values()) if (editor.mixedMode) scheduleTextEditorPreview(editor, 0);
+          syncSketchInkWell(color);
         }
         else state.aiColor = color;
         trigger.classList.remove(...Object.values(COLOR_CLASS));

@@ -91,8 +91,9 @@
   }
 
   function formatCleanLessonTitle(raw) {
-    if (!raw || raw === "Untitled") return "Science Discovery";
-    return String(raw)
+    const value = String(raw || "").trim();
+    if (!value || value === "Untitled" || /^New board\b/i.test(value) || value === "Science Discovery") return "";
+    return value
       .replace(/^[#\s*_-]+|[#\s*_-]+$/g, "")
       .replace(/^[Aa]n?\s+/, "")
       .trim();
@@ -225,11 +226,13 @@
     const feed = document.querySelector("#talkFeed");
     if (!feed) return;
 
-    const titleText = formatCleanLessonTitle(state.lessonTitle || document.querySelector("#currentDocName")?.textContent);
-
     const turns = typeof window.Lumi6Lesson?.turns === "function"
       ? window.Lumi6Lesson.turns()
       : [];
+    const firstAsk = turns.find((turn) => turn.role === "student" && String(turn.text || "").trim())?.text || "";
+    if (typeof maybeNameBoardFromText === "function") maybeNameBoardFromText(firstAsk);
+
+    const titleText = formatCleanLessonTitle(state.lessonTitle || state.boardTitle || firstAsk || document.querySelector("#currentDocName")?.textContent) || "Science Discovery";
 
     const LUMI6_AVATAR_HTML = `<div class="talk-lumi6-avatar" aria-label="Lumi6"><svg viewBox="0 0 24 24" width="22" height="22" fill="none"><circle cx="12" cy="12" r="10" fill="url(#lumiAvatarGrad)"/><path d="M12 6L13.8 10.2L18 12L13.8 13.8L12 18L10.2 13.8L6 12L10.2 10.2L12 6Z" fill="#ffffff"/><circle cx="12" cy="12" r="2.2" fill="#6d28d9"/><defs><linearGradient id="lumiAvatarGrad" x1="2" y1="2" x2="22" y2="22" gradientUnits="userSpaceOnUse"><stop stop-color="#8b5cf6"/><stop offset="1" stop-color="#6d28d9"/></linearGradient></defs></svg></div>`;
 
@@ -505,6 +508,9 @@
     setAppViewMode(initialMode, false);
   } catch {
     setAppViewMode("talk", false);
+  }
+  if (typeof applyBoardTitle === "function") {
+    applyBoardTitle(state.boardTitle || "New board", { placeholder: state.boardTitlePlaceholder !== false, force: true });
   }
   requestAnimationFrame(() => requestAnimationFrame(maybeStartOnboarding));
 })();

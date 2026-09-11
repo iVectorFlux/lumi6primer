@@ -36,7 +36,29 @@
     image.naturalWidth = naturalWidth;
     image.logicalWidth = naturalWidth;
     image.logicalHeight = naturalHeight;
-    return image;
+    return cropRasterToInk(image);
+  }
+  function cropRasterToInk(image) {
+    if (!image || typeof inkBox !== "function") return image;
+    const box = inkBox(image);
+    if (!box || box.w < 2 || box.h < 2) return image;
+    const pad = 2;
+    const x = Math.max(0, box.x - pad);
+    const y = Math.max(0, box.y - pad);
+    const w = Math.min(image.width - x, box.w + pad * 2);
+    const h = Math.min(image.height - y, box.h + pad * 2);
+    if (w >= image.width - 1 && h >= image.height - 1) return image;
+    const cropped = offscreen(Math.max(1, Math.ceil(w)), Math.max(1, Math.ceil(h)));
+    cropped.getContext("2d").drawImage(image, x, y, w, h, 0, 0, w, h);
+    const scaleX = image.width / Math.max(1, image.logicalWidth || image.width);
+    const scaleY = image.height / Math.max(1, image.logicalHeight || image.height);
+    cropped.logicalWidth = w / scaleX;
+    cropped.logicalHeight = h / scaleY;
+    cropped.naturalWidth = cropped.logicalWidth;
+    cropped.naturalHeight = cropped.logicalHeight;
+    cropped.revealRows = [cropped.logicalWidth];
+    cropped.revealRowHeight = cropped.logicalHeight;
+    return cropped;
   }
   function layoutText(content, context, maxWidth) {
     const lines = [];

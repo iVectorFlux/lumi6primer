@@ -2,54 +2,57 @@
 
 const HAS_EMOJI = /[\u{1F300}-\u{1FAFF}\u{2600}-\u{27BF}]/u;
 
+// One emoji per object word, first hit only. Avoid everyday words like "current" or "energy".
 const RULES = [
-  [/\belectromagnets?\b/gi, "🧲"],
-  [/\bmagnets?\b/gi, "🧲"],
-  [/\belectricity\b/gi, "⚡"],
-  [/\bcurrents?\b/gi, "⚡"],
-  [/\bwires?\b/gi, "🔌"],
-  [/\bcoils?\b/gi, "🔁"],
-  [/\bmarbles?\b/gi, "🔵"],
-  [/\bbulbs?\b/gi, "💡"],
-  [/\bbatter(?:y|ies)\b/gi, "🔋"],
-  [/\bswitches?\b/gi, "🔘"],
-  [/\bcircuits?\b/gi, "🔌"],
-  [/\bmoons?\b/gi, "🌙"],
-  [/\bsun\b/gi, "☀️"],
-  [/\bearth\b/gi, "🌍"],
-  [/\bplanets?\b/gi, "🪐"],
-  [/\bstars?\b/gi, "⭐"],
-  [/\bhearts?\b/gi, "❤️"],
-  [/\blungs?\b/gi, "🫁"],
-  [/\bbones?\b/gi, "🦴"],
-  [/\bbrains?\b/gi, "🧠"],
-  [/\bplants?\b/gi, "🌱"],
-  [/\bleaves\b/gi, "🍃"],
-  [/\bwater\b/gi, "💧"],
-  [/\brain\b/gi, "🌧️"],
-  [/\bclouds?\b/gi, "☁️"],
-  [/\bheat\b/gi, "🔥"],
-  [/\bice\b/gi, "🧊"],
-  [/\bforces?\b/gi, "➡️"],
-  [/\bgravity\b/gi, "⬇️"],
-  [/\benergy\b/gi, "⚡"]
+  [/\belectromagnets?\b/i, "🧲"],
+  [/\bmagnets?\b/i, "🧲"],
+  [/\belectricity\b/i, "⚡"],
+  [/\bwires?\b/i, "🔌"],
+  [/\bcoils?\b/i, "🔁"],
+  [/\bmarbles?\b/i, "🔵"],
+  [/\blight ?bulbs?\b/i, "💡"],
+  [/\bbatter(?:y|ies)\b/i, "🔋"],
+  [/\bcircuits?\b/i, "🔌"],
+  [/\bmoons?\b/i, "🌙"],
+  [/\bplanets?\b/i, "🪐"],
+  [/\blungs?\b/i, "🫁"],
+  [/\bbones?\b/i, "🦴"],
+  [/\bbrains?\b/i, "🧠"],
+  [/\bclouds?\b/i, "☁️"],
+  [/\bgravity\b/i, "⬇️"]
 ];
 
 function enrichWithEmojis(text) {
-  const source = String(text || "");
-  if (!source.trim() || HAS_EMOJI.test(source)) return source;
+  let out = String(text || "");
+  if (!out.trim()) return out;
+  out = stripMisplacedMagnets(out);
+  if (HAS_EMOJI.test(out)) return out;
   let used = 0;
-  let out = source;
+  const seen = new Set();
   for (const [pattern, emoji] of RULES) {
-    if (used >= 6) break;
-    const re = new RegExp(pattern.source, pattern.flags);
+    if (used >= 3) break;
+    if (seen.has(emoji) && emoji === "🧲") continue;
+    const re = new RegExp(pattern.source, pattern.flags.includes("g") ? pattern.flags : `${pattern.flags}g`);
+    let replaced = false;
     out = out.replace(re, (match) => {
-      if (used >= 6) return match;
+      if (replaced || used >= 3) return match;
+      replaced = true;
       used += 1;
+      seen.add(emoji);
       return `${match} ${emoji}`;
     });
   }
-  return out;
+  return stripMisplacedMagnets(out);
+}
+
+function stripMisplacedMagnets(text) {
+  return String(text || "")
+    .replace(/🧲/g, (emoji, offset, full) => {
+      const nearby = full.slice(Math.max(0, offset - 40), offset + 12);
+      return /magnet/i.test(nearby) ? emoji : "";
+    })
+    .replace(/[ \t]{2,}/g, " ")
+    .replace(/\s+([,.!?])/g, "$1");
 }
 
 function stripEmojis(text) {
@@ -59,4 +62,4 @@ function stripEmojis(text) {
     .trim();
 }
 
-module.exports = { enrichWithEmojis, stripEmojis };
+module.exports = { enrichWithEmojis, stripEmojis, stripMisplacedMagnets };

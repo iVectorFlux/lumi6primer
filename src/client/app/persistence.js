@@ -465,6 +465,7 @@
     state.currentSnapshotId = id;
     state.currentSnapshotName = snapshotName(item);
     state.currentSnapshotLocation = location;
+    applyBoardTitle(state.currentSnapshotName, { placeholder: false, force: true });
     await refreshSnapshots();
     setStatusKey(overwriteId ? "snapshotOverwritten" : "snapshotSaved");
     return id;
@@ -549,6 +550,7 @@
     state.currentSnapshotId = item.id;
     state.currentSnapshotName = snapshotName(item);
     state.currentSnapshotLocation = location;
+    applyBoardTitle(state.currentSnapshotName, { placeholder: false, force: true });
     render();
     closeHistoryPanel();
     setStatusKey("snapshotLoaded");
@@ -609,6 +611,34 @@
     dialog.querySelectorAll("button, input").forEach((control) => (control.disabled = busy));
     if (!busy) updateNewCanvasDialog();
   }
+  function applyBoardTitle(name, options) {
+    options ||= {};
+    const next = String(name || "").replace(/\s+/g, " ").trim().slice(0, 48) || "New board";
+    if (!options.force && options.fromContent && !state.boardTitlePlaceholder) return next;
+    state.boardTitle = next;
+    state.boardTitlePlaceholder = Boolean(options.placeholder);
+    state.lessonTitle = state.boardTitlePlaceholder ? "" : next;
+    const docName = document.querySelector("#currentDocName");
+    if (docName) docName.textContent = next;
+    renderSidebarRecents();
+    try {
+      document.title = `${next} · Lumi6`;
+    } catch {}
+    return next;
+  }
+  function maybeNameBoardFromText(text) {
+    if (!state.boardTitlePlaceholder) return;
+    const cleaned = String(text || "")
+      .replace(/\s+/g, " ")
+      .trim()
+      .replace(/^(hey|hi|hello|please|can you|could you)\s+/i, "")
+      .replace(/[?!.,;:]+$/g, "")
+      .trim();
+    if (cleaned.length < 4) return;
+    const title = cleaned.length <= 40 ? cleaned : `${cleaned.slice(0, 38).replace(/\s+\S*$/, "")}`.trim();
+    if (title.length < 4) return;
+    applyBoardTitle(title, { fromContent: true, placeholder: false });
+  }
   function startBlankCanvas() {
     const dialog = document.querySelector("#newCanvasDialog");
     if (state.selection) cancelSelection(true);
@@ -665,21 +695,30 @@
     if (typeof _atlasDrawCursor !== "undefined") {
       try { _atlasDrawCursor = null; } catch {}
     }
-    state.lessonTitle = "";
-    const docName = document.querySelector("#currentDocName");
-    if (docName) docName.textContent = "Untitled";
+    applyBoardTitle("New board", { placeholder: true, force: true });
     if (typeof window.syncTalkModeFeed === "function") {
       window.syncTalkModeFeed();
     }
+    renderSidebarRecents();
     document.querySelector("#newSnapshotName").value = "";
     if (dialog.open) dialog.close();
     if (document.querySelector("#historyPanel").classList.contains("open")) closeHistoryPanel();
     fit();
     setStatusKey("newCanvasReady");
   }
+  function boardHasContent() {
+    const talkTurns = typeof window.Lumi6Lesson?.turns === "function" ? window.Lumi6Lesson.turns() : [];
+    return Boolean(
+      tiles.size
+      || state.images.length
+      || state.textBoxes.length
+      || (pluginEnabled("animation") && state.animations.length)
+      || visibleWidgets().length
+      || talkTurns.length
+    );
+  }
   function openNewCanvasDialog() {
-    const inTalkMode = document.body.classList.contains("mode-talk-active");
-    if (inTalkMode || (!tiles.size && !state.images.length && !state.textBoxes.length && (!pluginEnabled("animation") || !state.animations.length) && !visibleWidgets().length)) {
+    if (!boardHasContent()) {
       startBlankCanvas();
       return;
     }
@@ -768,6 +807,45 @@
     if (generation !== snapshotListGeneration || location !== state.snapshotLocation) return;
     snapshotItems = items;
     renderSnapshotList();
+    renderSidebarRecents();
+  }
+  function renderSidebarRecents() {
+    const root = document.querySelector("#sidebarRecents");
+    if (!root) return;
+    let label = root.querySelector(".sidebar-recents-label");
+    if (!label) {
+      label = document.createElement("div");
+      label.className = "sidebar-recents-label";
+      label.textContent = "Boards";
+    }
+    root.replaceChildren(label);
+    const addItem = (text, options) => {
+      const button = document.createElement("button");
+      button.type = "button";
+      button.className = "sidebar-recent-item";
+      if (options.current) button.classList.add("current");
+      if (options.id) button.id = options.id;
+      button.textContent = text;
+      button.title = text;
+      if (options.onClick) button.onclick = options.onClick;
+      root.append(button);
+      return button;
+    };
+    const currentName = state.boardTitle || "New board";
+    if (!state.currentSnapshotId) {
+      addItem(currentName, { current: true, id: "currentBoardItem" });
+    }
+    for (const item of snapshotItems.slice(0, 16)) {
+      const name = snapshotName(item);
+      const isCurrent = item.id === state.currentSnapshotId && state.snapshotLocation === state.currentSnapshotLocation;
+      addItem(name, {
+        current: isCurrent,
+        onClick: () => runSnapshotAction(() => loadSnapshot(item.id, state.snapshotLocation)),
+      });
+    }
+    if (!root.querySelector(".sidebar-recent-item")) {
+      addItem(currentName, { current: true, id: "currentBoardItem" });
+    }
   }
   async function runSnapshotAction(action) {
     try {
@@ -1165,10 +1243,100 @@
     // Keep the legacy call shape available for integrations that opt into the old controls.
     if (selection.legacyActions) drawDraftActions(ctx, selection.box, size);
   }
-  function captureSelection(points) {
+  function padInkBox(box, pad) {
+    if (!box) return null;
+    return {
+      x: box.x - pad,
+      y: box.y - pad,
+      w: box.w + pad * 2,
+      h: box.h + pad * 2,
+    };
+  }
+  function rememberInkBox(box) {
+    if (!box) return;
+    const scale = Math.max(state.scale, 0.05);
+    const pad = Math.max(logicalWidth(state.pen || 6), 10 / scale);
+    const next = padInkBox({
+      x: box.x,
+      y: box.y,
+      w: Math.max(box.w, 1),
+      h: Math.max(box.h, 1),
+    }, pad);
+    const near = 12 / scale;
+    if (state.lastInkBox && intersection(padInkBox(state.lastInkBox, near), padInkBox(next, near))) {
+      state.lastInkBox = SELECT.unionBox(state.lastInkBox, next);
+      return;
+    }
+    state.lastInkBox = next;
+  }
+  function rectPathForBox(box) {
+    return [
+      { x: box.x, y: box.y },
+      { x: box.x + box.w, y: box.y },
+      { x: box.x + box.w, y: box.y + box.h },
+      { x: box.x, y: box.y + box.h },
+      { x: box.x, y: box.y },
+    ];
+  }
+  function inkBoundsInRegion(probe) {
+    if (!probe) return null;
+    let bounds = null;
+    forTiles(
+      probe.x,
+      probe.y,
+      probe.w,
+      probe.h,
+      (canvas, tx, ty) => {
+        const tileBox = { x: tx * TILE, y: ty * TILE, w: TILE, h: TILE };
+        const part = intersection(tileBox, probe);
+        if (!part) return;
+        const ink = inkBoxInRect(canvas, part.x - tileBox.x, part.y - tileBox.y, part.w, part.h);
+        if (!ink) return;
+        bounds = SELECT.unionBox(bounds, {
+          x: tileBox.x + ink.x,
+          y: tileBox.y + ink.y,
+          w: ink.w,
+          h: ink.h,
+        });
+      },
+      false,
+    );
+    return bounds;
+  }
+  function captureBoxSelection(box, options) {
+    if (!box || box.w < 1 || box.h < 1) return false;
+    return captureSelection(rectPathForBox(box), options);
+  }
+  function selectInkAtPoint(point) {
+    const scale = Math.max(state.scale, 0.05);
+    const hitPad = 8 / scale;
+    let bounds = inkBoundsInRegion({
+      x: point.x - hitPad,
+      y: point.y - hitPad,
+      w: hitPad * 2,
+      h: hitPad * 2,
+    });
+    if (!bounds) return false;
+    const grow = 6 / scale;
+    for (let i = 0; i < 8; i += 1) {
+      const next = inkBoundsInRegion(padInkBox(bounds, grow));
+      if (!next) break;
+      if (
+        Math.abs(next.x - bounds.x) < 1
+        && Math.abs(next.y - bounds.y) < 1
+        && Math.abs(next.w - bounds.w) < 1
+        && Math.abs(next.h - bounds.h) < 1
+      ) break;
+      bounds = next;
+    }
+    rememberInkBox(bounds);
+    return captureBoxSelection(bounds, { quiet: true });
+  }
+  function captureSelection(points, options) {
+    options ||= {};
     const box = SELECT.polygonBounds(points, SIZE);
     if (!box || points.length < 3 || SELECT.pathLength(points, state.scale) < 12 || box.w * state.scale < 4 || box.h * state.scale < 4) {
-      setStatusKey("selectionTooSmall");
+      if (!options.quiet) setStatusKey("selectionTooSmall");
       return false;
     }
     const fragments = [];
@@ -1200,10 +1368,17 @@
     );
     if (!fragments.length) {
       state.selection = null;
-      setStatusKey("selectionEmpty");
+      if (!options.quiet) setStatusKey("selectionEmpty");
       render();
       return false;
     }
+    let content = null;
+    for (const fragment of fragments) {
+      content = SELECT.unionBox(content, { x: fragment.x, y: fragment.y, w: fragment.w, h: fragment.h });
+    }
+    const tightPad = 3 / Math.max(state.scale, 0.05);
+    const tight = content ? padInkBox(content, tightPad) : originalBox;
+    const tightPath = rectPathForBox(tight);
     invalidateSharpOverlays(box);
     save();
     invalidateRecognition();
@@ -1242,12 +1417,12 @@
     );
     state.selection = {
       phase: "active",
-      originalPath: points.map((point) => ({ ...point })),
-      path: points.map((point) => ({ ...point })),
-      originalBox,
-      box: { ...originalBox },
+      originalPath: tightPath.map((point) => ({ ...point })),
+      path: tightPath.map((point) => ({ ...point })),
+      originalBox: { ...tight },
+      box: { ...tight },
       fragments,
-      contentBox: selectionContentBounds({ fragments, originalBox, box: originalBox }),
+      contentBox: selectionContentBounds({ fragments, originalBox: tight, box: tight }),
       beforeTiles,
       color: null,
     };
@@ -1401,9 +1576,16 @@
       ? SELECT.hitTestPath(selection.path, selection.box, point, size, includeLegacyActions)
       : SELECT.hitTest(selection.box, point, size, includeLegacyActions);
   }
-  function beginSelectionLasso(event, point) {
-    state.selection = { phase: "lasso", points: [SELECT.clipPoint(point, SIZE)], box: null };
-    state.selectionGesture = { id: event.pointerId, hit: "lasso" };
+  function beginSelectionMarquee(event, point) {
+    const start = SELECT.clipPoint(point, SIZE);
+    const box = { x: start.x, y: start.y, w: 1, h: 1 };
+    state.selection = {
+      phase: "lasso",
+      points: rectPathForBox(box),
+      box,
+      marqueeStart: start,
+    };
+    state.selectionGesture = { id: event.pointerId, hit: "marquee" };
     resetCanvasCursor();
     requestRender();
   }
@@ -1429,7 +1611,17 @@
       selection = state.selection;
     if (!gesture || !selection || gesture.id !== event.pointerId || selectionAIBusy(selection)) return false;
     const point = clientPoint(event);
-    if (gesture.hit === "lasso") {
+    if (gesture.hit === "marquee") {
+      const start = selection.marqueeStart || point;
+      const clipped = SELECT.clipPoint(point, SIZE);
+      selection.box = {
+        x: Math.min(start.x, clipped.x),
+        y: Math.min(start.y, clipped.y),
+        w: Math.max(1, Math.abs(clipped.x - start.x)),
+        h: Math.max(1, Math.abs(clipped.y - start.y)),
+      };
+      selection.points = rectPathForBox(selection.box);
+    } else if (gesture.hit === "lasso") {
       const samples = typeof event.getCoalescedEvents === "function" ? event.getCoalescedEvents() : [],
         events = samples.length ? samples : [event],
         minimumDistance = 0.75 / Math.max(0.03, state.scale);
@@ -1448,8 +1640,8 @@
     if (!gesture || gesture.id !== event.pointerId) return false;
     state.selectionGesture = null;
     resetCanvasCursor();
-    if (gesture.hit === "lasso") {
-      if (selection && event.type !== "pointercancel") {
+    if (gesture.hit === "marquee" || gesture.hit === "lasso") {
+      if (selection && event.type !== "pointercancel" && gesture.hit === "lasso") {
         const point = SELECT.clipPoint(clientPoint(event), SIZE);
         addLassoPoint(selection, point, 0.5 / state.scale);
       }
@@ -1485,6 +1677,11 @@
       }
       commitSelection();
     } else if (selection) cancelSelection(true);
-    beginSelectionLasso(event, point);
+    if (selectInkAtPoint(point)) {
+      const next = state.selection;
+      if (next?.phase === "active") beginSelectionTransform(event, "move");
+      return true;
+    }
+    beginSelectionMarquee(event, point);
     return true;
   }

@@ -51,7 +51,7 @@
   function positionTextEditors() {
     const visible = state.textEditors.size > 0;
     textEditorLayer.hidden = !visible;
-    textInputHint.hidden = !visible;
+    textInputHint.hidden = true;
     for (const editor of state.textEditors.values()) {
       keepTextEditorInsideCanvas(editor);
       keepTextEditorVisible(editor);
@@ -209,7 +209,7 @@
     editor.previewLogicalHeight = 0;
   }
   async function renderTextEditorPreview(editor) {
-    if (!editor || !editor.mixedMode || editor.committing || editor.cancelled || state.textEditors.get(editor.id) !== editor) return;
+    if (!editor?.preview || !editor.mixedMode || editor.committing || editor.cancelled || state.textEditors.get(editor.id) !== editor) return;
     const revision = ++editor.previewRevision,
       text = editor.textarea.value,
       fontCss = editor.fontCss,
@@ -254,8 +254,8 @@
     button.setAttribute("aria-label", t(labelKey));
     button.setAttribute("title", t(labelKey));
     editor.element.classList.toggle("previewing", editor.mixedMode);
-    editor.textarea.hidden = editor.mixedMode;
-    editor.preview.hidden = !editor.mixedMode;
+    if (editor.textarea) editor.textarea.hidden = Boolean(editor.mixedMode && editor.preview);
+    if (editor.preview) editor.preview.hidden = !editor.mixedMode;
   }
   function toggleTextEditorMixedMode(editor) {
     if (!editor || editor.committing) return;
@@ -264,7 +264,7 @@
     if (editor.mixedMode) {
       focusTextEditor(editor);
       scheduleTextEditorPreview(editor, 0);
-      editor.preview.focus({ preventScroll: true });
+      editor.preview?.focus({ preventScroll: true });
     } else {
       cancelTextEditorPreview(editor, true);
       focusTextEditor(editor, true);
@@ -290,7 +290,7 @@
   function textEditorContentOffset(editor) {
     const body = editor?.body || editor?.element?.querySelector(".text-editor-body"),
       left = body?.offsetLeft || 0,
-      top = body?.offsetTop || 36;
+      top = body?.offsetTop || 22;
     return { x: left + 8, y: top + 8 };
   }
 
@@ -398,6 +398,9 @@
   }
   function createTextEditor(point, options = null) {
     options ||= {};
+    if (!options.sourceTextBoxId && state.textEditors.size) {
+      for (const open of [...state.textEditors.values()]) void confirmTextEditor(open);
+    }
     if (!options.sourceTextBoxId && state.textBoxes.length >= MAX_VISIBLE_TEXT_BOXES) return null;
     supersedeActiveAI("text-input-started");
     if (!state.timer && state.auto && state.dirty && state.autoEligible) schedule();
@@ -435,14 +438,10 @@
       title = document.createElement("span"),
       mixedModeButton = document.createElement("button"),
       body = document.createElement("div"),
-      textarea = document.createElement("textarea"),
-      preview = document.createElement("div");
-    const helpButton = textEditorButton(document.createElement("button"), "textHelp", "help"),
-      acceptButton = textEditorButton(document.createElement("button"), "textConfirm", "confirm"),
-      cancelButton = textEditorButton(document.createElement("button"), "textCancel", "cancel");
+      textarea = document.createElement("textarea");
     editor.element = root;
     editor.textarea = textarea;
-    editor.preview = preview;
+    editor.preview = null;
     editor.body = body;
     editor.mixedModeButton = mixedModeButton;
     root.className = "text-editor active";
@@ -454,38 +453,18 @@
     title.className = "text-editor-title";
     title.dataset.i18n = "text";
     title.textContent = t("text");
-    mixedModeButton.className = "text-editor-button mixed-mode";
-    mixedModeButton.type = "button";
-    mixedModeButton.dataset.i18n = "textMixedModeShort";
-    mixedModeButton.dataset.i18nTitle = "textMixedMode";
-    mixedModeButton.dataset.i18nAria = "textMixedMode";
-    mixedModeButton.textContent = t("textMixedModeShort");
-    mixedModeButton.setAttribute("aria-label", t("textMixedMode"));
-    mixedModeButton.setAttribute("title", t("textMixedMode"));
-    mixedModeButton.setAttribute("aria-pressed", "false");
-    preview.id = `textEditorPreview${editor.id}`;
-    mixedModeButton.setAttribute("aria-controls", preview.id);
-    helpButton.textContent = "?";
-    helpButton.setAttribute("aria-haspopup", "dialog");
-    helpButton.setAttribute("aria-controls", "textHelpDialog");
-    acceptButton.textContent = "✓";
-    cancelButton.textContent = "×";
-    header.append(title, helpButton, mixedModeButton, acceptButton, cancelButton);
+    mixedModeButton.hidden = true;
+    header.append(title);
     body.className = "text-editor-body";
     textarea.className = "text-editor-input";
-    textarea.rows = 4;
+    textarea.rows = 3;
     textarea.maxLength = TEXT_INPUT_MAX_LENGTH;
     textarea.dataset.i18nPlaceholder = "textPlaceholder";
     textarea.dataset.i18nAria = "text";
     textarea.placeholder = t("textPlaceholder");
     textarea.setAttribute("aria-label", t("text"));
     textarea.value = typeof options.text === "string" ? options.text.slice(0, TEXT_INPUT_MAX_LENGTH) : "";
-    preview.className = "text-editor-preview";
-    preview.hidden = true;
-    preview.tabIndex = 0;
-    preview.setAttribute("role", "region");
-    preview.setAttribute("aria-label", t("textPreview"));
-    body.append(textarea, preview);
+    body.append(textarea);
     root.append(header, body);
     for (const kind of ["width", "height", "corner"]) {
       const handle = document.createElement("span");
@@ -507,7 +486,7 @@
     root.addEventListener("pointercancel", (event) => finishTextEditorGesture(event, editor));
     textarea.addEventListener("focus", () => focusTextEditor(editor));
     textarea.addEventListener("keydown", (event) => {
-      if ((event.ctrlKey || event.metaKey) && event.key === "Enter" && !event.isComposing) {
+      if (event.key === "Enter" && !event.shiftKey && !event.isComposing) {
         event.preventDefault();
         confirmTextEditor(editor);
       } else if (event.key === "Escape") {
@@ -515,36 +494,14 @@
         cancelTextEditor(editor);
       }
     });
-    preview.addEventListener("focus", () => focusTextEditor(editor));
-    preview.addEventListener("pointerdown", () => focusTextEditor(editor));
-    preview.addEventListener("keydown", (event) => {
-      if ((event.ctrlKey || event.metaKey) && event.key === "Enter" && !event.isComposing) {
-        event.preventDefault();
-        confirmTextEditor(editor);
-      } else if (event.key === "Escape") {
-        event.preventDefault();
-        cancelTextEditor(editor);
-      }
-    });
-    helpButton.addEventListener("click", (event) => {
-      event.preventDefault();
-      event.stopPropagation();
-      openTextHelp(editor, helpButton);
-    });
-    mixedModeButton.addEventListener("click", (event) => {
-      event.preventDefault();
-      event.stopPropagation();
-      toggleTextEditorMixedMode(editor);
-    });
-    acceptButton.addEventListener("click", (event) => {
-      event.preventDefault();
-      event.stopPropagation();
-      confirmTextEditor(editor);
-    });
-    cancelButton.addEventListener("click", (event) => {
-      event.preventDefault();
-      event.stopPropagation();
-      cancelTextEditor(editor);
+    textarea.addEventListener("blur", () => {
+      if (editor.committing || editor.cancelled || editor.gesture) return;
+      window.setTimeout(() => {
+        if (editor.cancelled || editor.committing || !state.textEditors.has(editor.id)) return;
+        if (editor.element.contains(document.activeElement)) return;
+        if (String(editor.textarea.value || "").trim()) void confirmTextEditor(editor);
+        else cancelTextEditor(editor);
+      }, 80);
     });
     textEditorLayer.append(root);
     addTextEditorStyleRule(editor);
@@ -592,7 +549,7 @@
     screen.classList.add(`cursor-${cursor}`);
   }
   function resetCanvasCursor() {
-    setCanvasCursor(state.mode === "hand" ? "grab" : state.mode === "pen" ? "pen" : state.mode === "eraser" ? "eraser" : "crosshair");
+    setCanvasCursor(state.mode === "hand" ? "grab" : state.mode === "pen" || state.mode === "shape" ? "pen" : state.mode === "eraser" ? "eraser" : "crosshair");
   }
   function beginTouchGesture() {
     if (state.touches.size < 2) return;

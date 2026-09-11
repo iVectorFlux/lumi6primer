@@ -1434,6 +1434,7 @@
     }
     notePendingContinuedInput(d);
     state.autoEligible ||= shouldRequest;
+    if (shouldRequest && d.bbox) rememberInkBox(d.bbox);
     if (shouldRequest && state.autoEligible && !refineCandidate) schedule();
     save();
     requestInteractionLayerRender();

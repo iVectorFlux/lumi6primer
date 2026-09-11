@@ -987,8 +987,6 @@
   }
   function openRadialMenu() {
     clearTimeout(state.radialCloseTimer);
-    const penTray = document.querySelector("#penTray");
-    if (penTray) penTray.hidden = true;
     embodiment.classList.add("menu-open");
     aiOrb.setAttribute("aria-expanded", "true");
     aiRadial.setAttribute("aria-hidden", "false");

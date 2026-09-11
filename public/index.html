@@ -14,11 +14,11 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,600;1,400&family=DM+Sans:wght@400;500;600;700&family=Inter:wght@400;500;600;700;800&family=Patrick+Hand&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="css/style.css?v=20260907">
+  <link rel="stylesheet" href="css/style.css?v=20260922">
   <link rel="stylesheet" href="css/primer-voice.css?v=20260907">
   <link rel="stylesheet" href="css/supabase-auth.css?v=20260904">
   <link rel="stylesheet" href="css/lumi6-onboard.css?v=20260904">
-  <link rel="stylesheet" href="css/mobile.css?v=20260907">
+  <link rel="stylesheet" href="css/mobile.css?v=20260922">
   <script src="js/lib/mathjax-config.js"></script>
   <script
     defer
@@ -70,7 +70,7 @@
 
       <div class="sidebar-recents" id="sidebarRecents" aria-label="Recent boards">
         <div class="sidebar-recents-label">Boards</div>
-        <div class="sidebar-recents-empty">New boards you save will show up here.</div>
+        <button type="button" class="sidebar-recent-item current" id="currentBoardItem">New board</button>
       </div>
 
       <!-- Sidebar Bottom -->
@@ -103,7 +103,7 @@
           <div class="doc-title-area">
             <h1 class="doc-title" id="docTitleHeading">Whiteboard</h1>
             <div class="doc-meta">
-              <span class="doc-name" id="currentDocName">Untitled</span>
+              <span class="doc-name" id="currentDocName">New board</span>
               <span class="doc-saved-dot" aria-hidden="true">·</span>
               <span class="doc-saved-status">
                 <svg viewBox="0 0 24 24" class="cloud-icon" aria-hidden="true"><path d="M18 10h-1.26A8 8 0 1 0 9 20h9a5 5 0 0 0 0-10z"/></svg>
@@ -114,6 +114,71 @@
         </div>
 
         <div class="topbar-center">
+          <div class="sketch-topbar-tools" id="sketchTopbarTools" role="toolbar" aria-label="Draw tools">
+            <div class="sketch-tool-group" id="sketchToolGroup">
+              <button id="lassoToolBtn" data-mode="select" class="icon-button btool" type="button" aria-pressed="false" aria-label="Select and move" data-tip="Select">
+                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 3l8 18 2.2-7.2L21 12Z" fill="currentColor" stroke="none"/></svg>
+              </button>
+              <button id="penBtn" data-mode="pen" class="icon-button btool active" type="button" aria-pressed="true" aria-label="Sketch" data-tip="Sketch">
+                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M14.8 3.6a2 2 0 0 1 2.8 2.8L8.2 16l-3.7 1 1-3.7Z"/><path d="m13.6 4.8 5.6 5.6"/><path d="M4 20c1.8-1 3.4-1 5.2.2 1.8 1.1 3.4 1.1 5.2.1"/></svg>
+              </button>
+              <div class="sketch-ink-control" id="penTray" data-color-control="ink">
+                <button type="button" class="icon-button btool color-orb-trigger color-blue" aria-label="Color" aria-expanded="false" data-tip="Color">
+                  <span id="sketchInkDot" class="sketch-ink-dot" aria-hidden="true"></span>
+                </button>
+                <div class="color-orbit sketch-ink-menu" role="menu" aria-label="Ink color" aria-hidden="true">
+                  <label class="sketch-rainbow" title="Custom color">
+                    <input id="sketchCustomColor" type="color" value="#1d4ed8" aria-label="Custom color">
+                  </label>
+                  <button type="button" class="orbit-swatch color-gray" data-ink-color="#9ca3af" aria-label="Gray"></button>
+                  <button type="button" class="orbit-swatch color-brown" data-ink-color="#92400e" aria-label="Brown"></button>
+                  <button type="button" class="orbit-swatch color-red" data-ink-color="#dc2626" aria-label="Red"></button>
+                  <button type="button" class="orbit-swatch color-orange" data-ink-color="#ea580c" aria-label="Orange"></button>
+                  <button type="button" class="orbit-swatch color-gold" data-ink-color="#eab308" aria-label="Yellow"></button>
+                  <button type="button" class="orbit-swatch color-green" data-ink-color="#16a34a" aria-label="Green"></button>
+                  <button type="button" class="orbit-swatch color-teal" data-ink-color="#0d9488" aria-label="Teal"></button>
+                  <button type="button" class="orbit-swatch color-cyan" data-ink-color="#0891b2" aria-label="Cyan"></button>
+                  <button type="button" class="orbit-swatch color-blue active" data-ink-color="#1d4ed8" aria-label="Blue"></button>
+                  <button type="button" class="orbit-swatch color-purple" data-ink-color="#9333ea" aria-label="Purple"></button>
+                  <button type="button" class="orbit-swatch color-pink" data-ink-color="#db2777" aria-label="Pink"></button>
+                  <button type="button" class="orbit-swatch color-black" data-ink-color="#1f2937" aria-label="Black"></button>
+                  <button type="button" class="orbit-swatch color-white" data-ink-color="#ffffff" aria-label="White"></button>
+                </div>
+              </div>
+              <button id="eraserBtn" data-mode="eraser" class="icon-button btool" type="button" aria-pressed="false" aria-label="Eraser" data-tip="Eraser">
+                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m7 20-4-4L14 5a2 2 0 0 1 3 0l2 2a2 2 0 0 1 0 3L9 20H7Z"/><path d="M7 20h12"/></svg>
+              </button>
+              <button data-action="undo" class="icon-button btool" type="button" aria-label="Undo last change" data-tip="Undo">
+                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m9 7-5 5 5 5"/><path d="M4 12h9a6 6 0 0 1 6 6"/></svg>
+              </button>
+              <button data-action="redo" class="icon-button btool" type="button" aria-label="Redo last change" data-tip="Redo">
+                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m15 7 5 5-5 5"/><path d="M20 12h-9a6 6 0 0 0-6 6"/></svg>
+              </button>
+              <div class="sketch-more-wrap" id="sketchMoreWrap">
+                <button id="sketchMoreBtn" class="icon-button btool sketch-more-btn" type="button" aria-expanded="false" aria-controls="sketchMorePanel" data-tip="More">
+                  <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="6" cy="12" r="1.8"/><circle cx="12" cy="12" r="1.8"/><circle cx="18" cy="12" r="1.8"/></svg>
+                </button>
+                <div class="sketch-more-panel" id="sketchMorePanel">
+                  <button id="handToolBtn" data-mode="hand" class="icon-button btool" type="button" aria-pressed="false" aria-label="Pan the board" data-tip="Hand">
+                    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M18 11V6a2 2 0 0 0-4 0v5"/><path d="M14 10V4a2 2 0 0 0-4 0v8"/><path d="M10 10.5V6a2 2 0 0 0-4 0v8"/><path d="M6 13.5 5.9 12a2 2 0 0 0-4 0c0 .7.1 1.5.2 2l.8 5a6 6 0 0 0 6 5h2a8 8 0 0 0 8-8v-5a2 2 0 1 0-4 0v1"/></svg>
+                  </button>
+                  <button id="textToolBtn" data-mode="text" class="icon-button btool" type="button" aria-pressed="false" aria-label="Text" data-tip="Text">
+                    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 6h14M12 6v14M8 20h8"/></svg>
+                  </button>
+                  <button id="shapeToolBtn" data-mode="shape" class="icon-button btool" type="button" aria-pressed="false" aria-label="Designs" data-tip="Designs">
+                    <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="5" width="7" height="7" rx="1"/><circle cx="16.5" cy="8.5" r="3.5"/><path d="M8 20 4.5 14h7L8 20Z"/></svg>
+                  </button>
+                  <button id="imagePickerBtn" class="icon-button btool" type="button" aria-label="Place a photo" data-tip="Photo">
+                    <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="2"/><circle cx="9" cy="9" r="2"/><path d="m4 17 5-5 4 4 2-2 5 5"/></svg>
+                  </button>
+                  <input id="imagePickerInput" type="file" accept="image/*" hidden>
+                  <button id="clearCanvasBtn" data-action="clear" class="icon-button btool danger-btool" type="button" aria-label="Clear board" data-tip="Clear">
+                    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M9 7V4h6v3M7 7l1 13h8l1-13"/></svg>
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
           <div id="aiStatusArea" class="topbar-status-area" hidden>
             <div id="status" role="status" aria-live="polite">Ready</div>
             <div id="batchActions" class="batch-actions" hidden>
@@ -145,12 +210,6 @@
           </span>
           <div class="topbar-divider" aria-hidden="true"></div>
           <span class="topbar-actions topbar-edit-actions">
-          <button data-action="undo" class="topbar-icon-btn" aria-label="Undo last change" title="Undo last change">
-            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m9 7-5 5 5 5"/><path d="M4 12h9a6 6 0 0 1 6 6"/></svg>
-          </button>
-          <button data-action="redo" class="topbar-icon-btn" aria-label="Redo last change" title="Redo last change">
-            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m15 7 5 5-5 5"/><path d="M20 12h-9a6 6 0 0 0-6 6"/></svg>
-          </button>
           <button id="shareCanvasBtn" class="share-btn" type="button" title="Copy a link to this board">
             <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"/><polyline points="16 6 12 2 8 6"/><line x1="12" y1="2" x2="12" y2="15"/></svg>
             <span>Share</span>
@@ -240,7 +299,7 @@
               <div id="selectionToolbar" class="selection-context-toolbar" role="toolbar" aria-label="Selection tools">
                 <span id="selectionScopeNotice" class="selection-scope-notice">AI answers use only this selection</span>
                 <span class="selection-toolbar-actions">
-                  <button id="selectionTypesetBtn" class="selection-toolbar-button primary" type="button" aria-label="Typeset selection" title="Typeset selection">Typeset</button>
+                  <button id="selectionTypesetBtn" class="selection-toolbar-button primary" type="button" aria-label="Typeset selection" title="Turn handwriting into clean typed text or math">Typeset</button>
                   <button id="selectionDeleteBtn" class="selection-toolbar-button danger" type="button" aria-label="Delete selection" title="Delete selection">Delete</button>
                   <button id="selectionCancelBtn" class="selection-toolbar-button" type="button" aria-label="Cancel selection" title="Cancel selection">Cancel</button>
                 </span>
@@ -280,56 +339,86 @@
           </section>
         </section>
 
-        <!-- BOTTOM FLOATING TOOLBAR (centered) -->
-        <nav class="bottom-toolbar toolbar" aria-label="Board tools">
-          <div class="tool-group bottom-tool-group">
-            <!-- Draw Modes -->
-            <button id="handToolBtn" data-mode="hand" class="icon-button btool" type="button" aria-pressed="false" aria-label="Move around the board" data-tip="Move around the board">
-              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M18 11V6a2 2 0 0 0-4 0v5"/><path d="M14 10V4a2 2 0 0 0-4 0v8"/><path d="M10 10.5V6a2 2 0 0 0-4 0v8"/><path d="M6 13.5 5.9 12a2 2 0 0 0-4 0c0 .7.1 1.5.2 2l.8 5a6 6 0 0 0 6 5h2a8 8 0 0 0 8-8v-5a2 2 0 1 0-4 0v1"/></svg>
-            </button>
-            <button id="penBtn" data-mode="pen" class="icon-button btool active" type="button" aria-pressed="true" aria-label="Pen" data-tip="Pen">
-              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m4 20 4.5-1 10-10a2.1 2.1 0 0 0-3-3l-10 10L4 20Z"/><path d="m14.5 7.5 3 3"/></svg>
-            </button>
-            <button id="eraserBtn" data-mode="eraser" class="icon-button btool" type="button" aria-pressed="false" aria-label="Eraser" data-tip="Eraser">
-              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m7 20-4-4L14 5a2 2 0 0 1 3 0l2 2a2 2 0 0 1 0 3L9 20H7Z"/><path d="m11 8 6 6M7 20h12"/></svg>
-            </button>
-            <div class="btool-divider" aria-hidden="true"></div>
-            <button id="lassoToolBtn" data-mode="select" class="icon-button btool" type="button" aria-pressed="false" aria-label="Select writing or drawings" data-tip="Select writing or drawings">
-              <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="m9 9 6 6M15 9l-6 6"/></svg>
-            </button>
-            <button id="textToolBtn" data-mode="text" class="icon-button btool" type="button" aria-pressed="false" aria-label="Add a text box" data-tip="Add a text box">
-              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 4h14a1 1 0 0 1 1 1v14a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V5a1 1 0 0 1 1-1Z"/><path d="M8 8h8M12 8v8M9 16h6"/></svg>
-            </button>
-            <button id="imagePickerBtn" class="icon-button btool" type="button" aria-label="Place a photo on the board" data-tip="Place a photo on the board">
-              <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="2"/><circle cx="9" cy="9" r="2"/><path d="m4 17 5-5 4 4 2-2 5 5"/></svg>
-            </button>
-            <input id="imagePickerInput" type="file" accept="image/*" hidden>
-            <div class="btool-divider" aria-hidden="true"></div>
-            <button id="clearCanvasBtn" data-action="clear" class="icon-button btool danger-btool" type="button" aria-label="Erase the whole board" data-tip="Erase the whole board">
-              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M9 7V4h6v3M7 7l1 13h8l1-13M10 11v5M14 11v5"/></svg>
-            </button>
+        <div class="sketch-hud" id="sketchHud">
+          <div class="sketch-size-rail" id="sketchSizeRail" role="slider" tabindex="0" aria-label="Pencil size" aria-valuemin="2" aria-valuemax="16" aria-valuenow="6" aria-orientation="vertical">
+            <span class="sketch-size-wedge" aria-hidden="true"></span>
+            <span class="sketch-size-knob" id="sketchSizeKnob" aria-hidden="true"></span>
+            <input id="penSize" type="range" min="2" max="16" value="6" tabindex="-1" aria-hidden="true">
           </div>
-        </nav>
 
-        <!-- Floating Pen Tray -->
-        <div class="pen-tray" id="penTray" hidden>
-          <label class="pen-size-control" for="penSize">
-            <span>Size</span>
-            <input id="penSize" type="range" min="2" max="16" value="6" aria-label="Pencil size">
-            <output id="penSizeValue">6 px</output>
-          </label>
-          <div class="color-orb-control pen-color-control" data-color-control="ink">
-            <button type="button" class="color-orb-trigger color-blue" aria-label="Ink color" title="Ink color" aria-expanded="false"><span aria-hidden="true">P</span></button>
-            <div class="color-orbit" role="menu" aria-label="Ink color" aria-hidden="true">
-              <button type="button" class="orbit-swatch orbit-1 color-blue active" data-ink-color="#2563eb" aria-label="Blue"></button>
-              <button type="button" class="orbit-swatch orbit-2 color-black" data-ink-color="#1f2937" aria-label="Ink black"></button>
-              <button type="button" class="orbit-swatch orbit-3 color-red" data-ink-color="#dc2626" aria-label="Red"></button>
-              <button type="button" class="orbit-swatch orbit-4 color-orange" data-ink-color="#ea580c" aria-label="Orange"></button>
-              <button type="button" class="orbit-swatch orbit-5 color-gold" data-ink-color="#ca8a04" aria-label="Gold"></button>
-              <button type="button" class="orbit-swatch orbit-6 color-green" data-ink-color="#16a34a" aria-label="Green"></button>
-              <button type="button" class="orbit-swatch orbit-7 color-cyan" data-ink-color="#0891b2" aria-label="Cyan"></button>
-              <button type="button" class="orbit-swatch orbit-8 color-purple" data-ink-color="#9333ea" aria-label="Purple"></button>
-            </div>
+          <div class="sketch-shape-sheet" id="sketchShapeSheet" hidden>
+            <button type="button" data-shape="line" aria-label="Line" title="Line">
+              <svg viewBox="0 0 24 24"><path d="M5 19 19 5"/></svg>
+            </button>
+            <button type="button" data-shape="arrow" aria-label="Arrow" title="Arrow">
+              <svg viewBox="0 0 24 24"><path d="M4 12h14M14 6l6 6-6 6"/></svg>
+            </button>
+            <button type="button" data-shape="double-arrow" aria-label="Double arrow" title="Double arrow">
+              <svg viewBox="0 0 24 24"><path d="M7 6 1 12l6 6M17 6l6 6-6 6M3 12h18"/></svg>
+            </button>
+            <button type="button" data-shape="rect" class="active" aria-label="Rectangle" title="Rectangle">
+              <svg viewBox="0 0 24 24"><rect x="4" y="6" width="16" height="12" rx="1"/></svg>
+            </button>
+            <button type="button" data-shape="roundrect" aria-label="Rounded rectangle" title="Rounded rectangle">
+              <svg viewBox="0 0 24 24"><rect x="4" y="6" width="16" height="12" rx="5"/></svg>
+            </button>
+            <button type="button" data-shape="ellipse" aria-label="Circle" title="Circle">
+              <svg viewBox="0 0 24 24"><ellipse cx="12" cy="12" rx="8" ry="6"/></svg>
+            </button>
+            <button type="button" data-shape="triangle" aria-label="Triangle" title="Triangle">
+              <svg viewBox="0 0 24 24"><path d="M12 4 21 19H3Z"/></svg>
+            </button>
+            <button type="button" data-shape="diamond" aria-label="Diamond" title="Diamond">
+              <svg viewBox="0 0 24 24"><path d="M12 3 21 12 12 21 3 12Z"/></svg>
+            </button>
+            <button type="button" data-shape="pentagon" aria-label="Pentagon" title="Pentagon">
+              <svg viewBox="0 0 24 24"><path d="M12 3 21 10l-3.5 11h-11L3 10Z"/></svg>
+            </button>
+            <button type="button" data-shape="hexagon" aria-label="Hexagon" title="Hexagon">
+              <svg viewBox="0 0 24 24"><path d="M7 4h10l5 8-5 8H7L2 12Z"/></svg>
+            </button>
+            <button type="button" data-shape="star" aria-label="Star" title="Star">
+              <svg viewBox="0 0 24 24"><path d="M12 3 14.8 9.2 21.5 10l-4.7 4.6L18 21l-6-3.2L6 21l1.2-6.4L2.5 10l6.7-.8Z"/></svg>
+            </button>
+            <button type="button" data-shape="plus" aria-label="Plus" title="Plus">
+              <svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>
+            </button>
+            <button type="button" data-shape="minus" aria-label="Minus" title="Minus">
+              <svg viewBox="0 0 24 24"><path d="M5 12h14"/></svg>
+            </button>
+            <button type="button" data-shape="cross" aria-label="Cross" title="Cross">
+              <svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6 6 18"/></svg>
+            </button>
+            <button type="button" data-shape="heart" aria-label="Heart" title="Heart">
+              <svg viewBox="0 0 24 24"><path d="M12 20s-7-4.5-7-10a4 4 0 0 1 7-2 4 4 0 0 1 7 2c0 5.5-7 10-7 10Z"/></svg>
+            </button>
+            <button type="button" data-shape="cloud" aria-label="Cloud" title="Cloud">
+              <svg viewBox="0 0 24 24"><path d="M7 18h10a4 4 0 0 0 1-7.9A6 6 0 0 0 7.2 9 4 4 0 0 0 7 18Z"/></svg>
+            </button>
+            <button type="button" data-shape="lightning" aria-label="Lightning" title="Lightning">
+              <svg viewBox="0 0 24 24"><path d="M13 2 6 13h6l-1 9 8-12h-6Z"/></svg>
+            </button>
+            <button type="button" data-shape="speech" aria-label="Speech bubble" title="Speech bubble">
+              <svg viewBox="0 0 24 24"><path d="M5 5h14v10H9l-4 4V5Z"/></svg>
+            </button>
+            <button type="button" data-shape="chevron" aria-label="Chevron" title="Chevron">
+              <svg viewBox="0 0 24 24"><path d="m6 6 8 6-8 6"/></svg>
+            </button>
+            <button type="button" data-shape="parallelogram" aria-label="Parallelogram" title="Parallelogram">
+              <svg viewBox="0 0 24 24"><path d="M7 6h14L17 18H3Z"/></svg>
+            </button>
+            <button type="button" data-shape="trapezoid" aria-label="Trapezoid" title="Trapezoid">
+              <svg viewBox="0 0 24 24"><path d="M7 6h10l4 12H3Z"/></svg>
+            </button>
+            <button type="button" data-shape="brace" aria-label="Brace" title="Brace">
+              <svg viewBox="0 0 24 24"><path d="M15 4c-4 0-4 4-8 4 4 0 4 4 8 4s4 4 8 4c-4 0-4 4-8 4"/></svg>
+            </button>
+            <button type="button" data-shape="house" aria-label="House" title="House">
+              <svg viewBox="0 0 24 24"><path d="m3 11 9-8 9 8"/><path d="M6 10v10h12V10"/></svg>
+            </button>
+            <button type="button" data-shape="person" aria-label="Person" title="Person">
+              <svg viewBox="0 0 24 24"><circle cx="12" cy="7" r="3"/><path d="M6 21v-2a6 6 0 0 1 12 0v2"/></svg>
+            </button>
           </div>
         </div>
 
@@ -697,7 +786,7 @@
   <script src="js/canvas/mixed-text.js?v=20260904"></script>
   <script src="js/canvas/animation.js?v=20260904"></script>
   <script src="js/canvas/summon.js?v=20260904"></script>
-  <script src="js/canvas/app.js?v=20260907"></script>
+  <script src="js/canvas/app.js?v=20260922"></script>
   <script src="js/tutor/lumi6-canvas-adapter.js?v=20260904"></script>
   <script src="js/tutor/primer-turn.js?v=20260907"></script>
   <script src="js/tutor/primer-voice.js?v=20260907"></script>

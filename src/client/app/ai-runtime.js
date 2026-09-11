@@ -68,6 +68,29 @@
       }
     return x1 < 0 ? null : { x: x0, y: y0, w: x1 - x0 + 1, h: y1 - y0 + 1 };
   }
+  function inkBoxInRect(c, rx, ry, rw, rh) {
+    const x = Math.max(0, Math.floor(rx));
+    const y = Math.max(0, Math.floor(ry));
+    const width = Math.max(0, Math.min(c.width - x, Math.floor(rw)));
+    const height = Math.max(0, Math.min(c.height - y, Math.floor(rh)));
+    if (!width || !height) return null;
+    const d = c.getContext("2d", { willReadFrequently: true }).getImageData(x, y, width, height).data;
+    let x0 = width,
+      y0 = height,
+      x1 = -1,
+      y1 = -1;
+    for (let py = 0; py < height; py++)
+      for (let px = 0; px < width; px++) {
+        const i = (py * width + px) * 4;
+        if (d[i + 3] && !(d[i] > 248 && d[i + 1] > 248 && d[i + 2] > 248)) {
+          x0 = Math.min(x0, px);
+          y0 = Math.min(y0, py);
+          x1 = Math.max(x1, px);
+          y1 = Math.max(y1, py);
+        }
+      }
+    return x1 < 0 ? null : { x: x + x0, y: y + y0, w: x1 - x0 + 1, h: y1 - y0 + 1 };
+  }
   function intersection(a, b) {
     const x = Math.max(a.x, b.x),
       y = Math.max(a.y, b.y),
