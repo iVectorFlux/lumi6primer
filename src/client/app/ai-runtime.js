@@ -504,7 +504,9 @@
     q.setTransform(imageScale, 0, 0, imageScale, -sourceRect.x * imageScale, -sourceRect.y * imageScale);
     for (const fragment of selection.fragments) {
       const target = SELECT.mapFragment(fragment, selection.originalBox, selection.box);
-      q.drawImage(fragment.renderImage || fragment.image, target.x, target.y, target.w, target.h);
+      const source = fragment.renderImage || fragment.image;
+      if (!source || !target.w || !target.h) continue;
+      try { q.drawImage(source, target.x, target.y, target.w, target.h); } catch {}
     }
     q.setTransform(1, 0, 0, 1, 0, 0);
     const path = selectionPathFor(selection),

@@ -300,27 +300,35 @@ async function tryOne(label, fn) {
 async function inferTopicFromImage(dataUrl) {
   const key = openaiKey();
   if (!key.startsWith("sk-") || typeof dataUrl !== "string" || !dataUrl.startsWith("data:image")) return "";
-  const result = await fetchJson("https://api.openai.com/v1/chat/completions", {
-    method: "POST",
-    headers: {
-      Authorization: `Bearer ${key}`,
-      "Content-Type": "application/json"
-    },
-    body: JSON.stringify({
-      model: String(process.env.OPENAI_VISION_MODEL || "gpt-4o-mini").trim() || "gpt-4o-mini",
-      max_tokens: 40,
-      temperature: 0,
-      messages: [{
-        role: "user",
-        content: [
-          { type: "text", text: "This is a child's handwriting or doodle. Reply with only the topic to illustrate, 1 to 6 words. No quotes. Examples: zebra, water cycle, volcano." },
-          { type: "image_url", image_url: { url: dataUrl } }
-        ]
-      }]
-    })
-  }, 20000);
-  const text = result.json?.choices?.[0]?.message?.content || "";
-  return String(text).replace(/^["'\s]+|["'\s.]+$/g, "").trim().slice(0, 80);
+  const models = [...new Set([
+    String(process.env.OPENAI_VISION_MODEL || "").trim(),
+    "gpt-4o-mini",
+    "gpt-4o"
+  ].filter(Boolean))];
+  for (const model of models) {
+    const result = await fetchJson("https://api.openai.com/v1/chat/completions", {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${key}`,
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        model,
+        max_tokens: 40,
+        temperature: 0,
+        messages: [{
+          role: "user",
+          content: [
+            { type: "text", text: "This is a child's handwriting or doodle. Reply with only the topic to illustrate, 1 to 6 words. No quotes. Examples: zebra, water cycle, volcano." },
+            { type: "image_url", image_url: { url: dataUrl } }
+          ]
+        }]
+      })
+    }, 20000);
+    const text = String(result.json?.choices?.[0]?.message?.content || "").replace(/^["'\s]+|["'\s.]+$/g, "").trim().slice(0, 80);
+    if (text.length >= 2 && !/sorry|can't|cannot|unable/i.test(text)) return text;
+  }
+  return "";
 }
 
 async function generate(input = {}) {
@@ -328,17 +336,20 @@ async function generate(input = {}) {
   if (topic.length < 2 && input.image) {
     topic = await inferTopicFromImage(input.image);
   }
+  if (topic.length < 2) topic = input.image ? "this child's drawing" : "";
   if (topic.length < 2) return null;
   input = { ...input, topic, spoken: input.spoken || topic, scene: input.scene || topic };
+  const skipSearch = /this child's drawing|this drawing|this sketch/i.test(topic);
 
-  // 1. Try instant educational image search first (Wikimedia / Wikipedia scientific diagrams)
-  try {
-    const eduImage = await searchEducationalGraphic(topic, input.spoken);
-    if (eduImage?.b64) {
-      return photoCommand(input, eduImage, eduImage.model);
+  if (!skipSearch) {
+    try {
+      const eduImage = await searchEducationalGraphic(topic, input.spoken);
+      if (eduImage?.b64) {
+        return photoCommand(input, eduImage, eduImage.model);
+      }
+    } catch (err) {
+      console.warn("[PRIMER] Educational image search error:", err.message);
     }
-  } catch (err) {
-    console.warn("[PRIMER] Educational image search error:", err.message);
   }
 
   // 2. Try OpenAI image generation if key is configured
@@ -348,6 +359,7 @@ async function generate(input = {}) {
     const preferred = String(process.env.OPENAI_IMAGE_MODEL || "").trim();
     const models = [
       preferred,
+      "gpt-image-1",
       "dall-e-3",
       "dall-e-2"
     ].filter(Boolean);

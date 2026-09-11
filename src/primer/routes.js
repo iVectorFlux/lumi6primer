@@ -62,7 +62,14 @@ async function primerRoutes(req, res, url, options = {}) {
   const orchestrator = options.orchestrator;
   const pathname = url.pathname;
   if (!pathname.startsWith("/api/primer")) return false;
-  if (!orchestrator) {
+  const needsTutor = pathname === "/api/primer/turn"
+    || pathname === "/api/primer/teach"
+    || pathname === "/api/primer/tts"
+    || pathname === "/api/primer/session/start"
+    || pathname === "/api/primer/session/end"
+    || pathname === "/api/primer/child"
+    || pathname.startsWith("/api/primer/child/");
+  if (needsTutor && !orchestrator) {
     sendJson(res, 503, { error: "Primer is not configured." });
     return true;
   }

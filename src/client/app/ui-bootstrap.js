@@ -644,6 +644,10 @@
     else normalizeSelectionForAI();
   };
   if (selectionVisualizeButton) selectionVisualizeButton.onclick = () => void visualizeSelection();
+  if (selectionToolbar) {
+    selectionToolbar.addEventListener("pointerdown", (event) => event.stopPropagation());
+    selectionToolbar.addEventListener("pointerup", (event) => event.stopPropagation());
+  }
   if (selectionDeleteButton) selectionDeleteButton.onclick = deleteSelection;
   if (selectionCancelButton) selectionCancelButton.onclick = () => {
     if (selectionHasTypesetDraft()) rejectPending();

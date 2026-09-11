@@ -7711,8 +7711,13 @@ User writes "Show air quality for Tokyo", names a place, and points to an empty 
       preferredY = top - height - 8,
       y = preferredY >= 8 ? preferredY : bottom + 8,
       maxY = Math.max(8, viewport.height - height - 8);
-    toolbarStyle?.setProperty("--selection-toolbar-x", `${x}px`);
-    toolbarStyle?.setProperty("--selection-toolbar-y", `${Math.max(8, Math.min(maxY, y))}px`);
+    if (toolbarStyle) {
+      toolbarStyle.setProperty("--selection-toolbar-x", `${x}px`);
+      toolbarStyle.setProperty("--selection-toolbar-y", `${Math.max(8, Math.min(maxY, y))}px`);
+    } else {
+      selectionToolbar.style.left = `${x}px`;
+      selectionToolbar.style.top = `${Math.max(8, Math.min(maxY, y))}px`;
+    }
   }
   function releaseSelectionAITransformLock(run = state.activeAI) {
     const selection = run?.isolatedSelection ? run.selection : null,
@@ -7790,6 +7795,7 @@ User writes "Show air quality for Tokyo", names a place, and points to an empty 
     if (!selection || selection.phase !== "active" || state.visualizingSelection || selectionHasTypesetDraft(selection)) return false;
     const packed = buildSelectionImage(selection);
     if (!packed?.atlasImage) {
+      if (selectionVisualizeButton) selectionVisualizeButton.textContent = t("selectionVisualizeFailed");
       setStatusKey("selectionEmpty");
       return false;
     }
@@ -7802,16 +7808,18 @@ User writes "Show air quality for Tokyo", names a place, and points to an empty 
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           topic: selectionTopicHint(selection),
-          image,
+          image: image || packed.atlasImage,
         }),
       });
       const data = await response.json().catch(() => ({}));
       if (!response.ok || !data.href) {
+        if (selectionVisualizeButton) selectionVisualizeButton.textContent = t("selectionVisualizeFailed");
         setStatusKey("selectionVisualizeFailed");
         return false;
       }
       const fileResponse = await fetch(data.href);
       if (!fileResponse.ok) {
+        if (selectionVisualizeButton) selectionVisualizeButton.textContent = t("selectionVisualizeFailed");
         setStatusKey("selectionVisualizeFailed");
         return false;
       }
@@ -7819,12 +7827,14 @@ User writes "Show air quality for Tokyo", names a place, and points to an empty 
       const file = new File([blob], `${String(data.title || "picture").replace(/\s+/g, "-")}.png`, { type: blob.type || "image/png" });
       const placed = await addGeneratedImageBelow(selection.box, file, data.title || "Visualize");
       if (!placed) {
+        if (selectionVisualizeButton) selectionVisualizeButton.textContent = t("selectionVisualizeFailed");
         setStatusKey("selectionVisualizeFailed");
         return false;
       }
       setStatusKey("imageAdded");
       return true;
     } catch {
+      if (selectionVisualizeButton) selectionVisualizeButton.textContent = t("selectionVisualizeFailed");
       setStatusKey("selectionVisualizeFailed");
       return false;
     } finally {
@@ -8466,7 +8476,9 @@ User writes "Show air quality for Tokyo", names a place, and points to an empty 
     q.setTransform(imageScale, 0, 0, imageScale, -sourceRect.x * imageScale, -sourceRect.y * imageScale);
     for (const fragment of selection.fragments) {
       const target = SELECT.mapFragment(fragment, selection.originalBox, selection.box);
-      q.drawImage(fragment.renderImage || fragment.image, target.x, target.y, target.w, target.h);
+      const source = fragment.renderImage || fragment.image;
+      if (!source || !target.w || !target.h) continue;
+      try { q.drawImage(source, target.x, target.y, target.w, target.h); } catch {}
     }
     q.setTransform(1, 0, 0, 1, 0, 0);
     const path = selectionPathFor(selection),
@@ -11406,6 +11418,10 @@ User writes "Show air quality for Tokyo", names a place, and points to an empty 
     else normalizeSelectionForAI();
   };
   if (selectionVisualizeButton) selectionVisualizeButton.onclick = () => void visualizeSelection();
+  if (selectionToolbar) {
+    selectionToolbar.addEventListener("pointerdown", (event) => event.stopPropagation());
+    selectionToolbar.addEventListener("pointerup", (event) => event.stopPropagation());
+  }
   if (selectionDeleteButton) selectionDeleteButton.onclick = deleteSelection;
   if (selectionCancelButton) selectionCancelButton.onclick = () => {
     if (selectionHasTypesetDraft()) rejectPending();

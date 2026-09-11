@@ -1998,17 +1998,28 @@ select { max-width: 112px; min-height: 27px; padding: 3px 21px 3px 5px; color: v
 
 body.mode-draw-active .selection-overlay-layer:not([hidden]) {
   display: block;
+  inset: auto;
+  left: 0;
+  top: 0;
+  width: 0;
+  height: 0;
+  overflow: visible;
+  pointer-events: none;
+  z-index: 90;
 }
 body.mode-draw-active .selection-context-toolbar {
   position: absolute;
   left: var(--selection-toolbar-x, 8px);
   top: var(--selection-toolbar-y, 8px);
+  z-index: 91;
   width: auto;
+  max-width: calc(100vw - 16px);
   justify-content: flex-start;
   padding: 4px;
   border: 1px solid var(--border);
   border-radius: 10px;
   box-shadow: 0 8px 20px rgba(26, 25, 21, 0.1);
+  pointer-events: auto;
 }
 body.mode-draw-active .selection-scope-notice {
   display: none;
