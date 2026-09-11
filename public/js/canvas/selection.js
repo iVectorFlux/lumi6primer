@@ -188,6 +188,7 @@
     pointInPolygon,
     pointNearPath,
     unionBox,
+    validBox,
     moveBox,
     resizeBox,
     resizeBoxAxis,

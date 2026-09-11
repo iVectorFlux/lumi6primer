@@ -7270,21 +7270,8 @@ User writes "Show air quality for Tokyo", names a place, and points to an empty 
     };
   }
   function rememberInkBox(box) {
-    if (!box) return;
-    const scale = Math.max(state.scale, 0.05);
-    const pad = Math.max(logicalWidth(state.pen || 6), 10 / scale);
-    const next = padInkBox({
-      x: box.x,
-      y: box.y,
-      w: Math.max(box.w, 1),
-      h: Math.max(box.h, 1),
-    }, pad);
-    const near = 12 / scale;
-    if (state.lastInkBox && intersection(padInkBox(state.lastInkBox, near), padInkBox(next, near))) {
-      state.lastInkBox = SELECT.unionBox(state.lastInkBox, next);
-      return;
-    }
-    state.lastInkBox = next;
+    if (!box || !Number.isFinite(box.x) || !Number.isFinite(box.y) || !Number.isFinite(box.w) || !Number.isFinite(box.h)) return;
+    state.lastInkBox = { x: box.x, y: box.y, w: box.w, h: box.h };
   }
   function rectPathForBox(box) {
     return [
@@ -7339,16 +7326,19 @@ User writes "Show air quality for Tokyo", names a place, and points to an empty 
     const tb = textBoxBox(item),
       overlap = intersection(tb, box);
     if (!overlap) return false;
+    const center = { x: tb.x + tb.w / 2, y: tb.y + tb.h / 2 };
+    if (SELECT.pointInPolygon(center, points)) return true;
     const overlapArea = overlap.w * overlap.h,
       textArea = Math.max(1, tb.w * tb.h);
-    if (overlapArea / textArea >= 0.2) return true;
-    return SELECT.pointInPolygon({ x: tb.x + tb.w / 2, y: tb.y + tb.h / 2 }, points);
+    return overlapArea / textArea >= 0.55;
   }
-  function liftTextBoxesForSelection(points, box, fragments) {
+  function liftTextBoxesForSelection(points, box, fragments, onlyId) {
     const lifted = [];
     for (let index = state.textBoxes.length - 1; index >= 0; index--) {
       const item = state.textBoxes[index];
-      if (!item?.image || item.id === state.selectedTextBoxId || !textBoxHitsSelection(item, points, box)) continue;
+      if (!item?.image || item.id === state.selectedTextBoxId) continue;
+      if (onlyId && item.id !== onlyId) continue;
+      if (!onlyId && !textBoxHitsSelection(item, points, box)) continue;
       fragments.push({ image: item.image, x: item.x, y: item.y, w: item.w, h: item.h, textBox: item });
       lifted.push(item);
       recordTextBoxesBefore();
@@ -7356,11 +7346,13 @@ User writes "Show air quality for Tokyo", names a place, and points to an empty 
     }
     return lifted;
   }
-  function liftImagesForSelection(points, box, fragments) {
+  function liftImagesForSelection(points, box, fragments, onlyId) {
     const lifted = [];
     for (let index = state.images.length - 1; index >= 0; index--) {
       const item = state.images[index];
-      if (!item?.image || !textBoxHitsSelection(item, points, box)) continue;
+      if (!item?.image) continue;
+      if (onlyId && item.id !== onlyId) continue;
+      if (!onlyId && !textBoxHitsSelection(item, points, box)) continue;
       fragments.push({ image: item.image, x: item.x, y: item.y, w: item.w, h: item.h, boardImage: item });
       lifted.push(item);
       recordImagesBefore();
@@ -7384,64 +7376,75 @@ User writes "Show air quality for Tokyo", names a place, and points to an empty 
     if (!box || box.w < 1 || box.h < 1) return false;
     return captureSelection(rectPathForBox(box), options);
   }
-  function selectInkAtPoint(point, options) {
-    options ||= {};
+  function boxesAlmostEqual(a, b) {
+    return a && b
+      && Math.abs(a.x - b.x) < 1
+      && Math.abs(a.y - b.y) < 1
+      && Math.abs(a.w - b.w) < 1
+      && Math.abs(a.h - b.h) < 1;
+  }
+  function selectInkClusterAtPoint(point) {
     const scale = Math.max(state.scale, 0.05),
-      hitPad = (options.hitCss || 22) / scale,
-      probe = {
-        x: point.x - hitPad,
-        y: point.y - hitPad,
-        w: hitPad * 2,
-        h: hitPad * 2,
-      },
-      textHit = textBoxAtPoint(point),
-      imageHit = imageAtPoint(point),
-      inkHit = inkBoundsInRegion(probe);
-    if (imageHit && !textHit) {
-      const box = imageBox(imageHit);
-      rememberInkBox(box);
-      return captureBoxSelection(box, { quiet: true, allowSmall: true });
-    }
-    if (textHit && !inkHit) {
-      const box = textBoxBox(textHit);
-      rememberInkBox(box);
-      return captureBoxSelection(box, { quiet: true, allowSmall: true });
-    }
-    let bounds = SELECT.unionBox(inkHit, textHit ? textBoxBox(textHit) : textBoxBoundsInRegion(probe));
+      hitPad = 14 / scale;
+    let bounds = inkBoundsInRegion({
+      x: point.x - hitPad,
+      y: point.y - hitPad,
+      w: hitPad * 2,
+      h: hitPad * 2,
+    });
     if (!bounds) return false;
-    const grow = 6 / scale;
-    for (let i = 0; i < 8; i += 1) {
-      const next = contentBoundsInRegion(padInkBox(bounds, grow));
-      if (!next) break;
+    const gap = 7 / scale,
+      maxGrow = 56 / scale,
+      origin = { ...bounds };
+    for (let i = 0; i < 10; i += 1) {
+      const next = inkBoundsInRegion(padInkBox(bounds, gap));
+      if (!next || boxesAlmostEqual(next, bounds)) break;
       if (
-        Math.abs(next.x - bounds.x) < 1
-        && Math.abs(next.y - bounds.y) < 1
-        && Math.abs(next.w - bounds.w) < 1
-        && Math.abs(next.h - bounds.h) < 1
+        next.x < origin.x - maxGrow
+        || next.y < origin.y - maxGrow
+        || next.x + next.w > origin.x + origin.w + maxGrow
+        || next.y + next.h > origin.y + origin.h + maxGrow
       ) break;
       bounds = next;
     }
     rememberInkBox(bounds);
-    return captureBoxSelection(bounds, { quiet: true, allowSmall: true });
+    return captureBoxSelection(bounds, {
+      quiet: true,
+      allowSmall: true,
+      liftText: false,
+      liftImages: false,
+      absorbPending: false,
+    });
+  }
+  function selectSingleAtPoint(point) {
+    const textHit = textBoxAtPoint(point);
+    if (textHit) {
+      rememberInkBox(textBoxBox(textHit));
+      return captureBoxSelection(textBoxBox(textHit), {
+        quiet: true,
+        allowSmall: true,
+        skipInk: true,
+        liftImages: false,
+        onlyTextId: textHit.id,
+        absorbPending: false,
+      });
+    }
+    const imageHit = imageAtPoint(point);
+    if (imageHit) {
+      rememberInkBox(imageBox(imageHit));
+      return captureBoxSelection(imageBox(imageHit), {
+        quiet: true,
+        allowSmall: true,
+        skipInk: true,
+        liftText: false,
+        onlyImageId: imageHit.id,
+        absorbPending: false,
+      });
+    }
+    return selectInkClusterAtPoint(point);
   }
   function selectNearestContent(point) {
-    if (selectInkAtPoint(point, { hitCss: 28 })) return true;
-    const scale = Math.max(state.scale, 0.05),
-      last = state.lastInkBox;
-    if (last) {
-      const pad = 48 / scale;
-      if (point.x >= last.x - pad && point.x <= last.x + last.w + pad && point.y >= last.y - pad && point.y <= last.y + last.h + pad) {
-        return captureBoxSelection(last, { quiet: true, allowSmall: true });
-      }
-    }
-    for (const css of [40, 72, 120]) {
-      const pad = css / scale,
-        bounds = contentBoundsInRegion({ x: point.x - pad, y: point.y - pad, w: pad * 2, h: pad * 2 });
-      if (!bounds) continue;
-      rememberInkBox(bounds);
-      if (captureBoxSelection(bounds, { quiet: true, allowSmall: true })) return true;
-    }
-    return false;
+    return selectSingleAtPoint(point);
   }
   function captureSelection(points, options) {
     options ||= {};
@@ -7456,34 +7459,40 @@ User writes "Show air quality for Tokyo", names a place, and points to an empty 
     }
     const fragments = [];
     const originalBox = { ...box };
-    forTiles(
-      box.x,
-      box.y,
-      box.w,
-      box.h,
-      (canvas, tx, ty) => {
-        const tileBox = { x: tx * TILE, y: ty * TILE, w: TILE, h: TILE },
-          part = intersection(tileBox, box);
-        if (!part) return;
-        const clipped = offscreen(part.w, part.h, true),
-          clippedContext = clipped.getContext("2d", { willReadFrequently: true });
-        clippedContext.save();
-        traceSelectionPath(clippedContext, points, part.x, part.y);
-        clippedContext.clip("evenodd");
-        clippedContext.drawImage(canvas, part.x - tileBox.x, part.y - tileBox.y, part.w, part.h, 0, 0, part.w, part.h);
-        clippedContext.restore();
-        const ink = inkBox(clipped);
-        if (!ink) return;
-        const image = offscreen(ink.w, ink.h);
-        image.getContext("2d").drawImage(clipped, ink.x, ink.y, ink.w, ink.h, 0, 0, ink.w, ink.h);
-        const fragment = { image, x: part.x + ink.x, y: part.y + ink.y, w: ink.w, h: ink.h };
-        fragments.push(fragment);
-      },
-      false,
-    );
-    absorbOverlappingPending(box);
-    const liftedTextBoxes = liftTextBoxesForSelection(points, box, fragments);
-    const liftedImages = liftImagesForSelection(points, box, fragments);
+    if (!options.skipInk) {
+      forTiles(
+        box.x,
+        box.y,
+        box.w,
+        box.h,
+        (canvas, tx, ty) => {
+          const tileBox = { x: tx * TILE, y: ty * TILE, w: TILE, h: TILE },
+            part = intersection(tileBox, box);
+          if (!part) return;
+          const clipped = offscreen(part.w, part.h, true),
+            clippedContext = clipped.getContext("2d", { willReadFrequently: true });
+          clippedContext.save();
+          traceSelectionPath(clippedContext, points, part.x, part.y);
+          clippedContext.clip("evenodd");
+          clippedContext.drawImage(canvas, part.x - tileBox.x, part.y - tileBox.y, part.w, part.h, 0, 0, part.w, part.h);
+          clippedContext.restore();
+          const ink = inkBox(clipped);
+          if (!ink) return;
+          const image = offscreen(ink.w, ink.h);
+          image.getContext("2d").drawImage(clipped, ink.x, ink.y, ink.w, ink.h, 0, 0, ink.w, ink.h);
+          const fragment = { image, x: part.x + ink.x, y: part.y + ink.y, w: ink.w, h: ink.h };
+          fragments.push(fragment);
+        },
+        false,
+      );
+    }
+    if (options.absorbPending !== false) absorbOverlappingPending(box);
+    const liftedTextBoxes = options.liftText === false
+      ? []
+      : liftTextBoxesForSelection(points, box, fragments, options.onlyTextId);
+    const liftedImages = options.liftImages === false
+      ? []
+      : liftImagesForSelection(points, box, fragments, options.onlyImageId);
     if (!fragments.length) {
       state.selection = null;
       if (!options.quiet) setStatusKey("selectionEmpty");
@@ -7836,11 +7845,11 @@ User writes "Show air quality for Tokyo", names a place, and points to an empty 
     const box = { x: start.x, y: start.y, w: 1, h: 1 };
     state.selection = {
       phase: "lasso",
-      points: rectPathForBox(box),
+      points: [start],
       box,
       marqueeStart: start,
     };
-    state.selectionGesture = { id: event.pointerId, hit: "marquee" };
+    state.selectionGesture = { id: event.pointerId, hit: "pending", startClientX: event.clientX, startClientY: event.clientY };
     resetCanvasCursor();
     requestRender();
   }
@@ -7866,6 +7875,11 @@ User writes "Show air quality for Tokyo", names a place, and points to an empty 
       selection = state.selection;
     if (!gesture || !selection || gesture.id !== event.pointerId || selectionAIBusy(selection)) return false;
     const point = clientPoint(event);
+    if (gesture.hit === "pending") {
+      const travel = Math.hypot(event.clientX - gesture.startClientX, event.clientY - gesture.startClientY);
+      if (travel < 8) return true;
+      gesture.hit = "marquee";
+    }
     if (gesture.hit === "marquee") {
       const start = selection.marqueeStart || point;
       const clipped = SELECT.clipPoint(point, SIZE);
@@ -7895,7 +7909,7 @@ User writes "Show air quality for Tokyo", names a place, and points to an empty 
     if (!gesture || gesture.id !== event.pointerId) return false;
     state.selectionGesture = null;
     resetCanvasCursor();
-    if (gesture.hit === "marquee" || gesture.hit === "lasso") {
+    if (gesture.hit === "marquee" || gesture.hit === "lasso" || gesture.hit === "pending") {
       if (selection && event.type !== "pointercancel" && gesture.hit === "lasso") {
         const point = SELECT.clipPoint(clientPoint(event), SIZE);
         addLassoPoint(selection, point, 0.5 / state.scale);
@@ -7903,14 +7917,18 @@ User writes "Show air quality for Tokyo", names a place, and points to an empty 
       const points = selection?.points || [],
         start = selection?.marqueeStart,
         box = selection?.box,
-        smallMarquee = Boolean(box && box.w * state.scale < 32 && box.h * state.scale < 32);
+        scale = Math.max(state.scale, 0.05),
+        smallMarquee = Boolean(
+          (gesture.hit === "pending")
+          || (box && box.w * scale < 28 && box.h * scale < 28 && SELECT.pathLength(points, scale) < 36)
+        );
       state.selection = null;
       if (event.type === "pointercancel") {
         requestRender();
         return true;
       }
-      if (smallMarquee && start && selectNearestContent(start)) return true;
-      if (!captureSelection(points) && start) selectNearestContent(start);
+      if (smallMarquee && start && selectSingleAtPoint(start)) return true;
+      if (!smallMarquee) captureSelection(points);
       return true;
     }
     if (selection) {
@@ -7939,11 +7957,6 @@ User writes "Show air quality for Tokyo", names a place, and points to an empty 
       }
       commitSelection();
     } else if (selection) cancelSelection(true);
-    if (selectNearestContent(point)) {
-      const next = state.selection;
-      if (next?.phase === "active") beginSelectionTransform(event, "move");
-      return true;
-    }
     beginSelectionMarquee(event, point);
     return true;
   }
