@@ -237,8 +237,9 @@ function gradeNumber(grade) {
   return Number.isFinite(n) && n > 0 ? n : null;
 }
 
-function scoreItem(item, hay) {
+function scoreItem(item, hay, concept) {
   const padded = ` ${hay} `;
+  const conceptPad = ` ${normalize(concept)} `;
   let score = 0;
   for (const alias of item.topics || []) {
     const phrase = normalize(alias);
@@ -248,13 +249,23 @@ function scoreItem(item, hay) {
       : padded.includes(` ${phrase} `);
     if (!hit) continue;
     const words = phrase.split(" ").filter(Boolean);
-    score += 4 + words.length * 3 + Math.min(8, phrase.length / 3);
+    const inConcept = conceptPad.includes(` ${phrase} `) || (concept && concept.includes(phrase));
+    if (words.length === 1 && phrase.length < 10 && !inConcept) {
+      const hayWords = hay.split(" ").filter(Boolean);
+      if (hayWords.length > 8) continue;
+      score += 3;
+      continue;
+    }
+    score += 6 + words.length * 4 + Math.min(10, phrase.length / 2);
+    if (inConcept) score += 8;
   }
   return score;
 }
 
 function matchInteractive(query, options = {}) {
-  const hay = normalize([query, options.concept, options.childText, options.spoken].filter(Boolean).join(" "));
+  const concept = normalize(options.concept || query || "");
+  const child = normalize(options.childText || "");
+  const hay = normalize([concept, child].filter(Boolean).join(" "));
   if (!hay || hay.length < 4) return null;
 
   const grade = gradeNumber(options.grade);
@@ -269,14 +280,14 @@ function matchInteractive(query, options = {}) {
       const max = Number(item.grade_max || 12);
       if (grade < min - 1 || grade > max + 1) continue;
     }
-    const score = scoreItem(item, hay);
+    const score = scoreItem(item, hay, concept);
     if (score > bestScore) {
       bestScore = score;
       best = item;
     }
   }
 
-  if (!best || bestScore < 5) return null;
+  if (!best || bestScore < 12) return null;
   if (options.excludeSlug && best.slug === options.excludeSlug) return null;
   return { ...best, score: bestScore };
 }

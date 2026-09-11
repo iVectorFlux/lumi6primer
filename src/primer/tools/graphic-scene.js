@@ -40,6 +40,12 @@ function sceneForTurn({ concept, childText }) {
 
 const { isNewAsk } = require("../tutor/kid-intent.js");
 
+function weakTopic(concept, childText) {
+  const text = normalize(`${concept || ""} ${childText || ""}`);
+  if (!text || text.length < 4) return true;
+  return /^(hi|hey|hello|ok|okay|yes|no|thanks|thank you|hmm|idk|help|please|what|why|how)$/.test(text);
+}
+
 function shouldGenerateGraphic(input = {}) {
   const childText = String(input.childText || "");
   const lastScene = String(input.lastScene || "");
@@ -53,6 +59,9 @@ function shouldGenerateGraphic(input = {}) {
   }
   if (isPictureComment(childText) || isAck(childText)) {
     return { generate: false, scene: lastScene || scene, kind: "none", reason: "ack" };
+  }
+  if (weakTopic(input.concept, childText) && !input.wantsDraw) {
+    return { generate: false, scene: lastScene || scene, kind: "none", reason: "weak-topic" };
   }
 
   if (input.wantsDraw) {

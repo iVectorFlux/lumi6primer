@@ -74,21 +74,19 @@ function formatEducationalTitle(rawConcept, spoken, childText) {
   }
   text = deduped.join(" ");
 
-  // If text is empty or too generic, deduce real science title from the teacher's explanation
   if (!text || text.length < 3 || /^(turn|slow|science discovery|lesson)$/i.test(text)) {
-    const spokenLower = String(spoken || "").toLowerCase();
-    if (/solid|liquid|gas|plasma|ice|steam|vapor/i.test(spokenLower)) text = "States of Matter";
-    else if (/electron|atom|proton|nucleus|orbit/i.test(spokenLower)) text = "Electrons & Atoms";
-    else if (/sun|solar|fusion|star|hydrogen/i.test(spokenLower)) text = "The Sun & Solar Energy";
-    else if (/gravity|planet|orbit|space/i.test(spokenLower)) text = "Gravity & Space";
-    else if (/energy|heat|kinetic|temperature|absolute zero/i.test(spokenLower)) text = "Heat & Particle Energy";
-    else {
-      const m = String(spoken || "").split(/[.!?]/)[0].match(/\b(?:is|are|called|named|about|on)\s+([A-Za-z0-9\s\-]{3,24})\b/i);
-      if (m && m[1]) text = m[1].trim();
+    const fromChild = String(childText || "")
+      .replace(/^(can you|could you|please|teach me about|teach me|tell me about|tell me|explain|what is|what are|how does|how do|why is|why does)\s+/gi, "")
+      .replace(/[?.!]+$/g, "")
+      .trim();
+    if (fromChild.length >= 3 && fromChild.length <= 40 && !/^(hi|hey|hello|ok|okay|yes|no|thanks)$/i.test(fromChild)) {
+      text = fromChild;
+    } else {
+      text = "";
     }
   }
 
-  if (!text || text.length < 3) text = "Science Discovery";
+  if (!text || text.length < 3) return "";
   
   return text.split(/\s+/).map(w => {
     if (/^(and|of|the|in|on|at|to|for|with)$/i.test(w)) return w.toLowerCase();
@@ -111,7 +109,7 @@ function extractHandwrittenNotes({ concept, spoken, childText, chapterIndex = 0 
     .filter((s) => s !== questionSentence && !/^(try|now you|what do you think|can you|let'?s|how does that sound|ready|tell me|ask me|want to|shall we)\b/i.test(s))
     .slice(0, 2);
 
-  if (!cleanTitle && !keyPoints.length && !questionSentence) return null;
+  if (!cleanTitle) return null;
 
   const lines = [];
   if (cleanTitle) lines.push(cleanTitle);
@@ -437,12 +435,13 @@ class LearningOrchestrator {
       lastScene,
       decisionAction: decision.action
     });
-    const graphicTitle = graphicPlan.title || state.currentConcept || understanding.concept || spokenText.slice(0, 40);
+    const graphicTitle = graphicPlan.title || state.currentConcept || understanding.concept || "";
     const chapterIndex = Math.max(0, Math.ceil((Number(recentTurns?.length || 0)) / 2));
-    const noteCmd = extractHandwrittenNotes({ concept: graphicTitle, spoken, childText: spokenText, chapterIndex });
+    const noteCmd = graphicPlan.generate
+      ? extractHandwrittenNotes({ concept: graphicTitle, spoken, childText: spokenText, chapterIndex })
+      : null;
 
     let commands = [];
-    // Emit handwritten concept note to the whiteboard immediately (0 ms latency)
     if (noteCmd) {
       commands.push(noteCmd);
       this._emitStream(input, {
@@ -455,9 +454,8 @@ class LearningOrchestrator {
     if (graphicPlan.generate) {
       const interactiveHit = await lessonInteractive.match({
         store: this.childModel.store,
-        concept: graphicTitle,
+        concept: graphicTitle || understanding.concept,
         childText: spokenText,
-        spoken,
         grade: child?.grade
       }).catch(() => null);
       const lastInteractive = String(state.conversationState?.lastInteractiveSlug || "");
