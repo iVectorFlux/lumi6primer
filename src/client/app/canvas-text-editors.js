@@ -29,17 +29,17 @@
       autoHeight = true;
     } else if (hit === "s" || hit === "height") {
       heightCss = clampH(startHeight + dy);
-      fontCss = Math.max(12, Math.min(96, startFontCss * (heightCss / Math.max(1, startHeight))));
+      fontCss = Math.max(16, Math.min(120, startFontCss * (heightCss / Math.max(1, startHeight))));
     } else if (hit === "n") {
       heightCss = clampH(startHeight - dy);
-      fontCss = Math.max(12, Math.min(96, startFontCss * (heightCss / Math.max(1, startHeight))));
+      fontCss = Math.max(16, Math.min(120, startFontCss * (heightCss / Math.max(1, startHeight))));
       applyNorth(heightCss);
     } else {
       const sx = hit.includes("w") ? -1 : 1;
       const sy = hit.includes("n") ? -1 : 1;
       const requested = Math.max((startWidth + sx * dx) / Math.max(1, startWidth), (startHeight + sy * dy) / Math.max(1, startHeight));
-      const minimumScale = Math.max(minWidth / startWidth, minHeight / startHeight, 12 / startFontCss);
-      const maximumScale = Math.max(minimumScale, Math.min(maxWidth / startWidth, maxHeight / startHeight, 96 / startFontCss));
+      const minimumScale = Math.max(minWidth / startWidth, minHeight / startHeight, 16 / startFontCss);
+      const maximumScale = Math.max(minimumScale, Math.min(maxWidth / startWidth, maxHeight / startHeight, 120 / startFontCss));
       const factor = Math.max(minimumScale, Math.min(maximumScale, requested));
       widthCss = startWidth * factor;
       heightCss = startHeight * factor;
@@ -94,6 +94,7 @@
         declaration.zIndex = String(editor.zIndex || 1);
         declaration.setProperty("--text-editor-font-size", `${editor.fontCss}px`);
         declaration.setProperty("--text-editor-ink", editor.color || state.inkColor);
+        declaration.setProperty("--text-editor-font-family", state.aiFont || TEXT_EDITOR_FONT_FAMILY);
         if (editor.previewLogicalWidth) declaration.setProperty("--text-editor-preview-width", `${editor.previewLogicalWidth}px`);
         else declaration.removeProperty("--text-editor-preview-width");
         if (editor.previewLogicalHeight) declaration.setProperty("--text-editor-preview-height", `${editor.previewLogicalHeight}px`);
@@ -250,9 +251,9 @@
     let image,
       fallback = false;
     try {
-      image = await mixedTextImage(text, fontCss, color, maxWidth, 1.35, TEXT_EDITOR_FONT_FAMILY, Math.min(3, devicePixelRatio || 1));
+      image = await mixedTextImage(text, fontCss, color, maxWidth, 1.35, state.aiFont || TEXT_EDITOR_FONT_FAMILY, Math.min(3, devicePixelRatio || 1));
     } catch {
-      image = textImage(text, fontCss, color, maxWidth, 1.35, TEXT_EDITOR_FONT_FAMILY, TEXT_INPUT_MAX_LENGTH, Math.min(3, devicePixelRatio || 1));
+      image = textImage(text, fontCss, color, maxWidth, 1.35, state.aiFont || TEXT_EDITOR_FONT_FAMILY, TEXT_INPUT_MAX_LENGTH, Math.min(3, devicePixelRatio || 1));
       fallback = true;
     }
     if (editor.cancelled || editor.committing || !editor.mixedMode || editor.previewRevision !== revision || state.textEditors.get(editor.id) !== editor) return;

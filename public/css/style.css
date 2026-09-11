@@ -1974,8 +1974,9 @@ body.mode-draw-active .selection-scope-notice {
 #textEditorLayer { position: absolute; z-index: 6; inset: 0; pointer-events: none; overflow: hidden; }
 .text-editor-layer[aria-hidden="true"], .text-editor-layer:empty { display: none; }
 .text-editor {
-  --text-editor-font-size: 24px;
+  --text-editor-font-size: 32px;
   --text-editor-ink: #1f2937;
+  --text-editor-font-family: "Patrick Hand", "Segoe Print", "Comic Sans MS", cursive;
   position: absolute;
   display: block;
   min-width: 72px;
@@ -2005,7 +2006,7 @@ body.mode-draw-active .selection-scope-notice {
   border: 0;
   outline: 0;
   background: transparent;
-  font: 600 var(--text-editor-font-size)/1.25 ui-rounded, "Trebuchet MS", system-ui, sans-serif;
+  font: 500 var(--text-editor-font-size)/1.3 var(--text-editor-font-family);
   resize: none;
   overflow: hidden;
 }

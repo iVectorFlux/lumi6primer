@@ -92,9 +92,9 @@
   async function fittedTextBoxContent(text, fontSize, color, maxWidth) {
     const render = async () => {
       try {
-        return { image:await mixedTextImage(text, fontSize, color, maxWidth, 1.35, TEXT_EDITOR_FONT_FAMILY), mixedFallback:false };
+        return { image:await mixedTextImage(text, fontSize, color, maxWidth, 1.35, state.aiFont || TEXT_EDITOR_FONT_FAMILY), mixedFallback:false };
       } catch {
-        return { image:textImage(text, fontSize, color, maxWidth, 1.35, TEXT_EDITOR_FONT_FAMILY, TEXT_INPUT_MAX_LENGTH), mixedFallback:true };
+        return { image:textImage(text, fontSize, color, maxWidth, 1.35, state.aiFont || TEXT_EDITOR_FONT_FAMILY, TEXT_INPUT_MAX_LENGTH), mixedFallback:true };
       }
     };
     maxWidth = Math.min(SIZE, Math.max(fontSize * 3, maxWidth));

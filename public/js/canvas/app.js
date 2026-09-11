@@ -123,13 +123,13 @@
   const SUMMON = window.LUMI6_SUMMON || {};
   const EFFORT_LEVELS = ["none", "low", "medium", "high", "max"],
     EFFORT_OPTIONS = ["config", ...EFFORT_LEVELS],
-    TEXT_EDITOR_DEFAULT_WIDTH = 240,
-    TEXT_EDITOR_DEFAULT_HEIGHT = 52,
-    TEXT_EDITOR_MIN_WIDTH = 72,
-    TEXT_EDITOR_MIN_HEIGHT = 36,
-    TEXT_EDITOR_FONT_CSS = 24,
+    TEXT_EDITOR_DEFAULT_WIDTH = 280,
+    TEXT_EDITOR_DEFAULT_HEIGHT = 76,
+    TEXT_EDITOR_MIN_WIDTH = 88,
+    TEXT_EDITOR_MIN_HEIGHT = 44,
+    TEXT_EDITOR_FONT_CSS = 32,
     TEXT_EDITOR_PREVIEW_INTERVAL_MS = 80,
-    TEXT_EDITOR_FONT_FAMILY = "ui-rounded, system-ui, sans-serif",
+    TEXT_EDITOR_FONT_FAMILY = '"Patrick Hand", "Segoe Print", "Comic Sans MS", cursive',
     TEXT_INPUT_GUARD_MS = 500,
     TEXT_INPUT_MAX_LENGTH = 2000,
     MAX_VISIBLE_TEXT_BOXES = 50,
@@ -680,7 +680,7 @@ User writes "Show air quality for Tokyo", names a place, and points to an empty 
       panY: 0,
       pen: 6,
       eraser: 35,
-      aiFont: "ui-rounded, system-ui, sans-serif",
+      aiFont: '"Patrick Hand", "Segoe Print", "Comic Sans MS", cursive',
       inkColor: "#1d4ed8",
       aiColor: "#2563eb",
       drawing: null,
@@ -2628,9 +2628,9 @@ User writes "Show air quality for Tokyo", names a place, and points to an empty 
   async function fittedTextBoxContent(text, fontSize, color, maxWidth) {
     const render = async () => {
       try {
-        return { image:await mixedTextImage(text, fontSize, color, maxWidth, 1.35, TEXT_EDITOR_FONT_FAMILY), mixedFallback:false };
+        return { image:await mixedTextImage(text, fontSize, color, maxWidth, 1.35, state.aiFont || TEXT_EDITOR_FONT_FAMILY), mixedFallback:false };
       } catch {
-        return { image:textImage(text, fontSize, color, maxWidth, 1.35, TEXT_EDITOR_FONT_FAMILY, TEXT_INPUT_MAX_LENGTH), mixedFallback:true };
+        return { image:textImage(text, fontSize, color, maxWidth, 1.35, state.aiFont || TEXT_EDITOR_FONT_FAMILY, TEXT_INPUT_MAX_LENGTH), mixedFallback:true };
       }
     };
     maxWidth = Math.min(SIZE, Math.max(fontSize * 3, maxWidth));
@@ -5217,17 +5217,17 @@ User writes "Show air quality for Tokyo", names a place, and points to an empty 
       autoHeight = true;
     } else if (hit === "s" || hit === "height") {
       heightCss = clampH(startHeight + dy);
-      fontCss = Math.max(12, Math.min(96, startFontCss * (heightCss / Math.max(1, startHeight))));
+      fontCss = Math.max(16, Math.min(120, startFontCss * (heightCss / Math.max(1, startHeight))));
     } else if (hit === "n") {
       heightCss = clampH(startHeight - dy);
-      fontCss = Math.max(12, Math.min(96, startFontCss * (heightCss / Math.max(1, startHeight))));
+      fontCss = Math.max(16, Math.min(120, startFontCss * (heightCss / Math.max(1, startHeight))));
       applyNorth(heightCss);
     } else {
       const sx = hit.includes("w") ? -1 : 1;
       const sy = hit.includes("n") ? -1 : 1;
       const requested = Math.max((startWidth + sx * dx) / Math.max(1, startWidth), (startHeight + sy * dy) / Math.max(1, startHeight));
-      const minimumScale = Math.max(minWidth / startWidth, minHeight / startHeight, 12 / startFontCss);
-      const maximumScale = Math.max(minimumScale, Math.min(maxWidth / startWidth, maxHeight / startHeight, 96 / startFontCss));
+      const minimumScale = Math.max(minWidth / startWidth, minHeight / startHeight, 16 / startFontCss);
+      const maximumScale = Math.max(minimumScale, Math.min(maxWidth / startWidth, maxHeight / startHeight, 120 / startFontCss));
       const factor = Math.max(minimumScale, Math.min(maximumScale, requested));
       widthCss = startWidth * factor;
       heightCss = startHeight * factor;
@@ -5282,6 +5282,7 @@ User writes "Show air quality for Tokyo", names a place, and points to an empty 
         declaration.zIndex = String(editor.zIndex || 1);
         declaration.setProperty("--text-editor-font-size", `${editor.fontCss}px`);
         declaration.setProperty("--text-editor-ink", editor.color || state.inkColor);
+        declaration.setProperty("--text-editor-font-family", state.aiFont || TEXT_EDITOR_FONT_FAMILY);
         if (editor.previewLogicalWidth) declaration.setProperty("--text-editor-preview-width", `${editor.previewLogicalWidth}px`);
         else declaration.removeProperty("--text-editor-preview-width");
         if (editor.previewLogicalHeight) declaration.setProperty("--text-editor-preview-height", `${editor.previewLogicalHeight}px`);
@@ -5438,9 +5439,9 @@ User writes "Show air quality for Tokyo", names a place, and points to an empty 
     let image,
       fallback = false;
     try {
-      image = await mixedTextImage(text, fontCss, color, maxWidth, 1.35, TEXT_EDITOR_FONT_FAMILY, Math.min(3, devicePixelRatio || 1));
+      image = await mixedTextImage(text, fontCss, color, maxWidth, 1.35, state.aiFont || TEXT_EDITOR_FONT_FAMILY, Math.min(3, devicePixelRatio || 1));
     } catch {
-      image = textImage(text, fontCss, color, maxWidth, 1.35, TEXT_EDITOR_FONT_FAMILY, TEXT_INPUT_MAX_LENGTH, Math.min(3, devicePixelRatio || 1));
+      image = textImage(text, fontCss, color, maxWidth, 1.35, state.aiFont || TEXT_EDITOR_FONT_FAMILY, TEXT_INPUT_MAX_LENGTH, Math.min(3, devicePixelRatio || 1));
       fallback = true;
     }
     if (editor.cancelled || editor.committing || !editor.mixedMode || editor.previewRevision !== revision || state.textEditors.get(editor.id) !== editor) return;
@@ -11200,9 +11201,13 @@ User writes "Show air quality for Tokyo", names a place, and points to an empty 
     if (rail) rail.style.setProperty("--sketch-wedge", lightenInkColor(next));
   }
   const aiFont = document.querySelector("#aiFont");
-  if (aiFont) aiFont.onchange = (e) => {
-    state.aiFont = e.target.value;
-  };
+  if (aiFont) {
+    state.aiFont = aiFont.value || state.aiFont;
+    aiFont.onchange = (e) => {
+      state.aiFont = e.target.value;
+      positionTextEditors();
+    };
+  }
   function closeColorOrbs(except = null) {
     document.querySelectorAll("[data-color-control]").forEach((control) => {
       if (control === except) return;

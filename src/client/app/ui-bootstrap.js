@@ -921,9 +921,13 @@
     if (rail) rail.style.setProperty("--sketch-wedge", lightenInkColor(next));
   }
   const aiFont = document.querySelector("#aiFont");
-  if (aiFont) aiFont.onchange = (e) => {
-    state.aiFont = e.target.value;
-  };
+  if (aiFont) {
+    state.aiFont = aiFont.value || state.aiFont;
+    aiFont.onchange = (e) => {
+      state.aiFont = e.target.value;
+      positionTextEditors();
+    };
+  }
   function closeColorOrbs(except = null) {
     document.querySelectorAll("[data-color-control]").forEach((control) => {
       if (control === except) return;
