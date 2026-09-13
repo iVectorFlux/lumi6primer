@@ -2,13 +2,61 @@
 
 const fs = require("fs");
 const path = require("path");
-const { ITEMS, matchInteractive } = require("../interactives/catalog.js");
+const { ITEMS, matchInteractive, keywordsFromTitle } = require("../interactives/catalog.js");
 
 const FILE_DIR = path.join(__dirname, "../../../content/interactives");
 
 let cache = null;
 let cacheAt = 0;
 const CACHE_MS = 60 * 1000;
+const HTML_CACHE_MAX = 24;
+const htmlCache = new Map();
+
+/** Grade aliases live in the class column, so they are useless as search topics. */
+const GRADE_TAG = /^(class|grade)[-\s]?\d+$/;
+const ORDINAL_GRADE_TAG = /^(\d+(st|nd|rd|th)|first|second|third|fourth|fifth|sixth|seventh|eighth|ninth|tenth|eleventh|twelfth)[-\s]grade$/;
+
+function topicsFromRow(row) {
+  const tags = Array.isArray(row?.tags) ? row.tags : [];
+  const seen = new Set();
+  const topics = [];
+  for (const tag of tags) {
+    const text = String(tag || "").trim().toLowerCase();
+    if (!text || GRADE_TAG.test(text) || ORDINAL_GRADE_TAG.test(text)) continue;
+    if (seen.has(text)) continue;
+    seen.add(text);
+    topics.push(text);
+  }
+  return topics;
+}
+
+function fromRow(row) {
+  const slug = String(row?.id || "").trim();
+  if (!slug || !row?.title) return null;
+  const klass = Number(row.class);
+  const grade = Number.isFinite(klass) && klass > 0 ? klass : null;
+  return {
+    id: slug,
+    slug,
+    title: String(row.title),
+    summary: String(row.description || row.concept || ""),
+    subject: String(row.subject || ""),
+    topics: topicsFromRow(row),
+    keywords: keywordsFromTitle(row.title),
+    grade_min: grade || 1,
+    grade_max: grade || 12,
+    enabled: true,
+    source: "db"
+  };
+}
+
+function rememberHtml(slug, html) {
+  htmlCache.set(slug, html);
+  if (htmlCache.size > HTML_CACHE_MAX) {
+    const oldest = htmlCache.keys().next().value;
+    htmlCache.delete(oldest);
+  }
+}
 
 function readHtmlFile(slug) {
   const file = path.join(FILE_DIR, `${slug}.html`);
@@ -23,7 +71,7 @@ function fromFiles() {
   return ITEMS.map((item) => {
     const html = readHtmlFile(item.slug);
     if (!html) return null;
-    return { ...item, html, enabled: true, id: item.slug };
+    return { ...item, keywords: keywordsFromTitle(item.title), html, enabled: true, id: item.slug };
   }).filter(Boolean);
 }
 
@@ -32,15 +80,15 @@ async function loadAll(store) {
   let rows = [];
   if (store && store.remoteEnabled && typeof store.listInteractives === "function") {
     try {
-      rows = await store.listInteractives();
+      rows = (await store.listInteractives()).map(fromRow).filter(Boolean);
     } catch (err) {
       console.warn("[PRIMER] interactive catalog from DB failed:", err.message);
     }
   }
-  if (!Array.isArray(rows) || !rows.length) {
+  if (!rows.length) {
     rows = fromFiles();
   }
-  cache = rows.filter((row) => row && row.enabled !== false && row.html && row.slug);
+  cache = rows.filter((row) => row && row.enabled !== false && row.slug);
   cacheAt = Date.now();
   return cache;
 }
@@ -48,6 +96,7 @@ async function loadAll(store) {
 function clearCache() {
   cache = null;
   cacheAt = 0;
+  htmlCache.clear();
 }
 
 async function match(options = {}) {
@@ -62,7 +111,27 @@ async function getBySlug(slug, store) {
   const key = String(slug || "").trim();
   if (!key) return null;
   const items = await loadAll(store);
-  return items.find((item) => item.slug === key) || null;
+  const item = items.find((entry) => entry.slug === key);
+  if (!item) {
+    // Lessons saved before the catalog moved to public.interactives still link old slugs.
+    const legacy = readHtmlFile(key);
+    return legacy ? { id: key, slug: key, title: key, topics: [], enabled: true, source: "file", html: legacy } : null;
+  }
+  if (item.html) return item;
+  const cached = htmlCache.get(key);
+  if (cached) return { ...item, html: cached };
+  let html = "";
+  if (item.source === "db" && store && typeof store.getInteractiveHtml === "function") {
+    try {
+      html = await store.getInteractiveHtml(key);
+    } catch (err) {
+      console.warn("[PRIMER] interactive html fetch failed:", err.message);
+    }
+  }
+  if (!html) html = readHtmlFile(key);
+  if (!html) return null;
+  rememberHtml(key, html);
+  return { ...item, html };
 }
 
 function commandFor(item) {

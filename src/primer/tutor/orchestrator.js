@@ -464,17 +464,46 @@ class LearningOrchestrator {
         state.conversationState.lastGraphicScene = graphicPlan.scene;
       } else if (interactiveHit?.slug) {
         const widget = lessonInteractive.commandFor(interactiveHit);
-        commands.push(widget);
+        // Wikipedia/Commons only. A companion picture is worth a second slot on the
+        // board when it is free; it is not worth paying an image model for.
+        const companion = await lessonGraphic.generate({
+          topic: graphicTitle,
+          scene: graphicPlan.scene,
+          previousScene: lastScene,
+          spoken,
+          question: spokenText,
+          age: child?.age_years,
+          grade: child?.grade,
+          kind: graphicPlan.kind,
+          freeOnly: true,
+          timeoutMs: 12000
+        }).catch((err) => {
+          console.warn("[PRIMER] Companion image failed:", err.message);
+          return null;
+        });
+        const pair = [];
+        if (companion?.href) {
+          companion.keepOthers = true;
+          companion.archivePrevious = true;
+          companion.pairWith = widget.slug;
+          pair.push(companion);
+        }
+        widget.keepOthers = true;
+        widget.archivePrevious = !companion?.href;
+        widget.pairWith = companion?.href ? widget.slug : "";
+        widget.openInPlayground = true;
+        pair.push(widget);
+        commands.push(...pair);
         state.conversationState = state.conversationState || {};
         state.conversationState.lastGraphicScene = graphicPlan.scene;
         state.conversationState.lastGraphicKind = "interactive";
         state.conversationState.lastInteractiveSlug = interactiveHit.slug;
         this._emitStream(input, {
           event: "graphic",
-          canvasActions: [widget],
-          visualPlan: { shouldDraw: true, commands: [widget] }
+          canvasActions: pair,
+          visualPlan: { shouldDraw: true, commands: pair }
         });
-        console.log("[PRIMER] Interactive matched:", interactiveHit.slug);
+        console.log("[PRIMER] Interactive matched:", interactiveHit.slug, companion?.href ? "(paired with image)" : "(no free image)");
       } else if (!lessonGraphic.isConfigured()) {
         console.warn("[PRIMER] Graphic skipped: no image provider configured");
       } else {

@@ -352,6 +352,10 @@ async function generate(input = {}) {
     }
   }
 
+  // Pairing an image beside an interactive is only worth it when it costs nothing,
+  // so callers asking for a companion image stop here.
+  if (input.freeOnly) return null;
+
   // 2. Try OpenAI image generation if key is configured
   if (openaiKey().startsWith("sk-")) {
     const prompt = kidPrompt(input);

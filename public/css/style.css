@@ -3186,6 +3186,23 @@ body.mode-talk-active .canvas-footer {
   min-width: 0;
 }
 
+/* Reference picture beside the thing to play with. */
+.talk-visual-pair {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 12px;
+  align-items: start;
+}
+
+.talk-visual-pair > .talk-image-wrapper {
+  min-width: 0;
+}
+
+/* Both halves share one row height so the grid reads as a pair. */
+.talk-visual-pair .talk-lesson-image {
+  max-height: min(42vh, 380px);
+}
+
 .talk-interactive-stage {
   position: relative;
   background: #fff;

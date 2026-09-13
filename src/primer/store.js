@@ -345,16 +345,33 @@ class PrimerStore {
     );
   }
 
+  /** Catalog rows only. html_content is fetched per interactive by getInteractiveHtml. */
   async listInteractives() {
     if (!this.remoteEnabled) return [];
     try {
-      const { data } = await this.request("GET", "lesson_interactives", {
-        query: "?enabled=eq.true&select=id,slug,title,summary,topics,grade_min,grade_max,html&order=title.asc"
+      const { data } = await this.request("GET", "interactives", {
+        query: "?is_available=eq.true&select=id,title,subject,class,concept,tags,description:config->>description&order=class.asc,id.asc"
       });
       return Array.isArray(data) ? data : [];
     } catch (err) {
       console.warn("[PRIMER] listInteractives:", err.message);
       return [];
+    }
+  }
+
+  async getInteractiveHtml(id) {
+    if (!this.remoteEnabled) return "";
+    const key = String(id || "").trim();
+    if (!key) return "";
+    try {
+      const { data } = await this.request("GET", "interactives", {
+        query: `?id=eq.${encodeURIComponent(key)}&is_available=eq.true&select=html_content&limit=1`
+      });
+      const row = Array.isArray(data) ? data[0] : data;
+      return row?.html_content ? String(row.html_content) : "";
+    } catch (err) {
+      console.warn("[PRIMER] getInteractiveHtml:", err.message);
+      return "";
     }
   }
 

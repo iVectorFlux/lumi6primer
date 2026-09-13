@@ -43,11 +43,10 @@
     return rest ? `${letter} — ${rest}` : letter;
   }
 
-  function talkVisualHtml(step, titleText, isLast) {
-    if (step.interactive && step.interactive.slug) {
-      const href = step.interactive.href || `/api/primer/interactive/${encodeURIComponent(step.interactive.slug)}`;
-      const label = step.interactive.title || titleText;
-      return `
+  function talkInteractiveHtml(step, titleText) {
+    const href = step.interactive.href || `/api/primer/interactive/${encodeURIComponent(step.interactive.slug)}`;
+    const label = step.interactive.title || titleText;
+    return `
             <div class="talk-image-wrapper talk-interactive-wrapper" data-interactive-slug="${escapeHtml(step.interactive.slug)}">
               <div class="talk-interactive-stage">
                 <iframe
@@ -67,9 +66,10 @@
                 </button>
               </figcaption>
             </div>`;
-    }
-    if (step.image) {
-      return `
+  }
+
+  function talkImageHtml(step, titleText) {
+    return `
             <div class="talk-image-wrapper">
               <img src="${escapeHtml(step.image)}" alt="Lesson illustration" class="talk-lesson-image" loading="lazy">
               <figcaption class="talk-image-caption">
@@ -77,7 +77,21 @@
                 ${escapeHtml(titleText)}
               </figcaption>
             </div>`;
+  }
+
+  function talkVisualHtml(step, titleText, isLast) {
+    const hasInteractive = Boolean(step.interactive && step.interactive.slug);
+    // A reference picture and a thing to play with answer different questions,
+    // so when we have both they share the row instead of pushing each other down.
+    if (hasInteractive && step.image) {
+      return `
+            <div class="talk-visual-pair">
+              ${talkImageHtml(step, titleText)}
+              ${talkInteractiveHtml(step, titleText)}
+            </div>`;
     }
+    if (hasInteractive) return talkInteractiveHtml(step, titleText);
+    if (step.image) return talkImageHtml(step, titleText);
     if (isLast && window.__primerGraphicLoading) {
       return `
             <div class="talk-image-wrapper talk-image-loading-wrapper">

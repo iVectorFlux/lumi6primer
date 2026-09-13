@@ -642,6 +642,15 @@ button,
     height: 16px;
   }
 
+  /* Two columns leave each half too narrow to read on a phone. Tablets keep the pair. */
+  .talk-visual-pair {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .talk-visual-pair .talk-lesson-image {
+    max-height: min(30vh, 240px);
+  }
+
   .doc-title-area .doc-title {
     display: none;
   }

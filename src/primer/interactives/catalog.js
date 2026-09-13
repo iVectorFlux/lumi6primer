@@ -1,8 +1,8 @@
 "use strict";
 
 /**
- * Class 5 maths/science interactives. HTML lives in content/interactives/
- * and is mirrored to public.lesson_interactives.
+ * Offline fallback catalog. The live catalog is public.interactives;
+ * HTML for these fallbacks lives in content/interactives/.
  */
 const ITEMS = [
   {
@@ -227,9 +227,40 @@ const ITEMS = [
 function normalize(text) {
   return String(text || "")
     .toLowerCase()
+    // Drop apostrophes rather than splitting on them, so "kepler's" stays one word.
+    .replace(/['’`\u02bc]/g, "")
     .replace(/[^a-z0-9]+/g, " ")
     .replace(/\s+/g, " ")
     .trim();
+}
+
+/** Crude singular form so "kepler's laws" matches the tag "kepler-laws". */
+function stemWord(word) {
+  if (word.length <= 3) return word;
+  if (word.endsWith("ss") || word.endsWith("us") || word.endsWith("is")) return word;
+  return word.endsWith("s") ? word.slice(0, -1) : word;
+}
+
+function stemPhrase(text) {
+  return normalize(text).split(" ").filter(Boolean).map(stemWord).join(" ");
+}
+
+/** Title words that say nothing about the topic. */
+const TITLE_STOPWORDS = new Set([
+  "intro", "introduction", "basic", "simple", "complete", "guide", "lesson", "class",
+  "grade", "math", "maths", "science", "using", "with", "from", "their", "what", "why",
+  "how", "and", "the", "for", "part", "visual", "interactive", "explorer", "explore",
+  "builder", "lab", "demo", "activity", "practice", "understanding", "definition"
+]);
+
+/** Distinct words from a title, usable as weak search aliases. */
+function keywordsFromTitle(title) {
+  const seen = new Set();
+  for (const word of stemPhrase(title).split(" ")) {
+    if (word.length < 5 || TITLE_STOPWORDS.has(word) || /^\d+$/.test(word)) continue;
+    seen.add(word);
+  }
+  return [...seen];
 }
 
 function gradeNumber(grade) {
@@ -237,59 +268,100 @@ function gradeNumber(grade) {
   return Number.isFinite(n) && n > 0 ? n : null;
 }
 
+/** A word this long, or any multi-word phrase, is specific enough to pick a topic on its own. */
+const DISTINCTIVE_LEN = 10;
+
+/**
+ * Returns the match strength plus whether any hit was specific enough to trust
+ * off-grade. Short generic words ("third", "line") only count when the child's
+ * request is essentially just that word, otherwise "newton's third law" pulls in
+ * a fractions widget tagged "thirds".
+ */
 function scoreItem(item, hay, concept) {
   const padded = ` ${hay} `;
-  const conceptPad = ` ${normalize(concept)} `;
+  const conceptPad = ` ${stemPhrase(concept)} `;
+  const hayWords = hay.split(" ").filter(Boolean);
+  const terse = hayWords.length <= 3;
   let score = 0;
+  let distinctive = false;
+
   for (const alias of item.topics || []) {
-    const phrase = normalize(alias);
+    const raw = normalize(alias);
+    const phrase = stemPhrase(alias);
     if (!phrase || phrase.length < 4) continue;
     const hit = phrase.includes(" ")
       ? hay.includes(phrase)
       : padded.includes(` ${phrase} `);
     if (!hit) continue;
     const words = phrase.split(" ").filter(Boolean);
-    const inConcept = conceptPad.includes(` ${phrase} `) || (concept && concept.includes(phrase));
-    if (words.length === 1 && phrase.length < 10 && !inConcept) {
-      const hayWords = hay.split(" ").filter(Boolean);
-      if (hayWords.length > 8) continue;
-      score += 3;
+    // Length is judged before stemming, so "pythagoras" stays a specific term.
+    if (words.length === 1 && raw.length < DISTINCTIVE_LEN) {
+      if (terse) score += 14;
+      else if (hayWords.length <= 8) score += 3;
       continue;
     }
-    score += 6 + words.length * 4 + Math.min(10, phrase.length / 2);
-    if (inConcept) score += 8;
+    distinctive = true;
+    score += 6 + words.length * 4 + Math.min(10, raw.length / 2);
+    if (conceptPad.includes(` ${phrase} `) || (concept && concept.includes(phrase))) score += 8;
   }
-  return score;
+
+  if (score >= MIN_SCORE) return { score, distinctive };
+
+  // Fall back to words lifted from the title, so "kepler" or "fractions" still
+  // land even when every tag is a compound phrase.
+  for (const word of item.keywords || []) {
+    if (!padded.includes(` ${word} `)) continue;
+    score += terse ? 14 : 2;
+  }
+  return { score, distinctive };
+}
+
+/** Grades within this distance are treated as on-level. */
+const NEAR_GRADE = 2;
+/** Further than that, only an explicitly named topic wins. */
+const FAR_GRADE_MIN_SCORE = 20;
+const MIN_SCORE = 12;
+
+function gradeDistance(item, grade) {
+  if (grade == null) return 0;
+  const min = Number(item.grade_min || 0);
+  const max = Number(item.grade_max || 12);
+  if (grade < min) return min - grade;
+  if (grade > max) return grade - max;
+  return 0;
 }
 
 function matchInteractive(query, options = {}) {
-  const concept = normalize(options.concept || query || "");
-  const child = normalize(options.childText || "");
-  const hay = normalize([concept, child].filter(Boolean).join(" "));
+  const concept = stemPhrase(options.concept || query || "");
+  const child = stemPhrase(options.childText || "");
+  const hay = stemPhrase([concept, child].filter(Boolean).join(" "));
   if (!hay || hay.length < 4) return null;
 
   const grade = gradeNumber(options.grade);
   const items = Array.isArray(options.items) && options.items.length ? options.items : ITEMS;
   let best = null;
   let bestScore = 0;
+  let bestRank = 0;
 
   for (const item of items) {
     if (item.enabled === false) continue;
-    if (grade != null) {
-      const min = Number(item.grade_min || 0);
-      const max = Number(item.grade_max || 12);
-      if (grade < min - 1 || grade > max + 1) continue;
-    }
-    const score = scoreItem(item, hay, concept);
-    if (score > bestScore) {
+    const { score, distinctive } = scoreItem(item, hay, concept);
+    if (score < MIN_SCORE) continue;
+    const distance = gradeDistance(item, grade);
+    // An off-level interactive beats nothing when the child named the topic outright,
+    // but a vague or generic match must never pull in far-off-grade content.
+    if (distance > NEAR_GRADE && (!distinctive || score < FAR_GRADE_MIN_SCORE)) continue;
+    const rank = score - distance * 1.5;
+    if (rank > bestRank) {
+      bestRank = rank;
       bestScore = score;
       best = item;
     }
   }
 
-  if (!best || bestScore < 12) return null;
+  if (!best) return null;
   if (options.excludeSlug && best.slug === options.excludeSlug) return null;
   return { ...best, score: bestScore };
 }
 
-module.exports = { ITEMS, matchInteractive, normalize, gradeNumber };
+module.exports = { ITEMS, matchInteractive, normalize, gradeNumber, keywordsFromTitle };
