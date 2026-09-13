@@ -66,13 +66,19 @@
     if (typeof window.syncTalkModeFeed === "function") window.syncTalkModeFeed();
   }
 
-  function attachInteractive(slug, title, href) {
+  function attachInteractive(slug, title, href, meta) {
     const key = String(slug || "").trim();
     if (!key) return;
+    const extra = meta || {};
     const widget = {
       slug: key,
       title: String(title || "").trim(),
-      href: String(href || `/api/primer/interactive/${encodeURIComponent(key)}`).trim()
+      href: String(href || `/api/primer/interactive/${encodeURIComponent(key)}`).trim(),
+      subject: String(extra.subject || "").trim(),
+      klass: Number(extra.klass) || null,
+      idea: String(extra.idea || "").trim(),
+      concept: String(extra.concept || "").trim(),
+      summary: String(extra.summary || "").trim()
     };
     for (let i = turns.length - 1; i >= 0; i -= 1) {
       if (turns[i].role === "teacher") {

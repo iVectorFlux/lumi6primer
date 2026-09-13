@@ -407,7 +407,19 @@ button,
 
   .talk-lesson-interactive {
     height: min(32dvh, 260px);
-    min-height: 180px;
+    min-height: 0;
+  }
+
+  .talk-playground-heading {
+    font-size: 16px;
+  }
+
+  .talk-playground-notes {
+    padding: 12px 12px 0;
+  }
+
+  .talk-playground-note-body {
+    font-size: 13.5px;
   }
 
   .talk-interactive-expand {

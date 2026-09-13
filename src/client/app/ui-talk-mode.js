@@ -46,12 +46,21 @@
   function talkInteractiveHtml(step, titleText) {
     const href = step.interactive.href || `/api/primer/interactive/${encodeURIComponent(step.interactive.slug)}`;
     const label = step.interactive.title || titleText;
+    // Carried on the element so the playground still has them after the frame moves.
+    const meta = [
+      `data-subject="${escapeHtml(step.interactive.subject || "")}"`,
+      `data-klass="${escapeHtml(step.interactive.klass || "")}"`,
+      `data-idea="${escapeHtml(step.interactive.idea || "")}"`,
+      `data-concept="${escapeHtml(step.interactive.concept || "")}"`,
+      `data-summary="${escapeHtml(step.interactive.summary || "")}"`
+    ].join("\n                  ");
     return `
             <div class="talk-image-wrapper talk-interactive-wrapper" data-interactive-slug="${escapeHtml(step.interactive.slug)}">
               <div class="talk-interactive-stage">
                 <iframe
                   class="talk-lesson-interactive"
                   data-slug="${escapeHtml(step.interactive.slug)}"
+                  ${meta}
                   src="${escapeHtml(href.includes("?") ? href : `${href}?embed=1`)}"
                   title="${escapeHtml(label)}"
                   sandbox="allow-scripts"
@@ -438,6 +447,71 @@
     });
   }
 
+  const SUBJECT_LABELS = { math: "Maths", maths: "Maths", science: "Science" };
+
+  function subjectLabel(value) {
+    const key = String(value || "").trim().toLowerCase();
+    if (!key) return "";
+    return SUBJECT_LABELS[key] || key.charAt(0).toUpperCase() + key.slice(1);
+  }
+
+  function playgroundNoteHtml(tag, body) {
+    if (!body) return "";
+    return `
+        <section class="talk-playground-note">
+          <span class="talk-playground-note-tag">${escapeHtml(tag)}</span>
+          <p class="talk-playground-note-body">${escapeHtml(body)}</p>
+        </section>`;
+  }
+
+  /** Title and badges above, instructions and concept below the interactive. */
+  function fillPlaygroundChrome(frame) {
+    const header = document.getElementById("talkPlaygroundHeader");
+    const heading = document.getElementById("talkPlaygroundHeading");
+    const badges = document.getElementById("talkPlaygroundBadges");
+    const notes = document.getElementById("talkPlaygroundNotes");
+    const data = frame.dataset || {};
+    const label = frame.getAttribute("title") || "";
+
+    if (heading) heading.textContent = label;
+    if (badges) {
+      const chips = [subjectLabel(data.subject), data.klass ? `Class ${data.klass}` : ""].filter(Boolean);
+      badges.innerHTML = chips.map((chip) => `<span class="talk-playground-badge">${escapeHtml(chip)}</span>`).join("");
+    }
+    if (header) header.hidden = !label;
+
+    if (notes) {
+      // Nothing in the database for this one: leave clean space rather than empty headings.
+      notes.innerHTML = [
+        playgroundNoteHtml("How to explore", data.idea),
+        playgroundNoteHtml("What you are learning", data.concept),
+        playgroundNoteHtml("Key takeaway", data.summary && data.summary !== data.concept ? data.summary : "")
+      ].join("");
+    }
+  }
+
+  /** Height comes from the interactive itself, so its canvas is never stretched. */
+  function applyInteractiveHeight(frame, height) {
+    if (!frame || !height) return;
+    const inPlayground = Boolean(frame.closest("#talkPlaygroundStage"));
+    const ceiling = inPlayground
+      ? Math.round(window.innerHeight * 1.4)
+      : Math.min(520, Math.round(window.innerHeight * 0.6));
+    frame.style.height = `${Math.max(200, Math.min(height, ceiling))}px`;
+  }
+
+  window.addEventListener("message", (event) => {
+    const data = event.data;
+    if (!data || data.type !== "lumi6:interactive-height") return;
+    const frames = document.querySelectorAll("iframe.talk-lesson-interactive");
+    for (const frame of frames) {
+      if (frame.contentWindow === event.source) {
+        applyInteractiveHeight(frame, Number(data.height));
+        return;
+      }
+    }
+  });
+
   function openTalkPlayground(frame) {
     const sheet = document.getElementById("talkPlayground");
     const stage = document.getElementById("talkPlaygroundStage");
@@ -447,18 +521,29 @@
     talkPlaygroundSlug = frame.dataset.slug || "";
     home.dataset.playgroundHome = "1";
     if (title) title.textContent = frame.getAttribute("title") || "Playground";
+    fillPlaygroundChrome(frame);
     stage.replaceChildren(frame);
     sheet.hidden = false;
     document.body.classList.add("talk-playground-open");
     requestAnimationFrame(() => {
       frame.style.width = "100%";
-      frame.style.height = "100%";
+      frame.style.height = "";
+      nudgeInteractive(frame);
     });
+  }
+
+  /** Ask the embed to re-measure after it changes container. */
+  function nudgeInteractive(frame) {
+    try {
+      frame.contentWindow?.dispatchEvent(new Event("resize"));
+    } catch {}
   }
 
   function closeTalkPlayground() {
     const sheet = document.getElementById("talkPlayground");
     const stage = document.getElementById("talkPlaygroundStage");
+    const header = document.getElementById("talkPlaygroundHeader");
+    const notes = document.getElementById("talkPlaygroundNotes");
     const frame = stage?.querySelector("iframe.talk-lesson-interactive");
     const home = document.querySelector(".talk-interactive-stage[data-playground-home]")
       || document.querySelector(`.talk-interactive-wrapper[data-interactive-slug="${CSS.escape(talkPlaygroundSlug)}"] .talk-interactive-stage`);
@@ -467,8 +552,11 @@
       frame.style.height = "";
       home.prepend(frame);
       delete home.dataset.playgroundHome;
+      nudgeInteractive(frame);
     }
     if (sheet) sheet.hidden = true;
+    if (header) header.hidden = true;
+    if (notes) notes.innerHTML = "";
     document.body.classList.remove("talk-playground-open");
     talkPlaygroundSlug = "";
   }

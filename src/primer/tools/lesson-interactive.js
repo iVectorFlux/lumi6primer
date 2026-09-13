@@ -41,6 +41,10 @@ function fromRow(row) {
     title: String(row.title),
     summary: String(row.description || row.concept || ""),
     subject: String(row.subject || ""),
+    klass: grade,
+    // Shown around the interactive: what to fiddle with, and what it teaches.
+    idea: String(row.interactive_idea || ""),
+    concept: String(row.concept || ""),
     topics: topicsFromRow(row),
     keywords: keywordsFromTitle(row.title),
     grade_min: grade || 1,
@@ -141,29 +145,50 @@ function commandFor(item) {
     id: item.id || item.slug,
     slug: item.slug,
     title: item.title || item.slug,
+    subject: item.subject || "",
+    klass: item.klass || null,
+    idea: item.idea || "",
+    concept: item.concept || "",
+    summary: item.summary || "",
     href: `/api/primer/interactive/${encodeURIComponent(item.slug)}?embed=1`
   };
 }
 
+/**
+ * The board sizes the iframe to this document's natural height, so nothing here
+ * may stretch to fill the viewport. The canvas keeps a fixed aspect ratio and the
+ * controls keep their natural height; the scene then looks the same on a phone as
+ * it does on a laptop, only smaller.
+ */
 const EMBED_CSS = `
-html,body{height:100%!important;width:100%!important;max-height:100%!important;margin:0;overflow:hidden!important}
-body{display:flex;flex-direction:column}
-.wrap,.app,.playground{flex:1;display:flex;flex-direction:column;max-width:none!important;width:100%!important;margin:0!important;padding:8px 10px!important;min-height:0!important;height:100%!important;max-height:100%!important;overflow:hidden!important;box-shadow:none!important;border-radius:0!important}
-h1{font-size:17px!important;margin:0 0 2px!important;letter-spacing:0!important;flex:0 0 auto}
+html,body{width:100%!important;height:auto!important;min-height:0!important;max-height:none!important;margin:0;overflow-x:hidden!important;overflow-y:visible!important}
+body{display:block!important}
+
+/* Generated interactives (public.interactives): an absolutely positioned canvas
+   fills .artifact-viewport, which normally flexes to the window height. Lock the
+   viewport to the scene's aspect ratio instead and let the page end after the
+   controls, so the canvas keeps its shape and the board can measure the height. */
+.artifact-container{display:block!important;width:100%!important;max-width:none!important;height:auto!important;min-height:0!important;max-height:none!important;margin:0!important}
+.artifact-viewport{position:relative!important;display:block!important;width:100%!important;flex:none!important;height:auto!important;min-height:0!important;max-height:none!important;aspect-ratio:var(--lumi6-aspect,16/9)!important}
+.artifact-viewport>canvas,canvas#mainCanvas{position:absolute!important;top:0!important;left:0!important;width:100%!important;height:100%!important;aspect-ratio:auto!important;flex:none!important;min-height:0!important;max-height:none!important}
+.artifact-controls{max-height:none!important;overflow:visible!important}
+
+/* Hand-written fallbacks in content/interactives/ use these class names. */
+.wrap,.app,.playground{display:block!important;max-width:none!important;width:100%!important;margin:0!important;padding:8px 10px!important;height:auto!important;min-height:0!important;max-height:none!important;overflow:visible!important;box-shadow:none!important;border-radius:0!important}
+h1{font-size:17px!important;margin:0 0 2px!important;letter-spacing:0!important}
 .sub,.subtitle,.intro,header p,.hero p{display:none!important}
-header{padding:4px 0 6px!important;border:0!important;background:transparent!important;flex:0 0 auto}
-main{flex:1;display:flex;flex-direction:column;min-height:0;padding:0!important;gap:8px!important;overflow:hidden!important}
-canvas{width:100%!important;flex:1 1 auto!important;height:auto!important;min-height:0!important;max-height:none!important}
-.stage{flex:1 1 auto;display:flex!important;flex-direction:column!important;height:auto!important;min-height:0!important;max-height:none!important;overflow:hidden!important}
+header{padding:4px 0 6px!important;border:0!important;background:transparent!important}
+main{display:block!important;height:auto!important;min-height:0!important;max-height:none!important;padding:0!important;overflow:visible!important}
+.stage{display:block!important;height:auto!important;min-height:0!important;max-height:none!important;overflow:visible!important}
+.stage>canvas,main>canvas,.wrap>canvas{display:block!important;width:100%!important;height:auto!important;aspect-ratio:var(--lumi6-aspect,16/9)!important;flex:none!important;min-height:0!important;max-height:none!important}
 @media(max-width:700px){
   h1{font-size:14px!important;display:none!important}
   .controls,.try,.question,.readout,.read{padding:6px 8px!important;font-size:12px!important}
   .control{min-width:0!important;flex-basis:100%!important}
   .readout{min-width:0!important;max-width:calc(100% - 16px)!important;left:8px!important;right:8px!important}
   button{padding:6px 9px!important;font-size:12px!important}
-  .read{max-height:4.2em;overflow:auto!important}
 }
-.controls,.try,.question,.readout,.read{flex:0 0 auto;margin-top:6px!important;padding:8px 10px!important;font-size:13px!important;overflow:auto}
+.controls,.try,.question,.readout,.read{margin-top:6px!important;padding:8px 10px!important;font-size:13px!important;overflow:visible!important;max-height:none!important}
 .try span,.hint,.question span:not(.feedback){display:none!important}
 .tabs{margin-bottom:8px!important}
 `;
@@ -171,15 +196,34 @@ canvas{width:100%!important;flex:1 1 auto!important;height:auto!important;min-he
 const EMBED_FIT_SCRIPT = `<script id="lumi-embed-fit">
 (function(){
   var timer;
+  var sent = 0;
+  function report(){
+    if (!window.parent || window.parent === window) return;
+    // Measure the content box only. documentElement.scrollHeight is floored at the
+    // viewport height, which would report a full screen no matter how short we are.
+    var body = document.body;
+    if (!body) return;
+    var height = Math.ceil(body.getBoundingClientRect().height) || body.scrollHeight;
+    if (!height || Math.abs(height - sent) < 2) return;
+    sent = height;
+    try {
+      window.parent.postMessage({ type: "lumi6:interactive-height", height: height }, "*");
+    } catch (e) {}
+  }
   function ping(){
     clearTimeout(timer);
     timer = setTimeout(function(){
       try { window.dispatchEvent(new Event("resize")); } catch (e) {}
+      report();
     }, 40);
   }
   addEventListener("load", ping);
   if (window.ResizeObserver) {
-    try { new ResizeObserver(ping).observe(document.documentElement); } catch (e) {}
+    try {
+      var observer = new ResizeObserver(ping);
+      observer.observe(document.documentElement);
+      if (document.body) observer.observe(document.body);
+    } catch (e) {}
   }
 })();
 </script>`;

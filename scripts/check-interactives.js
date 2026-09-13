@@ -81,7 +81,17 @@ async function main() {
   if (waterCycle?.slug) {
     const full = await lessonInteractive.getBySlug(waterCycle.slug, store);
     console.log(`\nhtml for ${waterCycle.slug}: ${full?.html ? `${full.html.length} bytes` : "MISSING"}`);
-    console.log(`embed wraps ok: ${lessonInteractive.embedHtml(full?.html || "").includes("lumi-embed")}`);
+    const embed = lessonInteractive.embedHtml(full?.html || "");
+    console.log(`embed wraps ok: ${embed.includes("lumi-embed")}`);
+    console.log(`canvas aspect locked: ${embed.includes("lumi6-aspect")}`);
+    console.log(`reports own height: ${embed.includes("lumi6:interactive-height")}`);
+
+    // Chrome around the interactive comes from these columns.
+    const cmd = lessonInteractive.commandFor(waterCycle);
+    console.log(`\ncommand metadata for ${cmd.slug}:`);
+    console.log(`  subject/class: ${cmd.subject || "—"} / ${cmd.klass || "—"}`);
+    console.log(`  idea:    ${cmd.idea ? cmd.idea.slice(0, 90) : "(empty)"}`);
+    console.log(`  concept: ${cmd.concept ? cmd.concept.slice(0, 90) : "(empty)"}`);
   }
 }
 

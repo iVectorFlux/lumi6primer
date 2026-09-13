@@ -158,7 +158,13 @@
     const interactive = commands.find((cmd) => cmd && cmd.tool === "lesson_interactive" && cmd.slug);
     if (interactive) {
       if (typeof window.Lumi6Lesson?.attachInteractive === "function") {
-        window.Lumi6Lesson.attachInteractive(interactive.slug, interactive.title, interactive.href);
+        window.Lumi6Lesson.attachInteractive(interactive.slug, interactive.title, interactive.href, {
+          subject: interactive.subject,
+          klass: interactive.klass,
+          idea: interactive.idea,
+          concept: interactive.concept,
+          summary: interactive.summary
+        });
       }
       const lastTeacher = document.querySelector("#primerMessages .primer-msg.teacher:last-of-type");
       if (lastTeacher) {

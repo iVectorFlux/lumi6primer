@@ -350,7 +350,7 @@ class PrimerStore {
     if (!this.remoteEnabled) return [];
     try {
       const { data } = await this.request("GET", "interactives", {
-        query: "?is_available=eq.true&select=id,title,subject,class,concept,tags,description:config->>description&order=class.asc,id.asc"
+        query: "?is_available=eq.true&select=id,title,subject,class,concept,interactive_idea,tags,description:config->>description&order=class.asc,id.asc"
       });
       return Array.isArray(data) ? data : [];
     } catch (err) {
