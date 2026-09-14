@@ -2,7 +2,7 @@
 
 const fs = require("fs");
 const path = require("path");
-const { ITEMS, matchInteractive, keywordsFromTitle } = require("../interactives/catalog.js");
+const { ITEMS, matchInteractive, keywordsFromTitle, stemPhrase } = require("../interactives/catalog.js");
 
 const FILE_DIR = path.join(__dirname, "../../../content/interactives");
 
@@ -65,6 +65,7 @@ function fromRow(row) {
     scenario: Boolean(pill),
     topics,
     keywords: keywordsFromTitle(row.title),
+    searchText: stemPhrase([row.title, row.concept, row.interactive_idea, topics.join(" ")].join(" ")),
     grade_min: grade || 1,
     grade_max: grade || 12,
     enabled: true,
@@ -93,7 +94,7 @@ function fromFiles() {
   return ITEMS.map((item) => {
     const html = readHtmlFile(item.slug);
     if (!html) return null;
-    return { ...item, keywords: keywordsFromTitle(item.title), html, enabled: true, id: item.slug };
+    return { ...item, keywords: keywordsFromTitle(item.title), searchText: stemPhrase([item.title, ...(item.topics || [])].join(" ")), html, enabled: true, id: item.slug };
   }).filter(Boolean);
 }
 

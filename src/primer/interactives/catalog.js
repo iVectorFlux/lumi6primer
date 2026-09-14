@@ -263,6 +263,30 @@ function keywordsFromTitle(title) {
   return [...seen];
 }
 
+/** Everyday questions never use the catalog's scientific tags. Expand them first. */
+const PHENOMENA = [
+  { re: /\bsky\b.*\bblue\b|\bblue\b.*\bsky\b|\bsunset\b.*\b(red|orange)\b|\bred\b.*\bsunset\b|\brayleigh\b/, extra: "rayleigh scattering wavelength optics waves" },
+  { re: /\brainbow\b|\bprism\b|\bdispers\w*\b|\bsplit\b.*\blight\b/, extra: "prism dispersion refraction rainbow" },
+  { re: /\belectromagnet\w*\b|\bfaraday\b|\binduction\b|\bgalvanometer\b|\b(magnet|coil)\b.*\b(electric|current|electricity)\b|\b(electric|current|electricity)\b.*\b(magnet|coil)\b/, extra: "electromagnetism faraday induction magnetic flux" },
+  { re: /\brelativ\w*\b|\beinstein\b|\btime dilate\w*\b|\blorentz\b|\bspeed of light\b|\b(time|clock)\b.*\b(slow|faster|dilate)\b/, extra: "relativity time dilation einstein lorentz" },
+  { re: /\bfree fall\b|\b(why|how).{0,24}\b(fall|falling)\b|\bfeather\b.*\b(ball|hammer)\b|\bgalileo\b/, extra: "gravity free fall acceleration" },
+  { re: /\bphotosynthe\w*\b|\b(why|how).{0,24}\bplant\w*\b.*\b(food|grow|green|oxygen)\b|\bplant\w*\b.*\bsunlight\b/, extra: "photosynthesis chlorophyll plants biomass" },
+  { re: /\bwater cycle\b|\b(why|how).{0,20}\brain\b|\bevaporat\w*\b|\bcondens\w*\b|\bcloud\w*\b.*\brain\b/, extra: "water cycle evaporation precipitation" },
+  { re: /\bheat\b.*\b(metal|copper|conduct)\b|\bconduct\w*\b.*\bheat\b|\bwhy.{0,16}\bmetal.{0,16}\b(hot|cold)\b/, extra: "heat transfer conduction thermal" },
+  { re: /\b(solid|liquid|gas|steam|melt|boil|freeze|ice)\b.*\b(heat|cold|hot|warm|temperature)\b|\bstates of matter\b|\bphase change\b/, extra: "states of matter kinetic temperature" },
+  { re: /\bkepler\b|\b(why|how).{0,20}\bplanet\w*\b.*\b(orbit|year|sun)\b|\bsolar system\b/, extra: "kepler planetary orbits solar system" }
+];
+
+function expandPhenomena(hay) {
+  const text = ` ${hay} `;
+  const extra = [];
+  for (const hint of PHENOMENA) {
+    if (hint.re.test(text)) extra.push(hint.extra);
+  }
+  if (!extra.length) return hay;
+  return stemPhrase(`${hay} ${extra.join(" ")}`);
+}
+
 function gradeNumber(grade) {
   const n = Number(String(grade || "").replace(/[^\d]/g, ""));
   return Number.isFinite(n) && n > 0 ? n : null;
@@ -277,11 +301,23 @@ const DISTINCTIVE_LEN = 10;
  * request is essentially just that word, otherwise "newton's third law" pulls in
  * a fractions widget tagged "thirds".
  */
+function searchDocument(item) {
+  return stemPhrase([
+    item.title,
+    item.concept,
+    item.idea,
+    item.summary,
+    ...(item.topics || []),
+    ...(item.keywords || [])
+  ].join(" "));
+}
+
 function scoreItem(item, hay, concept) {
   const padded = ` ${hay} `;
   const conceptPad = ` ${stemPhrase(concept)} `;
   const hayWords = hay.split(" ").filter(Boolean);
   const terse = hayWords.length <= 3;
+  const doc = ` ${item.searchText || searchDocument(item)} `;
   let score = 0;
   let distinctive = false;
 
@@ -305,10 +341,16 @@ function scoreItem(item, hay, concept) {
     if (conceptPad.includes(` ${phrase} `) || (concept && concept.includes(phrase))) score += 8;
   }
 
+  // Terms we injected from "why is the sky blue" → rayleigh scattering, etc.
+  for (const word of hayWords) {
+    if (word.length < 7) continue;
+    if (!doc.includes(` ${word} `)) continue;
+    score += word.length >= 9 ? 10 : 6;
+    if (word.length >= 9) distinctive = true;
+  }
+
   if (score >= MIN_SCORE) return { score, distinctive };
 
-  // Fall back to words lifted from the title, so "kepler" or "fractions" still
-  // land even when every tag is a compound phrase.
   for (const word of item.keywords || []) {
     if (!padded.includes(` ${word} `)) continue;
     score += terse ? 14 : 2;
@@ -336,8 +378,9 @@ function matchInteractive(query, options = {}) {
   const child = stemPhrase(options.childText || "");
   // Orchestrator often sends the same string as concept and childText; don't
   // double it or "force and friction" becomes six words and misses terse matches.
-  const hay = !child || child === concept ? concept : stemPhrase(`${concept} ${child}`);
-  if (!hay || hay.length < 4) return null;
+  const rawHay = !child || child === concept ? concept : stemPhrase(`${concept} ${child}`);
+  if (!rawHay || rawHay.length < 4) return null;
+  const hay = expandPhenomena(rawHay);
 
   const grade = gradeNumber(options.grade);
   const items = Array.isArray(options.items) && options.items.length ? options.items : ITEMS;
@@ -366,4 +409,4 @@ function matchInteractive(query, options = {}) {
   return { ...best, score: bestScore };
 }
 
-module.exports = { ITEMS, matchInteractive, normalize, gradeNumber, keywordsFromTitle };
+module.exports = { ITEMS, matchInteractive, normalize, gradeNumber, keywordsFromTitle, stemPhrase };

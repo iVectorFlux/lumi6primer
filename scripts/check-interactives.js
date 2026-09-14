@@ -39,7 +39,12 @@ const QUERIES = [
   { q: "force and friction", grade: 6 },
   { q: "natural selection", grade: 10 },
   // These must stay MISS: no topic named, so no widget should appear.
-  { q: "why is the sky blue", grade: 3 },
+  { q: "why is the sky blue", grade: 3, expect: "wave-v2" },
+  { q: "why are sunsets red", grade: 5, expect: "wave-v2" },
+  { q: "theory of relativity", grade: 5, expect: "relativity-v2" },
+  { q: "why does time slow down near the speed of light", grade: 8, expect: "relativity-v2" },
+  { q: "how does a magnet make electricity", grade: 6, expect: "electromagnetism-v2" },
+  { q: "why is there a rainbow", grade: 4, expect: "prism-v2" },
   { q: "what is newton's third law", grade: 11 },
   { q: "hello", grade: 3 },
   { q: "tell me a story", grade: 3 },
@@ -54,13 +59,14 @@ async function main() {
   const items = await lessonInteractive.loadAll(store);
   console.log(`catalog: ${items.length} interactives (source: ${items[0]?.source || "file"})`);
 
-  for (const { q, grade } of QUERIES) {
+  for (const { q, grade, expect } of QUERIES) {
     const hit = await lessonInteractive.match({ store, concept: q, childText: q, grade });
     if (!hit) {
-      console.log(`  MISS  class ${grade}  "${q}"`);
+      console.log(`  MISS  class ${grade}  "${q}"${expect ? `  (wanted ${expect})` : ""}`);
       continue;
     }
-    console.log(`  HIT   class ${grade}  "${q}" -> ${hit.slug} (${hit.score}) ${hit.title.slice(0, 58)}`);
+    const wrong = expect && hit.slug !== expect ? `  WANT ${expect}` : "";
+    console.log(`  HIT   class ${grade}  "${q}" -> ${hit.slug} (${hit.score}) ${hit.title.slice(0, 58)}${wrong}`);
   }
 
   // Coverage: can each interactive be found by its own title at its own class?
