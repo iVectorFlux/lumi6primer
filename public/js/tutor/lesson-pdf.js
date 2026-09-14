@@ -20,7 +20,7 @@
 
     for (let i = turns.length - 1; i >= Math.max(0, turns.length - 3); i--) {
       if (turns[i].role === cleanRole) {
-        if (!turns[i].text && turns[i].image) {
+        if (!turns[i].text && (turns[i].image || turns[i].interactive)) {
           turns[i].text = spoken;
           try {
             sessionStorage.setItem("lumi6_lesson_turns", JSON.stringify(turns.slice(-30)));
@@ -49,15 +49,14 @@
   function attachImage(href) {
     const url = String(href || "").trim();
     if (!url) return;
-    for (let i = turns.length - 1; i >= 0; i -= 1) {
-      if (turns[i].role === "teacher") {
-        turns[i].image = url;
-        try {
-          sessionStorage.setItem("lumi6_lesson_turns", JSON.stringify(turns.slice(-30)));
-        } catch {}
-        if (typeof window.syncTalkModeFeed === "function") window.syncTalkModeFeed();
-        return;
-      }
+    const last = turns[turns.length - 1];
+    if (last?.role === "teacher") {
+      last.image = url;
+      try {
+        sessionStorage.setItem("lumi6_lesson_turns", JSON.stringify(turns.slice(-30)));
+      } catch {}
+      if (typeof window.syncTalkModeFeed === "function") window.syncTalkModeFeed();
+      return;
     }
     turns.push({ role: "teacher", text: "", image: url, interactive: null });
     try {
@@ -78,17 +77,20 @@
       klass: Number(extra.klass) || null,
       idea: String(extra.idea || "").trim(),
       concept: String(extra.concept || "").trim(),
-      summary: String(extra.summary || "").trim()
+      summary: String(extra.summary || "").trim(),
+      pill: extra.pill && typeof extra.pill === "object" ? extra.pill : null,
+      scenario: Boolean(extra.scenario || extra.pill),
+      hrefMobile: String(extra.hrefMobile || "").trim(),
+      hrefDesktop: String(extra.hrefDesktop || "").trim()
     };
-    for (let i = turns.length - 1; i >= 0; i -= 1) {
-      if (turns[i].role === "teacher") {
-        turns[i].interactive = widget;
-        try {
-          sessionStorage.setItem("lumi6_lesson_turns", JSON.stringify(turns.slice(-30)));
-        } catch {}
-        if (typeof window.syncTalkModeFeed === "function") window.syncTalkModeFeed();
-        return;
-      }
+    const last = turns[turns.length - 1];
+    if (last?.role === "teacher") {
+      last.interactive = widget;
+      try {
+        sessionStorage.setItem("lumi6_lesson_turns", JSON.stringify(turns.slice(-30)));
+      } catch {}
+      if (typeof window.syncTalkModeFeed === "function") window.syncTalkModeFeed();
+      return;
     }
     turns.push({ role: "teacher", text: "", image: "", interactive: widget });
     try {

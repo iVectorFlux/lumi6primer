@@ -3208,6 +3208,94 @@ body.mode-talk-active .canvas-footer {
   background: #fff;
 }
 
+/* In-chat interactive pill (scenario v2) */
+.talk-interactive-pill-wrapper {
+  margin: 2px 0 6px;
+}
+
+.talk-interactive-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  max-width: min(100%, 320px);
+  width: auto;
+  padding: 7px 10px;
+  border: 1px solid rgba(139, 92, 246, 0.25);
+  border-radius: 999px;
+  background: linear-gradient(135deg, #faf5ff 0%, #ffffff 55%);
+  box-shadow: 0 3px 10px rgba(139, 92, 246, 0.08);
+  cursor: pointer;
+  text-align: left;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease, transform 0.15s ease;
+}
+
+.talk-interactive-pill:hover {
+  border-color: rgba(139, 92, 246, 0.45);
+  box-shadow: 0 8px 22px rgba(139, 92, 246, 0.14);
+  transform: translateY(-1px);
+}
+
+.talk-pill-icon {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 999px;
+  background: rgba(139, 92, 246, 0.08);
+}
+
+.talk-pill-icon svg {
+  width: 20px;
+  height: 15px;
+}
+
+.talk-pill-body {
+  flex: 1 1 auto;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.talk-pill-title {
+  font-size: 12.5px;
+  font-weight: 700;
+  color: #0f172a;
+  line-height: 1.2;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.talk-pill-sub {
+  font-size: 11px;
+  line-height: 1.3;
+  color: #64748b;
+  display: -webkit-box;
+  -webkit-line-clamp: 1;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.talk-pill-action {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  border-radius: 999px;
+  color: #8b5cf6;
+  background: rgba(139, 92, 246, 0.1);
+}
+
+.talk-pill-action svg {
+  width: 11px;
+  height: 11px;
+}
+
 /* Starting height only; the embed reports its real height and JS applies it. */
 .talk-lesson-interactive {
   display: block;
@@ -3582,13 +3670,6 @@ body.mode-talk-active .canvas-footer {
 }
 
 .talk-playground-notes {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-  padding: 14px 16px 0;
-}
-
-.talk-playground-notes:empty {
   display: none;
 }
 
@@ -3621,4 +3702,28 @@ body.talk-playground-open {
 
 body.talk-playground-open .talk-bottom-bar {
   visibility: hidden;
+}
+
+/* Scenario interactives fill the playground stage on desktop. */
+body.talk-playground-scenario .talk-playground-scroll {
+  display: flex;
+  flex-direction: column;
+  padding: 0;
+}
+
+body.talk-playground-scenario .talk-playground-header,
+body.talk-playground-scenario .talk-playground-notes {
+  flex: 0 0 auto;
+}
+
+body.talk-playground-scenario .talk-playground-stage {
+  flex: 1 1 auto;
+  min-height: 0;
+  display: flex;
+}
+
+body.talk-playground-scenario .talk-playground-stage .talk-lesson-interactive {
+  flex: 1 1 auto;
+  min-height: 0;
+  height: 100% !important;
 }

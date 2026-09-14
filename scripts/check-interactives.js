@@ -35,6 +35,8 @@ const QUERIES = [
   { q: "first law of thermodynamics", grade: 5 },
   { q: "faraday's law", grade: 12 },
   { q: "pythagoras theorem", grade: 8 },
+  { q: "pythagorean theorem", grade: 8 },
+  { q: "force and friction", grade: 6 },
   { q: "natural selection", grade: 10 },
   // These must stay MISS: no topic named, so no widget should appear.
   { q: "why is the sky blue", grade: 3 },
@@ -90,6 +92,8 @@ async function main() {
     const cmd = lessonInteractive.commandFor(waterCycle);
     console.log(`\ncommand metadata for ${cmd.slug}:`);
     console.log(`  subject/class: ${cmd.subject || "—"} / ${cmd.klass || "—"}`);
+    console.log(`  pill:    ${cmd.pill?.title ? cmd.pill.title.slice(0, 70) : "(none)"}`);
+    console.log(`  scenario:${cmd.scenario ? "yes" : "no"}  mobile/desktop hrefs set: ${Boolean(cmd.hrefMobile && cmd.hrefDesktop)}`);
     console.log(`  idea:    ${cmd.idea ? cmd.idea.slice(0, 90) : "(empty)"}`);
     console.log(`  concept: ${cmd.concept ? cmd.concept.slice(0, 90) : "(empty)"}`);
   }

@@ -43,24 +43,61 @@
     return rest ? `${letter} — ${rest}` : letter;
   }
 
+  function interactiveMetaAttrs(interactive) {
+    return [
+      `data-slug="${escapeHtml(interactive.slug || "")}"`,
+      `data-scenario="${interactive.scenario ? "1" : "0"}"`,
+      `data-subject="${escapeHtml(interactive.subject || "")}"`,
+      `data-klass="${escapeHtml(interactive.klass || "")}"`,
+      `data-idea="${escapeHtml(interactive.idea || "")}"`,
+      `data-concept="${escapeHtml(interactive.concept || "")}"`,
+      `data-summary="${escapeHtml(interactive.summary || "")}"`,
+      `data-href-mobile="${escapeHtml(interactive.hrefMobile || "")}"`,
+      `data-href-desktop="${escapeHtml(interactive.hrefDesktop || "")}"`
+    ].join("\n                  ");
+  }
+
+  /** Compact capsule in chat — the iframe loads only after the learner expands it. */
+  function talkInteractivePillHtml(step, titleText) {
+    const interactive = step.interactive;
+    const pill = interactive.pill || {};
+    const label = pill.title || interactive.title || titleText;
+    const subtitle = pill.subtitle || interactive.concept || interactive.summary || "Tap to explore";
+    return `
+            <div class="talk-interactive-pill-wrapper" data-interactive-slug="${escapeHtml(interactive.slug)}">
+              <button type="button" class="talk-interactive-pill" data-expand-interactive
+                ${interactiveMetaAttrs(interactive)}
+                title="${escapeHtml(label)}">
+                <span class="talk-pill-icon" aria-hidden="true">
+                  <svg width="32" height="24" viewBox="0 0 32 24" fill="none">
+                    <polygon points="6,20 26,20 6,6" fill="rgba(139,92,246,0.12)" stroke="#8b5cf6" stroke-width="1.8"/>
+                    <rect x="6" y="15" width="5" height="5" fill="none" stroke="#94a3b8" stroke-width="1"/>
+                  </svg>
+                </span>
+                <span class="talk-pill-body">
+                  <span class="talk-pill-title">${escapeHtml(label)}</span>
+                  <span class="talk-pill-sub">${escapeHtml(subtitle)}</span>
+                </span>
+                <span class="talk-pill-action" aria-hidden="true">
+                  <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="15 3 21 3 21 9"/><polyline points="9 21 3 21 3 15"/><line x1="21" y1="3" x2="14" y2="10"/><line x1="3" y1="21" x2="10" y2="14"/></svg>
+                </span>
+              </button>
+              <div class="talk-interactive-stage" hidden aria-hidden="true"></div>
+            </div>`;
+  }
+
   function talkInteractiveHtml(step, titleText) {
+    if (step.interactive?.pill?.title || step.interactive?.scenario) {
+      return talkInteractivePillHtml(step, titleText);
+    }
     const href = step.interactive.href || `/api/primer/interactive/${encodeURIComponent(step.interactive.slug)}`;
     const label = step.interactive.title || titleText;
-    // Carried on the element so the playground still has them after the frame moves.
-    const meta = [
-      `data-subject="${escapeHtml(step.interactive.subject || "")}"`,
-      `data-klass="${escapeHtml(step.interactive.klass || "")}"`,
-      `data-idea="${escapeHtml(step.interactive.idea || "")}"`,
-      `data-concept="${escapeHtml(step.interactive.concept || "")}"`,
-      `data-summary="${escapeHtml(step.interactive.summary || "")}"`
-    ].join("\n                  ");
     return `
             <div class="talk-image-wrapper talk-interactive-wrapper" data-interactive-slug="${escapeHtml(step.interactive.slug)}">
               <div class="talk-interactive-stage">
                 <iframe
                   class="talk-lesson-interactive"
-                  data-slug="${escapeHtml(step.interactive.slug)}"
-                  ${meta}
+                  ${interactiveMetaAttrs(step.interactive)}
                   src="${escapeHtml(href.includes("?") ? href : `${href}?embed=1`)}"
                   title="${escapeHtml(label)}"
                   sandbox="allow-scripts"
@@ -438,10 +475,47 @@
     }
   }
 
+  function isMobileInteractiveView() {
+    return window.matchMedia("(max-width: 900px)").matches;
+  }
+
+  function interactiveExpandHref(trigger) {
+    const data = trigger?.dataset || {};
+    const slug = data.slug || trigger?.closest("[data-interactive-slug]")?.dataset?.interactiveSlug || "";
+    if (!slug) return "";
+    const mobile = data.hrefMobile || `/api/primer/interactive/${encodeURIComponent(slug)}?embed=1&mode=mobile`;
+    const desktop = data.hrefDesktop || `/api/primer/interactive/${encodeURIComponent(slug)}?embed=1&mode=desktop`;
+    return isMobileInteractiveView() ? mobile : desktop;
+  }
+
+  function ensureInteractiveFrame(trigger) {
+    const wrapper = trigger.closest(".talk-interactive-pill-wrapper, .talk-interactive-wrapper");
+    if (!wrapper) return null;
+    const stage = wrapper.querySelector(".talk-interactive-stage") || wrapper;
+    let frame = wrapper.querySelector("iframe.talk-lesson-interactive");
+    const data = trigger.dataset || {};
+    const slug = data.slug || wrapper.dataset.interactiveSlug || "";
+    const label = trigger.getAttribute("title") || trigger.querySelector(".talk-pill-title")?.textContent?.trim() || slug;
+    if (!frame) {
+      frame = document.createElement("iframe");
+      frame.className = "talk-lesson-interactive";
+      frame.setAttribute("sandbox", "allow-scripts");
+      frame.setAttribute("title", label);
+      for (const key of ["slug", "scenario", "subject", "klass", "idea", "concept", "summary", "hrefMobile", "hrefDesktop"]) {
+        if (data[key] != null) frame.dataset[key] = data[key];
+      }
+      stage.appendChild(frame);
+    }
+    const href = interactiveExpandHref(trigger);
+    if (href && frame.getAttribute("src") !== href) frame.setAttribute("src", href);
+    return frame;
+  }
+
   function bindTalkPlayground(feed) {
     feed.querySelectorAll("[data-expand-interactive]").forEach((btn) => {
       btn.addEventListener("click", () => {
-        const frame = btn.closest(".talk-interactive-wrapper")?.querySelector("iframe.talk-lesson-interactive");
+        const frame = btn.closest(".talk-interactive-wrapper")?.querySelector("iframe.talk-lesson-interactive")
+          || ensureInteractiveFrame(btn);
         if (frame) openTalkPlayground(frame);
       });
     });
@@ -455,16 +529,6 @@
     return SUBJECT_LABELS[key] || key.charAt(0).toUpperCase() + key.slice(1);
   }
 
-  function playgroundNoteHtml(tag, body) {
-    if (!body) return "";
-    return `
-        <section class="talk-playground-note">
-          <span class="talk-playground-note-tag">${escapeHtml(tag)}</span>
-          <p class="talk-playground-note-body">${escapeHtml(body)}</p>
-        </section>`;
-  }
-
-  /** Title and badges above, instructions and concept below the interactive. */
   function fillPlaygroundChrome(frame) {
     const header = document.getElementById("talkPlaygroundHeader");
     const heading = document.getElementById("talkPlaygroundHeading");
@@ -479,20 +543,16 @@
       badges.innerHTML = chips.map((chip) => `<span class="talk-playground-badge">${escapeHtml(chip)}</span>`).join("");
     }
     if (header) header.hidden = !label;
-
-    if (notes) {
-      // Nothing in the database for this one: leave clean space rather than empty headings.
-      notes.innerHTML = [
-        playgroundNoteHtml("How to explore", data.idea),
-        playgroundNoteHtml("What you are learning", data.concept),
-        playgroundNoteHtml("Key takeaway", data.summary && data.summary !== data.concept ? data.summary : "")
-      ].join("");
-    }
+    if (notes) notes.innerHTML = "";
   }
 
   /** Height comes from the interactive itself, so its canvas is never stretched. */
   function applyInteractiveHeight(frame, height) {
     if (!frame || !height) return;
+    if (frame.dataset.scenario === "1" && frame.closest("#talkPlaygroundStage")) {
+      frame.style.height = "100%";
+      return;
+    }
     const inPlayground = Boolean(frame.closest("#talkPlaygroundStage"));
     const ceiling = inPlayground
       ? Math.round(window.innerHeight * 1.4)
@@ -520,14 +580,17 @@
     if (!sheet || !stage || !home) return;
     talkPlaygroundSlug = frame.dataset.slug || "";
     home.dataset.playgroundHome = "1";
+    const scenario = frame.dataset.scenario === "1";
     if (title) title.textContent = frame.getAttribute("title") || "Playground";
     fillPlaygroundChrome(frame);
     stage.replaceChildren(frame);
     sheet.hidden = false;
+    document.body.classList.toggle("talk-playground-scenario", scenario);
+    document.body.classList.toggle("talk-playground-mobile", isMobileInteractiveView());
     document.body.classList.add("talk-playground-open");
     requestAnimationFrame(() => {
       frame.style.width = "100%";
-      frame.style.height = "";
+      frame.style.height = scenario ? "100%" : "";
       nudgeInteractive(frame);
     });
   }
@@ -557,7 +620,7 @@
     if (sheet) sheet.hidden = true;
     if (header) header.hidden = true;
     if (notes) notes.innerHTML = "";
-    document.body.classList.remove("talk-playground-open");
+    document.body.classList.remove("talk-playground-open", "talk-playground-scenario", "talk-playground-mobile");
     talkPlaygroundSlug = "";
   }
 

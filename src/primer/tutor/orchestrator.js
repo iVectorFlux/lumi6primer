@@ -451,22 +451,33 @@ class LearningOrchestrator {
       });
     }
 
-    if (graphicPlan.generate) {
-      const interactiveHit = await lessonInteractive.match({
+    // A named topic should still get a pill even when we skip the Wikipedia picture
+    // (same-scene, no "draw" intent, answering a check question, etc.).
+    const skipInteractive = Boolean(
+      askedToLook
+      || junkBoardSpeech
+      || understanding.wantsWrite
+      || understanding.intent === "homework"
+    );
+    const interactiveHit = skipInteractive
+      ? null
+      : await lessonInteractive.match({
         store: this.childModel.store,
-        concept: graphicTitle || understanding.concept,
+        concept: graphicTitle || understanding.concept || spokenText,
         childText: spokenText,
         grade: child?.grade
       }).catch(() => null);
-      const lastInteractive = String(state.conversationState?.lastInteractiveSlug || "");
-      if (interactiveHit?.slug && interactiveHit.slug === lastInteractive) {
-        console.log("[PRIMER] Interactive already showing:", interactiveHit.slug);
-        state.conversationState.lastGraphicScene = graphicPlan.scene;
-      } else if (interactiveHit?.slug) {
+    const lastInteractive = String(state.conversationState?.lastInteractiveSlug || "");
+
+    if (interactiveHit?.slug && interactiveHit.slug === lastInteractive) {
+      console.log("[PRIMER] Interactive already showing:", interactiveHit.slug);
+      if (graphicPlan.generate) state.conversationState.lastGraphicScene = graphicPlan.scene;
+    } else if (interactiveHit?.slug) {
         const widget = lessonInteractive.commandFor(interactiveHit);
         // Wikipedia/Commons only. A companion picture is worth a second slot on the
         // board when it is free; it is not worth paying an image model for.
-        const companion = await lessonGraphic.generate({
+        const companion = graphicPlan.generate
+          ? await lessonGraphic.generate({
           topic: graphicTitle,
           scene: graphicPlan.scene,
           previousScene: lastScene,
@@ -480,7 +491,8 @@ class LearningOrchestrator {
         }).catch((err) => {
           console.warn("[PRIMER] Companion image failed:", err.message);
           return null;
-        });
+        })
+          : null;
         const pair = [];
         if (companion?.href) {
           companion.keepOthers = true;
@@ -504,6 +516,11 @@ class LearningOrchestrator {
           visualPlan: { shouldDraw: true, commands: pair }
         });
         console.log("[PRIMER] Interactive matched:", interactiveHit.slug, companion?.href ? "(paired with image)" : "(no free image)");
+    }
+
+    if (!interactiveHit?.slug) {
+      if (!graphicPlan.generate) {
+        console.log("[PRIMER] Graphic not requested:", graphicPlan.reason || graphicPlan.kind);
       } else if (!lessonGraphic.isConfigured()) {
         console.warn("[PRIMER] Graphic skipped: no image provider configured");
       } else {
@@ -561,8 +578,6 @@ class LearningOrchestrator {
           }
         }
       }
-    } else {
-      console.log("[PRIMER] Graphic not requested:", graphicPlan.reason || graphicPlan.kind);
     }
 
     const writeCmd = this.canvas.buildWriteCommand(spokenText, state.conversationState?.lastTeacherSpoken);

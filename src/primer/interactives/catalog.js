@@ -334,7 +334,9 @@ function gradeDistance(item, grade) {
 function matchInteractive(query, options = {}) {
   const concept = stemPhrase(options.concept || query || "");
   const child = stemPhrase(options.childText || "");
-  const hay = stemPhrase([concept, child].filter(Boolean).join(" "));
+  // Orchestrator often sends the same string as concept and childText; don't
+  // double it or "force and friction" becomes six words and misses terse matches.
+  const hay = !child || child === concept ? concept : stemPhrase(`${concept} ${child}`);
   if (!hay || hay.length < 4) return null;
 
   const grade = gradeNumber(options.grade);

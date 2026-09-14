@@ -163,7 +163,11 @@
           klass: interactive.klass,
           idea: interactive.idea,
           concept: interactive.concept,
-          summary: interactive.summary
+          summary: interactive.summary,
+          pill: interactive.pill,
+          scenario: interactive.scenario,
+          hrefMobile: interactive.hrefMobile,
+          hrefDesktop: interactive.hrefDesktop
         });
       }
       const lastTeacher = document.querySelector("#primerMessages .primer-msg.teacher:last-of-type");
@@ -184,15 +188,15 @@
     if (typeof window.syncTalkModeFeed === "function") {
       window.syncTalkModeFeed();
     }
-    const hasImage = Boolean(photo);
+    const hasVisual = Boolean(photo || interactive);
     if (window.Lumi6CanvasAdapter) {
       window.Lumi6CanvasAdapter.renderCommands(commands).then(() => {
-        if (hasImage) hidePrimerGraphicLoader();
+        if (hasVisual) hidePrimerGraphicLoader();
       }).catch((err) => {
         console.warn("[PRIMER] canvas render failed:", err);
-        if (hasImage) hidePrimerGraphicLoader();
+        if (hasVisual) hidePrimerGraphicLoader();
       });
-    } else if (hasImage) {
+    } else if (hasVisual) {
       hidePrimerGraphicLoader();
     }
     return true;

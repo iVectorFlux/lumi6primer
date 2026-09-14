@@ -233,7 +233,9 @@ async function primerRoutes(req, res, url, options = {}) {
         "Content-Security-Policy": "frame-ancestors 'self'",
         "X-Content-Type-Options": "nosniff"
       });
-      res.end(lessonInteractive.embedHtml(hit.html));
+      const q = new URL(req.url, "http://localhost");
+      const mode = q.searchParams.get("mode") || "";
+      res.end(lessonInteractive.embedHtml(hit.html, { mode }));
       return true;
     }
 
