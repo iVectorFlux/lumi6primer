@@ -114,6 +114,16 @@ async function main() {
     console.log(`  idea:    ${cmd.idea ? cmd.idea.slice(0, 90) : "(empty)"}`);
     console.log(`  concept: ${cmd.concept ? cmd.concept.slice(0, 90) : "(empty)"}`);
   }
+
+  const relativity = await lessonInteractive.getBySlug("relativity-v2", store);
+  if (relativity?.html) {
+    const mobile = lessonInteractive.embedHtml(relativity.html, { mode: "mobile" });
+    const pill = lessonInteractive.embedHtml(relativity.html, { mode: "pill" });
+    const hidesDesktop = mobile.includes(".desktop-section") && mobile.includes("display:none");
+    const showsPill = pill.includes(".pill-section") && /#chatPillCard/.test(pill);
+    console.log(`\nrelativity-v2 embed: pill=${showsPill ? "ok" : "BAD"} mobile-hides-desktop=${hidesDesktop ? "ok" : "BAD"}`);
+    if (!hidesDesktop || !showsPill) process.exitCode = 1;
+  }
 }
 
 main().catch((err) => {

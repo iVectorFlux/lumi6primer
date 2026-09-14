@@ -648,10 +648,23 @@ button,
     display: none !important;
   }
 
-  /* Shimmer / loading states */
+  /* Waiting animation — keep the Lottie readable on a phone */
   .talk-shimmer-image-placeholder {
     height: 100px;
     font-size: 12px;
+  }
+
+  .lumi-wait-stage {
+    width: min(190px, 68vw);
+    height: min(218px, 78vw);
+  }
+
+  .lumi-wait-title {
+    font-size: 15px;
+  }
+
+  .lumi-wait-line {
+    font-size: 13px;
   }
 
   /* Voice overlay — keep within viewport on mobile */

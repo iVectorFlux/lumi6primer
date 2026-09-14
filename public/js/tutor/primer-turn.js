@@ -130,17 +130,17 @@
 
   window.primerTurn = primerTurn;
 
-  const DEFAULT_TOPIC_ICON = '<svg viewBox="0 0 128 128" aria-hidden="true"><path fill="#fde68a" d="M64 18a32 32 0 0 1 18 58c-4 4-6 8-6 14H52c0-6-2-10-6-14A32 32 0 0 1 64 18Z"/><rect x="52" y="94" width="24" height="8" rx="3" fill="#f59e0b"/><rect x="56" y="104" width="16" height="8" rx="3" fill="#d97706"/></svg>';
-
-  function showPrimerGraphicLoader(title, extras = {}) {
+  function showPrimerGraphicLoader() {
     window.__primerGraphicLoading = true;
     if (typeof window.syncTalkModeFeed === "function") window.syncTalkModeFeed();
     const el = document.getElementById("primerGraphicLoader");
-    const text = document.getElementById("primerGraphicLoaderText");
-    const icon = document.getElementById("primerGraphicLoaderIcon");
-    if (text) text.textContent = "Drawing a picture";
-    if (icon) icon.innerHTML = extras.iconMarkup || extras.iconSvg || DEFAULT_TOPIC_ICON;
-    if (el) el.hidden = false;
+    if (el) {
+      el.hidden = false;
+      if (!el.querySelector(".lumi-wait") && typeof window.lumiWaitHtml === "function") {
+        el.innerHTML = window.lumiWaitHtml("visual");
+      }
+      if (typeof window.mountLumiWaiters === "function") window.mountLumiWaiters(el);
+    }
   }
 
   function hidePrimerGraphicLoader() {
@@ -350,12 +350,11 @@
       const loadingDiv = document.createElement("div");
       loadingDiv.id = "atlasLoadingIndicator";
       loadingDiv.className = "primer-loading";
-      loadingDiv.innerHTML = `
-        <span class="primer-dot"></span>
-        <span class="primer-dot"></span>
-        <span class="primer-dot"></span>
-      `;
+      loadingDiv.innerHTML = typeof window.lumiWaitHtml === "function"
+        ? window.lumiWaitHtml("think")
+        : `<p class="lumi-wait-title">Lumi6 is gathering the pieces</p>`;
       list.appendChild(loadingDiv);
+      if (typeof window.mountLumiWaiters === "function") window.mountLumiWaiters(loadingDiv);
       this.scrollToBottom();
     }
 
@@ -363,8 +362,10 @@
      * Remove loading indicator.
      */
     hideLoading() {
+      window.__primerWaiting = false;
       const loadingDiv = document.getElementById("atlasLoadingIndicator");
       if (loadingDiv) {
+        if (typeof window.destroyLumiWaiters === "function") window.destroyLumiWaiters(loadingDiv);
         loadingDiv.remove();
       }
     }
@@ -427,8 +428,10 @@
 
       // Set loading state
       this.isSending = true;
+      window.__primerWaiting = true;
       if (this.elements.sendBtn) this.elements.sendBtn.disabled = true;
       this.showLoading();
+      if (typeof window.syncTalkModeFeed === "function") window.syncTalkModeFeed();
 
       try {
         const primerBody = {

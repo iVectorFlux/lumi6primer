@@ -240,19 +240,24 @@ const SCENARIO_CHROME_CSS = `
 .view-section{width:100%!important;max-width:none!important;margin:0!important;padding:0!important}
 `;
 
+const PILL_SEL = "#sectionPill,.pill-section";
+const MOBILE_SEL = "#sectionMobile,.mobile-section";
+const DESKTOP_SEL = "#sectionDesktop,.desktop-section";
+const HIDDEN_OVERLAY = ".drawer-overlay,#drawerOverlay";
+
 const SCENARIO_PILL_CSS = `
 html,body{width:100%!important;height:auto!important;min-height:0!important;margin:0!important;padding:8px!important;overflow:hidden!important;background:transparent!important}
 body{display:block!important;align-items:stretch!important}
-#sectionPill{display:flex!important}
-#sectionMobile,#sectionDesktop,.drawer-overlay{display:none!important}
-.chat-pill-card{width:100%!important;max-width:100%!important;margin:0!important;cursor:pointer}
+${PILL_SEL}{display:flex!important}
+${MOBILE_SEL},${DESKTOP_SEL},${HIDDEN_OVERLAY}{display:none!important}
+.chat-pill-card,#chatPillCard{width:100%!important;max-width:100%!important;margin:0!important;cursor:pointer}
 `;
 
 const SCENARIO_MOBILE_CSS = `
 html,body{width:100%!important;height:100%!important;margin:0!important;padding:0!important;overflow:auto!important;-webkit-overflow-scrolling:touch!important}
 body{display:flex!important;flex-direction:column!important;align-items:stretch!important}
-#sectionPill,#sectionDesktop,.drawer-overlay{display:none!important}
-#sectionMobile{display:flex!important;flex:1 1 auto!important;min-height:100%!important}
+${PILL_SEL},${DESKTOP_SEL},${HIDDEN_OVERLAY}{display:none!important}
+${MOBILE_SEL}{display:flex!important;flex:1 1 auto!important;min-height:100%!important}
 .mobile-phone-frame{width:100%!important;max-width:none!important;height:auto!important;min-height:100%!important;border:0!important;border-radius:0!important;box-shadow:none!important;display:flex!important;flex-direction:column!important;overflow:visible!important}
 .mobile-phone-frame .phone-stage{width:100%!important;height:min(48dvh,380px)!important;min-height:200px!important;flex:0 0 auto!important}
 .mobile-phone-frame .phone-controls{height:auto!important;max-height:none!important;flex:1 1 auto!important;overflow:visible!important}
@@ -261,9 +266,10 @@ body{display:flex!important;flex-direction:column!important;align-items:stretch!
 const SCENARIO_DESKTOP_CSS = `
 html,body{width:100%!important;height:100%!important;margin:0!important;padding:0!important;overflow:hidden!important}
 body{display:flex!important;flex-direction:column!important;align-items:stretch!important}
-#sectionPill,#sectionMobile,.drawer-overlay{display:none!important}
-#sectionDesktop,.gridTop{display:flex!important;flex:1 1 auto!important}
-#sectionDesktop{display:flex!important;width:100%!important;height:100%!important}
+${PILL_SEL},${MOBILE_SEL},${HIDDEN_OVERLAY}{display:none!important}
+${DESKTOP_SEL},.gridTop{display:flex!important;flex:1 1 auto!important}
+${DESKTOP_SEL}{display:flex!important;width:100%!important;height:100%!important}
+.desktop-card{width:100%!important;max-width:none!important;height:100%!important;flex:1 1 auto!important}
 `;
 
 function scenarioEmbedCss(mode) {
@@ -278,19 +284,27 @@ function scenarioBootScript(mode) {
   return `<script id="lumi-scenario-boot">
 (function(){
   var mode = ${JSON.stringify(view)};
+  var tries = 0;
   function boot(){
     if (typeof setMode === "function") {
       setMode(mode === "pill" ? "pill" : mode);
+    } else if (tries++ < 25) {
+      setTimeout(boot, 40);
     }
-    if (mode === "pill") {
+    if (mode === "pill" && !window.__lumiPillBound) {
+      window.__lumiPillBound = true;
       window.openDrawer = function(){
         try { window.parent.postMessage({ type: "lumi6:expand-interactive" }, "*"); } catch (e) {}
       };
-      var pill = document.getElementById("chatPillTrigger");
-      if (pill) pill.onclick = window.openDrawer;
+      var pills = document.querySelectorAll("#chatPillTrigger, #chatPillCard, .chat-pill-card");
+      pills.forEach(function(pill){
+        pill.addEventListener("click", function(ev){
+          ev.preventDefault();
+          window.openDrawer();
+        });
+      });
     }
     try { window.dispatchEvent(new Event("resize")); } catch (e) {}
-    if (typeof setMode !== "function") setTimeout(boot, 40);
   }
   if (document.readyState === "loading") addEventListener("DOMContentLoaded", boot);
   else boot();

@@ -1607,7 +1607,7 @@ function plotFallback(result,changedBox){
   return{tool:"plot_function",x,y,w,h,expression};
 }
 
-const MIME = { ".html":"text/html; charset=utf-8", ".js":"application/javascript; charset=utf-8", ".css":"text/css; charset=utf-8", ".md":"text/markdown; charset=utf-8", ".svg":"image/svg+xml", ".png":"image/png" };
+const MIME = { ".html":"text/html; charset=utf-8", ".js":"application/javascript; charset=utf-8", ".css":"text/css; charset=utf-8", ".md":"text/markdown; charset=utf-8", ".svg":"image/svg+xml", ".png":"image/png", ".json":"application/json; charset=utf-8", ".webp":"image/webp" };
 function pluginAuthoringPrompt(document, styles="", instructions="") {
   return `Improve the Lumi6 plugin bundle below. Resolve structural or safety errors and make it specific enough that a canvas model can generate the requested HTML without receiving an HTML template. Treat any short natural-language sentence in the draft as the capability brief, not as a finished prompt. Understand the Markdown and CSS together: document the reusable CSS classes and variables that generated widgets should use, keep CSS scoped to widget content, and avoid repeating those base styles in generated HTML. For the simple air-quality brief ("Show air quality for a location"), fill in a concrete public browser-CORS data source, exact geocoding and air-quality URLs, parameters and JSON fields, then explain how the generated inline HTML uses the user's place, encodes query values, fetches the URLs, presents readable important values, and refreshes. Do not add an HTML implementation or a JSON API template.${instructions ? `\n\nRequested changes:\n${instructions}` : ""}\n\n<plugin-bundle-json>\n${JSON.stringify({ document, styles })}\n</plugin-bundle-json>`;
 }

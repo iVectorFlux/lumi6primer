@@ -847,7 +847,7 @@ body.mode-draw-active .topbar-status-area {
 
 .primer-graphic-loader {
   position: absolute;
-  right: max(20px, env(safe-area-inset-right));
+  right: max(16px, env(safe-area-inset-right));
   bottom: calc(90px + env(safe-area-inset-bottom));
   top: auto;
   left: auto;
@@ -862,19 +862,12 @@ body.mode-draw-active .topbar-status-area {
   display: none !important;
 }
 
-.primer-graphic-stage {
-  position: relative;
-  overflow: hidden;
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 8px 16px;
-  border: var(--kid-bar-border);
-  border-radius: 999px;
-  background: rgba(255, 255, 255, 0.94);
-  box-shadow: 0 8px 24px rgba(76, 29, 149, 0.16);
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
+.primer-graphic-loader .lumi-wait {
+  padding: 10px 16px 16px;
+  border-radius: 22px;
+  background: #0b1220;
+  border: 1px solid rgba(148, 163, 184, 0.18);
+  box-shadow: 0 16px 40px rgba(2, 6, 23, 0.45);
 }
 
 .primer-graphic-icon {
@@ -3139,12 +3132,97 @@ body.mode-talk-active .canvas-footer {
   font-weight: 600;
 }
 
+.primer-loading,
+.talk-wait-box {
+  margin: 0;
+  border-radius: 24px;
+  background: #0b1220;
+  border: 1px solid rgba(148, 163, 184, 0.16);
+  box-shadow: 0 18px 40px rgba(2, 6, 23, 0.38);
+  padding: 8px 16px 20px;
+}
+
+.lumi-wait {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 2px;
+}
+
+.lumi-wait-stage {
+  position: relative;
+  width: min(220px, 72vw);
+  height: min(252px, 82vw);
+  max-height: 280px;
+  margin: 0 auto;
+}
+
+.lumi-wait-fallback {
+  position: absolute;
+  inset: 22%;
+  border-radius: 50%;
+  background:
+    radial-gradient(circle at 32% 30%, #fbbf24 0 22%, transparent 46%),
+    radial-gradient(circle at 68% 62%, #be185d 0 28%, transparent 52%),
+    #1e293b;
+  animation: lumiWaitBlob 1.35s ease-in-out infinite;
+}
+
+.lumi-wait.is-ready .lumi-wait-fallback {
+  opacity: 0;
+}
+
+@keyframes lumiWaitBlob {
+  0%, 100% { transform: scale(0.92) translateY(4px); }
+  50% { transform: scale(1.08) translateY(-6px); }
+}
+
+.lumi-wait-lottie {
+  width: 100%;
+  height: 100%;
+}
+
+.lumi-wait-lottie svg {
+  display: block;
+  width: 100% !important;
+  height: 100% !important;
+}
+
+.lumi-wait-title {
+  margin: 2px 0 0;
+  font-size: 16px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  color: #f8fafc;
+}
+
+.lumi-wait-line {
+  margin: 4px 0 0;
+  max-width: 28ch;
+  font-size: 13.5px;
+  line-height: 1.45;
+  color: #94a3b8;
+}
+
+.lumi-wait-compact .lumi-wait-stage {
+  width: 148px;
+  height: 170px;
+}
+
+.lumi-wait-compact .lumi-wait-title {
+  font-size: 14px;
+}
+
+.lumi-wait-compact .lumi-wait-line {
+  font-size: 12.5px;
+}
+
 .talk-image-loading-wrapper {
-  padding: 36px 20px;
-  background: linear-gradient(90deg, #faf5ff 25%, #ede9fe 50%, #faf5ff 75%);
-  background-size: 200% 100%;
-  animation: talkShimmer 2s infinite ease-in-out;
-  border: 1.5px dashed rgba(139, 92, 246, 0.4);
+  padding: 4px 12px 16px;
+  background: #0b1220;
+  border: 1px solid rgba(148, 163, 184, 0.16);
+  border-radius: 20px;
   display: flex;
   align-items: center;
   justify-content: center;

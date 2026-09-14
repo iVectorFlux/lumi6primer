@@ -133,10 +133,7 @@
     if (isLast && window.__primerGraphicLoading) {
       return `
             <div class="talk-image-wrapper talk-image-loading-wrapper">
-              <div class="talk-image-loading-indicator">
-                <span class="talk-spinner">✦</span>
-                <span>Illustrating visual concept for this step…</span>
-              </div>
+              ${typeof window.lumiWaitHtml === "function" ? window.lumiWaitHtml("visual") : ""}
             </div>`;
     }
     return "";
@@ -277,6 +274,7 @@
   function syncTalkModeFeed(options = {}) {
     const feed = document.querySelector("#talkFeed");
     if (!feed) return;
+    if (typeof window.destroyLumiWaiters === "function") window.destroyLumiWaiters(feed);
 
     const turns = typeof window.Lumi6Lesson?.turns === "function"
       ? window.Lumi6Lesson.turns()
@@ -344,21 +342,8 @@
         return `
         <article class="talk-turn-card">
           ${step.asked ? childPromptHtml(step.asked) : ""}
-          <div class="talk-lumi6-box talk-shimmer-box">
-            <div class="talk-lumi6-header">
-              ${LUMI6_AVATAR_HTML}
-              <span class="talk-lumi6-name">Lumi6</span>
-              <span class="talk-topic-pill talk-shimmer-pill">Exploring…</span>
-            </div>
-            <div class="talk-shimmer-content">
-              <div class="talk-shimmer-line line-long"></div>
-              <div class="talk-shimmer-line line-med"></div>
-              <div class="talk-shimmer-line line-short"></div>
-              <div class="talk-shimmer-image-placeholder">
-                <span class="talk-spinner">✦</span>
-                <span>Lumi6 is preparing your explanation & visual model…</span>
-              </div>
-            </div>
+          <div class="talk-lumi6-box talk-wait-box">
+            ${typeof window.lumiWaitHtml === "function" ? window.lumiWaitHtml("think") : ""}
           </div>
         </article>
         `;
@@ -419,6 +404,7 @@
       const frame = home?.querySelector("iframe.talk-lesson-interactive:not(.talk-lesson-pill)");
       if (frame) openTalkPlayground(frame);
     }
+    if (typeof window.mountLumiWaiters === "function") window.mountLumiWaiters(feed);
     if (options.scroll !== false) scrollTalkToLatest(options.scroll === true);
   }
 
