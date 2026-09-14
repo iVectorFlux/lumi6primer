@@ -281,7 +281,14 @@ function scenarioBootScript(mode) {
 (function(){
   var mode = ${JSON.stringify(view)};
   var tries = 0;
+  function applyModeClass(){
+    var body = document.body;
+    if (!body) return;
+    body.classList.remove("mode-pill", "mode-mobile", "mode-desktop");
+    body.classList.add(mode === "pill" ? "mode-pill" : mode === "mobile" ? "mode-mobile" : "mode-desktop");
+  }
   function showSections(){
+    applyModeClass();
     var map = {
       pill: [".pill-section", "#sectionPill"],
       mobile: [".mobile-section", "#sectionMobile"],
@@ -297,23 +304,11 @@ function scenarioBootScript(mode) {
     });
     document.querySelectorAll(".drawer-overlay, #drawerOverlay").forEach(function(n){
       n.style.setProperty("display", "none", "important");
-      n.classList.remove("open");
+      n.classList.remove("open", "active");
     });
-  }
-  function sizeCanvases(){
-    document.querySelectorAll("canvas").forEach(function(c){
-      var box = c.parentElement;
-      if (!box) return;
-      var w = Math.round(box.clientWidth);
-      var h = Math.round(box.clientHeight);
-      if (w > 8 && h > 8 && (c.width !== w || c.height !== h)) {
-        c.width = w;
-        c.height = h;
-      }
-    });
-    try { window.dispatchEvent(new Event("resize")); } catch (e) {}
   }
   function boot(){
+    applyModeClass();
     if (typeof setMode === "function") {
       try { setMode(mode === "pill" ? "pill" : mode); } catch (e) {}
     } else {
@@ -333,21 +328,65 @@ function scenarioBootScript(mode) {
         });
       });
     }
-    sizeCanvases();
-    if (typeof setMode !== "function" && tries++ < 8) setTimeout(function(){ showSections(); sizeCanvases(); }, 80);
+    if (typeof setMode !== "function" && tries++ < 8) setTimeout(showSections, 80);
   }
   if (document.readyState === "loading") addEventListener("DOMContentLoaded", boot);
   else boot();
-  addEventListener("load", function(){ sizeCanvases(); });
 })();
 </script>`;
 }
+
+const LUMI_PERF_SCRIPT = `<script id="lumi-embed-perf">
+(function(){
+  var raf = window.requestAnimationFrame.bind(window);
+  var paused = false;
+  var hold = null;
+  window.requestAnimationFrame = function(cb){
+    if (paused) { hold = cb; return 0; }
+    return raf(function(t){
+      if (paused) { hold = cb; return; }
+      cb(t);
+    });
+  };
+  function setPaused(next){
+    if (next === paused) return;
+    paused = next;
+    if (!paused && hold) {
+      var cb = hold;
+      hold = null;
+      raf(cb);
+    }
+  }
+  function iframeOffscreen(){
+    try {
+      var frame = window.frameElement;
+      if (!frame) return false;
+      var rect = frame.getBoundingClientRect();
+      var view = frame.ownerDocument.defaultView;
+      var vh = view ? view.innerHeight : 0;
+      var vw = view ? view.innerWidth : 0;
+      return rect.bottom < 0 || rect.right < 0 || rect.top > vh || rect.left > vw || rect.width < 2 || rect.height < 2;
+    } catch (e) {
+      return false;
+    }
+  }
+  function syncPause(){
+    setPaused(document.hidden || iframeOffscreen());
+  }
+  document.addEventListener("visibilitychange", syncPause);
+  addEventListener("load", syncPause);
+  setInterval(syncPause, 800);
+})();
+</script>`;
 
 const EMBED_FIT_SCRIPT = `<script id="lumi-embed-fit">
 (function(){
   var timer;
   var sent = 0;
+  var mode = "";
+  try { mode = new URLSearchParams(location.search).get("mode") || ""; } catch (e) {}
   function report(){
+    if (mode === "pill" || mode === "mobile" || mode === "desktop") return;
     if (!window.parent || window.parent === window) return;
     var body = document.body;
     if (!body) return;
@@ -360,13 +399,10 @@ const EMBED_FIT_SCRIPT = `<script id="lumi-embed-fit">
   }
   function ping(){
     clearTimeout(timer);
-    timer = setTimeout(function(){
-      try { window.dispatchEvent(new Event("resize")); } catch (e) {}
-      report();
-    }, 40);
+    timer = setTimeout(report, 160);
   }
   addEventListener("load", ping);
-  if (window.ResizeObserver) {
+  if (mode !== "pill" && mode !== "mobile" && mode !== "desktop" && window.ResizeObserver) {
     try {
       var observer = new ResizeObserver(ping);
       observer.observe(document.documentElement);
@@ -376,13 +412,22 @@ const EMBED_FIT_SCRIPT = `<script id="lumi-embed-fit">
 })();
 </script>`;
 
+function patchHiddenCanvasWork(html) {
+  return String(html || "").replace(
+    /const w = rect\.width \|\| canvas\.width;\s*const h = rect\.height \|\| canvas\.height;\s*if \(w <= 0 \|\| h <= 0\) return;/g,
+    "if (rect.width < 4 || rect.height < 4) return;\n      const w = rect.width;\n      const h = rect.height;"
+  );
+}
+
 function embedHtml(html, options = {}) {
-  const source = String(html || "");
+  const source = patchHiddenCanvasWork(String(html || ""));
   if (!source) return source;
   const scenario = isScenarioHtml(source);
   const css = scenario ? scenarioEmbedCss(options.mode) : EMBED_CSS;
   const tag = `<style id="lumi-embed">${css}</style>`;
-  const boot = scenario ? `${scenarioBootScript(options.mode)}${EMBED_FIT_SCRIPT}` : EMBED_FIT_SCRIPT;
+  const boot = scenario
+    ? `${LUMI_PERF_SCRIPT}${scenarioBootScript(options.mode)}${EMBED_FIT_SCRIPT}`
+    : `${LUMI_PERF_SCRIPT}${EMBED_FIT_SCRIPT}`;
   let out = source;
   if (/<\/head>/i.test(out)) out = out.replace(/<\/head>/i, `${tag}</head>`);
   else out = `${tag}${out}`;
