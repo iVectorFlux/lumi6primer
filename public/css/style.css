@@ -3213,6 +3213,15 @@ body.mode-talk-active .canvas-footer {
   margin: 2px 0 6px;
 }
 
+/* Native pill iframe from the interactive HTML */
+iframe.talk-lesson-pill {
+  display: block;
+  width: min(100%, 420px);
+  height: 72px;
+  border: 0;
+  background: transparent;
+}
+
 .talk-interactive-pill {
   display: inline-flex;
   align-items: center;
@@ -3605,12 +3614,9 @@ body.mode-talk-active .canvas-footer {
   cursor: pointer;
 }
 
-.talk-playground-title {
-  font-weight: 700;
-  font-size: 15px;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+.talk-playground-title,
+.talk-playground-header {
+  display: none !important;
 }
 
 /* The sheet scrolls; the interactive keeps its own height inside it. */
@@ -3720,6 +3726,8 @@ body.talk-playground-scenario .talk-playground-stage {
   flex: 1 1 auto;
   min-height: 0;
   display: flex;
+  overflow: auto;
+  -webkit-overflow-scrolling: touch;
 }
 
 body.talk-playground-scenario .talk-playground-stage .talk-lesson-interactive {

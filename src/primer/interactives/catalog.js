@@ -274,7 +274,8 @@ const PHENOMENA = [
   { re: /\bwater cycle\b|\b(why|how).{0,20}\brain\b|\bevaporat\w*\b|\bcondens\w*\b|\bcloud\w*\b.*\brain\b/, extra: "water cycle evaporation precipitation" },
   { re: /\bheat\b.*\b(metal|copper|conduct)\b|\bconduct\w*\b.*\bheat\b|\bwhy.{0,16}\bmetal.{0,16}\b(hot|cold)\b/, extra: "heat transfer conduction thermal" },
   { re: /\b(solid|liquid|gas|steam|melt|boil|freeze|ice)\b.*\b(heat|cold|hot|warm|temperature)\b|\bstates of matter\b|\bphase change\b/, extra: "states of matter kinetic temperature" },
-  { re: /\bkepler\b|\b(why|how).{0,20}\bplanet\w*\b.*\b(orbit|year|sun)\b|\bsolar system\b/, extra: "kepler planetary orbits solar system" }
+  { re: /\bkepler\b|\b(why|how).{0,20}\bplanet\w*\b.*\b(orbit|year|sun)\b|\bsolar system\b/, extra: "kepler planetary orbits solar system" },
+  { re: /\bpythag/i, extra: "pythagoras theorem pythagorean" }
 ];
 
 function expandPhenomena(hay) {
@@ -358,6 +359,32 @@ function scoreItem(item, hay, concept) {
   return { score, distinctive };
 }
 
+function similarStem(a, b) {
+  if (!a || !b) return false;
+  if (a === b) return true;
+  if (a.length < 7 || b.length < 7) return false;
+  return a.slice(0, 7) === b.slice(0, 7);
+}
+
+/** Extra weight when the child actually named this widget (Pythagoras, Kepler, …). */
+function namedTopicBonus(item, hay) {
+  const padded = ` ${hay} `;
+  const hayWords = hay.split(" ").filter(Boolean);
+  let bonus = 0;
+  const names = [...(item.keywords || []), ...(item.topics || [])];
+  for (const name of names) {
+    const phrase = stemPhrase(name);
+    if (phrase.length < 8) continue;
+    if (padded.includes(` ${phrase} `)) {
+      bonus += 24;
+      continue;
+    }
+    const nameWords = phrase.split(" ").filter((word) => word.length >= 7);
+    if (nameWords.some((word) => hayWords.some((part) => similarStem(word, part)))) bonus += 24;
+  }
+  return bonus;
+}
+
 /** Grades within this distance are treated as on-level. */
 const NEAR_GRADE = 2;
 /** Further than that, only an explicitly named topic wins. */
@@ -376,9 +403,9 @@ function gradeDistance(item, grade) {
 function matchInteractive(query, options = {}) {
   const concept = stemPhrase(options.concept || query || "");
   const child = stemPhrase(options.childText || "");
-  // Orchestrator often sends the same string as concept and childText; don't
-  // double it or "force and friction" becomes six words and misses terse matches.
-  const rawHay = !child || child === concept ? concept : stemPhrase(`${concept} ${child}`);
+  // Prefer the child's words. A leftover lesson title in `concept` used to beat
+  // a new ask ("Pythagoras") after a previous widget (waves / Rayleigh).
+  const rawHay = child || concept;
   if (!rawHay || rawHay.length < 4) return null;
   const hay = expandPhenomena(rawHay);
 
@@ -390,16 +417,17 @@ function matchInteractive(query, options = {}) {
 
   for (const item of items) {
     if (item.enabled === false) continue;
+    const named = namedTopicBonus(item, hay);
     const { score, distinctive } = scoreItem(item, hay, concept);
-    if (score < MIN_SCORE) continue;
+    const total = score + named;
+    if (total < MIN_SCORE) continue;
     const distance = gradeDistance(item, grade);
-    // An off-level interactive beats nothing when the child named the topic outright,
-    // but a vague or generic match must never pull in far-off-grade content.
-    if (distance > NEAR_GRADE && (!distinctive || score < FAR_GRADE_MIN_SCORE)) continue;
-    const rank = score - distance * 1.5;
+    const isNamed = named >= 20 || distinctive;
+    if (distance > NEAR_GRADE && (!isNamed || total < FAR_GRADE_MIN_SCORE)) continue;
+    const rank = total - distance * 1.5 + named;
     if (rank > bestRank) {
       bestRank = rank;
-      bestScore = score;
+      bestScore = total;
       best = item;
     }
   }

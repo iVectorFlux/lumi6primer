@@ -405,9 +405,22 @@ button,
     margin: 0;
   }
 
-  .talk-lesson-interactive {
+  .talk-interactive-wrapper .talk-lesson-interactive {
     height: min(32dvh, 260px);
     min-height: 0;
+  }
+
+  .talk-playground-stage .talk-lesson-interactive {
+    height: auto !important;
+    min-height: 100% !important;
+    max-height: none !important;
+  }
+
+  body.talk-playground-mobile.talk-playground-scenario .talk-playground-stage .talk-lesson-interactive {
+    height: auto !important;
+    min-height: 100% !important;
+    max-height: none !important;
+    flex: 0 0 auto;
   }
 
   .talk-playground-heading {
@@ -422,14 +435,25 @@ button,
     font-size: 13.5px;
   }
 
-  /* Mobile: playground slides up like a drawer; scenario fills it. */
+  iframe.talk-lesson-pill {
+    width: 100%;
+    max-width: none;
+    height: 68px;
+  }
+
+  /* Mobile: playground is full-screen so the interactive can scroll. */
   .talk-playground {
-    top: auto;
+    top: 0;
     bottom: 0;
-    height: min(92dvh, 780px);
-    max-height: 92dvh;
-    border-radius: 18px 18px 0 0;
-    box-shadow: 0 -12px 40px rgba(15, 23, 42, 0.22);
+    height: 100dvh;
+    max-height: 100dvh;
+    border-radius: 0;
+    box-shadow: none;
+  }
+
+  body.talk-playground-mobile .talk-playground-scroll {
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
   }
 
   body.talk-playground-mobile.talk-playground-scenario .talk-playground-scroll {

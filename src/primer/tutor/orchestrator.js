@@ -463,7 +463,7 @@ class LearningOrchestrator {
       ? null
       : await lessonInteractive.match({
         store: this.childModel.store,
-        concept: graphicTitle || understanding.concept || spokenText,
+        concept: spokenText,
         childText: spokenText,
         grade: child?.grade
       }).catch(() => null);

@@ -12892,36 +12892,28 @@ User writes "Show air quality for Tokyo", names a place, and points to an empty 
       `data-idea="${escapeHtml(interactive.idea || "")}"`,
       `data-concept="${escapeHtml(interactive.concept || "")}"`,
       `data-summary="${escapeHtml(interactive.summary || "")}"`,
+      `data-href-pill="${escapeHtml(interactive.hrefPill || interactive.href || "")}"`,
       `data-href-mobile="${escapeHtml(interactive.hrefMobile || "")}"`,
       `data-href-desktop="${escapeHtml(interactive.hrefDesktop || "")}"`
     ].join("\n                  ");
   }
 
-  /** Compact capsule in chat — the iframe loads only after the learner expands it. */
+  /** Native pill iframe from the interactive HTML — tap expands in the parent. */
   function talkInteractivePillHtml(step, titleText) {
     const interactive = step.interactive;
     const pill = interactive.pill || {};
     const label = pill.title || interactive.title || titleText;
-    const subtitle = pill.subtitle || interactive.concept || interactive.summary || "Tap to explore";
+    const href = interactive.hrefPill || interactive.href || `/api/primer/interactive/${encodeURIComponent(interactive.slug)}?embed=1&mode=pill`;
     return `
             <div class="talk-interactive-pill-wrapper" data-interactive-slug="${escapeHtml(interactive.slug)}">
-              <button type="button" class="talk-interactive-pill" data-expand-interactive
+              <iframe
+                class="talk-lesson-pill"
                 ${interactiveMetaAttrs(interactive)}
-                title="${escapeHtml(label)}">
-                <span class="talk-pill-icon" aria-hidden="true">
-                  <svg width="32" height="24" viewBox="0 0 32 24" fill="none">
-                    <polygon points="6,20 26,20 6,6" fill="rgba(139,92,246,0.12)" stroke="#8b5cf6" stroke-width="1.8"/>
-                    <rect x="6" y="15" width="5" height="5" fill="none" stroke="#94a3b8" stroke-width="1"/>
-                  </svg>
-                </span>
-                <span class="talk-pill-body">
-                  <span class="talk-pill-title">${escapeHtml(label)}</span>
-                  <span class="talk-pill-sub">${escapeHtml(subtitle)}</span>
-                </span>
-                <span class="talk-pill-action" aria-hidden="true">
-                  <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="15 3 21 3 21 9"/><polyline points="9 21 3 21 3 15"/><line x1="21" y1="3" x2="14" y2="10"/><line x1="3" y1="21" x2="10" y2="14"/></svg>
-                </span>
-              </button>
+                src="${escapeHtml(href.includes("mode=") ? href : `${href}${href.includes("?") ? "&" : "?"}mode=pill`)}"
+                title="${escapeHtml(label)}"
+                sandbox="allow-scripts"
+                loading="lazy"
+              ></iframe>
               <div class="talk-interactive-stage" hidden aria-hidden="true"></div>
             </div>`;
   }
@@ -13178,7 +13170,7 @@ User writes "Show air quality for Tokyo", names a place, and points to an empty 
 
     const playgroundOpen = Boolean(talkPlaygroundSlug) && !document.getElementById("talkPlayground")?.hidden;
     const liveFrames = [];
-    document.querySelectorAll("iframe.talk-lesson-interactive").forEach((frame) => {
+    document.querySelectorAll("iframe.talk-lesson-interactive, iframe.talk-lesson-pill").forEach((frame) => {
       liveFrames.push({ slug: frame.dataset.slug, node: frame });
     });
 
@@ -13254,7 +13246,7 @@ User writes "Show air quality for Tokyo", names a place, and points to an empty 
       `;
     }).join("");
 
-    feed.querySelectorAll("iframe.talk-lesson-interactive").forEach((frame) => {
+    feed.querySelectorAll("iframe.talk-lesson-interactive, iframe.talk-lesson-pill").forEach((frame) => {
       const kept = liveFrames.find((item) => item.slug && item.slug === frame.dataset.slug);
       if (kept?.node && kept.node !== frame) frame.replaceWith(kept.node);
     });
@@ -13262,8 +13254,9 @@ User writes "Show air quality for Tokyo", names a place, and points to an empty 
     bindTalkChoices(feed);
     bindTalkPlayground(feed);
     if (playgroundOpen && talkPlaygroundSlug) {
-      const home = feed.querySelector(`.talk-interactive-wrapper[data-interactive-slug="${CSS.escape(talkPlaygroundSlug)}"]`);
-      const frame = home?.querySelector("iframe.talk-lesson-interactive");
+      const home = feed.querySelector(`.talk-interactive-pill-wrapper[data-interactive-slug="${CSS.escape(talkPlaygroundSlug)}"]`)
+        || feed.querySelector(`.talk-interactive-wrapper[data-interactive-slug="${CSS.escape(talkPlaygroundSlug)}"]`);
+      const frame = home?.querySelector("iframe.talk-lesson-interactive:not(.talk-lesson-pill)");
       if (frame) openTalkPlayground(frame);
     }
     if (options.scroll !== false) scrollTalkToLatest(options.scroll === true);
@@ -13316,7 +13309,7 @@ User writes "Show air quality for Tokyo", names a place, and points to an empty 
   }
 
   function isMobileInteractiveView() {
-    return window.matchMedia("(max-width: 900px)").matches;
+    return window.matchMedia("(max-width: 900px), (hover: none) and (pointer: coarse)").matches;
   }
 
   function interactiveExpandHref(trigger) {
@@ -13332,16 +13325,16 @@ User writes "Show air quality for Tokyo", names a place, and points to an empty 
     const wrapper = trigger.closest(".talk-interactive-pill-wrapper, .talk-interactive-wrapper");
     if (!wrapper) return null;
     const stage = wrapper.querySelector(".talk-interactive-stage") || wrapper;
-    let frame = wrapper.querySelector("iframe.talk-lesson-interactive");
+    let frame = wrapper.querySelector("iframe.talk-lesson-interactive:not(.talk-lesson-pill)");
     const data = trigger.dataset || {};
     const slug = data.slug || wrapper.dataset.interactiveSlug || "";
-    const label = trigger.getAttribute("title") || trigger.querySelector(".talk-pill-title")?.textContent?.trim() || slug;
+    const label = trigger.getAttribute("title") || slug;
     if (!frame) {
       frame = document.createElement("iframe");
       frame.className = "talk-lesson-interactive";
       frame.setAttribute("sandbox", "allow-scripts");
       frame.setAttribute("title", label);
-      for (const key of ["slug", "scenario", "subject", "klass", "idea", "concept", "summary", "hrefMobile", "hrefDesktop"]) {
+      for (const key of ["slug", "scenario", "subject", "klass", "idea", "concept", "summary", "hrefMobile", "hrefDesktop", "hrefPill"]) {
         if (data[key] != null) frame.dataset[key] = data[key];
       }
       stage.appendChild(frame);
@@ -13371,29 +13364,31 @@ User writes "Show air quality for Tokyo", names a place, and points to an empty 
 
   function fillPlaygroundChrome(frame) {
     const header = document.getElementById("talkPlaygroundHeader");
-    const heading = document.getElementById("talkPlaygroundHeading");
-    const badges = document.getElementById("talkPlaygroundBadges");
     const notes = document.getElementById("talkPlaygroundNotes");
-    const data = frame.dataset || {};
-    const label = frame.getAttribute("title") || "";
-
-    if (heading) heading.textContent = label;
-    if (badges) {
-      const chips = [subjectLabel(data.subject), data.klass ? `Class ${data.klass}` : ""].filter(Boolean);
-      badges.innerHTML = chips.map((chip) => `<span class="talk-playground-badge">${escapeHtml(chip)}</span>`).join("");
-    }
-    if (header) header.hidden = !label;
+    const title = document.getElementById("talkPlaygroundTitle");
+    if (header) header.hidden = true;
     if (notes) notes.innerHTML = "";
+    if (title) title.textContent = "";
   }
 
   /** Height comes from the interactive itself, so its canvas is never stretched. */
   function applyInteractiveHeight(frame, height) {
     if (!frame || !height) return;
-    if (frame.dataset.scenario === "1" && frame.closest("#talkPlaygroundStage")) {
-      frame.style.height = "100%";
+    if (frame.classList.contains("talk-lesson-pill")) {
+      frame.style.height = `${Math.max(56, Math.min(height, 96))}px`;
       return;
     }
     const inPlayground = Boolean(frame.closest("#talkPlaygroundStage"));
+    if (inPlayground && frame.dataset.scenario === "1") {
+      if (isMobileInteractiveView()) {
+        const floor = Math.round(window.innerHeight * 0.82);
+        frame.style.minHeight = "100%";
+        frame.style.height = `${Math.max(height, floor)}px`;
+      } else {
+        frame.style.height = "100%";
+      }
+      return;
+    }
     const ceiling = inPlayground
       ? Math.round(window.innerHeight * 1.4)
       : Math.min(520, Math.round(window.innerHeight * 0.6));
@@ -13402,8 +13397,18 @@ User writes "Show air quality for Tokyo", names a place, and points to an empty 
 
   window.addEventListener("message", (event) => {
     const data = event.data;
+    if (data?.type === "lumi6:expand-interactive") {
+      const pills = document.querySelectorAll("iframe.talk-lesson-pill");
+      for (const pill of pills) {
+        if (pill.contentWindow === event.source) {
+          const frame = ensureInteractiveFrame(pill);
+          if (frame) openTalkPlayground(frame);
+          return;
+        }
+      }
+    }
     if (!data || data.type !== "lumi6:interactive-height") return;
-    const frames = document.querySelectorAll("iframe.talk-lesson-interactive");
+    const frames = document.querySelectorAll("iframe.talk-lesson-interactive, iframe.talk-lesson-pill");
     for (const frame of frames) {
       if (frame.contentWindow === event.source) {
         applyInteractiveHeight(frame, Number(data.height));
@@ -13421,7 +13426,7 @@ User writes "Show air quality for Tokyo", names a place, and points to an empty 
     talkPlaygroundSlug = frame.dataset.slug || "";
     home.dataset.playgroundHome = "1";
     const scenario = frame.dataset.scenario === "1";
-    if (title) title.textContent = frame.getAttribute("title") || "Playground";
+    if (title) title.textContent = "";
     fillPlaygroundChrome(frame);
     stage.replaceChildren(frame);
     sheet.hidden = false;
@@ -13430,7 +13435,12 @@ User writes "Show air quality for Tokyo", names a place, and points to an empty 
     document.body.classList.add("talk-playground-open");
     requestAnimationFrame(() => {
       frame.style.width = "100%";
-      frame.style.height = scenario ? "100%" : "";
+      if (scenario && isMobileInteractiveView()) {
+        frame.style.minHeight = "100%";
+        frame.style.height = "";
+      } else if (scenario) {
+        frame.style.height = "100%";
+      }
       nudgeInteractive(frame);
     });
   }
@@ -13449,6 +13459,7 @@ User writes "Show air quality for Tokyo", names a place, and points to an empty 
     const notes = document.getElementById("talkPlaygroundNotes");
     const frame = stage?.querySelector("iframe.talk-lesson-interactive");
     const home = document.querySelector(".talk-interactive-stage[data-playground-home]")
+      || document.querySelector(`.talk-interactive-pill-wrapper[data-interactive-slug="${CSS.escape(talkPlaygroundSlug)}"] .talk-interactive-stage`)
       || document.querySelector(`.talk-interactive-wrapper[data-interactive-slug="${CSS.escape(talkPlaygroundSlug)}"] .talk-interactive-stage`);
     if (frame && home) {
       frame.style.width = "";

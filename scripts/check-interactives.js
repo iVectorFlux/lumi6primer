@@ -34,8 +34,9 @@ const QUERIES = [
   { q: "kepler's laws", grade: 11 },
   { q: "first law of thermodynamics", grade: 5 },
   { q: "faraday's law", grade: 12 },
-  { q: "pythagoras theorem", grade: 8 },
-  { q: "pythagorean theorem", grade: 8 },
+  { q: "pythagoras theorem", grade: 8, expect: "pythagoras-v2" },
+  { q: "pythagorean theorem", grade: 8, expect: "pythagoras-v2" },
+  { q: "explain pythagorus theoram", grade: 8, expect: "pythagoras-v2" },
   { q: "force and friction", grade: 6 },
   { q: "natural selection", grade: 10 },
   // These must stay MISS: no topic named, so no widget should appear.
@@ -84,6 +85,16 @@ async function main() {
   }
   console.log(`\nself-match: ${found}/${items.length} (${confused} unreachable)`);
   if (problems.length) console.log(problems.join("\n"));
+
+  const mixed = await lessonInteractive.match({
+    store,
+    concept: "Wave Dynamics & Harmonic Wave Equation Rayleigh scattering",
+    childText: "pythagoras theorem",
+    grade: 8
+  });
+  const mixedOk = mixed?.slug === "pythagoras-v2";
+  console.log(`\nstale-topic pythagoras: ${mixedOk ? "HIT pythagoras-v2" : `WRONG ${mixed?.slug || "MISS"}`}`);
+  if (!mixedOk) process.exitCode = 1;
 
   const waterCycle = await lessonInteractive.match({ store, concept: "water cycle", childText: "water cycle", grade: 3 });
   if (waterCycle?.slug) {

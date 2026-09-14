@@ -166,6 +166,7 @@
           summary: interactive.summary,
           pill: interactive.pill,
           scenario: interactive.scenario,
+          hrefPill: interactive.hrefPill,
           hrefMobile: interactive.hrefMobile,
           hrefDesktop: interactive.hrefDesktop
         });

@@ -181,7 +181,8 @@ function commandFor(item) {
     summary: item.summary || "",
     pill: item.pill || null,
     scenario: Boolean(item.scenario || item.pill),
-    href: interactiveHref(slug),
+    href: interactiveHref(slug, "pill"),
+    hrefPill: interactiveHref(slug, "pill"),
     hrefMobile: interactiveHref(slug, "mobile"),
     hrefDesktop: interactiveHref(slug, "desktop")
   };
@@ -231,17 +232,46 @@ function isScenarioHtml(html) {
   return /function\s+setMode\s*\(|id="sectionPill"|class="chat-pill-card"/.test(String(html || ""));
 }
 
-/** CSS for v2 scenario pages embedded in the playground or drawer. */
-const SCENARIO_EMBED_CSS = `
-html,body{width:100%!important;height:100%!important;margin:0!important;padding:0!important;overflow:hidden!important}
-body{display:flex!important;flex-direction:column!important;align-items:stretch!important;padding:0!important}
-.view-switcher,.specs-bar,.section-title{display:none!important}
-.showcase-container,.top-header{width:100%!important;max-width:none!important;margin:0!important;padding:0!important;gap:0!important}
-.showcase-grid-top{width:100%!important;margin:0!important;padding:0!important;gap:0!important}
+/** CSS for v2 scenario pages embedded in the playground or chat pill. */
+const SCENARIO_CHROME_CSS = `
+.view-switcher,.specs-bar,.section-title,.top-header{display:none!important}
+.showcase-container{width:100%!important;max-width:none!important;margin:0!important;padding:0!important;gap:0!important}
+.showcase-grid-top{width:100%!important;margin:0!important;padding:0!important;gap:0!important;display:block!important}
 .view-section{width:100%!important;max-width:none!important;margin:0!important;padding:0!important}
-#sectionPill{display:none!important}
-.drawer-overlay.open{display:none!important}
 `;
+
+const SCENARIO_PILL_CSS = `
+html,body{width:100%!important;height:auto!important;min-height:0!important;margin:0!important;padding:8px!important;overflow:hidden!important;background:transparent!important}
+body{display:block!important;align-items:stretch!important}
+#sectionPill{display:flex!important}
+#sectionMobile,#sectionDesktop,.drawer-overlay{display:none!important}
+.chat-pill-card{width:100%!important;max-width:100%!important;margin:0!important;cursor:pointer}
+`;
+
+const SCENARIO_MOBILE_CSS = `
+html,body{width:100%!important;height:100%!important;margin:0!important;padding:0!important;overflow:auto!important;-webkit-overflow-scrolling:touch!important}
+body{display:flex!important;flex-direction:column!important;align-items:stretch!important}
+#sectionPill,#sectionDesktop,.drawer-overlay{display:none!important}
+#sectionMobile{display:flex!important;flex:1 1 auto!important;min-height:100%!important}
+.mobile-phone-frame{width:100%!important;max-width:none!important;height:auto!important;min-height:100%!important;border:0!important;border-radius:0!important;box-shadow:none!important;display:flex!important;flex-direction:column!important;overflow:visible!important}
+.mobile-phone-frame .phone-stage{width:100%!important;height:min(48dvh,380px)!important;min-height:200px!important;flex:0 0 auto!important}
+.mobile-phone-frame .phone-controls{height:auto!important;max-height:none!important;flex:1 1 auto!important;overflow:visible!important}
+`;
+
+const SCENARIO_DESKTOP_CSS = `
+html,body{width:100%!important;height:100%!important;margin:0!important;padding:0!important;overflow:hidden!important}
+body{display:flex!important;flex-direction:column!important;align-items:stretch!important}
+#sectionPill,#sectionMobile,.drawer-overlay{display:none!important}
+#sectionDesktop,.gridTop{display:flex!important;flex:1 1 auto!important}
+#sectionDesktop{display:flex!important;width:100%!important;height:100%!important}
+`;
+
+function scenarioEmbedCss(mode) {
+  const chrome = SCENARIO_CHROME_CSS;
+  if (mode === "pill") return chrome + SCENARIO_PILL_CSS;
+  if (mode === "mobile") return chrome + SCENARIO_MOBILE_CSS;
+  return chrome + SCENARIO_DESKTOP_CSS;
+}
 
 function scenarioBootScript(mode) {
   const view = String(mode || "desktop").replace(/[^a-z]/gi, "") || "desktop";
@@ -250,11 +280,17 @@ function scenarioBootScript(mode) {
   var mode = ${JSON.stringify(view)};
   function boot(){
     if (typeof setMode === "function") {
-      setMode(mode);
-      try { window.dispatchEvent(new Event("resize")); } catch (e) {}
-      return;
+      setMode(mode === "pill" ? "pill" : mode);
     }
-    setTimeout(boot, 40);
+    if (mode === "pill") {
+      window.openDrawer = function(){
+        try { window.parent.postMessage({ type: "lumi6:expand-interactive" }, "*"); } catch (e) {}
+      };
+      var pill = document.getElementById("chatPillTrigger");
+      if (pill) pill.onclick = window.openDrawer;
+    }
+    try { window.dispatchEvent(new Event("resize")); } catch (e) {}
+    if (typeof setMode !== "function") setTimeout(boot, 40);
   }
   if (document.readyState === "loading") addEventListener("DOMContentLoaded", boot);
   else boot();
@@ -299,9 +335,9 @@ function embedHtml(html, options = {}) {
   const source = String(html || "");
   if (!source) return source;
   const scenario = isScenarioHtml(source);
-  const css = scenario ? SCENARIO_EMBED_CSS : EMBED_CSS;
+  const css = scenario ? scenarioEmbedCss(options.mode) : EMBED_CSS;
   const tag = `<style id="lumi-embed">${css}</style>`;
-  const boot = scenario ? scenarioBootScript(options.mode) : EMBED_FIT_SCRIPT;
+  const boot = scenario ? `${scenarioBootScript(options.mode)}${EMBED_FIT_SCRIPT}` : EMBED_FIT_SCRIPT;
   let out = source;
   if (/<\/head>/i.test(out)) out = out.replace(/<\/head>/i, `${tag}</head>`);
   else out = `${tag}${out}`;

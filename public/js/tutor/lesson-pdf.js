@@ -80,6 +80,7 @@
       summary: String(extra.summary || "").trim(),
       pill: extra.pill && typeof extra.pill === "object" ? extra.pill : null,
       scenario: Boolean(extra.scenario || extra.pill),
+      hrefPill: String(extra.hrefPill || extra.href || "").trim(),
       hrefMobile: String(extra.hrefMobile || "").trim(),
       hrefDesktop: String(extra.hrefDesktop || "").trim()
     };
