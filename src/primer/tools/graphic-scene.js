@@ -38,7 +38,7 @@ function sceneForTurn({ concept, childText }) {
   return normalize(concept || text).slice(0, 72);
 }
 
-const { isNewAsk } = require("../tutor/kid-intent.js");
+const { isNewAsk, explicitTopicSwitch } = require("../tutor/kid-intent.js");
 
 function weakTopic(concept, childText) {
   const text = normalize(`${concept || ""} ${childText || ""}`);
@@ -83,7 +83,9 @@ function shouldGenerateGraphic(input = {}) {
     || input.intent === "question"
   );
   const topicChanged = Boolean(scene && lastScene && !scenesMatch(scene, lastScene));
-  if (teachNow && (!lastScene || topicChanged)) {
+  const askedToLearn = explicitTopicSwitch(childText)
+    || /\b(teach me|i want to learn|tell me about)\b/i.test(childText);
+  if (teachNow && (!lastScene || topicChanged || askedToLearn)) {
     return {
       generate: true,
       scene: normalize(input.concept || scene || "picture").slice(0, 72),

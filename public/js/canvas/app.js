@@ -12947,9 +12947,11 @@ User writes "Show air quality for Tokyo", names a place, and points to an empty 
   }
 
   function talkImageHtml(step, titleText) {
+    const src = String(step.image || "").trim();
+    if (!src) return "";
     return `
-            <div class="talk-image-wrapper">
-              <img src="${escapeHtml(step.image)}" alt="Lesson illustration" class="talk-lesson-image" loading="lazy">
+            <div class="talk-image-wrapper is-pending">
+              <img src="${escapeHtml(src)}" alt="" class="talk-lesson-image" loading="lazy">
               <figcaption class="talk-image-caption">
                 <span class="talk-image-tag">Visual Model</span>
                 ${escapeHtml(titleText)}
@@ -12970,12 +12972,6 @@ User writes "Show air quality for Tokyo", names a place, and points to an empty 
     }
     if (hasInteractive) return talkInteractiveHtml(step, titleText);
     if (step.image) return talkImageHtml(step, titleText);
-    if (isLast && window.__primerGraphicLoading) {
-      return `
-            <div class="talk-image-wrapper talk-image-loading-wrapper">
-              ${typeof window.lumiWaitHtml === "function" ? window.lumiWaitHtml("visual") : ""}
-            </div>`;
-    }
     return "";
   }
 
@@ -13235,6 +13231,7 @@ User writes "Show air quality for Tokyo", names a place, and points to an empty 
 
     bindTalkChoices(feed);
     bindTalkPlayground(feed);
+    bindTalkImages(feed);
     if (playgroundOpen && talkPlaygroundSlug) {
       const home = feed.querySelector(`.talk-interactive-pill-wrapper[data-interactive-slug="${CSS.escape(talkPlaygroundSlug)}"]`)
         || feed.querySelector(`.talk-interactive-wrapper[data-interactive-slug="${CSS.escape(talkPlaygroundSlug)}"]`);
@@ -13275,6 +13272,24 @@ User writes "Show air quality for Tokyo", names a place, and points to an empty 
     const question = last.querySelector(".talk-question-text")?.textContent?.trim() || "";
     list.querySelectorAll(".talk-choice").forEach((btn) => {
       btn.addEventListener("click", () => sendTalkChoice(btn, question, list));
+    });
+  }
+
+  function bindTalkImages(feed) {
+    feed.querySelectorAll(".talk-lesson-image").forEach((img) => {
+      const wrap = img.closest(".talk-image-wrapper");
+      if (!wrap) return;
+      const show = () => {
+        wrap.classList.remove("is-pending");
+        wrap.classList.add("is-ready");
+      };
+      const hide = () => wrap.remove();
+      img.addEventListener("load", show);
+      img.addEventListener("error", hide);
+      if (img.complete) {
+        if (img.naturalWidth > 0) show();
+        else hide();
+      }
     });
   }
 
@@ -13362,14 +13377,10 @@ User writes "Show air quality for Tokyo", names a place, and points to an empty 
       return;
     }
     const inPlayground = Boolean(frame.closest("#talkPlaygroundStage"));
-    if (inPlayground && frame.dataset.scenario === "1") {
-      if (isMobileInteractiveView()) {
-        const floor = Math.round(window.innerHeight * 0.82);
-        frame.style.minHeight = "100%";
-        frame.style.height = `${Math.max(height, floor)}px`;
-      } else {
-        frame.style.height = "100%";
-      }
+    if (inPlayground) {
+      frame.style.width = "100%";
+      frame.style.height = "100%";
+      frame.style.minHeight = "0";
       return;
     }
     const ceiling = inPlayground
@@ -13424,12 +13435,8 @@ User writes "Show air quality for Tokyo", names a place, and points to an empty 
     if (typeof window.hideTalkWait === "function") window.hideTalkWait();
     requestAnimationFrame(() => {
       frame.style.width = "100%";
-      if (scenario && isMobileInteractiveView()) {
-        frame.style.minHeight = "100%";
-        frame.style.height = "";
-      } else if (scenario) {
-        frame.style.height = "100%";
-      }
+      frame.style.height = "100%";
+      frame.style.minHeight = "0";
       nudgeInteractive(frame);
     });
   }

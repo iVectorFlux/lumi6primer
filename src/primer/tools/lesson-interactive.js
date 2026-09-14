@@ -254,21 +254,17 @@ ${MOBILE_SEL},${DESKTOP_SEL},${HIDDEN_OVERLAY}{display:none!important}
 `;
 
 const SCENARIO_MOBILE_CSS = `
-html,body{width:100%!important;height:100%!important;margin:0!important;padding:0!important;overflow:auto!important;-webkit-overflow-scrolling:touch!important}
-body{display:flex!important;flex-direction:column!important;align-items:stretch!important}
+html,body{width:100%!important;height:100%!important;margin:0!important;padding:16px!important;overflow:auto!important;background:transparent!important}
+body{display:flex!important;align-items:center!important;justify-content:center!important}
 ${PILL_SEL},${DESKTOP_SEL},${HIDDEN_OVERLAY}{display:none!important}
-${MOBILE_SEL}{display:flex!important;flex:1 1 auto!important;min-height:100%!important}
-.mobile-phone-frame{width:100%!important;max-width:none!important;height:auto!important;min-height:100%!important;border:0!important;border-radius:0!important;box-shadow:none!important;display:flex!important;flex-direction:column!important;overflow:visible!important}
-.mobile-phone-frame .phone-stage{width:100%!important;height:min(48dvh,380px)!important;min-height:200px!important;flex:0 0 auto!important}
-.mobile-phone-frame .phone-controls{height:auto!important;max-height:none!important;flex:1 1 auto!important;overflow:visible!important}
+${MOBILE_SEL}{display:flex!important;flex:none!important;width:auto!important;max-width:100%!important;height:auto!important;min-height:0!important}
 `;
 
 const SCENARIO_DESKTOP_CSS = `
-html,body{width:100%!important;height:100%!important;margin:0!important;padding:0!important;overflow:hidden!important}
-body{display:flex!important;flex-direction:column!important;align-items:stretch!important}
+html,body{width:100%!important;height:100%!important;margin:0!important;padding:12px!important;overflow:hidden!important;background:#f8fafc!important}
+body{display:flex!important;align-items:stretch!important;justify-content:center!important}
 ${PILL_SEL},${MOBILE_SEL},${HIDDEN_OVERLAY}{display:none!important}
-${DESKTOP_SEL},.gridTop{display:flex!important;flex:1 1 auto!important}
-${DESKTOP_SEL}{display:flex!important;width:100%!important;height:100%!important}
+${DESKTOP_SEL},.gridTop{display:flex!important;flex:1 1 auto!important;width:100%!important;height:100%!important;min-height:0!important}
 .desktop-card{width:100%!important;max-width:none!important;height:100%!important;flex:1 1 auto!important}
 `;
 

@@ -463,15 +463,19 @@ class LearningOrchestrator {
       ? null
       : await lessonInteractive.match({
         store: this.childModel.store,
-        concept: spokenText,
+        query: spokenText,
+        concept: understanding.concept || spokenText,
         childText: spokenText,
         grade: child?.grade
       }).catch(() => null);
     const lastInteractive = String(state.conversationState?.lastInteractiveSlug || "");
+    const askedToLearn = Boolean(understanding.askingNewTopic)
+      || explicitTopicSwitch(spokenText)
+      || /\b(teach me|i want to learn|tell me about)\b/i.test(spokenText);
+    let sentInteractive = false;
 
-    if (interactiveHit?.slug && interactiveHit.slug === lastInteractive) {
+    if (interactiveHit?.slug && interactiveHit.slug === lastInteractive && !askedToLearn) {
       console.log("[PRIMER] Interactive already showing:", interactiveHit.slug);
-      if (graphicPlan.generate) state.conversationState.lastGraphicScene = graphicPlan.scene;
     } else if (interactiveHit?.slug) {
         const widget = lessonInteractive.commandFor(interactiveHit);
         // Wikipedia/Commons only. A companion picture is worth a second slot on the
@@ -515,10 +519,11 @@ class LearningOrchestrator {
           canvasActions: pair,
           visualPlan: { shouldDraw: true, commands: pair }
         });
+        sentInteractive = true;
         console.log("[PRIMER] Interactive matched:", interactiveHit.slug, companion?.href ? "(paired with image)" : "(no free image)");
     }
 
-    if (!interactiveHit?.slug) {
+    if (!sentInteractive) {
       if (!graphicPlan.generate) {
         console.log("[PRIMER] Graphic not requested:", graphicPlan.reason || graphicPlan.kind);
       } else if (!lessonGraphic.isConfigured()) {
