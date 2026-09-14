@@ -1,5 +1,4 @@
 (function () {
-  const SRC = "/assets/lottie/lumi-wait.json";
   const COPY = {
     think: {
       title: "Lumi6 is gathering the pieces",
@@ -10,8 +9,6 @@
       line: "The idea is coming into focus."
     }
   };
-  let animationData = null;
-  let loadingData = null;
 
   function copyFor(kind) {
     return COPY[kind] || COPY.think;
@@ -21,13 +18,17 @@
     return window.lottie || window.bodymovin || null;
   }
 
+  function animationData() {
+    return window.__LUMI_WAIT_ANIMATION || null;
+  }
+
   function waitHtml(kind) {
     const { title, line } = copyFor(kind);
     return `
       <div class="lumi-wait" data-lumi-wait="${kind === "visual" ? "visual" : "think"}">
         <div class="lumi-wait-stage" aria-hidden="true">
           <div class="lumi-wait-fallback"></div>
-          <div class="lumi-wait-lottie" data-lottie="${SRC}"></div>
+          <div class="lumi-wait-lottie"></div>
         </div>
         <p class="lumi-wait-title">${title}</p>
         <p class="lumi-wait-line">${line}</p>
@@ -45,28 +46,9 @@
     });
   }
 
-  function loadData() {
-    if (animationData) return Promise.resolve(animationData);
-    if (loadingData) return loadingData;
-    loadingData = fetch(SRC, { credentials: "same-origin" })
-      .then((res) => {
-        if (!res.ok) throw new Error("lottie missing");
-        return res.json();
-      })
-      .then((data) => {
-        animationData = data;
-        return data;
-      })
-      .catch((err) => {
-        loadingData = null;
-        throw err;
-      });
-    return loadingData;
-  }
-
   function play(el, data) {
     const api = lottieApi();
-    if (!api || !data || el.dataset.mounted) return;
+    if (!api || !data || el.dataset.mounted) return false;
     el.dataset.mounted = "1";
     try {
       el._lumiAnim = api.loadAnimation({
@@ -74,11 +56,13 @@
         renderer: "svg",
         loop: true,
         autoplay: true,
-        animationData: data
+        animationData: JSON.parse(JSON.stringify(data))
       });
       el.closest(".lumi-wait")?.classList.add("is-ready");
-    } catch {
+      return true;
+    } catch (err) {
       delete el.dataset.mounted;
+      return false;
     }
   }
 
@@ -86,16 +70,43 @@
     const scope = root || document;
     const nodes = [...scope.querySelectorAll(".lumi-wait-lottie:not([data-mounted])")];
     if (!nodes.length) return;
-    const start = () => {
-      loadData().then((data) => {
-        nodes.forEach((el) => play(el, data));
-      }).catch(() => {});
-    };
-    if (lottieApi()) start();
-    else setTimeout(() => { if (lottieApi()) start(); }, 80);
+    const data = animationData();
+    const api = lottieApi();
+    if (!api || !data) {
+      setTimeout(() => mountWaiters(scope), 60);
+      return;
+    }
+    nodes.forEach((el) => play(el, data));
+  }
+
+  function showTalkWait(kind) {
+    const el = document.getElementById("talkWait");
+    if (!el) return;
+    el.innerHTML = waitHtml(kind || "think");
+    el.hidden = false;
+    el.classList.add("is-on");
+    requestAnimationFrame(() => mountWaiters(el));
+  }
+
+  function hideTalkWait() {
+    const el = document.getElementById("talkWait");
+    if (!el) return;
+    destroyWaiters(el);
+    el.innerHTML = "";
+    el.hidden = true;
+    el.classList.remove("is-on");
   }
 
   window.lumiWaitHtml = waitHtml;
   window.mountLumiWaiters = mountWaiters;
   window.destroyLumiWaiters = destroyWaiters;
+  window.showTalkWait = showTalkWait;
+  window.hideTalkWait = hideTalkWait;
+
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", () => {
+      const el = document.getElementById("talkWait");
+      if (el && !el.hidden) mountWaiters(el);
+    });
+  }
 })();

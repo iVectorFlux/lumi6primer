@@ -345,6 +345,8 @@
      * Show animated loading indicator.
      */
     showLoading() {
+      window.__primerWaiting = true;
+      if (typeof window.showTalkWait === "function") window.showTalkWait("think");
       const list = this.elements.messagesList;
       if (!list) return;
       const loadingDiv = document.createElement("div");
@@ -363,6 +365,7 @@
      */
     hideLoading() {
       window.__primerWaiting = false;
+      if (typeof window.hideTalkWait === "function") window.hideTalkWait();
       const loadingDiv = document.getElementById("atlasLoadingIndicator");
       if (loadingDiv) {
         if (typeof window.destroyLumiWaiters === "function") window.destroyLumiWaiters(loadingDiv);
@@ -464,7 +467,10 @@
             this.appendMessage("teacher", unwrapSpoken(msg.teacherResponse || msg.spokenResponse || msg.spoken));
             speakTalk(msg);
           },
-          onGraphicLoading: (msg) => showPrimerGraphicLoader(msg?.title, msg),
+          onGraphicLoading: (msg) => {
+            if (typeof window.showTalkWait === "function") window.showTalkWait("visual");
+            showPrimerGraphicLoader(msg?.title, msg);
+          },
           onGraphic: (msg) => {
             graphicApplied = applyPrimerGraphic(msg) || graphicApplied;
           },

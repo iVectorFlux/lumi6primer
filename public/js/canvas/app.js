@@ -12911,7 +12911,7 @@ User writes "Show air quality for Tokyo", names a place, and points to an empty 
                 ${interactiveMetaAttrs(interactive)}
                 src="${escapeHtml(href.includes("mode=") ? href : `${href}${href.includes("?") ? "&" : "?"}mode=pill`)}"
                 title="${escapeHtml(label)}"
-                sandbox="allow-scripts"
+                sandbox="allow-scripts allow-same-origin"
                 loading="lazy"
               ></iframe>
               <div class="talk-interactive-stage" hidden aria-hidden="true"></div>
@@ -12932,7 +12932,7 @@ User writes "Show air quality for Tokyo", names a place, and points to an empty 
                   ${interactiveMetaAttrs(step.interactive)}
                   src="${escapeHtml(href.includes("?") ? href : `${href}?embed=1`)}"
                   title="${escapeHtml(label)}"
-                  sandbox="allow-scripts"
+                  sandbox="allow-scripts allow-same-origin"
                   loading="lazy"
                 ></iframe>
               </div>
@@ -13178,13 +13178,10 @@ User writes "Show air quality for Tokyo", names a place, and points to an empty 
       const question = step.question || parsed.question;
       const choices = (step.choices && step.choices.length) ? step.choices : parsed.choices;
 
-      if (!deeperExpl && !question) {
+      if (!deeperExpl && !question && !(step.interactive || step.image)) {
         return `
         <article class="talk-turn-card">
           ${step.asked ? childPromptHtml(step.asked) : ""}
-          <div class="talk-lumi6-box talk-wait-box">
-            ${typeof window.lumiWaitHtml === "function" ? window.lumiWaitHtml("think") : ""}
-          </div>
         </article>
         `;
       }
@@ -13318,7 +13315,7 @@ User writes "Show air quality for Tokyo", names a place, and points to an empty 
     if (!frame) {
       frame = document.createElement("iframe");
       frame.className = "talk-lesson-interactive";
-      frame.setAttribute("sandbox", "allow-scripts");
+      frame.setAttribute("sandbox", "allow-scripts allow-same-origin");
       frame.setAttribute("title", label);
       for (const key of ["slug", "scenario", "subject", "klass", "idea", "concept", "summary", "hrefMobile", "hrefDesktop", "hrefPill"]) {
         if (data[key] != null) frame.dataset[key] = data[key];
@@ -13384,14 +13381,19 @@ User writes "Show air quality for Tokyo", names a place, and points to an empty 
   window.addEventListener("message", (event) => {
     const data = event.data;
     if (data?.type === "lumi6:expand-interactive") {
-      const pills = document.querySelectorAll("iframe.talk-lesson-pill");
-      for (const pill of pills) {
-        if (pill.contentWindow === event.source) {
-          const frame = ensureInteractiveFrame(pill);
-          if (frame) openTalkPlayground(frame);
-          return;
-        }
+      const pills = [...document.querySelectorAll("iframe.talk-lesson-pill")];
+      const bySource = pills.find((pill) => {
+        try { return pill.contentWindow === event.source; } catch { return false; }
+      });
+      const bySlug = data.slug
+        ? pills.find((pill) => pill.dataset.slug === data.slug)
+        : null;
+      const pill = bySource || bySlug || pills[pills.length - 1];
+      if (pill) {
+        const frame = ensureInteractiveFrame(pill);
+        if (frame) openTalkPlayground(frame);
       }
+      return;
     }
     if (!data || data.type !== "lumi6:interactive-height") return;
     const frames = document.querySelectorAll("iframe.talk-lesson-interactive, iframe.talk-lesson-pill");
@@ -13419,6 +13421,7 @@ User writes "Show air quality for Tokyo", names a place, and points to an empty 
     document.body.classList.toggle("talk-playground-scenario", scenario);
     document.body.classList.toggle("talk-playground-mobile", isMobileInteractiveView());
     document.body.classList.add("talk-playground-open");
+    if (typeof window.hideTalkWait === "function") window.hideTalkWait();
     requestAnimationFrame(() => {
       frame.style.width = "100%";
       if (scenario && isMobileInteractiveView()) {

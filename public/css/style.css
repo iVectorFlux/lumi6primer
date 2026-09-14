@@ -3142,6 +3142,27 @@ body.mode-talk-active .canvas-footer {
   padding: 8px 16px 20px;
 }
 
+.talk-wait-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 5000;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  padding: 24px 16px 110px;
+  background: rgba(8, 12, 24, 0.78);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+}
+
+.talk-wait-overlay.is-on {
+  display: flex !important;
+}
+
+.talk-wait-overlay[hidden] {
+  display: none !important;
+}
+
 .lumi-wait {
   display: flex;
   flex-direction: column;

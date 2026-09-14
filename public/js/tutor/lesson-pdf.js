@@ -11,6 +11,31 @@
     return String(t || "").toLowerCase().replace(/[^a-z0-9]/g, "").trim();
   }
 
+  function persistTurns() {
+    try {
+      sessionStorage.setItem("lumi6_lesson_turns", JSON.stringify(turns.slice(-30)));
+    } catch {}
+    if (typeof window.syncTalkModeFeed === "function") window.syncTalkModeFeed();
+  }
+
+  function lastStudentIndex() {
+    for (let i = turns.length - 1; i >= 0; i--) {
+      if (turns[i].role === "student") return i;
+    }
+    return -1;
+  }
+
+  /** Teacher card for the latest question — never attach visuals to an older teacher. */
+  function currentTeacherTurn() {
+    const after = lastStudentIndex();
+    for (let i = turns.length - 1; i > after; i--) {
+      if (turns[i].role === "teacher") return turns[i];
+    }
+    const row = { role: "teacher", text: "", image: "", interactive: null };
+    turns.push(row);
+    return row;
+  }
+
   function record(role, text) {
     const spoken = String(text || "").replace(/\s+/g, " ").trim();
     if (!spoken) return;
@@ -18,51 +43,33 @@
     const norm = normalizeText(spoken);
     if (!norm) return;
 
+    if (cleanRole === "teacher") {
+      const teacher = currentTeacherTurn();
+      if (!teacher.text || spoken.length >= teacher.text.length) teacher.text = spoken;
+      persistTurns();
+      return;
+    }
+
     for (let i = turns.length - 1; i >= Math.max(0, turns.length - 3); i--) {
-      if (turns[i].role === cleanRole) {
-        if (!turns[i].text && (turns[i].image || turns[i].interactive)) {
-          turns[i].text = spoken;
-          try {
-            sessionStorage.setItem("lumi6_lesson_turns", JSON.stringify(turns.slice(-30)));
-          } catch {}
-          if (typeof window.syncTalkModeFeed === "function") window.syncTalkModeFeed();
-          return;
-        }
+      if (turns[i].role === "student") {
         const existingNorm = normalizeText(turns[i].text);
         if (existingNorm === norm || (existingNorm.length > 20 && (existingNorm.includes(norm) || norm.includes(existingNorm)))) {
-          if (spoken.length > (turns[i].text || "").length) {
-            turns[i].text = spoken;
-          }
-          if (typeof window.syncTalkModeFeed === "function") window.syncTalkModeFeed();
+          if (spoken.length > (turns[i].text || "").length) turns[i].text = spoken;
+          persistTurns();
           return;
         }
       }
     }
 
-    turns.push({ role: cleanRole, text: spoken, image: "", interactive: null });
-    try {
-      sessionStorage.setItem("lumi6_lesson_turns", JSON.stringify(turns.slice(-30)));
-    } catch {}
-    if (typeof window.syncTalkModeFeed === "function") window.syncTalkModeFeed();
+    turns.push({ role: "student", text: spoken, image: "", interactive: null });
+    persistTurns();
   }
 
   function attachImage(href) {
     const url = String(href || "").trim();
     if (!url) return;
-    const last = turns[turns.length - 1];
-    if (last?.role === "teacher") {
-      last.image = url;
-      try {
-        sessionStorage.setItem("lumi6_lesson_turns", JSON.stringify(turns.slice(-30)));
-      } catch {}
-      if (typeof window.syncTalkModeFeed === "function") window.syncTalkModeFeed();
-      return;
-    }
-    turns.push({ role: "teacher", text: "", image: url, interactive: null });
-    try {
-      sessionStorage.setItem("lumi6_lesson_turns", JSON.stringify(turns.slice(-30)));
-    } catch {}
-    if (typeof window.syncTalkModeFeed === "function") window.syncTalkModeFeed();
+    currentTeacherTurn().image = url;
+    persistTurns();
   }
 
   function attachInteractive(slug, title, href, meta) {
@@ -84,20 +91,8 @@
       hrefMobile: String(extra.hrefMobile || "").trim(),
       hrefDesktop: String(extra.hrefDesktop || "").trim()
     };
-    const last = turns[turns.length - 1];
-    if (last?.role === "teacher") {
-      last.interactive = widget;
-      try {
-        sessionStorage.setItem("lumi6_lesson_turns", JSON.stringify(turns.slice(-30)));
-      } catch {}
-      if (typeof window.syncTalkModeFeed === "function") window.syncTalkModeFeed();
-      return;
-    }
-    turns.push({ role: "teacher", text: "", image: "", interactive: widget });
-    try {
-      sessionStorage.setItem("lumi6_lesson_turns", JSON.stringify(turns.slice(-30)));
-    } catch {}
-    if (typeof window.syncTalkModeFeed === "function") window.syncTalkModeFeed();
+    currentTeacherTurn().interactive = widget;
+    persistTurns();
   }
 
   function turnsFromChat() {

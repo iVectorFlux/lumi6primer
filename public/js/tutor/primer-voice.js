@@ -1261,9 +1261,11 @@
       this.pendingHeard = "";
       this._syncVoiceButtonUI("processing");
       this.showOverlay("processing", "Got it — thinking...");
+      if (typeof window.showTalkWait === "function") window.showTalkWait("think");
 
       if (/want me to explain|what are you curious|listening to your|listening for your next|click the ai orb|you('re| are) getting it|what should we explore|which part should we|or a new topic|what else are you wondering|should we zoom|say heart, lungs/i.test(heard) || this.isHeardEcho(heard)) {
         console.log("[PRIMER Voice] Ignored echo of teacher prompt:", heard);
+        if (typeof window.hideTalkWait === "function") window.hideTalkWait();
         this.state = "LISTENING";
         this.scheduleAutoRestart(400);
         return;
@@ -1318,6 +1320,10 @@
       if (boardImage) requestPayload.boardImage = boardImage;
 
       this.showOverlay("processing", "Got it — thinking...");
+      if (typeof window.Lumi6Lesson?.record === "function") {
+        window.Lumi6Lesson.record("student", queryText);
+      }
+      if (typeof window.showTalkWait === "function") window.showTalkWait("think");
 
       try {
         const turn = typeof window.primerTurn === "function"
@@ -1344,9 +1350,11 @@
           onSpoken: (msg) => {
             if (!this.isActive || spoke) return;
             spoke = true;
+            if (typeof window.hideTalkWait === "function") window.hideTalkWait();
             this.speakAndDraw(msg, queryText, { draw: false });
           },
           onGraphicLoading: (msg) => {
+            if (typeof window.showTalkWait === "function") window.showTalkWait("visual");
             if (typeof window.showPrimerGraphicLoader === "function") {
               window.showPrimerGraphicLoader(msg?.title, msg);
             }
@@ -1401,6 +1409,7 @@
         }
       } finally {
         if (typeof window.hidePrimerGraphicLoader === "function") window.hidePrimerGraphicLoader();
+        if (typeof window.hideTalkWait === "function") window.hideTalkWait();
         this.queryInFlight = false;
       }
     }
@@ -1502,6 +1511,7 @@
       const speechText = this.cleanTextForSpeech(teacherText);
       this.lastSpoken = speechText || teacherText || "";
 
+      if (typeof window.hideTalkWait === "function") window.hideTalkWait();
       if (window.primerChat && typeof window.primerChat.ingestTurn === "function") {
         window.primerChat.ingestTurn(studentText, teacherText);
       } else if (window.Lumi6Lesson && typeof window.Lumi6Lesson.record === "function") {

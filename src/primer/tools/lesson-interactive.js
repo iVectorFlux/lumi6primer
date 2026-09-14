@@ -243,7 +243,7 @@ const SCENARIO_CHROME_CSS = `
 const PILL_SEL = "#sectionPill,.pill-section";
 const MOBILE_SEL = "#sectionMobile,.mobile-section";
 const DESKTOP_SEL = "#sectionDesktop,.desktop-section";
-const HIDDEN_OVERLAY = ".drawer-overlay,#drawerOverlay";
+const HIDDEN_OVERLAY = ".drawer-overlay,.drawer-overlay.open,#drawerOverlay";
 
 const SCENARIO_PILL_CSS = `
 html,body{width:100%!important;height:auto!important;min-height:0!important;margin:0!important;padding:8px!important;overflow:hidden!important;background:transparent!important}
@@ -285,29 +285,64 @@ function scenarioBootScript(mode) {
 (function(){
   var mode = ${JSON.stringify(view)};
   var tries = 0;
+  function showSections(){
+    var map = {
+      pill: [".pill-section", "#sectionPill"],
+      mobile: [".mobile-section", "#sectionMobile"],
+      desktop: [".desktop-section", "#sectionDesktop"]
+    };
+    var on = map[mode] || map.desktop;
+    var off = [].concat(map.pill, map.mobile, map.desktop).filter(function(sel){ return on.indexOf(sel) < 0; });
+    off.forEach(function(sel){
+      document.querySelectorAll(sel).forEach(function(n){ n.style.setProperty("display", "none", "important"); });
+    });
+    on.forEach(function(sel){
+      document.querySelectorAll(sel).forEach(function(n){ n.style.setProperty("display", "flex", "important"); });
+    });
+    document.querySelectorAll(".drawer-overlay, #drawerOverlay").forEach(function(n){
+      n.style.setProperty("display", "none", "important");
+      n.classList.remove("open");
+    });
+  }
+  function sizeCanvases(){
+    document.querySelectorAll("canvas").forEach(function(c){
+      var box = c.parentElement;
+      if (!box) return;
+      var w = Math.round(box.clientWidth);
+      var h = Math.round(box.clientHeight);
+      if (w > 8 && h > 8 && (c.width !== w || c.height !== h)) {
+        c.width = w;
+        c.height = h;
+      }
+    });
+    try { window.dispatchEvent(new Event("resize")); } catch (e) {}
+  }
   function boot(){
     if (typeof setMode === "function") {
-      setMode(mode === "pill" ? "pill" : mode);
-    } else if (tries++ < 25) {
-      setTimeout(boot, 40);
+      try { setMode(mode === "pill" ? "pill" : mode); } catch (e) {}
+    } else {
+      showSections();
     }
     if (mode === "pill" && !window.__lumiPillBound) {
       window.__lumiPillBound = true;
       window.openDrawer = function(){
-        try { window.parent.postMessage({ type: "lumi6:expand-interactive" }, "*"); } catch (e) {}
+        var slug = decodeURIComponent((location.pathname.split("/").pop() || "").split("?")[0]);
+        try { window.parent.postMessage({ type: "lumi6:expand-interactive", slug: slug }, "*"); } catch (e) {}
       };
-      var pills = document.querySelectorAll("#chatPillTrigger, #chatPillCard, .chat-pill-card");
-      pills.forEach(function(pill){
+      document.querySelectorAll("#chatPillTrigger, #chatPillCard, .chat-pill-card").forEach(function(pill){
         pill.addEventListener("click", function(ev){
           ev.preventDefault();
+          ev.stopPropagation();
           window.openDrawer();
         });
       });
     }
-    try { window.dispatchEvent(new Event("resize")); } catch (e) {}
+    sizeCanvases();
+    if (typeof setMode !== "function" && tries++ < 8) setTimeout(function(){ showSections(); sizeCanvases(); }, 80);
   }
   if (document.readyState === "loading") addEventListener("DOMContentLoaded", boot);
   else boot();
+  addEventListener("load", function(){ sizeCanvases(); });
 })();
 </script>`;
 }
