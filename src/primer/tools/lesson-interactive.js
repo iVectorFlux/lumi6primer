@@ -158,7 +158,7 @@ async function getBySlug(slug, store) {
 }
 
 function interactiveHref(slug, mode) {
-  const base = `/api/primer/interactive/${encodeURIComponent(itemSlug(slug))}?embed=1&v=20260955`;
+  const base = `/api/primer/interactive/${encodeURIComponent(itemSlug(slug))}?embed=1&v=20260956`;
   return mode ? `${base}&mode=${encodeURIComponent(mode)}` : base;
 }
 
@@ -239,9 +239,13 @@ function isScenarioHtml(html) {
 
 /** CSS for v2 scenario pages embedded in the playground or chat pill. */
 const SCENARIO_CHROME_CSS = `
-.view-switcher,.switch-btn,.specs-bar,.section-title,.top-header,.section-badge{display:none!important}
+.view-switcher,.switch-btn,.specs-bar,.section-title,.top-header,.section-badge,
+#sectionPill > :not(.chat-pill-card):not(#chatPillCard):not(#chatPillTrigger),
+.pill-section > :not(.chat-pill-card):not(#chatPillCard):not(#chatPillTrigger),
+#sectionDesktop > :not(.desktop-card),
+.desktop-section > :not(.desktop-card){display:none!important}
 .showcase-container,.showcase-grid-top{width:100%!important;max-width:none!important;margin:0!important;padding:0!important;gap:0!important;display:flex!important;flex-direction:column!important;align-items:stretch!important;height:100%!important;min-height:0!important}
-.view-section{width:100%!important;max-width:none!important;margin:0!important;padding:0!important;gap:0!important}
+.view-section{width:100%!important;max-width:none!important;margin:0!important;padding:0!important;gap:0!important;min-height:0!important}
 `;
 
 const PILL_SEL = "#sectionPill,.pill-section";
@@ -250,11 +254,11 @@ const DESKTOP_SEL = "#sectionDesktop,.desktop-section";
 const HIDDEN_OVERLAY = ".drawer-overlay,.drawer-overlay.active,.drawer-overlay.open,#drawerOverlay";
 
 const SCENARIO_PILL_CSS = `
-html,body{width:100%!important;height:auto!important;min-height:0!important;margin:0!important;padding:0!important;overflow:hidden!important;background:transparent!important}
+html,body{width:100%!important;height:auto!important;min-height:0!important;max-height:88px!important;margin:0!important;padding:0!important;overflow:hidden!important;background:transparent!important}
 body{display:block!important;align-items:stretch!important}
-${PILL_SEL}{display:flex!important;width:100%!important}
-${MOBILE_SEL},${DESKTOP_SEL},${HIDDEN_OVERLAY},.mobile-phone-frame,.desktop-card{display:none!important}
-.chat-pill-card,#chatPillCard{width:100%!important;max-width:100%!important;margin:0!important;cursor:pointer}
+${PILL_SEL}{display:flex!important;flex-direction:column!important;width:100%!important;overflow:hidden!important;max-height:88px!important}
+${MOBILE_SEL},${DESKTOP_SEL},${HIDDEN_OVERLAY},.mobile-phone-frame,.desktop-card,.section-title,.section-badge{display:none!important}
+.chat-pill-card,#chatPillCard,#chatPillTrigger{display:flex!important;width:100%!important;max-width:100%!important;margin:0!important;cursor:pointer}
 `;
 
 const SCENARIO_MOBILE_CSS = `
@@ -273,17 +277,17 @@ html.lumi-full .mobile-phone-frame .phone-controls{flex:0 0 auto!important;max-h
 `;
 
 const SCENARIO_DESKTOP_CSS = `
-html,body{width:880px!important;height:490px!important;margin:0!important;padding:0!important;overflow:hidden!important;background:#e2e8f0!important}
-body{display:flex!important;align-items:center!important;justify-content:center!important;min-height:0!important}
-${PILL_SEL},${MOBILE_SEL},${HIDDEN_OVERLAY},.chat-pill-card,.mobile-phone-frame{display:none!important}
-${DESKTOP_SEL}{display:flex!important;width:880px!important;height:490px!important;max-width:none!important;max-height:none!important;align-items:stretch!important;justify-content:center!important;margin:0!important}
-.desktop-card{display:grid!important;grid-template-columns:370px 1fr!important;grid-template-rows:490px!important;width:880px!important;max-width:none!important;height:490px!important;max-height:none!important;margin:0!important;overflow:hidden!important}
-.desktop-card .math-panel{order:0!important;border-right:1px solid #f1f5f9!important;border-top:0!important;width:auto!important}
-.desktop-card .stage-panel{order:0!important;height:100%!important}
-@media(max-width:960px){
-  .desktop-card{grid-template-columns:370px 1fr!important;height:490px!important;max-width:none!important}
-  .desktop-card .stage-panel{height:100%!important;order:0!important}
-  .desktop-card .math-panel{order:0!important;border-right:1px solid #f1f5f9!important;border-top:none!important;width:auto!important}
+html,body{width:880px!important;height:490px!important;min-width:880px!important;min-height:490px!important;max-width:880px!important;max-height:490px!important;margin:0!important;padding:0!important;overflow:hidden!important;background:#e2e8f0!important}
+body{display:flex!important;align-items:stretch!important;justify-content:flex-start!important}
+${PILL_SEL},${MOBILE_SEL},${HIDDEN_OVERLAY},.chat-pill-card,.mobile-phone-frame,.section-title,.section-badge{display:none!important}
+${DESKTOP_SEL}{display:flex!important;width:880px!important;height:490px!important;max-width:880px!important;max-height:490px!important;align-items:stretch!important;justify-content:flex-start!important;margin:0!important;padding:0!important}
+.desktop-card{display:grid!important;grid-template-columns:370px 510px!important;grid-template-rows:490px!important;grid-template-areas:"math stage"!important;width:880px!important;max-width:880px!important;height:490px!important;max-height:490px!important;margin:0!important;overflow:hidden!important}
+.desktop-card .math-panel{grid-area:math!important;order:0!important;border-right:1px solid #f1f5f9!important;border-top:0!important;width:370px!important;max-width:370px!important}
+.desktop-card .stage-panel{grid-area:stage!important;order:0!important;height:490px!important;width:510px!important}
+@media(max-width:2000px){
+  .desktop-card{display:grid!important;grid-template-columns:370px 510px!important;grid-template-rows:490px!important;grid-template-areas:"math stage"!important;height:490px!important;width:880px!important}
+  .desktop-card .math-panel{grid-area:math!important;order:0!important;border-right:1px solid #f1f5f9!important;border-top:0!important}
+  .desktop-card .stage-panel{grid-area:stage!important;order:0!important;height:490px!important}
 }
 `;
 
@@ -335,8 +339,13 @@ function scenarioBootScript(mode) {
   }
   function boot(){
     applyModeClass();
+    if (typeof setMode === "function" && !window.__lumiSetModeLocked) {
+      window.__lumiSetModeLocked = true;
+      var originalSetMode = setMode;
+      window.setMode = function(){ originalSetMode(mode); showSections(); };
+    }
     if (typeof setMode === "function") {
-      try { setMode(mode === "pill" ? "pill" : mode); } catch (e) {}
+      try { setMode(mode); } catch (e) {}
     }
     showSections();
     if (mode === "pill" && !window.__lumiExpandBound) {
