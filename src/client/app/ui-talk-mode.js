@@ -59,17 +59,19 @@
   }
 
   /** Native pill iframe from the interactive HTML — tap expands in the parent. */
-  function talkInteractivePillHtml(step, titleText) {
+  function talkInteractivePillHtml(step, titleText, extraClass = "") {
     const interactive = step.interactive;
     const pill = interactive.pill || {};
     const label = pill.title || interactive.title || titleText;
     const href = interactive.hrefPill || interactive.href || `/api/primer/interactive/${encodeURIComponent(interactive.slug)}?embed=1&mode=pill`;
+    const src = href.includes("mode=") ? href : `${href}${href.includes("?") ? "&" : "?"}mode=pill`;
+    const extra = extraClass ? ` ${extraClass}` : "";
     return `
-            <div class="talk-interactive-pill-wrapper" data-interactive-slug="${escapeHtml(interactive.slug)}">
+            <div class="talk-interactive-pill-wrapper${extra}" data-interactive-slug="${escapeHtml(interactive.slug)}" ${interactiveMetaAttrs(interactive)}>
               <iframe
                 class="talk-lesson-pill"
                 ${interactiveMetaAttrs(interactive)}
-                src="${escapeHtml(href.includes("mode=") ? href : `${href}${href.includes("?") ? "&" : "?"}mode=pill`)}"
+                src="${escapeHtml(src)}"
                 title="${escapeHtml(label)}"
                 sandbox="allow-scripts allow-same-origin"
                 loading="lazy"
@@ -515,13 +517,14 @@
   }
 
   function ensureInteractiveFrame(trigger, mode = "mobile") {
-    const wrapper = trigger.closest(".talk-interactive-pill-wrapper, .talk-interactive-wrapper") || trigger;
+    const wrapper = trigger.closest?.(".talk-interactive-pill-wrapper, .talk-interactive-wrapper") || trigger;
     if (!wrapper) return null;
     const stage = wrapper.querySelector(".talk-interactive-stage") || wrapper;
     let frame = wrapper.querySelector("iframe.talk-lesson-interactive:not(.talk-lesson-pill)");
-    const data = wrapper.dataset || {};
+    const pill = wrapper.querySelector("iframe.talk-lesson-pill");
+    const data = { ...wrapper.dataset, ...(pill?.dataset || {}), ...(trigger.dataset || {}) };
     const slug = data.slug || data.interactiveSlug || wrapper.dataset.interactiveSlug || "";
-    const label = trigger.getAttribute("title") || slug;
+    const label = pill?.getAttribute("title") || trigger.getAttribute?.("title") || slug;
     if (!frame) {
       frame = document.createElement("iframe");
       frame.className = "talk-lesson-interactive";
@@ -582,7 +585,7 @@
   function applyInteractiveHeight(frame, height) {
     if (!frame || !height) return;
     if (frame.classList.contains("talk-lesson-pill")) {
-      frame.style.height = `${Math.max(72, Math.min(height, 120))}px`;
+      frame.style.height = `${Math.max(72, Math.min(height, 88))}px`;
       return;
     }
     const inPlayground = Boolean(frame.closest("#talkPlaygroundStage"));
@@ -610,7 +613,7 @@
       const wrapper = bySource?.closest(".talk-interactive-pill-wrapper")
         || document.querySelector(`.talk-interactive-pill-wrapper[data-interactive-slug="${CSS.escape(data.slug || "")}"]`)
         || bySlug?.closest(".talk-interactive-pill-wrapper");
-      const trigger = wrapper?.querySelector("iframe.talk-lesson-pill, [data-expand-sim], .sim-native-pill") || wrapper;
+      const trigger = wrapper?.querySelector("iframe.talk-lesson-pill") || wrapper;
       if (trigger) {
         const frame = ensureInteractiveFrame(trigger, isPhoneViewport() ? "mobile" : "desktop");
         if (frame) openTalkPlayground(frame);
@@ -763,25 +766,6 @@
     return Number.isFinite(grade) && grade > 0 ? `Class ${grade}` : "More";
   }
 
-  function simNativePillHtml(interactive) {
-    const pill = interactive.pill || {};
-    const title = pill.title || interactive.title || interactive.slug;
-    const sub = pill.subtitle || interactive.concept || interactive.summary || "";
-    return `
-            <div class="talk-interactive-pill-wrapper sim-pill-item" data-interactive-slug="${escapeHtml(interactive.slug)}" ${interactiveMetaAttrs(interactive)}>
-              <button type="button" class="sim-native-pill" data-expand-sim>
-                <span class="sim-native-pill-body">
-                  <span class="sim-native-pill-title">${escapeHtml(title)}</span>
-                  ${sub ? `<span class="sim-native-pill-sub">${escapeHtml(sub)}</span>` : ""}
-                </span>
-                <span class="sim-native-pill-go" aria-hidden="true">
-                  <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 6 15 12 9 18"/></svg>
-                </span>
-              </button>
-              <div class="talk-interactive-stage" hidden aria-hidden="true"></div>
-            </div>`;
-  }
-
   function simCatalogHtml(items) {
     const groups = new Map();
     for (const item of items) {
@@ -795,7 +779,7 @@
         <section class="sim-class-block">
           <h2 class="sim-class-label">${escapeHtml(classHeading(klass))}</h2>
           <div class="sim-pill-list">
-            ${rows.map((interactive) => simNativePillHtml(interactive)).join("")}
+            ${rows.map((interactive) => talkInteractivePillHtml({ interactive }, interactive.title || interactive.slug, "sim-pill-item")).join("")}
           </div>
         </section>
       `)
@@ -832,14 +816,6 @@
       feed.innerHTML = `<p class="sim-feed-status">Could not load interactives. Try again.</p>`;
     }
   }
-
-  document.getElementById("simFeed")?.addEventListener("click", (e) => {
-    const btn = e.target.closest("[data-expand-sim]");
-    if (!btn) return;
-    e.preventDefault();
-    const frame = ensureInteractiveFrame(btn, isPhoneViewport() ? "mobile" : "desktop");
-    if (frame) openTalkPlayground(frame);
-  });
 
   window.addEventListener("resize", () => {
     if (document.body.classList.contains("talk-playground-desktop-view")) scaleDesktopPlayground();
