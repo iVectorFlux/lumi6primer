@@ -712,8 +712,9 @@
       document.body.classList.remove("talk-playground-fullscreen", "talk-playground-desktop-view");
       document.body.classList.toggle("talk-playground-mobile", isPhoneViewport());
       applyEmbedLayout(frame, false);
-      setFrameMode(frame, "mobile");
+      setFrameMode(frame, isPhoneViewport() ? "mobile" : "desktop");
       syncPlaygroundExpandLabel();
+      sizePlaygroundFrame(frame);
       return;
     }
     if (isPhoneViewport()) {
@@ -728,6 +729,8 @@
       setFrameMode(frame, "desktop");
     }
     syncPlaygroundExpandLabel();
+    sizePlaygroundFrame(frame);
+    nudgeInteractive(frame);
   }
 
   /** Ask the embed to re-measure after it changes container. */
@@ -845,8 +848,7 @@
 
   document.getElementById("talkPlaygroundClose")?.addEventListener("click", closeTalkPlayground);
   document.getElementById("talkPlaygroundExpand")?.addEventListener("click", () => {
-    const expanded = document.body.classList.contains("talk-playground-fullscreen")
-      || document.body.classList.contains("talk-playground-desktop-view");
+    const expanded = document.body.classList.contains("talk-playground-fullscreen");
     setPlaygroundFullscreen(!expanded);
   });
   document.addEventListener("keydown", (e) => {
