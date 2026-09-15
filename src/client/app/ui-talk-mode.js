@@ -551,6 +551,7 @@
       frame.setAttribute("src", href);
       frame.addEventListener("load", () => {
         applyEmbedLayout(frame, document.body.classList.contains("talk-playground-fullscreen"));
+        sizePlaygroundFrame(frame);
         nudgeInteractive(frame);
       }, { once: true });
     } else {

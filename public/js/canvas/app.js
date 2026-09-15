@@ -13391,6 +13391,7 @@ User writes "Show air quality for Tokyo", names a place, and points to an empty 
       frame.setAttribute("src", href);
       frame.addEventListener("load", () => {
         applyEmbedLayout(frame, document.body.classList.contains("talk-playground-fullscreen"));
+        sizePlaygroundFrame(frame);
         nudgeInteractive(frame);
       }, { once: true });
     } else {

@@ -497,19 +497,19 @@ button,
   }
 
   body.talk-playground-fullscreen .talk-playground {
-    padding: 0;
+    padding: 56px 0 0;
     background: #0f172a;
   }
 
-  body.talk-playground-fullscreen .talk-playground-bar,
-  body.talk-playground-fullscreen .talk-playground-scroll {
-    width: 100%;
-    max-width: none;
-  }
-
-  body.talk-playground-fullscreen .talk-playground-scroll {
-    flex: 1 1 auto;
-    height: auto;
+  body.talk-playground-fullscreen .talk-playground-scale,
+  body.talk-playground-fullscreen .talk-playground-scroll,
+  body.talk-playground-fullscreen .talk-playground-stage,
+  body.talk-playground-fullscreen .talk-playground-stage .talk-lesson-interactive {
+    width: 100% !important;
+    height: 100% !important;
+    max-height: none !important;
+    flex: 1 1 auto !important;
+    min-height: 0 !important;
     border-radius: 0;
   }
 
