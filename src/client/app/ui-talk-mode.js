@@ -685,7 +685,7 @@
       host.style.transform = "";
       return;
     }
-    const scale = Math.min(1, (window.innerWidth - 48) / 880, (window.innerHeight - 88) / 542);
+    const scale = Math.min(1, (window.innerWidth - 48) / 880, (window.innerHeight - 96) / 490);
     host.style.transformOrigin = "center center";
     host.style.transform = scale < 0.995 ? `scale(${scale})` : "";
   }

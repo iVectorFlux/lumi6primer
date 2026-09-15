@@ -3859,26 +3859,36 @@ iframe.talk-lesson-pill {
 }
 
 .talk-playground-scale {
+  position: relative;
   display: flex;
   flex-direction: column;
   align-items: stretch;
+  background: transparent;
+  box-shadow: none;
   transform-origin: center center;
 }
 
 .talk-playground-bar {
-  flex: 0 0 auto;
+  position: absolute;
+  top: 12px;
+  left: 12px;
+  right: 12px;
+  z-index: 3;
+  flex: none;
   display: flex;
   align-items: center;
   gap: 10px;
-  width: min(375px, 100%);
-  padding: 8px 12px;
-  border-radius: 20px 20px 0 0;
-  background: #1e1b4b;
+  width: auto;
+  padding: 0;
+  border-radius: 0;
+  background: transparent;
   color: #fff;
+  pointer-events: none;
 }
 
 .talk-playground-close,
 .talk-playground-expand {
+  pointer-events: auto;
   border: 0;
   border-radius: 999px;
   padding: 8px 14px;
@@ -3886,6 +3896,7 @@ iframe.talk-lesson-pill {
   color: #fff;
   font: 700 14px inherit;
   cursor: pointer;
+  box-shadow: 0 8px 20px rgba(15, 23, 42, 0.28);
 }
 
 .talk-playground-expand {
@@ -3913,15 +3924,15 @@ iframe.talk-lesson-pill {
 }
 
 .talk-playground-scroll {
-  flex: 0 1 auto;
+  flex: none;
   display: flex;
   flex-direction: column;
-  width: min(375px, 100%);
-  height: min(540px, calc(100dvh - 96px));
+  width: auto;
+  height: auto;
   min-height: 0;
   overflow: hidden;
-  border-radius: 0 0 20px 20px;
-  background: #f8fafc;
+  border-radius: 18px;
+  background: transparent;
   box-shadow: 0 24px 60px rgba(15, 23, 42, 0.28);
 }
 
@@ -3961,7 +3972,7 @@ iframe.talk-lesson-pill {
   flex: 1 1 auto;
   min-height: 0;
   height: 100%;
-  background: #fff;
+  background: transparent;
   overflow: hidden;
 }
 
@@ -4044,24 +4055,26 @@ body.talk-playground-desktop-view .talk-playground {
 body.talk-playground-desktop-view .talk-playground-scale,
 body.talk-playground-desktop-view.talk-playground-scenario .talk-playground-scale {
   width: 880px;
-  height: auto;
+  height: 490px;
   flex: none;
 }
 
-body.talk-playground-desktop-view .talk-playground-bar,
-body.talk-playground-desktop-view .talk-playground-scroll,
-body.talk-playground-desktop-view.talk-playground-scenario .talk-playground-bar,
-body.talk-playground-desktop-view.talk-playground-scenario .talk-playground-scroll {
-  width: 880px;
-  max-width: 880px;
+body.talk-playground-desktop-view .talk-playground-bar {
+  top: -48px;
+  left: 0;
+  right: auto;
+  width: auto;
 }
 
 body.talk-playground-desktop-view .talk-playground-scroll,
 body.talk-playground-desktop-view.talk-playground-scenario .talk-playground-scroll {
+  width: 880px;
+  max-width: 880px;
   height: 490px;
   max-height: 490px;
   flex: 0 0 490px;
-  border-radius: 0 0 20px 20px;
+  border-radius: 18px;
+  background: transparent;
 }
 
 body.talk-playground-desktop-view .talk-playground-stage .talk-lesson-interactive,
@@ -4110,13 +4123,6 @@ body.talk-playground-fullscreen .talk-playground-scale {
   height: 100%;
   flex: 1 1 auto;
   transform: none !important;
-}
-
-body.talk-playground-fullscreen .talk-playground-bar,
-body.talk-playground-fullscreen .talk-playground-scroll {
-  width: 100%;
-  max-width: none;
-  border-radius: 0;
 }
 
 body.talk-playground-fullscreen .talk-playground-bar,

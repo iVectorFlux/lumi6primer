@@ -158,7 +158,7 @@ async function getBySlug(slug, store) {
 }
 
 function interactiveHref(slug, mode) {
-  const base = `/api/primer/interactive/${encodeURIComponent(itemSlug(slug))}?embed=1&v=20260957`;
+  const base = `/api/primer/interactive/${encodeURIComponent(itemSlug(slug))}?embed=1&v=20260958`;
   return mode ? `${base}&mode=${encodeURIComponent(mode)}` : base;
 }
 
@@ -268,7 +268,7 @@ ${MOBILE_SEL},${DESKTOP_SEL},${HIDDEN_OVERLAY},.mobile-phone-frame,.desktop-card
 `;
 
 const SCENARIO_MOBILE_CSS = `
-html,body{width:100%!important;height:100%!important;margin:0!important;padding:0!important;overflow:hidden!important;background:#e2e8f0!important}
+html,body{width:100%!important;height:100%!important;margin:0!important;padding:0!important;overflow:hidden!important;background:transparent!important}
 body{display:flex!important;align-items:stretch!important;justify-content:stretch!important}
 ${PILL_SEL},${DESKTOP_SEL},${HIDDEN_OVERLAY},.chat-pill-card,#chatPillCard,.desktop-card,${TITLE_SEL}{display:none!important}
 ${MOBILE_SEL}{display:flex!important;flex:1 1 auto!important;width:100%!important;max-width:none!important;height:100%!important;min-height:0!important;align-items:stretch!important;justify-content:stretch!important;margin:0!important;padding:0!important}
@@ -282,7 +282,7 @@ html.lumi-full .mobile-phone-frame .phone-controls{flex:0 0 auto!important;max-h
 `;
 
 const SCENARIO_DESKTOP_CSS = `
-html,body{width:880px!important;height:490px!important;min-width:880px!important;min-height:490px!important;max-width:880px!important;max-height:490px!important;margin:0!important;padding:0!important;overflow:hidden!important;background:#e2e8f0!important}
+html,body{width:880px!important;height:490px!important;min-width:880px!important;min-height:490px!important;max-width:880px!important;max-height:490px!important;margin:0!important;padding:0!important;overflow:hidden!important;background:transparent!important}
 body{display:flex!important;align-items:stretch!important;justify-content:flex-start!important}
 ${PILL_SEL},${MOBILE_SEL},${HIDDEN_OVERLAY},.chat-pill-card,.mobile-phone-frame,${TITLE_SEL}{display:none!important}
 ${DESKTOP_SEL}{display:flex!important;width:880px!important;height:490px!important;max-width:880px!important;max-height:490px!important;align-items:stretch!important;justify-content:flex-start!important;margin:0!important;padding:0!important}
