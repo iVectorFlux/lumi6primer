@@ -13408,7 +13408,7 @@ User writes "Show air quality for Tokyo", names a place, and points to an empty 
   function applyInteractiveHeight(frame, height) {
     if (!frame || !height) return;
     if (frame.classList.contains("talk-lesson-pill")) {
-      frame.style.height = `${Math.max(56, Math.min(height, 96))}px`;
+      frame.style.height = `${Math.max(72, Math.min(height, 120))}px`;
       return;
     }
     const inPlayground = Boolean(frame.closest("#talkPlaygroundStage"));
@@ -13427,15 +13427,7 @@ User writes "Show air quality for Tokyo", names a place, and points to an empty 
   window.addEventListener("message", (event) => {
     const data = event.data;
     if (data?.type === "lumi6:expand-interactive") {
-      const stageFrame = document.querySelector("#talkPlaygroundStage iframe.talk-lesson-interactive");
-      if (document.body.classList.contains("talk-playground-open") && stageFrame) {
-        const fromStage = (() => { try { return stageFrame.contentWindow === event.source; } catch { return false; } })();
-        if (fromStage || !data.slug || stageFrame.dataset.slug === data.slug) {
-          document.body.classList.add("talk-playground-fullscreen");
-          nudgeInteractive(stageFrame);
-          return;
-        }
-      }
+      if (document.body.classList.contains("talk-playground-open")) return;
       const pills = [...document.querySelectorAll("iframe.talk-lesson-pill")];
       const bySource = pills.find((pill) => {
         try { return pill.contentWindow === event.source; } catch { return false; }
@@ -13477,17 +13469,46 @@ User writes "Show air quality for Tokyo", names a place, and points to an empty 
     document.body.classList.toggle("talk-playground-mobile", prefersMobilePlayground());
     document.body.classList.remove("talk-playground-fullscreen");
     document.body.classList.add("talk-playground-open");
+    syncPlaygroundExpandLabel();
     if (typeof window.hideTalkWait === "function") window.hideTalkWait();
+    const afterLoad = () => {
+      applyEmbedLayout(frame, false);
+      nudgeInteractive(frame);
+    };
+    frame.addEventListener("load", afterLoad, { once: true });
     requestAnimationFrame(() => {
       frame.style.width = "100%";
       frame.style.height = "100%";
       frame.style.minHeight = "0";
-      nudgeInteractive(frame);
+      afterLoad();
     });
+  }
+
+  function applyEmbedLayout(frame, full) {
+    try {
+      frame?.contentWindow?.document.documentElement.classList.toggle("lumi-full", Boolean(full));
+    } catch {}
+  }
+
+  function syncPlaygroundExpandLabel() {
+    const btn = document.getElementById("talkPlaygroundExpand");
+    if (!btn) return;
+    const mobile = document.body.classList.contains("talk-playground-mobile");
+    btn.hidden = !mobile;
+    btn.textContent = document.body.classList.contains("talk-playground-fullscreen") ? "Card view" : "Expand";
+  }
+
+  function setPlaygroundFullscreen(full) {
+    const frame = document.querySelector("#talkPlaygroundStage iframe.talk-lesson-interactive");
+    document.body.classList.toggle("talk-playground-fullscreen", Boolean(full));
+    applyEmbedLayout(frame, full);
+    syncPlaygroundExpandLabel();
+    nudgeInteractive(frame);
   }
 
   /** Ask the embed to re-measure after it changes container. */
   function nudgeInteractive(frame) {
+    if (!frame) return;
     try {
       frame.contentWindow?.dispatchEvent(new Event("resize"));
     } catch {}
@@ -13598,6 +13619,9 @@ User writes "Show air quality for Tokyo", names a place, and points to an empty 
   }
 
   document.getElementById("talkPlaygroundClose")?.addEventListener("click", closeTalkPlayground);
+  document.getElementById("talkPlaygroundExpand")?.addEventListener("click", () => {
+    setPlaygroundFullscreen(!document.body.classList.contains("talk-playground-fullscreen"));
+  });
   document.addEventListener("keydown", (e) => {
     if (e.key === "Escape" && document.body.classList.contains("talk-playground-open")) {
       closeTalkPlayground();

@@ -158,7 +158,7 @@ async function getBySlug(slug, store) {
 }
 
 function interactiveHref(slug, mode) {
-  const base = `/api/primer/interactive/${encodeURIComponent(itemSlug(slug))}?embed=1`;
+  const base = `/api/primer/interactive/${encodeURIComponent(itemSlug(slug))}?embed=1&v=20260951`;
   return mode ? `${base}&mode=${encodeURIComponent(mode)}` : base;
 }
 
@@ -239,36 +239,40 @@ function isScenarioHtml(html) {
 
 /** CSS for v2 scenario pages embedded in the playground or chat pill. */
 const SCENARIO_CHROME_CSS = `
-.view-switcher,.specs-bar,.section-title,.top-header{display:none!important}
-.showcase-container{width:100%!important;max-width:none!important;margin:0!important;padding:0!important;gap:0!important}
-.showcase-grid-top{width:100%!important;margin:0!important;padding:0!important;gap:0!important;display:block!important}
-.view-section{width:100%!important;max-width:none!important;margin:0!important;padding:0!important}
+.view-switcher,.specs-bar,.section-title,.top-header,.section-badge{display:none!important}
+.showcase-container,.showcase-grid-top{width:100%!important;max-width:none!important;margin:0!important;padding:0!important;gap:0!important;display:flex!important;flex-direction:column!important;align-items:stretch!important;height:100%!important;min-height:0!important}
+.view-section{width:100%!important;max-width:none!important;margin:0!important;padding:0!important;gap:0!important}
 `;
 
 const PILL_SEL = "#sectionPill,.pill-section";
 const MOBILE_SEL = "#sectionMobile,.mobile-section";
 const DESKTOP_SEL = "#sectionDesktop,.desktop-section";
-const HIDDEN_OVERLAY = ".drawer-overlay,.drawer-overlay.open,#drawerOverlay";
+const HIDDEN_OVERLAY = ".drawer-overlay,.drawer-overlay.active,.drawer-overlay.open,#drawerOverlay";
 
 const SCENARIO_PILL_CSS = `
-html,body{width:100%!important;height:auto!important;min-height:0!important;margin:0!important;padding:8px!important;overflow:hidden!important;background:transparent!important}
+html,body{width:100%!important;height:auto!important;min-height:0!important;margin:0!important;padding:0!important;overflow:hidden!important;background:transparent!important}
 body{display:block!important;align-items:stretch!important}
-${PILL_SEL}{display:flex!important}
-${MOBILE_SEL},${DESKTOP_SEL},${HIDDEN_OVERLAY}{display:none!important}
+${PILL_SEL}{display:flex!important;width:100%!important}
+${MOBILE_SEL},${DESKTOP_SEL},${HIDDEN_OVERLAY},.mobile-phone-frame,.desktop-card{display:none!important}
 .chat-pill-card,#chatPillCard{width:100%!important;max-width:100%!important;margin:0!important;cursor:pointer}
 `;
 
 const SCENARIO_MOBILE_CSS = `
-html,body{width:100%!important;height:100%!important;margin:0!important;padding:16px!important;overflow:auto!important;background:transparent!important}
-body{display:flex!important;align-items:center!important;justify-content:center!important}
-${PILL_SEL},${DESKTOP_SEL},${HIDDEN_OVERLAY}{display:none!important}
-${MOBILE_SEL}{display:flex!important;flex:none!important;width:auto!important;max-width:100%!important;height:auto!important;min-height:0!important}
+html,body{width:100%!important;height:100%!important;margin:0!important;padding:0!important;overflow:hidden!important;background:#f8fafc!important}
+body{display:flex!important;align-items:stretch!important;justify-content:stretch!important}
+${PILL_SEL},${DESKTOP_SEL},${HIDDEN_OVERLAY},.chat-pill-card,#chatPillCard,.desktop-card{display:none!important}
+${MOBILE_SEL}{display:flex!important;flex:1 1 auto!important;width:100%!important;max-width:none!important;height:100%!important;min-height:0!important;align-items:stretch!important}
+.mobile-phone-frame{display:flex!important;flex-direction:column!important;width:100%!important;max-width:none!important;height:100%!important;max-height:none!important;margin:0!important;border:0!important;border-radius:0!important;box-shadow:none!important;overflow:hidden!important}
+.mobile-phone-frame .phone-stage{flex:1 1 auto!important;height:auto!important;min-height:0!important;max-height:none!important}
+.mobile-phone-frame .phone-controls{flex:0 0 auto!important;height:auto!important;max-height:42%!important;overflow:auto!important;padding:10px 14px calc(12px + env(safe-area-inset-bottom, 0px))!important}
+.range-slider,input[type=range]{touch-action:manipulation;min-height:28px}
+html.lumi-full .mobile-phone-frame .phone-controls{max-height:none!important;overflow:visible!important}
 `;
 
 const SCENARIO_DESKTOP_CSS = `
-html,body{width:100%!important;height:100%!important;margin:0!important;padding:12px!important;overflow:hidden!important;background:#f8fafc!important}
+html,body{width:100%!important;height:100%!important;margin:0!important;padding:0!important;overflow:hidden!important;background:#f8fafc!important}
 body{display:flex!important;align-items:stretch!important;justify-content:center!important}
-${PILL_SEL},${MOBILE_SEL},${HIDDEN_OVERLAY}{display:none!important}
+${PILL_SEL},${MOBILE_SEL},${HIDDEN_OVERLAY},.chat-pill-card,.mobile-phone-frame{display:none!important}
 ${DESKTOP_SEL},.gridTop{display:flex!important;flex:1 1 auto!important;width:100%!important;height:100%!important;min-height:0!important}
 .desktop-card{width:100%!important;max-width:none!important;height:100%!important;flex:1 1 auto!important}
 `;
@@ -292,53 +296,55 @@ function scenarioBootScript(mode) {
     body.classList.remove("mode-pill", "mode-mobile", "mode-desktop");
     body.classList.add(mode === "pill" ? "mode-pill" : mode === "mobile" ? "mode-mobile" : "mode-desktop");
   }
-  function showSections(){
-    applyModeClass();
-    var map = {
-      pill: [".pill-section", "#sectionPill"],
-      mobile: [".mobile-section", "#sectionMobile"],
-      desktop: [".desktop-section", "#sectionDesktop"]
-    };
-    var on = map[mode] || map.desktop;
-    var off = [].concat(map.pill, map.mobile, map.desktop).filter(function(sel){ return on.indexOf(sel) < 0; });
-    off.forEach(function(sel){
-      document.querySelectorAll(sel).forEach(function(n){ n.style.setProperty("display", "none", "important"); });
-    });
-    on.forEach(function(sel){
-      document.querySelectorAll(sel).forEach(function(n){ n.style.setProperty("display", "flex", "important"); });
-    });
-    document.querySelectorAll(".drawer-overlay, #drawerOverlay").forEach(function(n){
+  function hide(sel){
+    document.querySelectorAll(sel).forEach(function(n){
       n.style.setProperty("display", "none", "important");
       n.classList.remove("open", "active");
     });
+  }
+  function show(sel){
+    document.querySelectorAll(sel).forEach(function(n){ n.style.setProperty("display", "flex", "important"); });
+  }
+  function showSections(){
+    applyModeClass();
+    hide(".drawer-overlay, #drawerOverlay, .top-header, .view-switcher, .specs-bar, .section-title");
+    if (mode === "pill") {
+      hide(".mobile-section, #sectionMobile, .desktop-section, #sectionDesktop, .mobile-phone-frame, .desktop-card");
+      show(".pill-section, #sectionPill, .chat-pill-card, #chatPillCard");
+    } else if (mode === "mobile") {
+      hide(".pill-section, #sectionPill, .desktop-section, #sectionDesktop, .chat-pill-card, #chatPillCard, .desktop-card");
+      show(".mobile-section, #sectionMobile, .mobile-phone-frame");
+    } else {
+      hide(".pill-section, #sectionPill, .mobile-section, #sectionMobile, .chat-pill-card, .mobile-phone-frame");
+      show(".desktop-section, #sectionDesktop, .desktop-card");
+    }
+  }
+  function askParentExpand(){
+    var slug = decodeURIComponent((location.pathname.split("/").pop() || "").split("?")[0]);
+    try { window.parent.postMessage({ type: "lumi6:expand-interactive", slug: slug }, "*"); } catch (e) {}
   }
   function boot(){
     applyModeClass();
     if (typeof setMode === "function") {
       try { setMode(mode === "pill" ? "pill" : mode); } catch (e) {}
-    } else {
-      showSections();
     }
-    if ((mode === "pill" || mode === "mobile") && !window.__lumiExpandBound) {
+    showSections();
+    if (mode === "pill" && !window.__lumiExpandBound) {
       window.__lumiExpandBound = true;
-      window.openDrawer = function(){
-        var slug = decodeURIComponent((location.pathname.split("/").pop() || "").split("?")[0]);
-        try { window.parent.postMessage({ type: "lumi6:expand-interactive", slug: slug }, "*"); } catch (e) {}
-      };
-      if (mode === "pill") {
-        document.querySelectorAll("#chatPillTrigger, #chatPillCard, .chat-pill-card").forEach(function(pill){
-          pill.addEventListener("click", function(ev){
-            ev.preventDefault();
-            ev.stopPropagation();
-            window.openDrawer();
-          });
-        });
-      }
+      window.openDrawer = askParentExpand;
+      document.querySelectorAll("#chatPillTrigger, #chatPillCard, .chat-pill-card, .pill-expand-btn").forEach(function(pill){
+        pill.addEventListener("click", function(ev){
+          ev.preventDefault();
+          ev.stopPropagation();
+          askParentExpand();
+        }, true);
+      });
     }
-    if (typeof setMode !== "function" && tries++ < 8) setTimeout(showSections, 80);
+    if (tries++ < 12) setTimeout(showSections, 80);
   }
   if (document.readyState === "loading") addEventListener("DOMContentLoaded", boot);
   else boot();
+  addEventListener("load", showSections);
 })();
 </script>`;
 }
@@ -393,11 +399,14 @@ const EMBED_FIT_SCRIPT = `<script id="lumi-embed-fit">
   var mode = "";
   try { mode = new URLSearchParams(location.search).get("mode") || ""; } catch (e) {}
   function report(){
-    if (mode === "pill" || mode === "mobile" || mode === "desktop") return;
+    if (mode === "mobile" || mode === "desktop") return;
     if (!window.parent || window.parent === window) return;
-    var body = document.body;
-    if (!body) return;
-    var height = Math.ceil(body.getBoundingClientRect().height) || body.scrollHeight;
+    var node = mode === "pill"
+      ? (document.querySelector(".chat-pill-card, #chatPillCard") || document.body)
+      : document.body;
+    if (!node) return;
+    var height = Math.ceil(node.getBoundingClientRect().height) || node.scrollHeight;
+    if (mode === "pill") height = Math.min(Math.max(height + 4, 72), 120);
     if (!height || Math.abs(height - sent) < 2) return;
     sent = height;
     try {
@@ -409,7 +418,7 @@ const EMBED_FIT_SCRIPT = `<script id="lumi-embed-fit">
     timer = setTimeout(report, 160);
   }
   addEventListener("load", ping);
-  if (mode !== "pill" && mode !== "mobile" && mode !== "desktop" && window.ResizeObserver) {
+  if (mode !== "mobile" && mode !== "desktop" && window.ResizeObserver) {
     try {
       var observer = new ResizeObserver(ping);
       observer.observe(document.documentElement);

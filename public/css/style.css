@@ -2923,12 +2923,18 @@ button, a, .btool, .topbar-icon-btn, .zoom-btn, .share-btn, .nav-item {
   display: flex;
   flex-direction: column;
   align-items: stretch;
-  gap: 10px;
+  gap: 14px;
 }
 
-.sim-pill-list .talk-interactive-pill-wrapper,
-.sim-pill-list iframe.talk-lesson-pill {
+.sim-pill-list .talk-interactive-pill-wrapper {
   width: min(100%, 420px);
+  overflow: hidden;
+  isolation: isolate;
+  min-height: 80px;
+}
+
+.sim-pill-list iframe.talk-lesson-pill {
+  width: 100%;
 }
 
 .sim-feed-status {
@@ -3385,16 +3391,18 @@ body.mode-sim-active .canvas-footer {
 
 /* In-chat interactive pill (scenario v2) */
 .talk-interactive-pill-wrapper {
-  margin: 2px 0 6px;
+  margin: 0;
+  overflow: hidden;
 }
 
 /* Native pill iframe from the interactive HTML */
 iframe.talk-lesson-pill {
   display: block;
   width: min(100%, 420px);
-  height: 72px;
+  height: 88px;
   border: 0;
   background: transparent;
+  overflow: hidden;
 }
 
 .talk-interactive-pill {
@@ -3841,12 +3849,12 @@ iframe.talk-lesson-pill {
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: center;
+  justify-content: flex-end;
   width: 100%;
   height: 100dvh;
-  padding: 16px;
+  padding: 0;
   overflow: hidden;
-  background: rgba(15, 23, 42, 0.42);
+  background: rgba(15, 23, 42, 0.88);
 }
 
 .talk-playground[hidden] {
@@ -3857,15 +3865,17 @@ iframe.talk-lesson-pill {
   flex: 0 0 auto;
   display: flex;
   align-items: center;
-  gap: 12px;
-  width: min(390px, calc(100vw - 32px));
-  padding: 10px 14px;
+  gap: 10px;
+  width: min(420px, 100%);
+  padding: 8px 12px;
+  padding-top: max(8px, env(safe-area-inset-top));
   border-radius: 20px 20px 0 0;
   background: #1e1b4b;
   color: #fff;
 }
 
-.talk-playground-close {
+.talk-playground-close,
+.talk-playground-expand {
   border: 0;
   border-radius: 999px;
   padding: 8px 14px;
@@ -3873,6 +3883,16 @@ iframe.talk-lesson-pill {
   color: #fff;
   font: 700 14px inherit;
   cursor: pointer;
+}
+
+.talk-playground-expand {
+  margin-left: auto;
+  background: #fff;
+  color: #4c1d95;
+}
+
+.talk-playground-expand[hidden] {
+  display: none !important;
 }
 
 .talk-playground-title,
@@ -3884,13 +3904,13 @@ iframe.talk-lesson-pill {
   flex: 0 1 auto;
   display: flex;
   flex-direction: column;
-  width: min(390px, calc(100vw - 32px));
-  height: min(680px, calc(100dvh - 96px));
+  width: min(420px, 100%);
+  height: min(620px, calc(100dvh - 56px));
   min-height: 0;
   overflow: hidden;
-  border-radius: 0 0 20px 20px;
+  border-radius: 0;
   background: #f8fafc;
-  box-shadow: 0 24px 60px rgba(15, 23, 42, 0.28);
+  box-shadow: 0 -16px 40px rgba(15, 23, 42, 0.28);
 }
 
 .talk-playground-header {
@@ -3972,12 +3992,17 @@ body.talk-playground-open {
   overflow: hidden;
 }
 
-body.talk-playground-open .talk-bottom-bar {
+body.talk-playground-open .talk-bottom-bar,
+body.talk-playground-open .sim-mode-workspace,
+body.talk-playground-open .talk-mode-workspace {
   visibility: hidden;
 }
 
-/* Scenario interactives sit in a centered card, not a stretched full screen. */
-body.talk-playground-scenario .talk-playground-scroll {
+body.talk-playground-scenario:not(.talk-playground-mobile) .talk-playground {
+  justify-content: center;
+  padding: 16px;
+  background: rgba(15, 23, 42, 0.42);
+}
   display: flex;
   flex-direction: column;
   padding: 0;
@@ -4014,6 +4039,7 @@ body.talk-playground-scenario .talk-playground-stage .talk-lesson-interactive {
 body.talk-playground-fullscreen .talk-playground {
   padding: 0;
   background: #0f172a;
+  justify-content: stretch;
 }
 
 body.talk-playground-fullscreen .talk-playground-bar,
@@ -4023,7 +4049,12 @@ body.talk-playground-fullscreen .talk-playground-scroll {
   border-radius: 0;
 }
 
+body.talk-playground-fullscreen .talk-playground-bar {
+  padding-top: max(8px, env(safe-area-inset-top));
+}
+
 body.talk-playground-fullscreen .talk-playground-scroll {
-  height: calc(100dvh - 52px);
+  flex: 1 1 auto;
+  height: auto;
   box-shadow: none;
 }
