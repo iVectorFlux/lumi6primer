@@ -158,7 +158,7 @@ async function getBySlug(slug, store) {
 }
 
 function interactiveHref(slug, mode) {
-  const base = `/api/primer/interactive/${encodeURIComponent(itemSlug(slug))}?embed=1&v=20260951`;
+  const base = `/api/primer/interactive/${encodeURIComponent(itemSlug(slug))}?embed=1&v=20260952`;
   return mode ? `${base}&mode=${encodeURIComponent(mode)}` : base;
 }
 
@@ -258,23 +258,26 @@ ${MOBILE_SEL},${DESKTOP_SEL},${HIDDEN_OVERLAY},.mobile-phone-frame,.desktop-card
 `;
 
 const SCENARIO_MOBILE_CSS = `
-html,body{width:100%!important;height:100%!important;margin:0!important;padding:0!important;overflow:hidden!important;background:#f8fafc!important}
-body{display:flex!important;align-items:stretch!important;justify-content:stretch!important}
+html,body{width:100%!important;height:100%!important;margin:0!important;padding:0!important;overflow:hidden!important;background:#e2e8f0!important}
+body{display:flex!important;align-items:center!important;justify-content:center!important}
 ${PILL_SEL},${DESKTOP_SEL},${HIDDEN_OVERLAY},.chat-pill-card,#chatPillCard,.desktop-card{display:none!important}
-${MOBILE_SEL}{display:flex!important;flex:1 1 auto!important;width:100%!important;max-width:none!important;height:100%!important;min-height:0!important;align-items:stretch!important}
-.mobile-phone-frame{display:flex!important;flex-direction:column!important;width:100%!important;max-width:none!important;height:100%!important;max-height:none!important;margin:0!important;border:0!important;border-radius:0!important;box-shadow:none!important;overflow:hidden!important}
-.mobile-phone-frame .phone-stage{flex:1 1 auto!important;height:auto!important;min-height:0!important;max-height:none!important}
-.mobile-phone-frame .phone-controls{flex:0 0 auto!important;height:auto!important;max-height:42%!important;overflow:auto!important;padding:10px 14px calc(12px + env(safe-area-inset-bottom, 0px))!important}
+${MOBILE_SEL}{display:flex!important;flex:none!important;width:auto!important;max-width:100%!important;height:auto!important;min-height:0!important;align-items:center!important;justify-content:center!important}
+.mobile-phone-frame{display:flex!important;flex-direction:column!important;width:375px!important;max-width:100%!important;height:540px!important;max-height:100%!important;margin:0 auto!important;border:1px solid #e2e8f0!important;border-radius:26px!important;box-shadow:0 12px 36px -6px rgba(0,0,0,.09)!important;overflow:hidden!important;background:#fff!important}
+.mobile-phone-frame .phone-stage{flex:none!important;height:285px!important;min-height:285px!important;max-height:285px!important}
+.mobile-phone-frame .phone-controls{flex:1 1 auto!important;height:auto!important;min-height:0!important;max-height:none!important;overflow:auto!important;padding:12px 16px 16px!important}
 .range-slider,input[type=range]{touch-action:manipulation;min-height:28px}
-html.lumi-full .mobile-phone-frame .phone-controls{max-height:none!important;overflow:visible!important}
+html.lumi-full body{align-items:stretch!important;justify-content:stretch!important;background:#fff!important}
+html.lumi-full ${MOBILE_SEL},html.lumi-full .mobile-phone-frame{width:100%!important;height:100%!important;max-width:none!important;max-height:none!important;border:0!important;border-radius:0!important;box-shadow:none!important}
+html.lumi-full .mobile-phone-frame .phone-stage{flex:1 1 auto!important;height:auto!important;min-height:0!important;max-height:none!important}
+html.lumi-full .mobile-phone-frame .phone-controls{flex:0 0 auto!important;max-height:42%!important;padding:10px 14px calc(12px + env(safe-area-inset-bottom, 0px))!important}
 `;
 
 const SCENARIO_DESKTOP_CSS = `
-html,body{width:100%!important;height:100%!important;margin:0!important;padding:0!important;overflow:hidden!important;background:#f8fafc!important}
-body{display:flex!important;align-items:stretch!important;justify-content:center!important}
+html,body{width:100%!important;height:100%!important;margin:0!important;padding:0!important;overflow:hidden!important;background:#e2e8f0!important}
+body{display:flex!important;align-items:center!important;justify-content:center!important}
 ${PILL_SEL},${MOBILE_SEL},${HIDDEN_OVERLAY},.chat-pill-card,.mobile-phone-frame{display:none!important}
-${DESKTOP_SEL},.gridTop{display:flex!important;flex:1 1 auto!important;width:100%!important;height:100%!important;min-height:0!important}
-.desktop-card{width:100%!important;max-width:none!important;height:100%!important;flex:1 1 auto!important}
+${DESKTOP_SEL}{display:flex!important;flex:none!important;width:880px!important;max-width:100%!important;height:490px!important;max-height:100%!important;align-items:stretch!important;justify-content:center!important}
+.desktop-card{width:880px!important;max-width:100%!important;height:490px!important;max-height:100%!important;flex:none!important;margin:0!important;transform-origin:center center}
 `;
 
 function scenarioEmbedCss(mode) {
@@ -323,12 +326,20 @@ function scenarioBootScript(mode) {
     var slug = decodeURIComponent((location.pathname.split("/").pop() || "").split("?")[0]);
     try { window.parent.postMessage({ type: "lumi6:expand-interactive", slug: slug }, "*"); } catch (e) {}
   }
+  function fitDesktopCard(){
+    var card = document.querySelector(".desktop-card");
+    if (!card || mode !== "desktop") return;
+    var scale = Math.min(1, window.innerWidth / 880, window.innerHeight / 490);
+    card.style.transformOrigin = "center center";
+    card.style.transform = scale < 0.99 ? ("scale(" + scale + ")") : "none";
+  }
   function boot(){
     applyModeClass();
     if (typeof setMode === "function") {
       try { setMode(mode === "pill" ? "pill" : mode); } catch (e) {}
     }
     showSections();
+    fitDesktopCard();
     if (mode === "pill" && !window.__lumiExpandBound) {
       window.__lumiExpandBound = true;
       window.openDrawer = askParentExpand;
@@ -340,11 +351,12 @@ function scenarioBootScript(mode) {
         }, true);
       });
     }
-    if (tries++ < 12) setTimeout(showSections, 80);
+    if (tries++ < 4) setTimeout(function(){ showSections(); fitDesktopCard(); }, 80);
   }
   if (document.readyState === "loading") addEventListener("DOMContentLoaded", boot);
   else boot();
-  addEventListener("load", showSections);
+  addEventListener("load", function(){ showSections(); fitDesktopCard(); });
+  addEventListener("resize", fitDesktopCard);
 })();
 </script>`;
 }

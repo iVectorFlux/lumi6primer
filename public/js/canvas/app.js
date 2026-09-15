@@ -13337,24 +13337,24 @@ User writes "Show air quality for Tokyo", names a place, and points to an empty 
     }
   }
 
-  function isMobileInteractiveView() {
+  function isPhoneViewport() {
     return window.matchMedia("(max-width: 900px), (hover: none) and (pointer: coarse)").matches;
   }
 
-  function prefersMobilePlayground() {
-    return currentAppViewMode === "sim" || isMobileInteractiveView();
+  function isMobileInteractiveView() {
+    return isPhoneViewport();
   }
 
-  function interactiveExpandHref(trigger) {
-    const data = trigger?.dataset || {};
-    const slug = data.slug || trigger?.closest("[data-interactive-slug]")?.dataset?.interactiveSlug || "";
+  function playgroundHref(frameOrTrigger, mode) {
+    const data = frameOrTrigger?.dataset || {};
+    const slug = data.slug || frameOrTrigger?.closest?.("[data-interactive-slug]")?.dataset?.interactiveSlug || "";
     if (!slug) return "";
     const mobile = data.hrefMobile || `/api/primer/interactive/${encodeURIComponent(slug)}?embed=1&mode=mobile`;
     const desktop = data.hrefDesktop || `/api/primer/interactive/${encodeURIComponent(slug)}?embed=1&mode=desktop`;
-    return prefersMobilePlayground() ? mobile : desktop;
+    return mode === "desktop" ? desktop : mobile;
   }
 
-  function ensureInteractiveFrame(trigger) {
+  function ensureInteractiveFrame(trigger, mode = "mobile") {
     const wrapper = trigger.closest(".talk-interactive-pill-wrapper, .talk-interactive-wrapper");
     if (!wrapper) return null;
     const stage = wrapper.querySelector(".talk-interactive-stage") || wrapper;
@@ -13372,9 +13372,22 @@ User writes "Show air quality for Tokyo", names a place, and points to an empty 
       }
       stage.appendChild(frame);
     }
-    const href = interactiveExpandHref(trigger);
-    if (href && frame.getAttribute("src") !== href) frame.setAttribute("src", href);
+    setFrameMode(frame, mode);
     return frame;
+  }
+
+  function setFrameMode(frame, mode) {
+    if (!frame) return;
+    const href = playgroundHref(frame, mode);
+    if (href && frame.getAttribute("src") !== href) {
+      frame.setAttribute("src", href);
+      frame.addEventListener("load", () => {
+        applyEmbedLayout(frame, document.body.classList.contains("talk-playground-fullscreen"));
+        nudgeInteractive(frame);
+      }, { once: true });
+    } else {
+      nudgeInteractive(frame);
+    }
   }
 
   function bindTalkPlayground(feed) {
@@ -13466,9 +13479,10 @@ User writes "Show air quality for Tokyo", names a place, and points to an empty 
     stage.replaceChildren(frame);
     sheet.hidden = false;
     document.body.classList.toggle("talk-playground-scenario", scenario);
-    document.body.classList.toggle("talk-playground-mobile", prefersMobilePlayground());
-    document.body.classList.remove("talk-playground-fullscreen");
+    document.body.classList.toggle("talk-playground-mobile", isPhoneViewport());
+    document.body.classList.remove("talk-playground-fullscreen", "talk-playground-desktop-view");
     document.body.classList.add("talk-playground-open");
+    setFrameMode(frame, "mobile");
     syncPlaygroundExpandLabel();
     if (typeof window.hideTalkWait === "function") window.hideTalkWait();
     const afterLoad = () => {
@@ -13493,17 +13507,38 @@ User writes "Show air quality for Tokyo", names a place, and points to an empty 
   function syncPlaygroundExpandLabel() {
     const btn = document.getElementById("talkPlaygroundExpand");
     if (!btn) return;
-    const mobile = document.body.classList.contains("talk-playground-mobile");
-    btn.hidden = !mobile;
-    btn.textContent = document.body.classList.contains("talk-playground-fullscreen") ? "Card view" : "Expand";
+    btn.hidden = false;
+    if (document.body.classList.contains("talk-playground-desktop-view")) {
+      btn.textContent = "Mobile view";
+    } else if (document.body.classList.contains("talk-playground-fullscreen")) {
+      btn.textContent = "Card view";
+    } else {
+      btn.textContent = isPhoneViewport() ? "Expand" : "Desktop view";
+    }
   }
 
   function setPlaygroundFullscreen(full) {
     const frame = document.querySelector("#talkPlaygroundStage iframe.talk-lesson-interactive");
-    document.body.classList.toggle("talk-playground-fullscreen", Boolean(full));
-    applyEmbedLayout(frame, full);
+    if (!full) {
+      document.body.classList.remove("talk-playground-fullscreen", "talk-playground-desktop-view");
+      document.body.classList.toggle("talk-playground-mobile", isPhoneViewport());
+      applyEmbedLayout(frame, false);
+      setFrameMode(frame, "mobile");
+      syncPlaygroundExpandLabel();
+      return;
+    }
+    if (isPhoneViewport()) {
+      document.body.classList.add("talk-playground-fullscreen");
+      document.body.classList.remove("talk-playground-desktop-view");
+      applyEmbedLayout(frame, true);
+      setFrameMode(frame, "mobile");
+    } else {
+      document.body.classList.add("talk-playground-desktop-view");
+      document.body.classList.remove("talk-playground-fullscreen", "talk-playground-mobile");
+      applyEmbedLayout(frame, false);
+      setFrameMode(frame, "desktop");
+    }
     syncPlaygroundExpandLabel();
-    nudgeInteractive(frame);
   }
 
   /** Ask the embed to re-measure after it changes container. */
@@ -13533,7 +13568,7 @@ User writes "Show air quality for Tokyo", names a place, and points to an empty 
     if (sheet) sheet.hidden = true;
     if (header) header.hidden = true;
     if (notes) notes.innerHTML = "";
-    document.body.classList.remove("talk-playground-open", "talk-playground-scenario", "talk-playground-mobile", "talk-playground-fullscreen");
+    document.body.classList.remove("talk-playground-open", "talk-playground-scenario", "talk-playground-mobile", "talk-playground-fullscreen", "talk-playground-desktop-view");
     talkPlaygroundSlug = "";
   }
 
@@ -13620,7 +13655,9 @@ User writes "Show air quality for Tokyo", names a place, and points to an empty 
 
   document.getElementById("talkPlaygroundClose")?.addEventListener("click", closeTalkPlayground);
   document.getElementById("talkPlaygroundExpand")?.addEventListener("click", () => {
-    setPlaygroundFullscreen(!document.body.classList.contains("talk-playground-fullscreen"));
+    const expanded = document.body.classList.contains("talk-playground-fullscreen")
+      || document.body.classList.contains("talk-playground-desktop-view");
+    setPlaygroundFullscreen(!expanded);
   });
   document.addEventListener("keydown", (e) => {
     if (e.key === "Escape" && document.body.classList.contains("talk-playground-open")) {

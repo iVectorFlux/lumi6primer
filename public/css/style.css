@@ -3849,10 +3849,10 @@ iframe.talk-lesson-pill {
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: flex-end;
+  justify-content: center;
   width: 100%;
   height: 100dvh;
-  padding: 0;
+  padding: 24px;
   overflow: hidden;
   background: rgba(15, 23, 42, 0.88);
 }
@@ -3866,9 +3866,8 @@ iframe.talk-lesson-pill {
   display: flex;
   align-items: center;
   gap: 10px;
-  width: min(420px, 100%);
+  width: min(375px, 100%);
   padding: 8px 12px;
-  padding-top: max(8px, env(safe-area-inset-top));
   border-radius: 20px 20px 0 0;
   background: #1e1b4b;
   color: #fff;
@@ -3904,13 +3903,13 @@ iframe.talk-lesson-pill {
   flex: 0 1 auto;
   display: flex;
   flex-direction: column;
-  width: min(420px, 100%);
-  height: min(620px, calc(100dvh - 56px));
+  width: min(375px, 100%);
+  height: min(540px, calc(100dvh - 96px));
   min-height: 0;
   overflow: hidden;
-  border-radius: 0;
+  border-radius: 0 0 20px 20px;
   background: #f8fafc;
-  box-shadow: 0 -16px 40px rgba(15, 23, 42, 0.28);
+  box-shadow: 0 24px 60px rgba(15, 23, 42, 0.28);
 }
 
 .talk-playground-header {
@@ -3998,23 +3997,10 @@ body.talk-playground-open .talk-mode-workspace {
   visibility: hidden;
 }
 
-body.talk-playground-scenario:not(.talk-playground-mobile) .talk-playground {
-  justify-content: center;
-  padding: 16px;
-  background: rgba(15, 23, 42, 0.42);
-}
+body.talk-playground-scenario .talk-playground-scroll {
   display: flex;
   flex-direction: column;
   padding: 0;
-}
-
-body.talk-playground-scenario:not(.talk-playground-mobile) .talk-playground-bar,
-body.talk-playground-scenario:not(.talk-playground-mobile) .talk-playground-scroll {
-  width: min(1040px, calc(100vw - 48px));
-}
-
-body.talk-playground-scenario:not(.talk-playground-mobile) .talk-playground-scroll {
-  height: min(720px, calc(100dvh - 96px));
 }
 
 body.talk-playground-scenario .talk-playground-header,
@@ -4034,6 +4020,22 @@ body.talk-playground-scenario .talk-playground-stage .talk-lesson-interactive {
   width: 100%;
   min-height: 0;
   height: 100% !important;
+}
+
+body.talk-playground-desktop-view .talk-playground {
+  justify-content: center;
+  padding: 24px;
+  background: rgba(15, 23, 42, 0.88);
+}
+
+body.talk-playground-desktop-view .talk-playground-bar,
+body.talk-playground-desktop-view .talk-playground-scroll {
+  width: min(880px, calc(100vw - 48px));
+}
+
+body.talk-playground-desktop-view .talk-playground-scroll {
+  height: min(490px, calc((100vw - 48px) * 490 / 880), calc(100dvh - 96px));
+  border-radius: 0 0 20px 20px;
 }
 
 body.talk-playground-fullscreen .talk-playground {
