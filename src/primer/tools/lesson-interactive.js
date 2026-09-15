@@ -188,6 +188,11 @@ function commandFor(item) {
   };
 }
 
+async function listCatalog(store) {
+  const items = await loadAll(store);
+  return items.map(commandFor).filter(Boolean);
+}
+
 /**
  * The board sizes the iframe to this document's natural height, so nothing here
  * may stretch to fill the viewport. The canvas keeps a fixed aspect ratio and the
@@ -314,19 +319,21 @@ function scenarioBootScript(mode) {
     } else {
       showSections();
     }
-    if (mode === "pill" && !window.__lumiPillBound) {
-      window.__lumiPillBound = true;
+    if ((mode === "pill" || mode === "mobile") && !window.__lumiExpandBound) {
+      window.__lumiExpandBound = true;
       window.openDrawer = function(){
         var slug = decodeURIComponent((location.pathname.split("/").pop() || "").split("?")[0]);
         try { window.parent.postMessage({ type: "lumi6:expand-interactive", slug: slug }, "*"); } catch (e) {}
       };
-      document.querySelectorAll("#chatPillTrigger, #chatPillCard, .chat-pill-card").forEach(function(pill){
-        pill.addEventListener("click", function(ev){
-          ev.preventDefault();
-          ev.stopPropagation();
-          window.openDrawer();
+      if (mode === "pill") {
+        document.querySelectorAll("#chatPillTrigger, #chatPillCard, .chat-pill-card").forEach(function(pill){
+          pill.addEventListener("click", function(ev){
+            ev.preventDefault();
+            ev.stopPropagation();
+            window.openDrawer();
+          });
         });
-      });
+      }
     }
     if (typeof setMode !== "function" && tries++ < 8) setTimeout(showSections, 80);
   }
@@ -438,6 +445,7 @@ function embedHtml(html, options = {}) {
 
 module.exports = {
   loadAll,
+  listCatalog,
   match,
   getBySlug,
   commandFor,

@@ -14,11 +14,11 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,600;1,400&family=DM+Sans:wght@400;500;600;700&family=Inter:wght@400;500;600;700;800&family=Patrick+Hand&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="css/style.css?v=20260949">
-  <link rel="stylesheet" href="css/primer-voice.css?v=20260949">
+  <link rel="stylesheet" href="css/style.css?v=20260950">
+  <link rel="stylesheet" href="css/primer-voice.css?v=20260950">
   <link rel="stylesheet" href="css/supabase-auth.css?v=20260904">
   <link rel="stylesheet" href="css/lumi6-onboard.css?v=20260904">
-  <link rel="stylesheet" href="css/mobile.css?v=20260949">
+  <link rel="stylesheet" href="css/mobile.css?v=20260950">
   <script src="js/lib/mathjax-config.js"></script>
   <script
     defer
@@ -65,6 +65,10 @@
         <button class="nav-item active" id="modeTalkBtn" type="button" aria-pressed="true" data-mode="talk">
           <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/><line x1="9" y1="9" x2="15" y2="9"/><line x1="9" y1="13" x2="13" y2="13"/></svg>
           <span>Talk Mode</span>
+        </button>
+        <button class="nav-item" id="modeSimBtn" type="button" aria-pressed="false" data-mode="sim">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg>
+          <span>SIM</span>
         </button>
       </nav>
 
@@ -473,6 +477,16 @@
         </footer>
       </div>
 
+      <div id="simModeWorkspace" class="sim-mode-workspace" hidden>
+        <div class="talk-scroll-area sim-scroll-area" id="simScrollArea">
+          <div class="talk-container">
+            <main class="sim-feed" id="simFeed">
+              <p class="sim-feed-status">Loading interactives…</p>
+            </main>
+          </div>
+        </div>
+      </div>
+
     </div><!-- /center-area -->
 
   </main><!-- /app-shell -->
@@ -798,15 +812,15 @@
   <script src="js/canvas/mixed-text.js?v=20260904"></script>
   <script src="js/canvas/animation.js?v=20260904"></script>
   <script src="js/canvas/summon.js?v=20260904"></script>
-  <script src="js/lib/lottie.min.js?v=20260949"></script>
+  <script src="js/lib/lottie.min.js?v=20260950"></script>
   <script>window.lottie = window.lottie || window.bodymovin;</script>
-  <script src="js/tutor/lumi-wait-data.js?v=20260949"></script>
-  <script src="js/tutor/lumi-wait.js?v=20260949"></script>
-  <script src="js/canvas/app.js?v=20260949"></script>
+  <script src="js/tutor/lumi-wait-data.js?v=20260950"></script>
+  <script src="js/tutor/lumi-wait.js?v=20260950"></script>
+  <script src="js/canvas/app.js?v=20260950"></script>
   <script src="js/tutor/lumi6-canvas-adapter.js?v=20260904"></script>
-  <script src="js/tutor/primer-turn.js?v=20260949"></script>
-  <script src="js/tutor/primer-voice.js?v=20260949"></script>
-  <script src="js/tutor/lesson-pdf.js?v=20260949"></script>
+  <script src="js/tutor/primer-turn.js?v=20260950"></script>
+  <script src="js/tutor/primer-voice.js?v=20260950"></script>
+  <script src="js/tutor/lesson-pdf.js?v=20260950"></script>
   <script src="js/tutor/lumi6-onboard.js?v=20260904"></script>
   <script src="js/auth/supabase-auth.js?v=20260904"></script>
   <script>

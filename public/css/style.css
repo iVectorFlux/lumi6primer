@@ -2886,6 +2886,57 @@ button, a, .btool, .topbar-icon-btn, .zoom-btn, .share-btn, .nav-item {
   display: none !important;
 }
 
+.sim-mode-workspace {
+  position: absolute;
+  inset: 0;
+  z-index: 10;
+  display: flex;
+  flex-direction: column;
+  background: #ffffff;
+  overflow: hidden;
+}
+
+.sim-mode-workspace[hidden] {
+  display: none !important;
+}
+
+.sim-scroll-area {
+  padding-bottom: 28px;
+}
+
+.sim-feed {
+  display: flex;
+  flex-direction: column;
+  gap: 22px;
+}
+
+.sim-class-label {
+  margin: 0 0 10px;
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: #6d28d9;
+}
+
+.sim-pill-list {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 10px;
+}
+
+.sim-pill-list .talk-interactive-pill-wrapper,
+.sim-pill-list iframe.talk-lesson-pill {
+  width: min(100%, 420px);
+}
+
+.sim-feed-status {
+  margin: 24px 0;
+  color: #64748b;
+  font-size: 15px;
+}
+
 .talk-scroll-area {
   flex: 1 1 auto;
   overflow-y: auto;
@@ -2907,7 +2958,19 @@ body.mode-talk-active .layer-switcher,
 body.mode-talk-active .floating-zoom-control,
 body.mode-talk-active .zoom-controls,
 body.mode-talk-active .pen-preview-badge,
-body.mode-talk-active .canvas-footer {
+body.mode-talk-active .canvas-footer,
+body.mode-sim-active #aiMergedBadge,
+body.mode-sim-active [data-action="undo"],
+body.mode-sim-active [data-action="redo"],
+body.mode-sim-active .bottom-toolbar,
+body.mode-sim-active .pen-tray,
+body.mode-sim-active .sketch-topbar-tools,
+body.mode-sim-active .quick-actions-bar,
+body.mode-sim-active .layer-switcher,
+body.mode-sim-active .floating-zoom-control,
+body.mode-sim-active .zoom-controls,
+body.mode-sim-active .pen-preview-badge,
+body.mode-sim-active .canvas-footer {
   display: none !important;
 }
 
@@ -3946,4 +4009,21 @@ body.talk-playground-scenario .talk-playground-stage .talk-lesson-interactive {
   width: 100%;
   min-height: 0;
   height: 100% !important;
+}
+
+body.talk-playground-fullscreen .talk-playground {
+  padding: 0;
+  background: #0f172a;
+}
+
+body.talk-playground-fullscreen .talk-playground-bar,
+body.talk-playground-fullscreen .talk-playground-scroll {
+  width: 100%;
+  max-width: none;
+  border-radius: 0;
+}
+
+body.talk-playground-fullscreen .talk-playground-scroll {
+  height: calc(100dvh - 52px);
+  box-shadow: none;
 }

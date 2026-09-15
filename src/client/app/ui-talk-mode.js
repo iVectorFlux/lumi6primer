@@ -204,15 +204,26 @@
     };
   }
 
+  function normalizeAppMode(mode) {
+    if (mode === "talk" || mode === "sim" || mode === "draw") return mode;
+    return "draw";
+  }
+
   function setAppViewMode(mode, updateUrl = true) {
-    currentAppViewMode = mode === "talk" ? "talk" : "draw";
+    const next = normalizeAppMode(mode);
+    if (next !== currentAppViewMode) closeTalkPlayground();
+    currentAppViewMode = next;
     const drawBtns = document.querySelectorAll("#modeDrawBtn, #topbarModeDrawBtn");
     const talkBtns = document.querySelectorAll("#modeTalkBtn, #topbarModeTalkBtn");
+    const simBtns = document.querySelectorAll("#modeSimBtn, #topbarModeSimBtn");
     const canvasWorkspace = document.querySelector(".canvas-workspace");
     const talkWorkspace = document.querySelector("#talkModeWorkspace");
+    const simWorkspace = document.querySelector("#simModeWorkspace");
     const docTitle = document.querySelector("#docTitleHeading");
+    const hideBoard = currentAppViewMode !== "draw";
 
     document.body.classList.toggle("mode-talk-active", currentAppViewMode === "talk");
+    document.body.classList.toggle("mode-sim-active", currentAppViewMode === "sim");
     document.body.classList.toggle("mode-draw-active", currentAppViewMode === "draw");
 
     drawBtns.forEach(btn => {
@@ -223,25 +234,37 @@
       btn.classList.toggle("active", currentAppViewMode === "talk");
       btn.setAttribute("aria-pressed", String(currentAppViewMode === "talk"));
     });
+    simBtns.forEach(btn => {
+      btn.classList.toggle("active", currentAppViewMode === "sim");
+      btn.setAttribute("aria-pressed", String(currentAppViewMode === "sim"));
+    });
 
     if (docTitle) {
-      docTitle.textContent = currentAppViewMode === "talk" ? "Talk Mode" : "Whiteboard";
+      docTitle.textContent = currentAppViewMode === "talk"
+        ? "Talk Mode"
+        : currentAppViewMode === "sim"
+          ? "SIM"
+          : "Whiteboard";
     }
 
     if (canvasWorkspace) {
-      canvasWorkspace.hidden = currentAppViewMode === "talk";
-      canvasWorkspace.style.display = currentAppViewMode === "talk" ? "none" : "";
+      canvasWorkspace.hidden = hideBoard;
+      canvasWorkspace.style.display = hideBoard ? "none" : "";
     }
     if (talkWorkspace) {
       talkWorkspace.hidden = currentAppViewMode !== "talk";
       talkWorkspace.style.display = currentAppViewMode === "talk" ? "flex" : "none";
     }
+    if (simWorkspace) {
+      simWorkspace.hidden = currentAppViewMode !== "sim";
+      simWorkspace.style.display = currentAppViewMode === "sim" ? "flex" : "none";
+    }
 
     if (updateUrl && window.history?.replaceState) {
       try {
         const url = new URL(window.location.href);
-        if (currentAppViewMode === "talk") {
-          url.searchParams.set("mode", "talk");
+        if (currentAppViewMode === "talk" || currentAppViewMode === "sim") {
+          url.searchParams.set("mode", currentAppViewMode);
         } else {
           url.searchParams.delete("mode");
         }
@@ -257,13 +280,18 @@
       if (backdrop) backdrop.hidden = true;
     }
 
+    if (currentAppViewMode !== "talk" && window.primerVoice && typeof window.primerVoice.turnOff === "function") {
+      window.primerVoice.turnOff();
+    }
+
     if (currentAppViewMode === "talk") {
       if (typeof window.hideTalkWait === "function") window.hideTalkWait();
       syncTalkModeFeed({ scroll: true });
+    } else if (currentAppViewMode === "sim") {
+      if (typeof window.hideTalkWait === "function") window.hideTalkWait();
+      loadSimCatalog();
     } else {
-      if (window.primerVoice && typeof window.primerVoice.turnOff === "function") {
-        window.primerVoice.turnOff();
-      }
+      closeTalkPlayground();
       render();
     }
   }
@@ -473,13 +501,17 @@
     return window.matchMedia("(max-width: 900px), (hover: none) and (pointer: coarse)").matches;
   }
 
+  function prefersMobilePlayground() {
+    return currentAppViewMode === "sim" || isMobileInteractiveView();
+  }
+
   function interactiveExpandHref(trigger) {
     const data = trigger?.dataset || {};
     const slug = data.slug || trigger?.closest("[data-interactive-slug]")?.dataset?.interactiveSlug || "";
     if (!slug) return "";
     const mobile = data.hrefMobile || `/api/primer/interactive/${encodeURIComponent(slug)}?embed=1&mode=mobile`;
     const desktop = data.hrefDesktop || `/api/primer/interactive/${encodeURIComponent(slug)}?embed=1&mode=desktop`;
-    return isMobileInteractiveView() ? mobile : desktop;
+    return prefersMobilePlayground() ? mobile : desktop;
   }
 
   function ensureInteractiveFrame(trigger) {
@@ -555,6 +587,15 @@
   window.addEventListener("message", (event) => {
     const data = event.data;
     if (data?.type === "lumi6:expand-interactive") {
+      const stageFrame = document.querySelector("#talkPlaygroundStage iframe.talk-lesson-interactive");
+      if (document.body.classList.contains("talk-playground-open") && stageFrame) {
+        const fromStage = (() => { try { return stageFrame.contentWindow === event.source; } catch { return false; } })();
+        if (fromStage || !data.slug || stageFrame.dataset.slug === data.slug) {
+          document.body.classList.add("talk-playground-fullscreen");
+          nudgeInteractive(stageFrame);
+          return;
+        }
+      }
       const pills = [...document.querySelectorAll("iframe.talk-lesson-pill")];
       const bySource = pills.find((pill) => {
         try { return pill.contentWindow === event.source; } catch { return false; }
@@ -593,7 +634,8 @@
     stage.replaceChildren(frame);
     sheet.hidden = false;
     document.body.classList.toggle("talk-playground-scenario", scenario);
-    document.body.classList.toggle("talk-playground-mobile", isMobileInteractiveView());
+    document.body.classList.toggle("talk-playground-mobile", prefersMobilePlayground());
+    document.body.classList.remove("talk-playground-fullscreen");
     document.body.classList.add("talk-playground-open");
     if (typeof window.hideTalkWait === "function") window.hideTalkWait();
     requestAnimationFrame(() => {
@@ -630,8 +672,67 @@
     if (sheet) sheet.hidden = true;
     if (header) header.hidden = true;
     if (notes) notes.innerHTML = "";
-    document.body.classList.remove("talk-playground-open", "talk-playground-scenario", "talk-playground-mobile");
+    document.body.classList.remove("talk-playground-open", "talk-playground-scenario", "talk-playground-mobile", "talk-playground-fullscreen");
     talkPlaygroundSlug = "";
+  }
+
+  function classHeading(klass) {
+    const grade = Number(klass);
+    return Number.isFinite(grade) && grade > 0 ? `Class ${grade}` : "More";
+  }
+
+  function simCatalogHtml(items) {
+    const groups = new Map();
+    for (const item of items) {
+      const key = Number.isFinite(Number(item.klass)) ? Number(item.klass) : 0;
+      if (!groups.has(key)) groups.set(key, []);
+      groups.get(key).push(item);
+    }
+    return [...groups.entries()]
+      .sort((a, b) => a[0] - b[0])
+      .map(([klass, rows]) => `
+        <section class="sim-class-block">
+          <h2 class="sim-class-label">${escapeHtml(classHeading(klass))}</h2>
+          <div class="sim-pill-list">
+            ${rows.map((interactive) => talkInteractivePillHtml(
+              { interactive },
+              interactive.pill?.title || interactive.title
+            )).join("")}
+          </div>
+        </section>
+      `)
+      .join("");
+  }
+
+  let simCatalogPromise = null;
+
+  async function loadSimCatalog() {
+    const feed = document.getElementById("simFeed");
+    if (!feed) return;
+    if (feed.querySelector(".sim-class-block")) return;
+    if (!simCatalogPromise) {
+      simCatalogPromise = (async () => {
+        const headers = typeof window.Lumi6Profile?.authHeaders === "function"
+          ? await window.Lumi6Profile.authHeaders()
+          : {};
+        const response = await fetch("/api/primer/interactives", { headers });
+        if (!response.ok) throw new Error(`HTTP ${response.status}`);
+        const data = await response.json();
+        return Array.isArray(data.items) ? data.items : [];
+      })().catch((err) => {
+        simCatalogPromise = null;
+        throw err;
+      });
+    }
+    feed.innerHTML = `<p class="sim-feed-status">Loading interactives…</p>`;
+    try {
+      const items = await simCatalogPromise;
+      feed.innerHTML = items.length
+        ? simCatalogHtml(items)
+        : `<p class="sim-feed-status">No interactives yet.</p>`;
+    } catch {
+      feed.innerHTML = `<p class="sim-feed-status">Could not load interactives. Try again.</p>`;
+    }
   }
 
   window.syncTalkModeFeed = (options) => syncTalkModeFeed(options);
@@ -649,6 +750,7 @@
 
   bindModeBtn("#modeDrawBtn", "draw");
   bindModeBtn("#modeTalkBtn", "talk");
+  bindModeBtn("#modeSimBtn", "sim");
 
   const talkMic = document.querySelector("#talkModeMicBtn");
   if (talkMic && window.primerVoice && typeof window.primerVoice.bindMicTriggers === "function") {
@@ -712,7 +814,8 @@
   try {
     const urlParams = new URLSearchParams(window.location.search);
     const hash = String(window.location.hash || "").toLowerCase();
-    const initialMode = (urlParams.get("mode") === "draw" || hash === "#draw") ? "draw" : "talk";
+    const requested = String(urlParams.get("mode") || hash.replace("#", "") || "").toLowerCase();
+    const initialMode = requested === "draw" || requested === "sim" || requested === "talk" ? requested : "talk";
     setAppViewMode(initialMode, false);
   } catch {
     setAppViewMode("talk", false);

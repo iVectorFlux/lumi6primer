@@ -219,6 +219,13 @@ async function primerRoutes(req, res, url, options = {}) {
       return true;
     }
 
+    if (req.method === "GET" && pathname === "/api/primer/interactives") {
+      const lessonInteractive = require("./tools/lesson-interactive.js");
+      const items = await lessonInteractive.listCatalog(orchestrator.childModel.store);
+      sendJson(res, 200, { items });
+      return true;
+    }
+
     if (req.method === "GET" && pathname.startsWith("/api/primer/interactive/")) {
       const slug = decodeURIComponent(pathname.slice("/api/primer/interactive/".length).split("/")[0] || "");
       const lessonInteractive = require("./tools/lesson-interactive.js");

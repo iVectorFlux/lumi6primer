@@ -471,6 +471,22 @@ button,
     padding-bottom: 0;
   }
 
+  body.talk-playground-fullscreen .talk-playground {
+    padding: 0;
+    background: #0f172a;
+  }
+
+  body.talk-playground-fullscreen .talk-playground-bar,
+  body.talk-playground-fullscreen .talk-playground-scroll {
+    width: 100%;
+    max-width: none;
+  }
+
+  body.talk-playground-fullscreen .talk-playground-scroll {
+    height: calc(100dvh - 52px);
+    border-radius: 0;
+  }
+
   .talk-interactive-pill {
     padding: 6px 9px;
     gap: 7px;
@@ -657,7 +673,8 @@ button,
     top: 8px;
     max-width: calc(100vw - 16px);
   }
-  body.mode-talk-active .ai-embodiment {
+  body.mode-talk-active .ai-embodiment,
+  body.mode-sim-active .ai-embodiment {
     display: none !important;
   }
 
