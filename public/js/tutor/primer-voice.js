@@ -1,5 +1,5 @@
 /**
- * Primer voice for Talk Mode: hold-to-talk STT, TTS, and lesson pictures.
+ * Primer voice for Talk Mode: tap-to-talk STT, TTS, and lesson pictures.
  */
 (function () {
   "use strict";
@@ -93,14 +93,15 @@
 
   /**
    * Modular Speech Recognition Wrapper (STT)
-   * Live streaming recognition with zero premature auto-commit timeouts during hold-to-talk.
+   * Live streaming recognition. Fresh engine each listen so old transcripts cannot leak back.
    */
   class SpeechRecognizer {
     constructor(options = {}) {
       const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
       this.isSupported = Boolean(SpeechRecognition);
-      this.recognition = this.isSupported ? new SpeechRecognition() : null;
+      this.recognition = null;
       this.isListening = false;
+      this._lang = options.lang || "en-US";
 
       this.onResult = options.onResult || null;
       this.onError = options.onError || null;
@@ -112,35 +113,41 @@
       const isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent) || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
       this.isMobile = isMobile;
 
-      if (this.isSupported) {
-        this.recognition.continuous = true;
-        this.recognition.interimResults = true;
-        this.recognition.lang = options.lang || "en-US";
+      if (this.isSupported) this._bindEngine();
+    }
 
-        this.recognition.onresult = (e) => {
-          let interim = "";
-          for (let i = e.resultIndex; i < e.results.length; i++) {
-            const piece = String(e.results[i][0].transcript || "").trim();
-            if (!piece) continue;
-            if (e.results[i].isFinal) this._finalParts.push(piece);
-            else interim += (interim ? " " : "") + piece;
-          }
-          this._interim = interim;
-          this.lastTranscript = this._fullText();
-          if (this.onResult) this.onResult(this.lastTranscript, false);
-        };
-
-        this.recognition.onerror = (e) => {
-          if (e.error === "no-speech") return;
-          console.warn("[PRIMER STT] Recognition error:", e.error);
-          if (this.onError) this.onError(e.error);
-        };
-
-        this.recognition.onend = () => {
-          this.isListening = false;
-          if (this.onEnd) this.onEnd(this.lastTranscript || "");
-        };
-      }
+    _bindEngine() {
+      const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+      if (!SpeechRecognition) return;
+      const rec = new SpeechRecognition();
+      rec.continuous = true;
+      rec.interimResults = true;
+      rec.lang = this._lang;
+      rec.onresult = (e) => {
+        if (this.recognition !== rec || !this.isListening) return;
+        let interim = "";
+        for (let i = e.resultIndex; i < e.results.length; i++) {
+          const piece = String(e.results[i][0].transcript || "").trim();
+          if (!piece) continue;
+          if (e.results[i].isFinal) this._finalParts.push(piece);
+          else interim += (interim ? " " : "") + piece;
+        }
+        this._interim = interim;
+        this.lastTranscript = this._fullText();
+        if (this.onResult) this.onResult(this.lastTranscript, false);
+      };
+      rec.onerror = (e) => {
+        if (this.recognition !== rec) return;
+        if (e.error === "no-speech") return;
+        console.warn("[PRIMER STT] Recognition error:", e.error);
+        if (this.onError) this.onError(e.error);
+      };
+      rec.onend = () => {
+        if (this.recognition !== rec) return;
+        this.isListening = false;
+        if (this.onEnd) this.onEnd(this.lastTranscript || "");
+      };
+      this.recognition = rec;
     }
 
     _fullText() {
@@ -149,10 +156,15 @@
 
     start({ keepBuffer = false } = {}) {
       if (!this.isSupported) return false;
+      if (this.isListening) {
+        try { this.recognition.abort(); } catch {}
+        this.isListening = false;
+      }
       if (!keepBuffer) {
         this._finalParts = [];
         this._interim = "";
         this.lastTranscript = "";
+        this._bindEngine();
       }
       try {
         this.recognition.start();
@@ -164,15 +176,17 @@
     }
 
     stop() {
+      if (this.isSupported && this.recognition && this.isListening) {
+        try {
+          this.recognition.abort();
+        } catch (e) {
+          try { this.recognition.stop(); } catch {}
+        }
+      }
+      this.isListening = false;
       this._finalParts = [];
       this._interim = "";
       this.lastTranscript = "";
-      if (this.isSupported && this.isListening) {
-        try {
-          this.recognition.stop();
-        } catch (e) {}
-        this.isListening = false;
-      }
     }
   }
 
@@ -788,7 +802,7 @@
           <span class="primer-kid-orb" aria-hidden="true"></span>
           <div class="primer-kid-copy">
             <span id="primerOverlayBadge" class="primer-badge listening">Listening</span>
-            <span id="primerOverlayText" class="primer-overlay-text">Hold to talk — release to send</span>
+            <span id="primerOverlayText" class="primer-overlay-text">Tap the mic to talk</span>
           </div>
           <div class="primer-kid-actions">
             <button id="primerVoiceStop" class="primer-overlay-stop" type="button" aria-label="Cancel">Cancel</button>
@@ -824,54 +838,37 @@
       btn._hasVoiceTriggers = true;
       btn.style.userSelect = "none";
       btn.style.webkitUserSelect = "none";
-      btn.style.touchAction = "none";
+      btn.style.touchAction = "manipulation";
 
-      const startHold = (e) => {
-        if (!this.isTalkModeActive()) return;
-        if (e.button !== undefined && e.button !== 0) return;
-        if (e.preventDefault) e.preventDefault();
-        if (this._isHolding) return;
-        this._isHolding = true;
-        this._pushToTalkTurn = true;
-        this._pressStartTime = Date.now();
-        btn.classList.add("primer-holding");
-        try {
-          if (e.pointerId && typeof btn.setPointerCapture === "function") {
-            btn.setPointerCapture(e.pointerId);
-          }
-        } catch {}
-        this.tts.unlockPlayback();
-        this.startPushToTalk();
-      };
-
-      const endHold = (e) => {
-        if (!this._isHolding) return;
-        if (e && e.preventDefault) e.preventDefault();
-        btn.classList.remove("primer-holding");
-        this._isHolding = false;
-        try {
-          if (e && e.pointerId && typeof btn.releasePointerCapture === "function") {
-            btn.releasePointerCapture(e.pointerId);
-          }
-        } catch {}
-        this.endPushToTalk();
-      };
-
-      const cancelHold = () => {
-        if (!this._isHolding) return;
-        btn.classList.remove("primer-holding");
-        this._isHolding = false;
-        this.turnOff();
-      };
-
-      btn.addEventListener("pointerdown", startHold);
-      btn.addEventListener("pointerup", endHold);
-      btn.addEventListener("pointercancel", cancelHold);
-      btn.addEventListener("contextmenu", (e) => e.preventDefault());
       btn.addEventListener("click", (e) => {
         e.preventDefault();
         e.stopPropagation();
+        this.toggleTapToTalk();
       });
+      btn.addEventListener("contextmenu", (e) => e.preventDefault());
+    }
+
+    toggleTapToTalk() {
+      if (!this.isTalkModeActive()) {
+        if (typeof window.setAppViewMode === "function") window.setAppViewMode("talk");
+        return;
+      }
+      if (this.state === "PROCESSING" || this.state === "SPEAKING") return;
+      if (this.state === "LISTENING" && this.isActive) {
+        this.endPushToTalk();
+        return;
+      }
+      this.tts.unlockPlayback();
+      this.startPushToTalk();
+    }
+
+    clearSpeechBuffer() {
+      this.pendingHeard = "";
+      if (this.stt) {
+        this.stt._finalParts = [];
+        this.stt._interim = "";
+        this.stt.lastTranscript = "";
+      }
     }
 
     startPushToTalk() {
@@ -879,15 +876,12 @@
       this.paused = false;
       this.isActive = true;
       window.__atlasTeachingLock = true;
-      this.pendingHeard = "";
+      this._pushToTalkTurn = true;
+      this._holdListen = false;
+      this.clearSpeechBuffer();
       const talkInput = document.getElementById("talkModeTextInput");
-      if (talkInput) talkInput.value = "";
+      this._speechSeed = String(talkInput?.value || "").trim();
       this.tts.cancel();
-      if (this.stt) {
-        this.stt._finalParts = [];
-        this.stt._interim = "";
-        this.stt.lastTranscript = "";
-      }
       this.state = "LISTENING";
       this.showOverlay("listening", "Listening... speak now");
       this._syncVoiceButtonUI("listening");
@@ -896,7 +890,12 @@
 
     endPushToTalk() {
       if (this.state !== "LISTENING" && !this.isActive) return;
-      const heard = String(this.pendingHeard || this.stt?._fullText?.() || this.stt?.lastTranscript || "").trim();
+      if (this._silenceTimer) {
+        clearTimeout(this._silenceTimer);
+        this._silenceTimer = null;
+      }
+      const typed = String(document.getElementById("talkModeTextInput")?.value || "").trim();
+      const heard = String(typed || this.pendingHeard || this.stt?._fullText?.() || this.stt?.lastTranscript || "").trim();
       if (this.stt) this.stt.stop();
       this._syncVoiceButtonUI(null);
 
@@ -909,21 +908,28 @@
 
     _syncVoiceButtonUI(stateName) {
       const btns = [this.elements?.toggleBtn, document.getElementById("talkModeMicBtn")].filter(Boolean);
+      const mic = document.getElementById("talkModeMicBtn");
       btns.forEach((btn) => {
         btn.classList.remove("primer-listening", "primer-speaking", "primer-processing", "primer-holding");
         if (stateName) btn.classList.add(`primer-${stateName}`);
       });
+      if (mic) {
+        const mark = stateName === "speaking"
+          ? `<span class="talk-mic-eq" aria-hidden="true"><span></span><span></span><span></span></span>`
+          : stateName === "processing"
+            ? `<span class="talk-mic-think" aria-hidden="true"><span class="talk-mic-ring"></span><svg class="talk-mic-glyph" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/></svg></span>`
+            : `<svg class="talk-mic-glyph" viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg>`;
+        if (mic.innerHTML !== mark) mic.innerHTML = mark;
+        mic.setAttribute("aria-label", stateName === "speaking" ? "Lumi6 is speaking" : stateName === "processing" ? "Lumi6 is thinking" : stateName === "listening" ? "Listening — tap to send" : "Tap to talk");
+      }
       if (this.elements?.label) {
         this.elements.label.textContent = stateName === "speaking" ? "Speaking..." : stateName === "listening" ? "Listening..." : stateName === "processing" ? "Thinking..." : "Lumi6";
       }
+      if (typeof window.growTalkComposer === "function") window.growTalkComposer();
     }
 
     handleMicButtonClick() {
-      if (!this.isTalkModeActive()) {
-        if (typeof window.setAppViewMode === "function") window.setAppViewMode("talk");
-        return;
-      }
-      // Talk mode uses hold-to-talk on the mic button; a tap alone does not start listening.
+      this.toggleTapToTalk();
     }
 
     friendlyName(raw) {
@@ -1136,8 +1142,11 @@
       window.__atlasTeachingLock = false;
       this.state = "IDLE";
       this.pendingHeard = "";
-      const talkInput = document.getElementById("talkModeTextInput");
-      if (talkInput) talkInput.value = "";
+      this._speechSeed = "";
+      if (this._silenceTimer) {
+        clearTimeout(this._silenceTimer);
+        this._silenceTimer = null;
+      }
       if (this.stt) {
         this.stt.stop();
         this.stt._finalParts = [];
@@ -1177,17 +1186,15 @@
       // Safeguard: Ensure TTS is stopped before listening to prevent self-talk feedback
       this.tts.cancel();
 
-      const keepBuffer = Boolean(this.pendingHeard) || this.stt.hasPendingSilence;
+      const talkInput = document.getElementById("talkModeTextInput");
+      this._speechSeed = String(talkInput?.value || this.pendingHeard || "").trim();
+      this.pendingHeard = this._speechSeed;
       this.state = "LISTENING";
-      if (!keepBuffer) {
-        this.pendingHeard = "";
-        if (this.stt) this.stt.lastTranscript = "";
-      }
-      const started = this.stt.start({ keepBuffer });
+      const started = this.stt.start({ keepBuffer: false });
       if (started) {
         this._syncVoiceButtonUI("listening");
-        if (keepBuffer && this.pendingHeard) {
-          this.showOverlay("student", this.pendingHeard);
+        if (this._speechSeed) {
+          this.showOverlay("student", this._speechSeed);
         } else {
           this.showOverlay("listening", "I'm listening... take your time.");
         }
@@ -1233,14 +1240,23 @@
     handleSttResult(text) {
       if (!this.isActive || this.paused) return;
       if (this.state === "PROCESSING" || this.state === "SPEAKING") return;
-      const queryText = (text || "").trim();
+      const spoken = String(text || "").trim();
+      const seed = String(this._speechSeed || "").trim();
+      const queryText = seed ? (spoken ? `${seed} ${spoken}` : seed) : spoken;
       if (queryText) {
         this.pendingHeard = queryText;
         this.showOverlay("student", queryText);
         const talkInput = document.getElementById("talkModeTextInput");
         if (talkInput) {
           talkInput.value = queryText;
+          if (typeof window.growTalkComposer === "function") window.growTalkComposer();
         }
+      }
+      if (this._silenceTimer) clearTimeout(this._silenceTimer);
+      if (this.pendingHeard && this.pendingHeard.length >= 2) {
+        this._silenceTimer = setTimeout(() => {
+          if (this.state === "LISTENING" && this.isActive) this.endPushToTalk();
+        }, 1600);
       }
     }
 
@@ -1248,6 +1264,10 @@
       if (!this.isActive || this.paused) return;
       if (this.state === "PROCESSING" || this.state === "SPEAKING") return;
       const heard = String(queryText || this.pendingHeard || "").trim();
+      if (this._silenceTimer) {
+        clearTimeout(this._silenceTimer);
+        this._silenceTimer = null;
+      }
       if (!heard || heard.length < 2) {
         console.log("[PRIMER Voice] Ignored empty or noisy speech transcript.");
         if (this.isActive) {
@@ -1260,8 +1280,12 @@
       this.state = "PROCESSING";
       this.pendingHeard = "";
       this._syncVoiceButtonUI("processing");
-      this.showOverlay("processing", "Got it — thinking...");
-      if (typeof window.showTalkWait === "function") window.showTalkWait("think");
+      this.hideOverlay();
+      const box = document.getElementById("talkModeTextInput");
+      if (box) {
+        box.value = "";
+        if (typeof window.growTalkComposer === "function") window.growTalkComposer();
+      }
 
       if (/want me to explain|what are you curious|listening to your|listening for your next|click the ai orb|you('re| are) getting it|what should we explore|which part should we|or a new topic|what else are you wondering|should we zoom|say heart, lungs/i.test(heard) || this.isHeardEcho(heard)) {
         console.log("[PRIMER Voice] Ignored echo of teacher prompt:", heard);
@@ -1292,18 +1316,16 @@
     }
 
     handleSttEnd() {
-      if (this.state !== "SPEAKING" && this.state !== "PROCESSING") {
+      if (this.state !== "SPEAKING" && this.state !== "PROCESSING" && this.state !== "LISTENING") {
         this._syncVoiceButtonUI(null);
       }
       if (!this.isActive || this.paused) return;
       if (this.state === "PROCESSING" || this.state === "SPEAKING") return;
       if (this.stt._committing) return;
-      if (this.state === "LISTENING" && (this.stt.hasPendingSilence || this.pendingHeard)) {
-        this.scheduleAutoRestart(280);
-        return;
-      }
       if (this.state === "LISTENING") {
-        this.scheduleAutoRestart(300);
+        const talkInput = document.getElementById("talkModeTextInput");
+        this._speechSeed = String(talkInput?.value || this.pendingHeard || "").trim();
+        this.scheduleAutoRestart(280);
       }
     }
 
@@ -1323,7 +1345,7 @@
       if (typeof window.Lumi6Lesson?.record === "function") {
         window.Lumi6Lesson.record("student", queryText);
       }
-      if (typeof window.showTalkWait === "function") window.showTalkWait("think");
+      this._syncVoiceButtonUI("processing");
 
       try {
         const turn = typeof window.primerTurn === "function"
@@ -1345,7 +1367,7 @@
             };
         let spoke = false;
         let graphicApplied = false;
-        this._holdListen = true;
+        this._holdListen = false;
         const data = await turn(requestPayload, {
           onSpoken: (msg) => {
             if (!this.isActive || spoke) return;
@@ -1354,7 +1376,7 @@
             this.speakAndDraw(msg, queryText, { draw: false });
           },
           onGraphicLoading: (msg) => {
-            if (typeof window.showTalkWait === "function") window.showTalkWait("visual");
+            this._syncVoiceButtonUI("processing");
             if (typeof window.showPrimerGraphicLoader === "function") {
               window.showPrimerGraphicLoader(msg?.title, msg);
             }
@@ -1571,7 +1593,10 @@
      * Update minimal accessibility transcript overlay.
      */
     showOverlay(role, text) {
-      if (!this.isTalkModeActive()) return;
+      if (this.isTalkModeActive()) {
+        this.hideOverlay();
+        return;
+      }
       if (role === "listening" && !this._isHolding) return;
       if (!this.elements || !this.elements.overlay) this.initUI();
       if (this.overlayTimeout) clearTimeout(this.overlayTimeout);

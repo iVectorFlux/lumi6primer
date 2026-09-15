@@ -67,46 +67,14 @@
   100% { box-shadow: 0 0 0 0 rgba(99, 102, 241, 0); }
 }
 
-/* Kid-friendly voice bar docked to the bottom */
-#primerVoiceOverlay {
-  position: fixed;
-  bottom: calc(84px + env(safe-area-inset-bottom, 0px) + var(--keyboard-inset, 0px));
-  top: auto;
-  left: 50%;
-  transform: translateX(-50%) translateY(14px);
-  z-index: 99999;
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  overflow: visible;
-  max-width: 680px;
-  width: min(680px, calc(100vw - 32px));
-  padding: 10px 16px;
-  color: #3b2064;
-  border: 2px solid rgba(255, 255, 255, 0.92);
-  border-radius: 999px;
-  background:
-    radial-gradient(circle at 12% 20%, rgba(255, 236, 153, 0.95) 0 28%, transparent 52%),
-    radial-gradient(circle at 88% 80%, rgba(167, 243, 208, 0.9) 0 24%, transparent 50%),
-    linear-gradient(135deg, #ffd6e8 0%, #e9d5ff 42%, #c7f0ff 100%);
-  box-shadow:
-    0 14px 38px rgba(91, 79, 232, 0.28),
-    0 4px 12px rgba(0, 0, 0, 0.08),
-    inset 0 1px 0 rgba(255, 255, 255, 0.85);
-  font-family: "Patrick Hand", "Segoe Print", "Comic Sans MS", cursive;
-  font-size: 18px;
-  line-height: 1.25;
-  opacity: 0;
-  pointer-events: none;
-  transition: opacity 0.22s ease, transform 0.22s cubic-bezier(0.16, 1, 0.3, 1);
-}
-
-#primerVoiceOverlay.primer-visible {
-  opacity: 1 !important;
-  transform: translateX(-50%) translateY(0) !important;
-  pointer-events: auto !important;
-  display: flex !important;
-  visibility: visible !important;
+/* Kid-friendly voice bar — parked for now; Talk Mode uses the composer mic. */
+#primerVoiceOverlay,
+#primerVoiceOverlay.primer-visible,
+body.mode-talk-active #primerVoiceOverlay,
+body.mode-talk-active #primerVoiceOverlay.primer-visible {
+  display: none !important;
+  opacity: 0 !important;
+  pointer-events: none !important;
 }
 
 .primer-kid-sparkle,
@@ -257,15 +225,16 @@
 }
 
 .talk-mic-btn.primer-processing {
-  background: linear-gradient(135deg, #4f46e5 0%, #6366f1 100%);
-  color: #ffffff;
-  animation: primerThinkPulse 1.2s infinite;
+  background: #fff7ed;
+  color: #ea580c;
+  box-shadow: 0 0 0 3px rgba(234, 88, 12, 0.35), 0 8px 18px rgba(234, 88, 12, 0.22);
+  animation: talkMicThink 1.1s ease-in-out infinite;
 }
 
 .talk-mic-btn.primer-speaking {
-  background: linear-gradient(135deg, #a855f7 0%, #7c3aed 100%);
+  background: linear-gradient(135deg, #7c3aed 0%, #4c1d95 100%);
   color: #ffffff;
-  animation: primerVoiceOrbPulse 1.4s infinite alternate;
+  box-shadow: 0 0 0 3px rgba(124, 58, 237, 0.28);
 }
 
 @keyframes primerKidBob {
@@ -365,7 +334,6 @@ body[data-theme="canvas-pro"] #primerVoiceOverlay.primer-visible {
 
 @media (max-width: 640px) {
   #primerVoiceOverlay {
-    font-size: 15px;
-    bottom: calc(68px + env(safe-area-inset-bottom, 0px) + var(--keyboard-inset, 0px));
+    display: none !important;
   }
 }

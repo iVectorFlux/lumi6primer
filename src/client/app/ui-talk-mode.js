@@ -258,6 +258,7 @@
     }
 
     if (currentAppViewMode === "talk") {
+      if (typeof window.hideTalkWait === "function") window.hideTalkWait();
       syncTalkModeFeed({ scroll: true });
     } else {
       if (window.primerVoice && typeof window.primerVoice.turnOff === "function") {
@@ -279,6 +280,8 @@
     if (typeof maybeNameBoardFromText === "function") maybeNameBoardFromText(firstAsk);
 
     const titleText = formatCleanLessonTitle(state.lessonTitle || state.boardTitle || firstAsk || document.querySelector("#currentDocName")?.textContent) || "Science Discovery";
+    const hasLesson = turns.some((turn) => turn.role === "teacher" && (String(turn.text || "").trim() || turn.image || turn.interactive));
+    if (hasLesson && typeof window.hideTalkWait === "function") window.hideTalkWait();
 
     const LUMI6_AVATAR_HTML = `<div class="talk-lumi6-avatar" aria-label="Lumi6"><svg viewBox="0 0 24 24" width="22" height="22" fill="none"><circle cx="12" cy="12" r="10" fill="url(#lumiAvatarGrad)"/><path d="M12 6L13.8 10.2L18 12L13.8 13.8L12 18L10.2 13.8L6 12L10.2 10.2L12 6Z" fill="#ffffff"/><circle cx="12" cy="12" r="2.2" fill="#6d28d9"/><defs><linearGradient id="lumiAvatarGrad" x1="2" y1="2" x2="22" y2="22" gradientUnits="userSpaceOnUse"><stop stop-color="#8b5cf6"/><stop offset="1" stop-color="#6d28d9"/></linearGradient></defs></svg></div>`;
 
@@ -291,7 +294,7 @@
               <span class="talk-lumi6-name">Lumi6</span>
             </div>
             <div class="talk-explanation-body">
-              <p>Welcome! Press and hold <strong>Talk</strong> below, then release to send — or type a question to start exploring.</p>
+              <p>Tap the mic to talk, or type a question and send. What would you like to explore?</p>
             </div>
           </div>
         </article>
@@ -659,14 +662,47 @@
     }
   });
 
+  function growTalkComposer() {
+    const input = document.getElementById("talkModeTextInput");
+    if (!input) return;
+    input.style.height = "auto";
+    input.style.height = `${Math.min(Math.max(input.scrollHeight, 24), 160)}px`;
+  }
+
+  function syncComposerSpeech() {
+    growTalkComposer();
+    const voice = window.primerVoice;
+    if (!voice || voice.state === "LISTENING") return;
+    const value = String(document.getElementById("talkModeTextInput")?.value || "").trim();
+    voice._speechSeed = value;
+    voice.pendingHeard = value;
+    if (voice.stt) {
+      voice.stt._finalParts = [];
+      voice.stt._interim = "";
+      voice.stt.lastTranscript = "";
+    }
+  }
+
+  window.growTalkComposer = growTalkComposer;
+
   document.querySelector("#talkModeForm")?.addEventListener("submit", (e) => {
     e.preventDefault();
     const input = document.querySelector("#talkModeTextInput");
     const val = input?.value?.trim();
     if (!val) return;
     input.value = "";
+    growTalkComposer();
     if (window.primerChat && typeof window.primerChat.sendMessage === "function") {
       window.primerChat.sendMessage(val);
+    }
+  });
+
+  const talkComposer = document.querySelector("#talkModeTextInput");
+  talkComposer?.addEventListener("input", syncComposerSpeech);
+  talkComposer?.addEventListener("keydown", (e) => {
+    if (e.key === "Enter" && !e.shiftKey) {
+      e.preventDefault();
+      document.querySelector("#talkModeForm")?.requestSubmit();
     }
   });
 

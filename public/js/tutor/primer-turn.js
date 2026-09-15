@@ -278,8 +278,8 @@
         closeBtn: null,
         resetBtn: null,
         messagesList: null,
-        inputField: null,
-        sendBtn: null
+        inputField: document.getElementById("talkModeTextInput"),
+        sendBtn: document.getElementById("talkModeSendBtn")
       };
     }
 
@@ -346,18 +346,16 @@
      */
     showLoading() {
       window.__primerWaiting = true;
-      if (typeof window.showTalkWait === "function") window.showTalkWait("think");
+      if (window.primerVoice && typeof window.primerVoice._syncVoiceButtonUI === "function") {
+        window.primerVoice._syncVoiceButtonUI("processing");
+      }
       const list = this.elements.messagesList;
       if (!list) return;
       const loadingDiv = document.createElement("div");
       loadingDiv.id = "atlasLoadingIndicator";
       loadingDiv.className = "primer-loading";
-      loadingDiv.innerHTML = typeof window.lumiWaitHtml === "function"
-        ? window.lumiWaitHtml("think")
-        : `<p class="lumi-wait-title">Lumi6 is gathering the pieces</p>`;
+      loadingDiv.hidden = true;
       list.appendChild(loadingDiv);
-      if (typeof window.mountLumiWaiters === "function") window.mountLumiWaiters(loadingDiv);
-      this.scrollToBottom();
     }
 
     /**
@@ -367,10 +365,7 @@
       window.__primerWaiting = false;
       if (typeof window.hideTalkWait === "function") window.hideTalkWait();
       const loadingDiv = document.getElementById("atlasLoadingIndicator");
-      if (loadingDiv) {
-        if (typeof window.destroyLumiWaiters === "function") window.destroyLumiWaiters(loadingDiv);
-        loadingDiv.remove();
-      }
+      if (loadingDiv) loadingDiv.remove();
     }
 
     /**
@@ -427,6 +422,7 @@
       if (this.elements.inputField) {
         this.elements.inputField.value = "";
         this.elements.inputField.style.height = "auto";
+        if (typeof window.growTalkComposer === "function") window.growTalkComposer();
       }
 
       // Set loading state
@@ -468,7 +464,9 @@
             speakTalk(msg);
           },
           onGraphicLoading: (msg) => {
-            if (typeof window.showTalkWait === "function") window.showTalkWait("visual");
+            if (window.primerVoice && typeof window.primerVoice._syncVoiceButtonUI === "function") {
+              window.primerVoice._syncVoiceButtonUI("processing");
+            }
             showPrimerGraphicLoader(msg?.title, msg);
           },
           onGraphic: (msg) => {

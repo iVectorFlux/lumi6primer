@@ -62,8 +62,14 @@ button,
   }
 
   .topbar-icon-btn {
-    width: 40px;
-    height: 40px;
+    width: 28px;
+    height: 28px;
+    padding: 4px;
+  }
+
+  .topbar-icon-btn svg {
+    width: 14px;
+    height: 14px;
   }
 
   .mobile-chat-btn {
@@ -530,9 +536,11 @@ button,
   }
 
   .talk-mic-btn {
-    padding: 8px 12px;
+    width: 44px;
+    height: 44px;
+    padding: 0;
     font-size: 13px;
-    gap: 4px;
+    gap: 0;
   }
 
   .talk-mic-btn svg {
@@ -558,9 +566,9 @@ button,
   }
 
   .sketch-topbar-tools .btool {
-    width: 36px;
-    height: 36px;
-    flex-basis: 36px;
+    width: 28px;
+    height: 28px;
+    flex-basis: 28px;
   }
 
   /* Draw mode: one compact row + a More menu for extra tools. */
@@ -682,8 +690,9 @@ button,
     bottom: calc(74px + env(safe-area-inset-bottom, 0px) + var(--keyboard-inset, 0px));
   }
 
-  body.mode-talk-active #primerVoiceOverlay {
-    bottom: calc(64px + env(safe-area-inset-bottom, 0px) + var(--keyboard-inset, 0px));
+  body.mode-talk-active #primerVoiceOverlay,
+  body.mode-talk-active #primerVoiceOverlay.primer-visible {
+    display: none !important;
   }
 
   .primer-kid-orb {
@@ -713,15 +722,15 @@ button,
   }
 
   .share-btn {
-    width: 40px;
-    height: 40px;
+    width: 28px;
+    height: 28px;
     padding: 0;
     justify-content: center;
   }
 
   .topbar-edit-actions .share-btn svg {
-    width: 16px;
-    height: 16px;
+    width: 13px;
+    height: 13px;
   }
 
   /* Two columns leave each half too narrow to read on a phone. Tablets keep the pair. */
@@ -738,9 +747,9 @@ button,
   }
 
   body.mode-draw-active .sketch-topbar-tools .btool {
-    width: 32px;
-    height: 32px;
-    flex-basis: 32px;
+    width: 26px;
+    height: 26px;
+    flex-basis: 26px;
   }
 
   body.mode-draw-active .app-topbar {
