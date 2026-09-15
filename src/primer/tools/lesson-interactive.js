@@ -158,7 +158,7 @@ async function getBySlug(slug, store) {
 }
 
 function interactiveHref(slug, mode) {
-  const base = `/api/primer/interactive/${encodeURIComponent(itemSlug(slug))}?embed=1&v=20260960`;
+  const base = `/api/primer/interactive/${encodeURIComponent(itemSlug(slug))}?embed=1&v=20260961`;
   return mode ? `${base}&mode=${encodeURIComponent(mode)}` : base;
 }
 
@@ -184,6 +184,7 @@ function commandFor(item) {
     href: interactiveHref(slug, "pill"),
     hrefPill: interactiveHref(slug, "pill"),
     hrefMobile: interactiveHref(slug, "mobile"),
+    hrefDrawer: interactiveHref(slug, "drawer"),
     hrefDesktop: interactiveHref(slug, "desktop")
   };
 }
@@ -293,9 +294,20 @@ ${PILL_SEL},${MOBILE_SEL},${HIDDEN_OVERLAY},.chat-pill-card,.mobile-phone-frame,
 .desktop-card > .canvas-overlay-pill{grid-area:stage!important;position:absolute!important;z-index:2!important;pointer-events:none!important}
 `;
 
+const SCENARIO_DRAWER_CSS = `
+html,body{width:100%!important;height:100%!important;margin:0!important;padding:0!important;overflow:hidden!important;background:transparent!important}
+body{display:block!important}
+${PILL_SEL},${MOBILE_SEL},${DESKTOP_SEL},${TITLE_SEL},.showcase-grid-top,.showcase-container,.mobile-phone-frame,.desktop-card,.chat-pill-card,.drawer-close-btn{display:none!important}
+.drawer-overlay,#drawerOverlay{display:flex!important;position:fixed!important;inset:0!important;z-index:30!important;align-items:flex-end!important;justify-content:stretch!important;background:rgba(15,23,42,.35)!important;opacity:1!important;visibility:visible!important;pointer-events:auto!important;margin:0!important;padding:0!important}
+.drawer-overlay > *,#drawerOverlay > *,.drawer-content,.mobile-drawer-sheet,.drawer-overlay .drawer-content{display:flex!important;flex-direction:column!important;width:100%!important;max-width:100%!important;max-height:92%!important;margin:0!important;border-radius:22px 22px 0 0!important;background:#fff!important;overflow:hidden!important;box-shadow:0 -12px 40px rgba(15,23,42,.18)!important}
+.drawer-stage,.drawer-overlay canvas,#drawerOverlay canvas{width:100%!important;min-height:180px!important;height:36vh!important;max-height:42vh!important}
+.drawer-controls,.drawer-overlay .phone-controls{flex:1 1 auto!important;overflow:auto!important;padding:12px 16px calc(16px + env(safe-area-inset-bottom, 0px))!important}
+`;
+
 function scenarioEmbedCss(mode) {
   const chrome = SCENARIO_CHROME_CSS;
   if (mode === "pill") return chrome + SCENARIO_PILL_CSS;
+  if (mode === "drawer") return chrome + SCENARIO_DRAWER_CSS;
   if (mode === "mobile") return chrome + SCENARIO_MOBILE_CSS;
   return chrome + SCENARIO_DESKTOP_CSS;
 }
@@ -326,15 +338,22 @@ function scenarioBootScript(mode) {
   }
   function showSections(){
     applyModeClass();
-    hide(".drawer-overlay, #drawerOverlay, .top-header, .view-switcher, .switch-btn, .specs-bar, .section-title, .section-badge");
+    hide(".top-header, .view-switcher, .switch-btn, .specs-bar, .section-title, .section-badge");
     if (mode === "pill") {
-      hide("${MOBILE_SEL}, ${DESKTOP_SEL}, .mobile-phone-frame, .desktop-card");
+      hide("${MOBILE_SEL}, ${DESKTOP_SEL}, .mobile-phone-frame, .desktop-card, .drawer-overlay, #drawerOverlay");
       show("${PILL_SEL}, .chat-pill-card, #chatPillCard, #chatPillTrigger, #openDrawerCard");
+    } else if (mode === "drawer") {
+      hide("${PILL_SEL}, ${MOBILE_SEL}, ${DESKTOP_SEL}, .chat-pill-card, .mobile-phone-frame, .desktop-card, .showcase-grid-top, .drawer-close-btn");
+      show(".drawer-overlay, #drawerOverlay");
+      document.querySelectorAll(".drawer-overlay, #drawerOverlay").forEach(function(n){
+        n.classList.add("open", "active");
+        n.style.setProperty("display", "flex", "important");
+      });
     } else if (mode === "mobile") {
-      hide("${PILL_SEL}, ${DESKTOP_SEL}, .chat-pill-card, #chatPillCard, .desktop-card, .showcase-grid-top");
+      hide("${PILL_SEL}, ${DESKTOP_SEL}, .chat-pill-card, #chatPillCard, .desktop-card, .showcase-grid-top, .drawer-overlay, #drawerOverlay");
       show("${MOBILE_SEL}, .mobile-phone-frame");
     } else {
-      hide("${PILL_SEL}, ${MOBILE_SEL}, .chat-pill-card, .mobile-phone-frame, .showcase-grid-top");
+      hide("${PILL_SEL}, ${MOBILE_SEL}, .chat-pill-card, .mobile-phone-frame, .showcase-grid-top, .drawer-overlay, #drawerOverlay");
       show("${DESKTOP_SEL}, .desktop-card");
     }
   }
@@ -343,6 +362,13 @@ function scenarioBootScript(mode) {
     try { window.parent.postMessage({ type: "lumi6:expand-interactive", slug: slug }, "*"); } catch (e) {}
   }
   function paint(){
+    if (mode === "drawer") {
+      document.querySelectorAll(".drawer-overlay, #drawerOverlay").forEach(function(n){
+        n.classList.add("open", "active");
+        n.style.setProperty("display", "flex", "important");
+      });
+      try { if (typeof openDrawer === "function") openDrawer(); } catch (e) {}
+    }
     if (mode === "desktop") {
       document.documentElement.style.setProperty("height", "490px", "important");
       document.documentElement.style.setProperty("max-height", "490px", "important");

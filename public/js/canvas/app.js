@@ -12894,6 +12894,7 @@ User writes "Show air quality for Tokyo", names a place, and points to an empty 
       `data-summary="${escapeHtml(interactive.summary || "")}"`,
       `data-href-pill="${escapeHtml(interactive.hrefPill || interactive.href || "")}"`,
       `data-href-mobile="${escapeHtml(interactive.hrefMobile || "")}"`,
+      `data-href-drawer="${escapeHtml(interactive.hrefDrawer || "")}"`,
       `data-href-desktop="${escapeHtml(interactive.hrefDesktop || "")}"`
     ].join("\n                  ");
   }
@@ -13352,8 +13353,11 @@ User writes "Show air quality for Tokyo", names a place, and points to an empty 
     const slug = data.slug || frameOrTrigger?.closest?.("[data-interactive-slug]")?.dataset?.interactiveSlug || "";
     if (!slug) return "";
     const mobile = data.hrefMobile || `/api/primer/interactive/${encodeURIComponent(slug)}?embed=1&mode=mobile`;
+    const drawer = data.hrefDrawer || `/api/primer/interactive/${encodeURIComponent(slug)}?embed=1&mode=drawer`;
     const desktop = data.hrefDesktop || `/api/primer/interactive/${encodeURIComponent(slug)}?embed=1&mode=desktop`;
-    return mode === "desktop" ? desktop : mobile;
+    if (mode === "desktop") return desktop;
+    if (mode === "drawer") return drawer;
+    return mobile;
   }
 
   function ensureInteractiveFrame(trigger, mode = "mobile") {
@@ -13370,7 +13374,7 @@ User writes "Show air quality for Tokyo", names a place, and points to an empty 
       frame.className = "talk-lesson-interactive";
       frame.setAttribute("sandbox", "allow-scripts allow-same-origin");
       frame.setAttribute("title", label);
-      for (const key of ["slug", "scenario", "subject", "klass", "idea", "concept", "summary", "hrefMobile", "hrefDesktop", "hrefPill"]) {
+      for (const key of ["slug", "scenario", "subject", "klass", "idea", "concept", "summary", "hrefMobile", "hrefDrawer", "hrefDesktop", "hrefPill"]) {
         if (data[key] != null) frame.dataset[key] = data[key];
       }
       if (slug) frame.dataset.slug = slug;
@@ -13455,7 +13459,7 @@ User writes "Show air quality for Tokyo", names a place, and points to an empty 
         || bySlug?.closest(".talk-interactive-pill-wrapper");
       const trigger = wrapper?.querySelector("iframe.talk-lesson-pill") || wrapper;
       if (trigger) {
-        const frame = ensureInteractiveFrame(trigger, isPhoneViewport() ? "mobile" : "desktop");
+        const frame = ensureInteractiveFrame(trigger, isPhoneViewport() ? "drawer" : "desktop");
         if (frame) openTalkPlayground(frame);
       }
       return;
@@ -13489,7 +13493,7 @@ User writes "Show air quality for Tokyo", names a place, and points to an empty 
     document.body.classList.toggle("talk-playground-desktop-view", !phone);
     document.body.classList.remove("talk-playground-fullscreen");
     document.body.classList.add("talk-playground-open");
-    setFrameMode(frame, phone ? "mobile" : "desktop");
+    setFrameMode(frame, phone ? "drawer" : "desktop");
     syncPlaygroundExpandLabel();
     if (typeof window.hideTalkWait === "function") window.hideTalkWait();
     const afterLoad = () => {
@@ -13555,8 +13559,11 @@ User writes "Show air quality for Tokyo", names a place, and points to an empty 
     if (!btn) return;
     const enlarged = document.body.classList.contains("talk-playground-fullscreen");
     btn.hidden = !isPhoneViewport();
-    btn.setAttribute("aria-label", enlarged ? "Back to card" : "Open larger layout");
-    btn.setAttribute("title", enlarged ? "Back to card" : "Open larger layout");
+    const label = enlarged ? "Drawer" : "Full screen";
+    btn.setAttribute("aria-label", enlarged ? "Back to drawer" : "Go full screen");
+    btn.setAttribute("title", enlarged ? "Back to drawer" : "Go full screen");
+    const text = btn.querySelector(".talk-playground-expand-label");
+    if (text) text.textContent = label;
     btn.classList.toggle("is-enlarged", enlarged);
   }
 
@@ -13566,7 +13573,7 @@ User writes "Show air quality for Tokyo", names a place, and points to an empty 
       document.body.classList.remove("talk-playground-fullscreen", "talk-playground-desktop-view");
       document.body.classList.toggle("talk-playground-mobile", isPhoneViewport());
       applyEmbedLayout(frame, false);
-      setFrameMode(frame, isPhoneViewport() ? "mobile" : "desktop");
+      setFrameMode(frame, isPhoneViewport() ? "drawer" : "desktop");
       syncPlaygroundExpandLabel();
       sizePlaygroundFrame(frame);
       return;
@@ -13607,10 +13614,24 @@ User writes "Show air quality for Tokyo", names a place, and points to an empty 
     if (frame && home) {
       frame.style.width = "";
       frame.style.height = "";
+      frame.style.maxWidth = "";
+      frame.style.maxHeight = "";
+      frame.style.minHeight = "";
+      frame.style.flex = "";
       home.prepend(frame);
       delete home.dataset.playgroundHome;
       nudgeInteractive(frame);
     }
+    [".talk-playground-scale", "#talkPlaygroundScroll", "#talkPlaygroundStage"].forEach((sel) => {
+      const el = document.querySelector(sel);
+      if (!el) return;
+      el.style.width = "";
+      el.style.height = "";
+      el.style.maxWidth = "";
+      el.style.maxHeight = "";
+      el.style.minHeight = "";
+      el.style.flex = "";
+    });
     if (sheet) sheet.hidden = true;
     if (header) header.hidden = true;
     if (notes) notes.innerHTML = "";

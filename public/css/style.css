@@ -3870,10 +3870,10 @@ iframe.talk-lesson-pill {
 
 .talk-playground-bar {
   position: absolute;
-  top: 12px;
+  top: max(12px, env(safe-area-inset-top));
   left: 12px;
   right: 12px;
-  z-index: 3;
+  z-index: 5;
   flex: none;
   display: flex;
   align-items: center;
@@ -3901,13 +3901,18 @@ iframe.talk-lesson-pill {
 
 .talk-playground-expand {
   margin-left: auto;
-  width: 36px;
+  width: auto;
   height: 36px;
-  padding: 0;
-  display: grid;
-  place-items: center;
+  padding: 0 12px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
   background: #fff;
   color: #4c1d95;
+}
+
+.talk-playground-expand-label {
+  font: 700 13px inherit;
 }
 
 .talk-playground-expand.is-enlarged svg {
@@ -4065,8 +4070,8 @@ body.talk-playground-desktop-view.talk-playground-scenario .talk-playground-scal
 }
 
 body.talk-playground-desktop-view .talk-playground-bar {
-  top: -44px;
-  left: 0;
+  top: max(16px, env(safe-area-inset-top));
+  left: 16px;
   right: auto;
   width: auto;
 }
@@ -4095,7 +4100,7 @@ body.talk-playground-desktop-view.talk-playground-scenario .talk-playground-stag
 }
 
 body.talk-playground-mobile .talk-playground {
-  padding: 0;
+  padding: 56px 0 0;
   justify-content: stretch;
   align-items: stretch;
 }
