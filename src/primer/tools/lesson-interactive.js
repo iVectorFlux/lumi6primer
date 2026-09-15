@@ -158,7 +158,7 @@ async function getBySlug(slug, store) {
 }
 
 function interactiveHref(slug, mode) {
-  const base = `/api/primer/interactive/${encodeURIComponent(itemSlug(slug))}?embed=1&v=20260952`;
+  const base = `/api/primer/interactive/${encodeURIComponent(itemSlug(slug))}?embed=1&v=20260953`;
   return mode ? `${base}&mode=${encodeURIComponent(mode)}` : base;
 }
 
@@ -239,7 +239,7 @@ function isScenarioHtml(html) {
 
 /** CSS for v2 scenario pages embedded in the playground or chat pill. */
 const SCENARIO_CHROME_CSS = `
-.view-switcher,.specs-bar,.section-title,.top-header,.section-badge{display:none!important}
+.view-switcher,.switch-btn,.specs-bar,.section-title,.top-header,.section-badge{display:none!important}
 .showcase-container,.showcase-grid-top{width:100%!important;max-width:none!important;margin:0!important;padding:0!important;gap:0!important;display:flex!important;flex-direction:column!important;align-items:stretch!important;height:100%!important;min-height:0!important}
 .view-section{width:100%!important;max-width:none!important;margin:0!important;padding:0!important;gap:0!important}
 `;
@@ -310,7 +310,7 @@ function scenarioBootScript(mode) {
   }
   function showSections(){
     applyModeClass();
-    hide(".drawer-overlay, #drawerOverlay, .top-header, .view-switcher, .specs-bar, .section-title");
+    hide(".drawer-overlay, #drawerOverlay, .top-header, .view-switcher, .switch-btn, .specs-bar, .section-title");
     if (mode === "pill") {
       hide(".mobile-section, #sectionMobile, .desktop-section, #sectionDesktop, .mobile-phone-frame, .desktop-card");
       show(".pill-section, #sectionPill, .chat-pill-card, #chatPillCard");

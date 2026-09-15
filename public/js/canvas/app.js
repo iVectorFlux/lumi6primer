@@ -13507,14 +13507,12 @@ User writes "Show air quality for Tokyo", names a place, and points to an empty 
   function syncPlaygroundExpandLabel() {
     const btn = document.getElementById("talkPlaygroundExpand");
     if (!btn) return;
+    const enlarged = document.body.classList.contains("talk-playground-desktop-view")
+      || document.body.classList.contains("talk-playground-fullscreen");
     btn.hidden = false;
-    if (document.body.classList.contains("talk-playground-desktop-view")) {
-      btn.textContent = "Mobile view";
-    } else if (document.body.classList.contains("talk-playground-fullscreen")) {
-      btn.textContent = "Card view";
-    } else {
-      btn.textContent = isPhoneViewport() ? "Expand" : "Desktop view";
-    }
+    btn.setAttribute("aria-label", enlarged ? "Back to card" : "Open larger layout");
+    btn.setAttribute("title", enlarged ? "Back to card" : "Open larger layout");
+    btn.classList.toggle("is-enlarged", enlarged);
   }
 
   function setPlaygroundFullscreen(full) {

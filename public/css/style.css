@@ -3886,8 +3886,17 @@ iframe.talk-lesson-pill {
 
 .talk-playground-expand {
   margin-left: auto;
+  width: 36px;
+  height: 36px;
+  padding: 0;
+  display: grid;
+  place-items: center;
   background: #fff;
   color: #4c1d95;
+}
+
+.talk-playground-expand.is-enlarged svg {
+  transform: rotate(180deg);
 }
 
 .talk-playground-expand[hidden] {
