@@ -465,6 +465,15 @@ button,
     min-height: 0;
   }
 
+  body.talk-playground-desktop-view .talk-playground-scale,
+  body.talk-playground-desktop-view .talk-playground-scroll,
+  body.talk-playground-desktop-view .talk-playground-stage {
+    width: 880px !important;
+    height: 490px !important;
+    max-height: 490px !important;
+    flex: none !important;
+  }
+
   .talk-playground-bar,
   .talk-playground-scroll {
     width: 100%;

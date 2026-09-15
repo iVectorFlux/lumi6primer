@@ -665,16 +665,30 @@
 
   function sizePlaygroundFrame(frame) {
     if (!frame) return;
+    const scale = document.querySelector(".talk-playground-scale");
+    const scroll = document.getElementById("talkPlaygroundScroll");
+    const stage = document.getElementById("talkPlaygroundStage");
+    const lock = (el, width, height) => {
+      if (!el) return;
+      el.style.setProperty("width", width, "important");
+      el.style.setProperty("height", height, "important");
+      el.style.setProperty("max-width", width, "important");
+      el.style.setProperty("max-height", height, "important");
+      el.style.setProperty("min-height", height === "100%" ? "0" : height, "important");
+      el.style.setProperty("flex", height === "100%" ? "1 1 auto" : "none", "important");
+    };
     if (document.body.classList.contains("talk-playground-desktop-view")) {
-      frame.style.width = "880px";
-      frame.style.height = "490px";
-      frame.style.minHeight = "490px";
+      lock(scale, "880px", "490px");
+      lock(scroll, "880px", "490px");
+      lock(stage, "880px", "490px");
+      lock(frame, "880px", "490px");
       scaleDesktopPlayground();
       return;
     }
-    frame.style.width = "100%";
-    frame.style.height = "100%";
-    frame.style.minHeight = "0";
+    lock(scale, "100%", "100%");
+    lock(scroll, "100%", "100%");
+    lock(stage, "100%", "100%");
+    lock(frame, "100%", "100%");
     scaleDesktopPlayground();
   }
 

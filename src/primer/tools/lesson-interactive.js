@@ -158,7 +158,7 @@ async function getBySlug(slug, store) {
 }
 
 function interactiveHref(slug, mode) {
-  const base = `/api/primer/interactive/${encodeURIComponent(itemSlug(slug))}?embed=1&v=20260958`;
+  const base = `/api/primer/interactive/${encodeURIComponent(itemSlug(slug))}?embed=1&v=20260959`;
   return mode ? `${base}&mode=${encodeURIComponent(mode)}` : base;
 }
 
@@ -282,20 +282,14 @@ html.lumi-full .mobile-phone-frame .phone-controls{flex:0 0 auto!important;max-h
 `;
 
 const SCENARIO_DESKTOP_CSS = `
-html,body{width:880px!important;height:490px!important;min-width:880px!important;min-height:490px!important;max-width:880px!important;max-height:490px!important;margin:0!important;padding:0!important;overflow:hidden!important;background:transparent!important}
-body{display:flex!important;align-items:stretch!important;justify-content:flex-start!important}
+html,body{width:880px!important;height:490px!important;min-width:0!important;min-height:0!important;max-width:880px!important;max-height:490px!important;margin:0!important;padding:0!important;overflow:hidden!important;background:transparent!important}
+body{display:block!important;position:relative!important}
 ${PILL_SEL},${MOBILE_SEL},${HIDDEN_OVERLAY},.chat-pill-card,.mobile-phone-frame,${TITLE_SEL}{display:none!important}
-${DESKTOP_SEL}{display:flex!important;width:880px!important;height:490px!important;max-width:880px!important;max-height:490px!important;align-items:stretch!important;justify-content:flex-start!important;margin:0!important;padding:0!important}
-.desktop-card{display:grid!important;grid-template-columns:370px 510px!important;grid-template-rows:490px!important;grid-template-areas:"math stage"!important;width:880px!important;max-width:880px!important;height:490px!important;max-height:490px!important;margin:0!important;overflow:hidden!important}
+.showcase-container,.showcase-grid-top,${DESKTOP_SEL}{display:block!important;position:relative!important;width:880px!important;height:490px!important;max-height:490px!important;min-height:0!important;margin:0!important;padding:0!important;overflow:hidden!important}
+.desktop-card{display:grid!important;position:absolute!important;top:0!important;left:0!important;grid-template-columns:370px 510px!important;grid-template-rows:490px!important;grid-template-areas:"math stage"!important;width:880px!important;max-width:880px!important;height:490px!important;max-height:490px!important;margin:0!important;overflow:hidden!important}
 .desktop-card .math-panel{grid-area:math!important;order:0!important;border-right:1px solid #f1f5f9!important;border-top:0!important;width:370px!important;max-width:370px!important;min-width:370px!important}
 .desktop-card .stage-panel{grid-area:stage!important;order:0!important;position:relative!important;height:490px!important;width:510px!important;min-height:490px!important}
 .desktop-card > .canvas-overlay-pill{grid-area:stage!important;position:absolute!important;z-index:2!important;pointer-events:none!important}
-@media(max-width:2000px){
-  html,body,${DESKTOP_SEL},.desktop-card{width:880px!important;height:490px!important;max-width:880px!important;max-height:490px!important}
-  .desktop-card{display:grid!important;grid-template-columns:370px 510px!important;grid-template-rows:490px!important;grid-template-areas:"math stage"!important}
-  .desktop-card .math-panel{grid-area:math!important;order:0!important;border-right:1px solid #f1f5f9!important;border-top:0!important}
-  .desktop-card .stage-panel{grid-area:stage!important;order:0!important;height:490px!important}
-}
 `;
 
 function scenarioEmbedCss(mode) {
@@ -348,6 +342,23 @@ function scenarioBootScript(mode) {
     try { window.parent.postMessage({ type: "lumi6:expand-interactive", slug: slug }, "*"); } catch (e) {}
   }
   function paint(){
+    if (mode === "desktop") {
+      document.documentElement.style.setProperty("height", "490px", "important");
+      document.documentElement.style.setProperty("max-height", "490px", "important");
+      document.body.style.setProperty("height", "490px", "important");
+      document.body.style.setProperty("min-height", "0", "important");
+      document.body.style.setProperty("max-height", "490px", "important");
+      document.body.style.setProperty("padding", "0", "important");
+      var card = document.querySelector(".desktop-card");
+      if (card) {
+        card.style.setProperty("position", "absolute", "important");
+        card.style.setProperty("top", "0", "important");
+        card.style.setProperty("left", "0", "important");
+        card.style.setProperty("width", "880px", "important");
+        card.style.setProperty("height", "490px", "important");
+        card.style.setProperty("display", "grid", "important");
+      }
+    }
     try { window.dispatchEvent(new Event("resize")); } catch (e) {}
     try { if (typeof resizeAllCanvases === "function") resizeAllCanvases(); } catch (e) {}
   }
