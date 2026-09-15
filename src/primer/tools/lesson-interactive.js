@@ -158,7 +158,7 @@ async function getBySlug(slug, store) {
 }
 
 function interactiveHref(slug, mode) {
-  const base = `/api/primer/interactive/${encodeURIComponent(itemSlug(slug))}?embed=1&v=20260953`;
+  const base = `/api/primer/interactive/${encodeURIComponent(itemSlug(slug))}?embed=1&v=20260954`;
   return mode ? `${base}&mode=${encodeURIComponent(mode)}` : base;
 }
 
@@ -273,11 +273,18 @@ html.lumi-full .mobile-phone-frame .phone-controls{flex:0 0 auto!important;max-h
 `;
 
 const SCENARIO_DESKTOP_CSS = `
-html,body{width:100%!important;height:100%!important;margin:0!important;padding:0!important;overflow:hidden!important;background:#e2e8f0!important}
-body{display:flex!important;align-items:center!important;justify-content:center!important}
+html,body{width:880px!important;height:490px!important;margin:0!important;padding:0!important;overflow:hidden!important;background:#e2e8f0!important}
+body{display:flex!important;align-items:center!important;justify-content:center!important;min-height:0!important}
 ${PILL_SEL},${MOBILE_SEL},${HIDDEN_OVERLAY},.chat-pill-card,.mobile-phone-frame{display:none!important}
-${DESKTOP_SEL}{display:flex!important;flex:none!important;width:880px!important;max-width:100%!important;height:490px!important;max-height:100%!important;align-items:stretch!important;justify-content:center!important}
-.desktop-card{width:880px!important;max-width:100%!important;height:490px!important;max-height:100%!important;flex:none!important;margin:0!important;transform-origin:center center}
+${DESKTOP_SEL}{display:flex!important;width:880px!important;height:490px!important;max-width:none!important;max-height:none!important;align-items:stretch!important;justify-content:center!important;margin:0!important}
+.desktop-card{display:grid!important;grid-template-columns:370px 1fr!important;grid-template-rows:490px!important;width:880px!important;max-width:none!important;height:490px!important;max-height:none!important;margin:0!important;overflow:hidden!important}
+.desktop-card .math-panel{order:0!important;border-right:1px solid #f1f5f9!important;border-top:0!important;width:auto!important}
+.desktop-card .stage-panel{order:0!important;height:100%!important}
+@media(max-width:960px){
+  .desktop-card{grid-template-columns:370px 1fr!important;height:490px!important;max-width:none!important}
+  .desktop-card .stage-panel{height:100%!important;order:0!important}
+  .desktop-card .math-panel{order:0!important;border-right:1px solid #f1f5f9!important;border-top:none!important;width:auto!important}
+}
 `;
 
 function scenarioEmbedCss(mode) {
@@ -326,20 +333,12 @@ function scenarioBootScript(mode) {
     var slug = decodeURIComponent((location.pathname.split("/").pop() || "").split("?")[0]);
     try { window.parent.postMessage({ type: "lumi6:expand-interactive", slug: slug }, "*"); } catch (e) {}
   }
-  function fitDesktopCard(){
-    var card = document.querySelector(".desktop-card");
-    if (!card || mode !== "desktop") return;
-    var scale = Math.min(1, window.innerWidth / 880, window.innerHeight / 490);
-    card.style.transformOrigin = "center center";
-    card.style.transform = scale < 0.99 ? ("scale(" + scale + ")") : "none";
-  }
   function boot(){
     applyModeClass();
     if (typeof setMode === "function") {
       try { setMode(mode === "pill" ? "pill" : mode); } catch (e) {}
     }
     showSections();
-    fitDesktopCard();
     if (mode === "pill" && !window.__lumiExpandBound) {
       window.__lumiExpandBound = true;
       window.openDrawer = askParentExpand;
@@ -351,12 +350,11 @@ function scenarioBootScript(mode) {
         }, true);
       });
     }
-    if (tries++ < 4) setTimeout(function(){ showSections(); fitDesktopCard(); }, 80);
+    if (tries++ < 4) setTimeout(showSections, 80);
   }
   if (document.readyState === "loading") addEventListener("DOMContentLoaded", boot);
   else boot();
-  addEventListener("load", function(){ showSections(); fitDesktopCard(); });
-  addEventListener("resize", fitDesktopCard);
+  addEventListener("load", showSections);
 })();
 </script>`;
 }

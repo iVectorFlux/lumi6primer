@@ -13355,12 +13355,12 @@ User writes "Show air quality for Tokyo", names a place, and points to an empty 
   }
 
   function ensureInteractiveFrame(trigger, mode = "mobile") {
-    const wrapper = trigger.closest(".talk-interactive-pill-wrapper, .talk-interactive-wrapper");
+    const wrapper = trigger.closest(".talk-interactive-pill-wrapper, .talk-interactive-wrapper") || trigger;
     if (!wrapper) return null;
     const stage = wrapper.querySelector(".talk-interactive-stage") || wrapper;
     let frame = wrapper.querySelector("iframe.talk-lesson-interactive:not(.talk-lesson-pill)");
-    const data = trigger.dataset || {};
-    const slug = data.slug || wrapper.dataset.interactiveSlug || "";
+    const data = wrapper.dataset || {};
+    const slug = data.slug || data.interactiveSlug || wrapper.dataset.interactiveSlug || "";
     const label = trigger.getAttribute("title") || slug;
     if (!frame) {
       frame = document.createElement("iframe");
@@ -13370,6 +13370,7 @@ User writes "Show air quality for Tokyo", names a place, and points to an empty 
       for (const key of ["slug", "scenario", "subject", "klass", "idea", "concept", "summary", "hrefMobile", "hrefDesktop", "hrefPill"]) {
         if (data[key] != null) frame.dataset[key] = data[key];
       }
+      if (slug) frame.dataset.slug = slug;
       stage.appendChild(frame);
     }
     setFrameMode(frame, mode);
@@ -13426,9 +13427,7 @@ User writes "Show air quality for Tokyo", names a place, and points to an empty 
     }
     const inPlayground = Boolean(frame.closest("#talkPlaygroundStage"));
     if (inPlayground) {
-      frame.style.width = "100%";
-      frame.style.height = "100%";
-      frame.style.minHeight = "0";
+      sizePlaygroundFrame(frame);
       return;
     }
     const ceiling = inPlayground
@@ -13448,9 +13447,12 @@ User writes "Show air quality for Tokyo", names a place, and points to an empty 
       const bySlug = data.slug
         ? pills.find((pill) => pill.dataset.slug === data.slug)
         : null;
-      const pill = bySource || bySlug || pills[pills.length - 1];
-      if (pill) {
-        const frame = ensureInteractiveFrame(pill);
+      const wrapper = bySource?.closest(".talk-interactive-pill-wrapper")
+        || document.querySelector(`.talk-interactive-pill-wrapper[data-interactive-slug="${CSS.escape(data.slug || "")}"]`)
+        || bySlug?.closest(".talk-interactive-pill-wrapper");
+      const trigger = wrapper?.querySelector("iframe.talk-lesson-pill, [data-expand-sim], .sim-native-pill") || wrapper;
+      if (trigger) {
+        const frame = ensureInteractiveFrame(trigger, isPhoneViewport() ? "mobile" : "desktop");
         if (frame) openTalkPlayground(frame);
       }
       return;
@@ -13479,23 +13481,50 @@ User writes "Show air quality for Tokyo", names a place, and points to an empty 
     stage.replaceChildren(frame);
     sheet.hidden = false;
     document.body.classList.toggle("talk-playground-scenario", scenario);
-    document.body.classList.toggle("talk-playground-mobile", isPhoneViewport());
-    document.body.classList.remove("talk-playground-fullscreen", "talk-playground-desktop-view");
+    const phone = isPhoneViewport();
+    document.body.classList.toggle("talk-playground-mobile", phone);
+    document.body.classList.toggle("talk-playground-desktop-view", !phone);
+    document.body.classList.remove("talk-playground-fullscreen");
     document.body.classList.add("talk-playground-open");
-    setFrameMode(frame, "mobile");
+    setFrameMode(frame, phone ? "mobile" : "desktop");
     syncPlaygroundExpandLabel();
     if (typeof window.hideTalkWait === "function") window.hideTalkWait();
     const afterLoad = () => {
       applyEmbedLayout(frame, false);
+      sizePlaygroundFrame(frame);
       nudgeInteractive(frame);
+      setTimeout(() => nudgeInteractive(frame), 200);
+      setTimeout(() => nudgeInteractive(frame), 700);
     };
     frame.addEventListener("load", afterLoad, { once: true });
-    requestAnimationFrame(() => {
-      frame.style.width = "100%";
-      frame.style.height = "100%";
-      frame.style.minHeight = "0";
-      afterLoad();
-    });
+    requestAnimationFrame(() => afterLoad());
+  }
+
+  function sizePlaygroundFrame(frame) {
+    if (!frame) return;
+    if (document.body.classList.contains("talk-playground-desktop-view")) {
+      frame.style.width = "880px";
+      frame.style.height = "490px";
+      frame.style.minHeight = "490px";
+      scaleDesktopPlayground();
+      return;
+    }
+    frame.style.width = "100%";
+    frame.style.height = "100%";
+    frame.style.minHeight = "0";
+    scaleDesktopPlayground();
+  }
+
+  function scaleDesktopPlayground() {
+    const host = document.querySelector(".talk-playground-scale");
+    if (!host) return;
+    if (!document.body.classList.contains("talk-playground-desktop-view")) {
+      host.style.transform = "";
+      return;
+    }
+    const scale = Math.min(1, (window.innerWidth - 48) / 880, (window.innerHeight - 88) / 542);
+    host.style.transformOrigin = "center center";
+    host.style.transform = scale < 0.995 ? `scale(${scale})` : "";
   }
 
   function applyEmbedLayout(frame, full) {
@@ -13507,9 +13536,8 @@ User writes "Show air quality for Tokyo", names a place, and points to an empty 
   function syncPlaygroundExpandLabel() {
     const btn = document.getElementById("talkPlaygroundExpand");
     if (!btn) return;
-    const enlarged = document.body.classList.contains("talk-playground-desktop-view")
-      || document.body.classList.contains("talk-playground-fullscreen");
-    btn.hidden = false;
+    const enlarged = document.body.classList.contains("talk-playground-fullscreen");
+    btn.hidden = !isPhoneViewport();
     btn.setAttribute("aria-label", enlarged ? "Back to card" : "Open larger layout");
     btn.setAttribute("title", enlarged ? "Back to card" : "Open larger layout");
     btn.classList.toggle("is-enlarged", enlarged);
@@ -13575,6 +13603,25 @@ User writes "Show air quality for Tokyo", names a place, and points to an empty 
     return Number.isFinite(grade) && grade > 0 ? `Class ${grade}` : "More";
   }
 
+  function simNativePillHtml(interactive) {
+    const pill = interactive.pill || {};
+    const title = pill.title || interactive.title || interactive.slug;
+    const sub = pill.subtitle || interactive.concept || interactive.summary || "";
+    return `
+            <div class="talk-interactive-pill-wrapper sim-pill-item" data-interactive-slug="${escapeHtml(interactive.slug)}" ${interactiveMetaAttrs(interactive)}>
+              <button type="button" class="sim-native-pill" data-expand-sim>
+                <span class="sim-native-pill-body">
+                  <span class="sim-native-pill-title">${escapeHtml(title)}</span>
+                  ${sub ? `<span class="sim-native-pill-sub">${escapeHtml(sub)}</span>` : ""}
+                </span>
+                <span class="sim-native-pill-go" aria-hidden="true">
+                  <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 6 15 12 9 18"/></svg>
+                </span>
+              </button>
+              <div class="talk-interactive-stage" hidden aria-hidden="true"></div>
+            </div>`;
+  }
+
   function simCatalogHtml(items) {
     const groups = new Map();
     for (const item of items) {
@@ -13588,10 +13635,7 @@ User writes "Show air quality for Tokyo", names a place, and points to an empty 
         <section class="sim-class-block">
           <h2 class="sim-class-label">${escapeHtml(classHeading(klass))}</h2>
           <div class="sim-pill-list">
-            ${rows.map((interactive) => talkInteractivePillHtml(
-              { interactive },
-              interactive.pill?.title || interactive.title
-            )).join("")}
+            ${rows.map((interactive) => simNativePillHtml(interactive)).join("")}
           </div>
         </section>
       `)
@@ -13628,6 +13672,18 @@ User writes "Show air quality for Tokyo", names a place, and points to an empty 
       feed.innerHTML = `<p class="sim-feed-status">Could not load interactives. Try again.</p>`;
     }
   }
+
+  document.getElementById("simFeed")?.addEventListener("click", (e) => {
+    const btn = e.target.closest("[data-expand-sim]");
+    if (!btn) return;
+    e.preventDefault();
+    const frame = ensureInteractiveFrame(btn, isPhoneViewport() ? "mobile" : "desktop");
+    if (frame) openTalkPlayground(frame);
+  });
+
+  window.addEventListener("resize", () => {
+    if (document.body.classList.contains("talk-playground-desktop-view")) scaleDesktopPlayground();
+  });
 
   window.syncTalkModeFeed = (options) => syncTalkModeFeed(options);
   window.scrollTalkToLatest = () => scrollTalkToLatest(true);

@@ -2923,18 +2923,65 @@ button, a, .btool, .topbar-icon-btn, .zoom-btn, .share-btn, .nav-item {
   display: flex;
   flex-direction: column;
   align-items: stretch;
-  gap: 14px;
+  gap: 28px;
 }
 
-.sim-pill-list .talk-interactive-pill-wrapper {
-  width: min(100%, 420px);
-  overflow: hidden;
-  isolation: isolate;
-  min-height: 80px;
+.sim-pill-item {
+  width: min(100%, 440px);
+  overflow: visible;
+  min-height: 0;
 }
 
-.sim-pill-list iframe.talk-lesson-pill {
+.sim-native-pill {
+  display: flex;
+  align-items: center;
+  gap: 12px;
   width: 100%;
+  min-height: 72px;
+  padding: 14px 14px 14px 16px;
+  border: 1px solid #e2e8f0;
+  border-radius: 18px;
+  background: #fff;
+  box-shadow: 0 2px 8px rgba(15, 23, 42, 0.04);
+  cursor: pointer;
+  text-align: left;
+}
+
+.sim-native-pill-body {
+  flex: 1 1 auto;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.sim-native-pill-title {
+  font-size: 14px;
+  font-weight: 700;
+  color: #0f172a;
+  line-height: 1.3;
+}
+
+.sim-native-pill-sub {
+  font-size: 12px;
+  line-height: 1.35;
+  color: #64748b;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.sim-native-pill-go {
+  flex: 0 0 auto;
+  width: 36px;
+  height: 36px;
+  display: grid;
+  place-items: center;
+  border-radius: 999px;
+  background: #f8fafc;
+  color: #334155;
+  border: 1px solid #e2e8f0;
 }
 
 .sim-feed-status {
@@ -3861,6 +3908,13 @@ iframe.talk-lesson-pill {
   display: none !important;
 }
 
+.talk-playground-scale {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  transform-origin: center center;
+}
+
 .talk-playground-bar {
   flex: 0 0 auto;
   display: flex;
@@ -4037,14 +4091,26 @@ body.talk-playground-desktop-view .talk-playground {
   background: rgba(15, 23, 42, 0.88);
 }
 
+body.talk-playground-desktop-view .talk-playground-scale {
+  width: 880px;
+}
+
 body.talk-playground-desktop-view .talk-playground-bar,
 body.talk-playground-desktop-view .talk-playground-scroll {
-  width: min(880px, calc(100vw - 48px));
+  width: 880px;
+  max-width: none;
 }
 
 body.talk-playground-desktop-view .talk-playground-scroll {
-  height: min(490px, calc((100vw - 48px) * 490 / 880), calc(100dvh - 96px));
+  height: 490px;
+  flex: none;
   border-radius: 0 0 20px 20px;
+}
+
+body.talk-playground-desktop-view .talk-playground-stage .talk-lesson-interactive {
+  width: 880px !important;
+  height: 490px !important;
+  min-height: 490px !important;
 }
 
 body.talk-playground-fullscreen .talk-playground {
