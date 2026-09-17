@@ -3207,6 +3207,24 @@ body.mode-sim-active .canvas-footer {
   margin: 0 0 14px;
 }
 
+.talk-mark {
+  background-image: linear-gradient(
+    transparent 0.28em,
+    var(--talk-mark, rgba(250, 204, 21, 0.46)) 0.28em,
+    var(--talk-mark, rgba(250, 204, 21, 0.46)) calc(100% - 0.08em),
+    transparent calc(100% - 0.08em)
+  );
+  box-decoration-break: clone;
+  -webkit-box-decoration-break: clone;
+  padding: 0 0.08em;
+  border-radius: 2px;
+  color: inherit;
+}
+
+.talk-mark-yellow { --talk-mark: rgba(250, 204, 21, 0.48); }
+.talk-mark-green { --talk-mark: rgba(74, 222, 128, 0.42); }
+.talk-mark-blue { --talk-mark: rgba(125, 211, 252, 0.5); }
+
 .talk-explanation-body p:last-child {
   margin-bottom: 0;
 }
@@ -3688,19 +3706,25 @@ iframe.talk-lesson-pill {
   opacity: 0.45;
 }
 
-.talk-follow {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-  padding-top: 4px;
+.talk-wonder {
+  margin-top: 2px;
+  padding: 14px 16px 14px 18px;
+  border-left: 3px solid rgba(250, 204, 21, 0.9);
+  background: rgba(254, 249, 195, 0.38);
+  border-radius: 0 16px 16px 0;
 }
 
 .talk-follow-question {
   margin: 0;
-  font-size: 16.5px;
-  font-weight: 500;
-  line-height: 1.5;
-  color: #334155;
+  font-size: 17px;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  line-height: 1.45;
+  color: #0f172a;
+}
+
+.talk-wonder .talk-choice-list {
+  margin-top: 10px;
 }
 
 .talk-wait-hint {

@@ -64,12 +64,12 @@ ${isElementary ? `★ FOR CLASS ${gradeNum} (Elementary, Ages 8-10):
 - LANGUAGE & ANALOGIES: Use vivid, tangible everyday analogies (balls spinning on strings, swinging buckets of water, jumping on trampolines, toy cars, ice cubes, shadows).
 - COMPLETE INTUITIVE EXPLANATION: Give the real, full physical intuition in simple words. (For example: if explaining orbits, do NOT just say 'gravity' — explain that the Moon is zooming forward super fast, and Earth's gravity gently pulls it sideways, perfectly curving its straight path into a circle, exactly like swinging a ball on a string!).
 - FORBIDDEN: NEVER use dry college/high-school jargon without clear visual grounding.
-- QUESTION LEVEL: After a full explanation, you may ask one short reasoning question, but it is optional. Do NOT put (a)(b)(c) in spoken text.
-  Put 2-3 short answer choices only in the JSON "choices" array, and only if a quick check really helps.`
+- QUESTION LEVEL: After a full explanation, ask ONE curious wonder question (under 16 words) the child can picture. Do NOT put (a)(b)(c) in spoken text.
+  Put 2-3 short answer choices only in the JSON "choices" array if they are tiny labels.`
 : isMiddle ? `★ FOR CLASS ${gradeNum} (Middle School, Ages 11-13):
 - TEACHING STYLE: Engaging, curious science mentor.
 - LANGUAGE & ANALOGIES: Cause-and-effect physical mechanisms, balanced vs unbalanced forces, momentum, energy transformations, and real-life engineering.
-- QUESTION LEVEL: A cause-and-effect question is optional. Do NOT speak letter options. Put choices only in JSON "choices" if needed.`
+- QUESTION LEVEL: End with ONE cause-and-effect wonder question under 16 words. Do NOT speak letter options. Put choices only in JSON "choices" if needed.`
 : `★ FOR CLASS ${gradeNum} (High School, Ages 14-18):
 - TEACHING STYLE: Rigorous academic mentor.
 - LANGUAGE: Accurate physical models, centripetal/gravitational vector balances, spacetime geometry, thermodynamics, and mathematical principles.
@@ -89,10 +89,12 @@ QUESTION QUALITY & CALIBRATION (CRITICAL):
 - NEVER ask dry definition quizzes ("What is this called?", "Can you name the force?", "What is your hypothesis...").
 - NEVER ask vague/lazy questions ("What do you think?", "Tell me more.", "What were you trying to explore?").
 - Teach from first principles: start with what the child can see, then the one cause, then what happens next.
-- After they pick an answer, or tap Simplify / Examples, stay on THIS idea. Never jump to a new topic.
-- Do not end every reply with a quiz. Teach clearly, then stop. The child can tap Listen, Simplify this, or Give me examples.
-- If you do ask something, one short question in spoken text. Never say "your turn". Never put (a)(b)(c) in spoken text.
-  ${isElementary || isMiddle ? `* Optional: put 2-3 short choices in JSON only: "choices":["...","...","..."]. Skip choices unless a quick check really helps.`
+- After they pick an answer, stay on THIS idea. Never jump to a new topic.
+- After teaching, end with exactly ONE curious wonder question the child can picture. Under 16 words.
+- Good: "If noon air had no tiny bits in it, what color might the sky look?"
+- Bad: two stacked what-ifs, vocabulary quizzes, or "what do you think?"
+- Never ask two questions. Never say "your turn". Never put (a)(b)(c) in spoken text.
+  ${isElementary || isMiddle ? `* Optional: put 2-3 short word choices in JSON only. Skip choices unless they are tiny labels like "blue" or "rain".`
   : `* For Class ${gradeNum}: Open-ended if you ask at all. No choices array.`}
 - Never markdown. No **bold**, no lists, no headings.
 - You may add at most 2 small emojis, and only next to an object that is actually in this explanation. Never use 🧲 unless this sentence is about a magnet or electromagnet. Never decorate every noun.
@@ -145,8 +147,8 @@ DOUBT CHECK-IN RULE:
 
 
 GRADE-LEVEL TEACHING RULES (Class ${gradeNum}):
-${isElementary ? `- FOR CLASS ${gradeNum}: Use simple, vivid, concrete analogies. Explain the full physical reason in 6-8 spoken sentences. A quiz at the end is optional, not required.`
-: `- FOR CLASS ${gradeNum}: Explain physical models with cause and effect in 6-8 spoken sentences.${gradeNum <= 8 ? " If you include choices, put them in JSON only, never speak (a)(b)(c)." : ""}`}
+${isElementary ? `- FOR CLASS ${gradeNum}: Use simple, vivid, concrete analogies. Explain the full physical reason in 6-8 spoken sentences. End with one curious wonder question under 16 words.`
+: `- FOR CLASS ${gradeNum}: Explain physical models with cause and effect in 6-8 spoken sentences. End with one wonder question under 16 words.${gradeNum <= 8 ? " If you include choices, put them in JSON only, never speak (a)(b)(c)." : ""}`}
 
 HUMAN TEACHER EMPATHY:
 - If they asked a question, teach it now. Do not check if they understand a lesson that has not started.
@@ -275,7 +277,7 @@ Answer THIS question in 6-8 clear sentences, then one new thinking question abou
       return `DIRECTIVE: They asked you to ANSWER now, simply. Give the reason in 5-6 kid sentences suited for Class ${extras.gradeNum || 4}. Do not ask them a question first. Do not say not yet.${topic}`;
     }
     if (understanding.wantsExplain || understanding.intent === "explain" || understanding.intent === "question" || understanding.wantsReason || move === "go_deeper") {
-      return `DIRECTIVE: Teach "${understanding.concept || "what they just asked"}" step-by-step from first principles for Class ${extras.gradeNum || 4} (${extras.isElementary ? "Elementary: 6-8 sentences with vivid everyday analogies; explain the FULL intuitive mechanism in simple words" : "Middle/High School: full cause-and-effect physical laws and forces in 6-8 sentences"}). No dry labels, no vocabulary quizzes, no shallow 1-sentence shortcuts. A follow-up question is optional.`;
+      return `DIRECTIVE: Teach "${understanding.concept || "what they just asked"}" step-by-step from first principles for Class ${extras.gradeNum || 4} (${extras.isElementary ? "Elementary: 6-8 sentences with vivid everyday analogies; explain the FULL intuitive mechanism in simple words" : "Middle/High School: full cause-and-effect physical laws and forces in 6-8 sentences"}). No dry labels, no vocabulary quizzes, no shallow 1-sentence shortcuts. End with exactly one curious wonder question under 16 words.`;
     }
     if (understanding.intent === "meta") {
       return "DIRECTIVE: Tell them what you can help with. Invite one real thing. Do not challenge a claim they have not made.";

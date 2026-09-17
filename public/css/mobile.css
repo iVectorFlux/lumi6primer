@@ -551,8 +551,12 @@ button,
     padding: 6px 10px;
   }
 
+  .talk-wonder {
+    padding: 12px 12px 12px 14px;
+  }
+
   .talk-follow-question {
-    font-size: 15px;
+    font-size: 15.5px;
   }
 
   .talk-thinking {

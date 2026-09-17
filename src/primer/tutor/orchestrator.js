@@ -480,23 +480,21 @@ class LearningOrchestrator {
         const widget = lessonInteractive.commandFor(interactiveHit);
         // Wikipedia/Commons only. A companion picture is worth a second slot on the
         // board when it is free; it is not worth paying an image model for.
-        const companion = graphicPlan.generate
-          ? await lessonGraphic.generate({
-          topic: graphicTitle,
-          scene: graphicPlan.scene,
+        const companion = await lessonGraphic.generate({
+          topic: graphicTitle || interactiveHit.title || spokenText,
+          scene: graphicPlan.scene || interactiveHit.title,
           previousScene: lastScene,
           spoken,
           question: spokenText,
           age: child?.age_years,
           grade: child?.grade,
-          kind: graphicPlan.kind,
+          kind: graphicPlan.kind || "overview",
           freeOnly: true,
-          timeoutMs: 12000
+          timeoutMs: 14000
         }).catch((err) => {
           console.warn("[PRIMER] Companion image failed:", err.message);
           return null;
-        })
-          : null;
+        });
         const pair = [];
         if (companion?.href) {
           companion.keepOthers = true;

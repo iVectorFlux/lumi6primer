@@ -1505,6 +1505,7 @@
       text = text.replace(/`([^`]+)`/g, "$1");
       text = text.replace(/^\s*[-*+]\s+/gm, "");
 
+      text = text.replace(/<[^>]+>/g, " ");
       // Collapse multiple whitespace
       text = text.replace(/\s+/g, " ").trim();
       const choiceStart = text.search(/\(\s*[aA]\s*\)/);

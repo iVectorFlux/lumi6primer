@@ -57,62 +57,79 @@ async function downloadImageAsBase64(url) {
 }
 
 async function searchEducationalGraphic(topic, spoken) {
-  const query = String(topic || spoken || "")
-    .replace(/^(teach me about|teach me|tell me about|what is|what's|whats|how does|how do|how to|can you teach me|explain|i want to learn about)\s+/i, "")
+  const queries = graphicQueries(topic, spoken);
+  for (const query of queries) {
+    const wiki = await searchWikipediaImage(query);
+    if (wiki) return wiki;
+  }
+  for (const query of queries) {
+    const commons = await searchCommonsImage(query);
+    if (commons) return commons;
+  }
+  return null;
+}
+
+function graphicQueries(topic, spoken) {
+  const strip = (value) => String(value || "")
+    .replace(/^(can you |could you |please )?(teach me about|teach me|tell me about|explain to me|explain|what is|what's|whats|why is|why are|why do|why does|how does|how do|how to|i want to learn about)\s+/i, "")
     .replace(/[?.!]+$/g, "")
     .replace(/\s+/g, " ")
     .trim();
-  if (!query || query.length < 2) return null;
+  const main = strip(topic);
+  const spokenClean = strip(spoken);
+  const words = main.split(/\s+/).filter((word) => word.length > 2 && !/^(the|and|for|from|with|this|that|into|about)$/i.test(word));
+  const short = words.slice(-3).join(" ");
+  return [...new Set([main, spokenClean, short, short ? `${short} diagram` : "", main ? `${main} diagram` : ""].filter((query) => query && query.length >= 2))].slice(0, 5);
+}
 
-  // 1. Wikipedia Page Thumbnail / Original (high quality 1024px raster)
-  const wikiUrl = `https://en.wikipedia.org/w/api.php?action=query&generator=search&gsrsearch=${encodeURIComponent(query)}&gsrlimit=5&prop=pageimages|extracts&exintro=1&explaintext=1&piprop=thumbnail|original&pithumbsize=1024&format=json&origin=*`;
+async function searchWikipediaImage(query) {
+  const wikiUrl = `https://en.wikipedia.org/w/api.php?action=query&generator=search&gsrsearch=${encodeURIComponent(query)}&gsrlimit=8&prop=pageimages|extracts&exintro=1&explaintext=1&piprop=thumbnail|original&pithumbsize=1280&format=json&origin=*`;
   try {
     const res = await fetch(wikiUrl, {
       headers: { "User-Agent": "Lumi6EducationalTutor/1.0 (https://lumi6.com)" }
     });
-    if (res.ok) {
-      const data = await res.json();
-      const pages = Object.values(data?.query?.pages || {}).sort((a, b) => (a.index || 0) - (b.index || 0));
-      for (const page of pages) {
-        const imgUrl = page.thumbnail?.source || page.original?.source;
-        if (imgUrl && !/\.(webm|ogv|mp4|avi|mov)$/i.test(imgUrl) && !/icon|logo|flag|disambig|symbol/i.test(imgUrl)) {
-          const fetched = await downloadImageAsBase64(imgUrl);
-          if (fetched) {
-            console.log(`[PRIMER] Educational graphic found via Wikipedia for "${query}": ${page.title}`);
-            return { mime: fetched.mime, b64: fetched.b64, model: "wikimedia:wikipedia" };
-          }
+    if (!res.ok) return null;
+    const data = await res.json();
+    const pages = Object.values(data?.query?.pages || {}).sort((a, b) => (a.index || 0) - (b.index || 0));
+    for (const page of pages) {
+      const imgUrl = page.original?.source || page.thumbnail?.source;
+      if (imgUrl && !/\.(webm|ogv|mp4|avi|mov)$/i.test(imgUrl) && !/icon|logo|flag|disambig|symbol|coat_of_arms/i.test(imgUrl)) {
+        const fetched = await downloadImageAsBase64(imgUrl);
+        if (fetched) {
+          console.log(`[PRIMER] Educational graphic found via Wikipedia for "${query}": ${page.title}`);
+          return { mime: fetched.mime, b64: fetched.b64, model: "wikimedia:wikipedia" };
         }
       }
     }
   } catch (err) {
     console.warn("[PRIMER] Wikipedia image search failed:", err.message);
   }
+  return null;
+}
 
-  // 2. Wikimedia Commons scientific diagram & illustration search
-  const commonsUrl = `https://commons.wikimedia.org/w/api.php?action=query&generator=search&gsrnamespace=6&gsrsearch=${encodeURIComponent(query + " diagram illustration science")}&gsrlimit=5&prop=imageinfo&iiprop=url|mime|size&iiurlwidth=1024&format=json&origin=*`;
+async function searchCommonsImage(query) {
+  const commonsUrl = `https://commons.wikimedia.org/w/api.php?action=query&generator=search&gsrnamespace=6&gsrsearch=${encodeURIComponent(`${query} diagram illustration science`)}&gsrlimit=8&prop=imageinfo&iiprop=url|mime|size&iiurlwidth=1280&format=json&origin=*`;
   try {
     const res = await fetch(commonsUrl, {
       headers: { "User-Agent": "Lumi6EducationalTutor/1.0 (https://lumi6.com)" }
     });
-    if (res.ok) {
-      const data = await res.json();
-      const pages = Object.values(data?.query?.pages || {});
-      for (const page of pages) {
-        const info = page.imageinfo?.[0];
-        const imgUrl = info?.thumburl || info?.url;
-        if (imgUrl && !/\.(webm|ogv|mp4|avi|mov)$/i.test(imgUrl) && !/icon|logo|flag|symbol/i.test(imgUrl)) {
-          const fetched = await downloadImageAsBase64(imgUrl);
-          if (fetched) {
-            console.log(`[PRIMER] Educational graphic found via Commons for "${query}": ${page.title}`);
-            return { mime: fetched.mime, b64: fetched.b64, model: "wikimedia:commons" };
-          }
+    if (!res.ok) return null;
+    const data = await res.json();
+    const pages = Object.values(data?.query?.pages || {});
+    for (const page of pages) {
+      const info = page.imageinfo?.[0];
+      const imgUrl = info?.thumburl || info?.url;
+      if (imgUrl && !/\.(webm|ogv|mp4|avi|mov)$/i.test(imgUrl) && !/icon|logo|flag|symbol|coat_of_arms/i.test(imgUrl)) {
+        const fetched = await downloadImageAsBase64(imgUrl);
+        if (fetched) {
+          console.log(`[PRIMER] Educational graphic found via Commons for "${query}": ${page.title}`);
+          return { mime: fetched.mime, b64: fetched.b64, model: "wikimedia:commons" };
         }
       }
     }
   } catch (err) {
     console.warn("[PRIMER] Commons image search failed:", err.message);
   }
-
   return null;
 }
 

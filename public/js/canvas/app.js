@@ -12887,7 +12887,7 @@ User writes "Show air quality for Tokyo", names a place, and points to an empty 
       .filter((choice) => choice.text && choice.text.length < 42 && !choice.text.includes("?"));
     if (!question && !shortChoices.length) return "";
     return `
-          <div class="talk-follow">
+          <div class="talk-wonder">
             ${question ? `<p class="talk-follow-question">${escapeHtml(question)}</p>` : ""}
             ${shortChoices.length ? `
               <div class="talk-choice-list" role="list">
@@ -13071,7 +13071,59 @@ User writes "Show air quality for Tokyo", names a place, and points to an empty 
     for (let i = 0; i < sentences.length; i += 2) {
       paras.push(sentences.slice(i, i + 2).join(" "));
     }
-    return paras.map((para) => `<p>${escapeHtml(para)}</p>`).join("");
+    return paras.map((para) => `<p>${renderTextbookMarks(para)}</p>`).join("");
+  }
+
+  const MARK_STOP = new Set("the a an of to in on and or for is it how does what why me about this that with from into then than they them their there".split(" "));
+  const MARK_COLORS = ["yellow", "green", "blue"];
+  const KEY_TERM = /\b((?:blue|red|green|sunlight|sun|air|water vapor|water vapour|water|heat|rain|cloud|vapor|vapour|gas|energy|force|gravity|oxygen|carbon dioxide|scattering|scatter|evaporation|condensation|precipitation|photosynthesis|season|cycle|molecule|wavelength|dust|particle)s?(?:\s+[A-Za-z]{3,12}){0,3})\b/gi;
+
+  function pickTextbookMarks(text) {
+    const raw = String(text || "");
+    const found = [];
+    const because = raw.match(/\bbecause\s+([^.]{10,80})/i);
+    if (because) found.push(because[1].replace(/[,;:]+$/, "").trim());
+    const named = raw.match(/\b(?:called|known as)\s+([^.]{6,48})/i);
+    if (named) found.push(named[1].replace(/[,;:]+$/, "").trim());
+    let match;
+    const termRe = new RegExp(KEY_TERM.source, "gi");
+    while ((match = termRe.exec(raw)) && found.length < 6) {
+      const phrase = String(match[1] || "").replace(/\s+/g, " ").trim();
+      if (phrase.length < 4 || MARK_STOP.has(phrase.toLowerCase())) continue;
+      found.push(phrase);
+    }
+    const unique = [];
+    for (const phrase of found.sort((a, b) => b.length - a.length)) {
+      const key = phrase.toLowerCase();
+      if (unique.some((item) => item.toLowerCase().includes(key) || key.includes(item.toLowerCase()))) continue;
+      unique.push(phrase);
+      if (unique.length >= 3) break;
+    }
+    return unique;
+  }
+
+  function renderTextbookMarks(text) {
+    const raw = String(text || "");
+    const marks = pickTextbookMarks(raw);
+    if (!marks.length) return escapeHtml(raw);
+    const hits = [];
+    const lower = raw.toLowerCase();
+    marks.forEach((phrase, idx) => {
+      const at = lower.indexOf(phrase.toLowerCase());
+      if (at < 0) return;
+      if (hits.some((hit) => at < hit.end && at + phrase.length > hit.start)) return;
+      hits.push({ start: at, end: at + phrase.length, color: MARK_COLORS[idx % MARK_COLORS.length] });
+    });
+    hits.sort((a, b) => a.start - b.start);
+    let html = "";
+    let cursor = 0;
+    for (const hit of hits) {
+      html += escapeHtml(raw.slice(cursor, hit.start));
+      html += `<mark class="talk-mark talk-mark-${hit.color}">${escapeHtml(raw.slice(hit.start, hit.end))}</mark>`;
+      cursor = hit.end;
+    }
+    html += escapeHtml(raw.slice(cursor));
+    return html;
   }
 
   function splitTeacherTurn(cleanSpoken) {
