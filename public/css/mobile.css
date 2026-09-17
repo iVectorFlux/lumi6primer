@@ -555,9 +555,8 @@ button,
     font-size: 15px;
   }
 
-  .talk-nudge {
-    font-size: 13px;
-    padding: 7px 11px;
+  .talk-thinking {
+    padding: 14px 14px;
   }
 
   .talk-image-wrapper {

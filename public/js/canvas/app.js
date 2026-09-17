@@ -12853,7 +12853,7 @@ User writes "Show air quality for Tokyo", names a place, and points to an empty 
 
   function childPromptHtml(text) {
     const raw = String(text || "").trim();
-    if (!raw) return "";
+    if (!raw || /^stay on\b/i.test(raw)) return "";
     const choice = parseChildChoice(raw);
     return `
             <div class="talk-child-prompt">
@@ -12877,32 +12877,35 @@ User writes "Show air quality for Tokyo", names a place, and points to an empty 
             </div>`;
   }
 
-  function talkFollowHtml(question, choices, showNudges) {
-    const hasChoices = Array.isArray(choices) && choices.length;
-    if (!question && !hasChoices && !showNudges) return "";
+  function talkFollowHtml(question, choices) {
+    const shortChoices = (Array.isArray(choices) ? choices : [])
+      .map((choice, i) => {
+        const text = String(typeof choice === "string" ? choice : (choice.text || "")).trim();
+        const letter = String((typeof choice === "object" && choice.letter) || String.fromCharCode(97 + i)).toUpperCase();
+        return { letter, text };
+      })
+      .filter((choice) => choice.text && choice.text.length < 42 && !choice.text.includes("?"));
+    if (!question && !shortChoices.length) return "";
     return `
           <div class="talk-follow">
             ${question ? `<p class="talk-follow-question">${escapeHtml(question)}</p>` : ""}
-            ${hasChoices ? `
+            ${shortChoices.length ? `
               <div class="talk-choice-list" role="list">
-                ${choices.map((choice, i) => {
-                  const text = String(typeof choice === "string" ? choice : (choice.text || "")).trim();
-                  const letter = String((typeof choice === "object" && choice.letter) || String.fromCharCode(97 + i)).toUpperCase();
-                  if (!text) return "";
-                  return `
-                  <button type="button" class="talk-choice" role="listitem" data-choice-letter="${escapeHtml(letter)}" data-choice-text="${escapeHtml(text)}">
-                    ${escapeHtml(text)}
-                  </button>`;
-                }).join("")}
+                ${shortChoices.map((choice) => `
+                  <button type="button" class="talk-choice" role="listitem" data-choice-letter="${escapeHtml(choice.letter)}" data-choice-text="${escapeHtml(choice.text)}">
+                    ${escapeHtml(choice.text)}
+                  </button>
+                `).join("")}
               </div>
             ` : ""}
-            ${showNudges ? `
-              <div class="talk-nudge-row">
-                <button type="button" class="talk-nudge" data-talk-nudge="listen">Listen</button>
-                <button type="button" class="talk-nudge" data-talk-nudge="simplify">Simplify this</button>
-                <button type="button" class="talk-nudge" data-talk-nudge="examples">Give me examples</button>
-              </div>
-            ` : ""}
+          </div>`;
+  }
+
+  function talkThinkingHtml() {
+    return `
+          <div class="talk-thinking" aria-live="polite">
+            <span class="talk-thinking-dots" aria-hidden="true"><span></span><span></span><span></span></span>
+            <p class="talk-wait-hint">Working on this…</p>
           </div>`;
   }
 
@@ -13053,8 +13056,10 @@ User writes "Show air quality for Tokyo", names a place, and points to an empty 
     const teaching = [];
     for (const sentence of sentences) {
       const isQuestion = sentence.endsWith("?");
-      if (isQuestion) question = sentence;
-      else teaching.push(sentence);
+      if (isQuestion) {
+        if (question) teaching.push(question);
+        question = sentence;
+      } else teaching.push(sentence);
     }
     return { teaching: teaching.join(" "), question, choices };
   }
@@ -13234,19 +13239,17 @@ User writes "Show air quality for Tokyo", names a place, and points to an empty 
       const choices = (step.choices && step.choices.length) ? step.choices : parsed.choices;
 
       if (!deeperExpl && !question && !(step.interactive || step.image)) {
-        if (idx === pairs.length - 1 && window.__primerWaiting) {
-          return `
+        return `
         <article class="talk-turn-card">
-          <p class="talk-wait-hint">Looking this up…</p>
-        </article>`;
-        }
-        return "";
+          ${step.asked ? childPromptHtml(step.asked) : ""}
+          ${idx === pairs.length - 1 && window.__primerWaiting ? talkThinkingHtml() : ""}
+        </article>
+        `;
       }
-
-      const showNudges = idx === pairs.length - 1 && Boolean(deeperExpl || step.interactive || step.image);
 
       return `
       <article class="talk-turn-card">
+        ${step.asked ? childPromptHtml(step.asked) : ""}
         <div class="talk-lumi6-box${(step.interactive || step.image || (idx === pairs.length - 1 && window.__primerGraphicLoading)) ? " has-visual" : ""}">
           ${titleText ? `
           <div class="talk-lumi6-header">
@@ -13261,7 +13264,7 @@ User writes "Show air quality for Tokyo", names a place, and points to an empty 
 
           ${talkVisualHtml(step, titleText, idx === pairs.length - 1)}
 
-          ${talkFollowHtml(question, choices, showNudges)}
+          ${talkFollowHtml(question, choices)}
         </div>
       </article>
       `;
@@ -13273,7 +13276,6 @@ User writes "Show air quality for Tokyo", names a place, and points to an empty 
     });
 
     bindTalkChoices(feed);
-    bindTalkNudges(feed);
     bindTalkPlayground(feed);
     bindTalkImages(feed);
     if (playgroundOpen && talkPlaygroundSlug) {
@@ -13333,40 +13335,12 @@ User writes "Show air quality for Tokyo", names a place, and points to an empty 
     });
   }
 
-  function currentThreadHint() {
-    const title = formatCleanLessonTitle(state.lessonTitle || state.boardTitle || document.querySelector("#currentDocName")?.textContent);
-    return title ? `Stay on ${title}.` : "Stay on this same idea.";
-  }
-
   function bindTalkStarters(feed) {
     feed.querySelectorAll("[data-talk-starter]").forEach((btn) => {
       btn.addEventListener("click", () => {
         const text = String(btn.getAttribute("data-talk-starter") || btn.textContent || "").trim();
         if (!text || !window.primerChat || typeof window.primerChat.sendMessage !== "function") return;
         window.primerChat.sendMessage(text);
-      });
-    });
-  }
-
-  function bindTalkNudges(feed) {
-    const last = feed.querySelector(".talk-turn-card:last-of-type");
-    last?.querySelectorAll("[data-talk-nudge]").forEach((btn) => {
-      btn.addEventListener("click", () => {
-        const kind = btn.getAttribute("data-talk-nudge");
-        if (kind === "listen") {
-          const text = last.querySelector(".talk-explanation-body")?.innerText?.trim() || "";
-          if (window.primerVoice && typeof window.primerVoice.speakCurrentLesson === "function") {
-            window.primerVoice.speakCurrentLesson(text);
-          }
-          return;
-        }
-        const hint = currentThreadHint();
-        const payload = kind === "simplify"
-          ? `${hint} Explain it more simply, with a new everyday picture.`
-          : `${hint} Give me two everyday examples of this.`;
-        if (window.primerChat && typeof window.primerChat.sendMessage === "function") {
-          window.primerChat.sendMessage(payload);
-        }
       });
     });
   }
