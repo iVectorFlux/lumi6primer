@@ -53,6 +53,10 @@ function understandLearner(raw, extras = {}) {
   const coversPrior = Boolean(prior) && spokenCoversTopic(text, prior);
   const guessedUnrelated = Boolean(guessed) && !isWeakTopic(guessed) && Boolean(prior) && !topicsRelated(prior, guessed);
   const compactNamedTopic = text.split(/\s+/).filter(Boolean).length <= 6 && !ANSWER_LEAD.test(t);
+  const isContinue = /^(please )?(continue|keep going|go on|resume|carry on|tell me more|what next|continue explaining)[\s.!?]*$/i.test(text)
+    || /\b(please continue|keep going|carry on)\b/i.test(t);
+  const wantsExamples = /\b((give|show|tell) me (an |some |a few |two |2 )?examples?|everyday examples?|an example|more examples?)\b/i.test(t);
+  const stayOnThread = isStayOnThread(text) || wantsExamples || isContinue;
   const askingNewTopic = !stayOnThread && !choiceReply && guessedUnrelated && !coversPrior && (
     explicitTopicSwitch(text)
     || CURIOUS_PIVOT.test(t)
@@ -66,11 +70,6 @@ function understandLearner(raw, extras = {}) {
   const confusedAboutThis = /\b(i don't understand|i do not understand|don't understand|dont understand|huh\??$|i'm confused|i am confused|that doesn't make sense|what do you mean|what does that mean|why are you talking about|clarify|can you clarify|i didn't get that|i didn't understand|could you explain again|repeat that|say that again|what do you mean by|i'm lost|i am lost|not getting it|didn't get it|did not get it|explain again|tell me again|can you explain that|i still don't get|i don't get it|what are you saying|hard to understand|too complicated|simpler|explain simply|in simple words|make it simpler)\b/i.test(t)
     || /^(what|huh|pardon|sorry|repeat)\??$/i.test(t);
   const confused = confusedAboutThis && !askingNewTopic && !curiousPivot;
-
-  const isContinue = /^(please )?(continue|keep going|go on|resume|carry on|tell me more|what next|continue explaining)[\s.!?]*$/i.test(text)
-    || /\b(please continue|keep going|carry on)\b/i.test(t);
-  const wantsExamples = /\b((give|show|tell) me (an |some |a few |two |2 )?examples?|everyday examples?|an example|more examples?)\b/i.test(t);
-  const stayOnThread = isStayOnThread(text) || wantsExamples || isContinue;
 
   const GREETING = /^(hi|hello|hey|how are you|how do you do|what'?s up|good (morning|afternoon|evening)|how('?s| is) it going|are you there)\b/i;
   const isGreeting = GREETING.test(t) && text.length < 50 && !wantsExplain && !isContinue;
