@@ -848,10 +848,10 @@ Use 6 to 10 parts. Types: circle, box, ellipse, arrow, line, beam, person, text.
 Teach "${topic}" from first principles. The child asked: "${raw}".
 Every sentence must be about "${topic}".
 Explain the full physical intuition in 6-8 simple, vivid spoken sentences using concrete everyday analogies (${isElem ? "spinning a ball on a string, swings, or water buckets" : "momentum and balanced forces"}).
-End spoken with exactly ONE warm check-in for Class ${gradeNum} (under 16 words).
-Do not put (a)(b)(c) in spoken text. If helpful, add JSON choices.
+A follow-up question is optional. Do not quiz every time.
+Do not put (a)(b)(c) in spoken text.
 NEVER ask "what is this called", "what is your hypothesis", or dry vocabulary quizzes.
-Return JSON only: {"spoken":"explanation then one question?","choices":["...","...","..."]}`;
+Return JSON only: {"spoken":"plain teaching","choices":["optional"]}`;
     const userText = `${systemPrompt}\n\nChild said: "${raw}"\nTeach: ${topic}`;
     if (groqTalk.isConfigured()) {
       try {

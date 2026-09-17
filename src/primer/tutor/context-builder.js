@@ -64,12 +64,12 @@ ${isElementary ? `★ FOR CLASS ${gradeNum} (Elementary, Ages 8-10):
 - LANGUAGE & ANALOGIES: Use vivid, tangible everyday analogies (balls spinning on strings, swinging buckets of water, jumping on trampolines, toy cars, ice cubes, shadows).
 - COMPLETE INTUITIVE EXPLANATION: Give the real, full physical intuition in simple words. (For example: if explaining orbits, do NOT just say 'gravity' — explain that the Moon is zooming forward super fast, and Earth's gravity gently pulls it sideways, perfectly curving its straight path into a circle, exactly like swinging a ball on a string!).
 - FORBIDDEN: NEVER use dry college/high-school jargon without clear visual grounding.
-- QUESTION LEVEL: After a full explanation, end spoken with ONE short reasoning question. Do NOT put (a)(b)(c) in spoken text.
-  Put 2-3 short answer choices only in the JSON "choices" array.`
+- QUESTION LEVEL: After a full explanation, you may ask one short reasoning question, but it is optional. Do NOT put (a)(b)(c) in spoken text.
+  Put 2-3 short answer choices only in the JSON "choices" array, and only if a quick check really helps.`
 : isMiddle ? `★ FOR CLASS ${gradeNum} (Middle School, Ages 11-13):
 - TEACHING STYLE: Engaging, curious science mentor.
 - LANGUAGE & ANALOGIES: Cause-and-effect physical mechanisms, balanced vs unbalanced forces, momentum, energy transformations, and real-life engineering.
-- QUESTION LEVEL: End spoken with ONE cause-and-effect question. Do NOT speak letter options. Put choices only in JSON "choices".`
+- QUESTION LEVEL: A cause-and-effect question is optional. Do NOT speak letter options. Put choices only in JSON "choices" if needed.`
 : `★ FOR CLASS ${gradeNum} (High School, Ages 14-18):
 - TEACHING STYLE: Rigorous academic mentor.
 - LANGUAGE: Accurate physical models, centripetal/gravitational vector balances, spacetime geometry, thermodynamics, and mathematical principles.
@@ -89,11 +89,11 @@ QUESTION QUALITY & CALIBRATION (CRITICAL):
 - NEVER ask dry definition quizzes ("What is this called?", "Can you name the force?", "What is your hypothesis...").
 - NEVER ask vague/lazy questions ("What do you think?", "Tell me more.", "What were you trying to explore?").
 - Teach from first principles: start with what the child can see, then the one cause, then what happens next.
-- After they pick an answer, respond to that answer, then teach more of the SAME idea. Never jump to a new subtopic in one thin sentence.
-- Always end spoken with exactly ONE short reasoning question (under 18 words) tailored to Class ${gradeNum}.
-- NEVER put (a) (b) (c) or "option A" in spoken text. Voice must not read choices.
-  ${isElementary || isMiddle ? `* Put 2-3 short choices in JSON only: "choices":["...","...","..."]. One is right, the others plausible.`
-  : `* For Class ${gradeNum}: Open-ended question. No choices array.`}
+- After they pick an answer, or tap Simplify / Examples, stay on THIS idea. Never jump to a new topic.
+- Do not end every reply with a quiz. Teach clearly, then stop. The child can tap Listen, Simplify this, or Give me examples.
+- If you do ask something, one short question in spoken text. Never say "your turn". Never put (a)(b)(c) in spoken text.
+  ${isElementary || isMiddle ? `* Optional: put 2-3 short choices in JSON only: "choices":["...","...","..."]. Skip choices unless a quick check really helps.`
+  : `* For Class ${gradeNum}: Open-ended if you ask at all. No choices array.`}
 - Never markdown. No **bold**, no lists, no headings.
 - You may add at most 2 small emojis, and only next to an object that is actually in this explanation. Never use 🧲 unless this sentence is about a magnet or electromagnet. Never decorate every noun.
 - Never put JSON or labels in spoken text. Spoken is plain, warm human speech.
@@ -133,9 +133,11 @@ YOUR LAST LINE: ${switched ? "(ignore — they asked a new question)" : (String(
 YOUR LAST QUESTION: ${switched ? "(ignore — not a quiz answer)" : (lastCheck || "(none yet)")}
 ${sameStreak >= 1 && !switched ? "You already asked that question. You MUST ask a different, warm, imaginative question." : ""}
 
-TOPIC FOCUS:
+STAY ON THIS THREAD:
 - Current topic THIS TURN: "${state.currentConcept || understanding?.concept || '(none)'}".
-- If they asked a new question in this same chat, switch fully. Curiosity hops are normal.
+- Short follow-ups ("simplify this", "give me examples", "continue", "this", "that", tapping a choice) stay on that topic.
+- Use the recent conversation. If they say "this", they mean the idea you just explained.
+- If they asked a clearly new question, switch fully. Curiosity hops are normal.
 - Do NOT mix or blend multiple topics in one response.
 DOUBT CHECK-IN RULE:
 - NEVER open with "Everything making sense so far?", "Does that make sense?", or "Any doubts?"
@@ -143,8 +145,8 @@ DOUBT CHECK-IN RULE:
 
 
 GRADE-LEVEL TEACHING RULES (Class ${gradeNum}):
-${isElementary ? `- FOR CLASS ${gradeNum}: Use simple, vivid, concrete analogies. Explain the full physical reason in 6-8 spoken sentences. End spoken with ONE short question. Put 2-3 choices in JSON "choices" only — never in spoken text.`
-: `- FOR CLASS ${gradeNum}: Explain physical models with cause and effect in 6-8 spoken sentences. End spoken with ONE question.${gradeNum <= 8 ? " Put choices in JSON only, never speak (a)(b)(c)." : ""}`}
+${isElementary ? `- FOR CLASS ${gradeNum}: Use simple, vivid, concrete analogies. Explain the full physical reason in 6-8 spoken sentences. A quiz at the end is optional, not required.`
+: `- FOR CLASS ${gradeNum}: Explain physical models with cause and effect in 6-8 spoken sentences.${gradeNum <= 8 ? " If you include choices, put them in JSON only, never speak (a)(b)(c)." : ""}`}
 
 HUMAN TEACHER EMPATHY:
 - If they asked a question, teach it now. Do not check if they understand a lesson that has not started.
@@ -157,10 +159,10 @@ HUMAN TEACHER EMPATHY:
 
 ${this._turnDirective(understanding, decision, Boolean(state?.conversationState?.askedBackLast), { lastCheck, move, boardMath, isElementary, gradeNum, switched, previousConcept })}
 
-Return JSON only: {"spoken":"explanation then one question?","choices":["...","...","..."]}`;
+Return JSON only: {"spoken":"plain teaching","choices":["optional","optional"]}`;
 
     const mathBlock = factsText(boardMath);
-    const userBlock = `${retrievalContext ? `REFERENCE NOTES (facts you may borrow; never the topic itself)\n${retrievalContext}\n\n` : ""}${switched ? `The child just switched topics. Older turns were about "${previousConcept}". Answer only the new question.\n\n` : ""}Recent conversation:
+    const userBlock = `${retrievalContext ? `REFERENCE NOTES (facts you may borrow; never the topic itself)\n${retrievalContext}\n\n` : ""}${switched ? `The child just switched topics. Older turns were about "${previousConcept}". Answer only the new question.\n\n` : ""}Recent conversation (stay on this thread unless they clearly asked something new):
 ${this._history(history, state.currentConcept || understanding?.concept) || "(first turn on this topic)"}
 
 Child just said: "${understanding?.raw || ""}"
@@ -184,10 +186,9 @@ TEACH NOW: ${state.currentConcept || understanding?.concept || "what they just a
 
   _history(history, currentTopic) {
     if (!Array.isArray(history) || !history.length) return "";
-    return history
-      .slice(-6)
-      .map((t) => `${t.role === "child" || t.role === "student" ? "Child" : "Lumi6"}: ${t.text || t.content || ""}`)
-      .join("\n");
+    const topic = String(currentTopic || "").trim();
+    const lines = history.slice(-12).map((t) => `${t.role === "child" || t.role === "student" ? "Child" : "Lumi6"}: ${t.text || t.content || ""}`);
+    return `${topic ? `Thread topic: ${topic}\n` : ""}${lines.join("\n")}`;
   }
 
   _learnerBrief(child) {
@@ -242,6 +243,9 @@ Answer THIS question in 6-8 clear sentences, then one new thinking question abou
       }
       return `DIRECTIVE: The child noted you went off topic. Apologize warmly in one short line and ask what question they want to explore today.`;
     }
+    if (understanding.intent === "examples") {
+      return `DIRECTIVE: Stay on "${understanding.concept || "the idea you just taught"}". Give two short everyday examples of THAT same idea. Do not start a new topic. Do not quiz.`;
+    }
     if (understanding.intent === "continue" || /^(please )?(continue|keep going|go on|resume|carry on)/i.test(understanding.raw || "")) {
       return `DIRECTIVE: The child asked to CONTINUE where you left off. KEEP teaching the current science concept (${topic || "what you were explaining"}) step-by-step from first principles! Move the physical mechanism forward. NEVER define the word "continue" or discuss pausing. Teach the next step of the science smoothly and vividly!`;
     }
@@ -250,7 +254,7 @@ Answer THIS question in 6-8 clear sentences, then one new thinking question abou
 1. Warmly empathize like a patient, caring human teacher ("No problem at all! Let's picture it in a super simple way...").
 2. Clarify the exact confusion using a fresh, vivid, everyday metaphor suited for Class ${extras.gradeNum || 4}. NEVER repeat previous sentences, definitions, or phrasing!
 3. Keep it crystal clear in 4-6 short, friendly sentences.
-4. End with a gentle check-in ("Does that picture make sense?").`;
+4. Do not quiz. They can tap Listen, Simplify this, or Give me examples if they want more.`;
     }
     const calledOutRepeat = /\b(as i (already )?(mentioned|said)|i already said|you already asked|you just asked|i already told you|already told you)\b/i.test(understanding.raw || "");
     if (calledOutRepeat || understanding.pushback) {
@@ -271,7 +275,7 @@ Answer THIS question in 6-8 clear sentences, then one new thinking question abou
       return `DIRECTIVE: They asked you to ANSWER now, simply. Give the reason in 5-6 kid sentences suited for Class ${extras.gradeNum || 4}. Do not ask them a question first. Do not say not yet.${topic}`;
     }
     if (understanding.wantsExplain || understanding.intent === "explain" || understanding.intent === "question" || understanding.wantsReason || move === "go_deeper") {
-      return `DIRECTIVE: Teach "${understanding.concept || "what they just asked"}" step-by-step from first principles for Class ${extras.gradeNum || 4} (${extras.isElementary ? "Elementary: 6-8 sentences with vivid everyday analogies; explain the FULL intuitive mechanism in simple words; end with one short thinking question" : "Middle/High School: full cause-and-effect physical laws and forces in 6-8 sentences"}). No dry labels, no vocabulary quizzes, no shallow 1-sentence shortcuts.`;
+      return `DIRECTIVE: Teach "${understanding.concept || "what they just asked"}" step-by-step from first principles for Class ${extras.gradeNum || 4} (${extras.isElementary ? "Elementary: 6-8 sentences with vivid everyday analogies; explain the FULL intuitive mechanism in simple words" : "Middle/High School: full cause-and-effect physical laws and forces in 6-8 sentences"}). No dry labels, no vocabulary quizzes, no shallow 1-sentence shortcuts. A follow-up question is optional.`;
     }
     if (understanding.intent === "meta") {
       return "DIRECTIVE: Tell them what you can help with. Invite one real thing. Do not challenge a claim they have not made.";

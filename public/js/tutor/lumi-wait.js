@@ -1,11 +1,11 @@
 (function () {
   const COPY = {
     think: {
-      title: "Lumi6 is gathering the pieces",
-      line: "Looking it up, then we will walk through it together."
+      title: "Looking this up",
+      line: "Then we will walk through it together."
     },
     visual: {
-      title: "Lumi6 is putting the picture together",
+      title: "Putting the picture together",
       line: "The idea is coming into focus."
     }
   };

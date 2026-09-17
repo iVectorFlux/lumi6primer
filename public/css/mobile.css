@@ -331,11 +331,25 @@ button,
   }
 
   .talk-feed {
-    gap: 16px;
+    gap: 20px;
+  }
+
+  .talk-empty-title {
+    font-size: 1.22rem;
+  }
+
+  .talk-empty-hint {
+    font-size: 0.95rem;
+    margin-bottom: 14px;
+  }
+
+  .talk-starter {
+    font-size: 13.5px;
+    padding: 9px 12px;
   }
 
   .talk-turn-card {
-    gap: 12px;
+    gap: 18px;
   }
 
   .talk-child-prompt {
@@ -355,7 +369,11 @@ button,
   .talk-lumi6-box {
     padding: 16px 14px;
     border-radius: 18px;
-    gap: 14px;
+    gap: 16px;
+  }
+
+  .talk-lumi6-box.has-visual {
+    gap: 22px;
   }
 
   .talk-lumi6-header {
@@ -398,8 +416,8 @@ button,
   }
 
   .talk-explanation-body {
-    font-size: 17px;
-    line-height: 1.62;
+    font-size: 16.5px;
+    line-height: 1.65;
   }
 
   .talk-lesson-image {
@@ -533,25 +551,13 @@ button,
     padding: 6px 10px;
   }
 
-  .talk-question-capsule {
-    padding: 12px 14px;
-    gap: 10px;
-    border-radius: 14px;
-  }
-
-  .talk-question-icon {
-    width: 26px;
-    height: 26px;
-    border-radius: 8px;
-    font-size: 14px;
-  }
-
-  .talk-question-tag {
-    font-size: 10.5px;
-  }
-
-  .talk-question-text {
+  .talk-follow-question {
     font-size: 15px;
+  }
+
+  .talk-nudge {
+    font-size: 13px;
+    padding: 7px 11px;
   }
 
   .talk-image-wrapper {
@@ -591,11 +597,16 @@ button,
   }
 
   .talk-input-form {
-    padding: 3px 4px 3px 12px;
+    min-height: 44px;
+    padding: 4px 4px 4px 14px;
+    align-items: center;
   }
 
   .talk-input-field {
     font-size: 16px; /* prevent iOS zoom */
+    line-height: 22px;
+    height: 22px;
+    padding: 0;
   }
 
   .talk-send-action-btn {

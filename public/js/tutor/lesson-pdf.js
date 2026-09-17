@@ -120,7 +120,7 @@
           .map((p) => p.textContent.trim())
           .filter(Boolean)
           .join(" ");
-        const question = card.querySelector(".talk-question-text")?.textContent?.trim();
+        const question = card.querySelector(".talk-follow-question")?.textContent?.trim();
         const img = card.querySelector(".talk-lesson-image")?.getAttribute("src") || "";
 
         const teacherText = [explanation, question ? `Think About It: ${question}` : ""].filter(Boolean).join("\n\n");

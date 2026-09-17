@@ -159,6 +159,7 @@
       if (this.isListening) {
         try { this.recognition.abort(); } catch {}
         this.isListening = false;
+        return false;
       }
       if (!keepBuffer) {
         this._finalParts = [];
@@ -171,6 +172,7 @@
         this.isListening = true;
         return true;
       } catch (err) {
+        this.isListening = false;
         return false;
       }
     }
@@ -751,6 +753,7 @@
       this._awaitingListen = false;
       this._didWelcome = false;
       try { this._didWelcome = sessionStorage.getItem("lumi6-voice-welcomed") === "1"; } catch {}
+      this._autoSpokeLesson = false;
       this._lastOpening = "";
       this._openingListen = false;
       this._welcomeWatch = null;
@@ -851,9 +854,19 @@
     toggleTapToTalk() {
       if (!this.isTalkModeActive()) {
         if (typeof window.setAppViewMode === "function") window.setAppViewMode("talk");
+        window.setTimeout(() => {
+          if (this.isTalkModeActive()) this.toggleTapToTalk();
+        }, 40);
         return;
       }
-      if (this.state === "PROCESSING" || this.state === "SPEAKING") return;
+      if (this.state === "SPEAKING") {
+        this.turnOff();
+        window.setTimeout(() => {
+          if (this.isTalkModeActive() && this.state === "IDLE") this.startPushToTalk();
+        }, 80);
+        return;
+      }
+      if (this.state === "PROCESSING") return;
       if (this.state === "LISTENING" && this.isActive) {
         this.endPushToTalk();
         return;
@@ -885,7 +898,14 @@
       this.state = "LISTENING";
       this.showOverlay("listening", "Listening... speak now");
       this._syncVoiceButtonUI("listening");
-      if (this.stt) this.stt.start({ keepBuffer: false });
+      const tryStart = (attempt) => {
+        if (!this.isTalkModeActive() || this.state !== "LISTENING" || !this.isActive) return;
+        const started = this.stt ? this.stt.start({ keepBuffer: false }) : false;
+        if (!started && attempt < 4) {
+          window.setTimeout(() => tryStart(attempt + 1), 90 * (attempt + 1));
+        }
+      };
+      tryStart(0);
     }
 
     endPushToTalk() {
@@ -1116,6 +1136,7 @@
       this.pendingHeard = "";
       this._lastOpening = "";
       this._didWelcome = false;
+      this._autoSpokeLesson = false;
       const talkInput = document.getElementById("talkModeTextInput");
       if (talkInput) talkInput.value = "";
       if (this.stt) {
@@ -1498,6 +1519,19 @@
       return unique.join(" ");
     }
 
+    shouldAutoSpeak({ fromVoice = false } = {}) {
+      if (fromVoice) return true;
+      return !this._autoSpokeLesson;
+    }
+
+    speakCurrentLesson(text) {
+      if (!this.isTalkModeActive()) return;
+      const speechText = this.cleanTextForSpeech(text);
+      if (!speechText || !this.tts) return;
+      this.tts.cancel();
+      this.speakLesson({ spokenResponse: speechText });
+    }
+
     /**
      * Speak a Talk Mode reply even when the mic is not held.
      */
@@ -1506,12 +1540,18 @@
       const teacherText = data?.spokenResponse || data?.teacherResponse || data?.spoken;
       const speechText = this.cleanTextForSpeech(teacherText);
       if (!speechText || !this.tts) return;
+      this._autoSpokeLesson = true;
+      this.lastSpoken = speechText;
       if (typeof this.tts.unlockPlayback === "function") this.tts.unlockPlayback();
+      this.state = "SPEAKING";
+      this._syncVoiceButtonUI("speaking");
       this.showOverlay("speaking", "Speaking...");
       this.tts.speak(
         speechText,
         () => this.showOverlay("speaking", "Speaking..."),
         () => {
+          if (this.state === "SPEAKING") this.state = "IDLE";
+          this._syncVoiceButtonUI(null);
           if (!this.isActive) this.hideOverlay();
         }
       );
@@ -1532,6 +1572,7 @@
 
       const speechText = this.cleanTextForSpeech(teacherText);
       this.lastSpoken = speechText || teacherText || "";
+      this._autoSpokeLesson = true;
 
       if (typeof window.hideTalkWait === "function") window.hideTalkWait();
       if (window.primerChat && typeof window.primerChat.ingestTurn === "function") {

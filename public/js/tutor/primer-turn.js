@@ -452,6 +452,7 @@
           if (spokenAloud || !msg) return;
           if (!voice || typeof voice.speakLesson !== "function") return;
           if (voice.state === "SPEAKING") return;
+          if (typeof voice.shouldAutoSpeak === "function" && !voice.shouldAutoSpeak({ fromVoice: false })) return;
           spokenAloud = true;
           voice.speakLesson(msg);
         };

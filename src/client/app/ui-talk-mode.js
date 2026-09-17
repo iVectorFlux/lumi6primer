@@ -15,18 +15,55 @@
     const raw = String(text || "").trim();
     if (!raw) return "";
     const choice = parseChildChoice(raw);
-    if (choice) {
-      return `
-            <div class="talk-child-prompt">
-              <span class="talk-child-badge">You answered</span>
-              <p class="talk-child-text">${escapeHtml(choice)}</p>
-            </div>`;
-    }
     return `
             <div class="talk-child-prompt">
-              <span class="talk-child-badge">You asked</span>
-              <p class="talk-child-text">${escapeHtml(raw)}</p>
+              <p class="talk-child-text">${escapeHtml(choice || raw)}</p>
             </div>`;
+  }
+
+  const TALK_STARTERS = [
+    "Explain to me water cycle",
+    "Why is the sky blue",
+    "How do plants make food",
+    "Why do we have seasons"
+  ];
+
+  function talkStarterHtml() {
+    return `
+            <div class="talk-starter-row">
+              ${TALK_STARTERS.map((question) => `
+                <button type="button" class="talk-starter" data-talk-starter="${escapeHtml(question)}">${escapeHtml(question)}</button>
+              `).join("")}
+            </div>`;
+  }
+
+  function talkFollowHtml(question, choices, showNudges) {
+    const hasChoices = Array.isArray(choices) && choices.length;
+    if (!question && !hasChoices && !showNudges) return "";
+    return `
+          <div class="talk-follow">
+            ${question ? `<p class="talk-follow-question">${escapeHtml(question)}</p>` : ""}
+            ${hasChoices ? `
+              <div class="talk-choice-list" role="list">
+                ${choices.map((choice, i) => {
+                  const text = String(typeof choice === "string" ? choice : (choice.text || "")).trim();
+                  const letter = String((typeof choice === "object" && choice.letter) || String.fromCharCode(97 + i)).toUpperCase();
+                  if (!text) return "";
+                  return `
+                  <button type="button" class="talk-choice" role="listitem" data-choice-letter="${escapeHtml(letter)}" data-choice-text="${escapeHtml(text)}">
+                    ${escapeHtml(text)}
+                  </button>`;
+                }).join("")}
+              </div>
+            ` : ""}
+            ${showNudges ? `
+              <div class="talk-nudge-row">
+                <button type="button" class="talk-nudge" data-talk-nudge="listen">Listen</button>
+                <button type="button" class="talk-nudge" data-talk-nudge="simplify">Simplify this</button>
+                <button type="button" class="talk-nudge" data-talk-nudge="examples">Give me examples</button>
+              </div>
+            ` : ""}
+          </div>`;
   }
 
   function parseChildChoice(text) {
@@ -114,27 +151,22 @@
     if (!src) return "";
     return `
             <div class="talk-image-wrapper is-pending">
-              <img src="${escapeHtml(src)}" alt="" class="talk-lesson-image" loading="lazy">
-              <figcaption class="talk-image-caption">
-                <span class="talk-image-tag">Visual Model</span>
-                ${escapeHtml(titleText)}
-              </figcaption>
+              <img src="${escapeHtml(src)}" alt="${escapeHtml(titleText || "Lesson picture")}" class="talk-lesson-image">
             </div>`;
   }
 
   function talkVisualHtml(step, titleText, isLast) {
     const hasInteractive = Boolean(step.interactive && step.interactive.slug);
-    // A reference picture and a thing to play with answer different questions,
-    // so when we have both they share the row instead of pushing each other down.
-    if (hasInteractive && step.image) {
-      return `
-            <div class="talk-visual-pair">
-              ${talkImageHtml(step, titleText)}
-              ${talkInteractiveHtml(step, titleText)}
-            </div>`;
+    const image = step.image ? talkImageHtml(step, titleText) : "";
+    const interactive = hasInteractive ? talkInteractiveHtml(step, titleText) : "";
+    if (image && interactive) {
+      return `${image}${interactive}`;
     }
-    if (hasInteractive) return talkInteractiveHtml(step, titleText);
-    if (step.image) return talkImageHtml(step, titleText);
+    if (interactive) return interactive;
+    if (image) return image;
+    if (isLast && window.__primerGraphicLoading && typeof window.lumiWaitHtml === "function") {
+      return `<div class="talk-visual-pending">${window.lumiWaitHtml("visual")}</div>`;
+    }
     return "";
   }
 
@@ -310,26 +342,19 @@
     const firstAsk = turns.find((turn) => turn.role === "student" && String(turn.text || "").trim())?.text || "";
     if (typeof maybeNameBoardFromText === "function") maybeNameBoardFromText(firstAsk);
 
-    const titleText = formatCleanLessonTitle(state.lessonTitle || state.boardTitle || firstAsk || document.querySelector("#currentDocName")?.textContent) || "Science Discovery";
+    const titleText = formatCleanLessonTitle(state.lessonTitle || state.boardTitle || document.querySelector("#currentDocName")?.textContent);
     const hasLesson = turns.some((turn) => turn.role === "teacher" && (String(turn.text || "").trim() || turn.image || turn.interactive));
     if (hasLesson && typeof window.hideTalkWait === "function") window.hideTalkWait();
 
-    const LUMI6_AVATAR_HTML = `<div class="talk-lumi6-avatar" aria-label="Lumi6"><svg viewBox="0 0 24 24" width="22" height="22" fill="none"><circle cx="12" cy="12" r="10" fill="url(#lumiAvatarGrad)"/><path d="M12 6L13.8 10.2L18 12L13.8 13.8L12 18L10.2 13.8L6 12L10.2 10.2L12 6Z" fill="#ffffff"/><circle cx="12" cy="12" r="2.2" fill="#6d28d9"/><defs><linearGradient id="lumiAvatarGrad" x1="2" y1="2" x2="22" y2="22" gradientUnits="userSpaceOnUse"><stop stop-color="#8b5cf6"/><stop offset="1" stop-color="#6d28d9"/></linearGradient></defs></svg></div>`;
-
     if (!turns.length) {
       feed.innerHTML = `
-        <article class="talk-turn-card">
-          <div class="talk-lumi6-box">
-            <div class="talk-lumi6-header">
-              ${LUMI6_AVATAR_HTML}
-              <span class="talk-lumi6-name">Lumi6</span>
-            </div>
-            <div class="talk-explanation-body">
-              <p>Tap the mic to talk, or type a question and send. What would you like to explore?</p>
-            </div>
-          </div>
-        </article>
+        <div class="talk-empty">
+          <p class="talk-empty-title">Ask anything you want to understand.</p>
+          <p class="talk-empty-hint">Tap the mic, type a question, or try one of these.</p>
+          ${talkStarterHtml()}
+        </div>
       `;
+      bindTalkStarters(feed);
       return;
     }
 
@@ -369,22 +394,24 @@
       const choices = (step.choices && step.choices.length) ? step.choices : parsed.choices;
 
       if (!deeperExpl && !question && !(step.interactive || step.image)) {
-        return `
+        if (idx === pairs.length - 1 && window.__primerWaiting) {
+          return `
         <article class="talk-turn-card">
-          ${step.asked ? childPromptHtml(step.asked) : ""}
-        </article>
-        `;
+          <p class="talk-wait-hint">Looking this up…</p>
+        </article>`;
+        }
+        return "";
       }
+
+      const showNudges = idx === pairs.length - 1 && Boolean(deeperExpl || step.interactive || step.image);
 
       return `
       <article class="talk-turn-card">
-        ${step.asked ? childPromptHtml(step.asked) : ""}
         <div class="talk-lumi6-box${(step.interactive || step.image || (idx === pairs.length - 1 && window.__primerGraphicLoading)) ? " has-visual" : ""}">
+          ${titleText ? `
           <div class="talk-lumi6-header">
-            ${LUMI6_AVATAR_HTML}
-            <span class="talk-lumi6-name">Lumi6</span>
             <span class="talk-topic-pill">${escapeHtml(titleText)}</span>
-          </div>
+          </div>` : ""}
 
           ${deeperExpl ? `
             <div class="talk-explanation-body">
@@ -394,25 +421,7 @@
 
           ${talkVisualHtml(step, titleText, idx === pairs.length - 1)}
 
-          ${question || (choices && choices.length) ? `
-            <div class="talk-question-capsule">
-              <div class="talk-question-icon">🤔</div>
-              <div class="talk-question-content">
-                <span class="talk-question-tag">Your Turn</span>
-                ${question ? `<p class="talk-question-text">${escapeHtml(question)}</p>` : ""}
-                ${choices && choices.length ? `
-                  <div class="talk-choice-list" role="list">
-                    ${choices.map((choice) => `
-                      <button type="button" class="talk-choice" role="listitem" data-choice-letter="${escapeHtml((choice.letter || "").toUpperCase())}" data-choice-text="${escapeHtml(choice.text)}">
-                        <span class="talk-choice-letter">${escapeHtml((choice.letter || "").toUpperCase())}</span>
-                        <span class="talk-choice-text">${escapeHtml(choice.text)}</span>
-                      </button>
-                    `).join("")}
-                  </div>
-                ` : ""}
-              </div>
-            </div>
-          ` : ""}
+          ${talkFollowHtml(question, choices, showNudges)}
         </div>
       </article>
       `;
@@ -424,6 +433,7 @@
     });
 
     bindTalkChoices(feed);
+    bindTalkNudges(feed);
     bindTalkPlayground(feed);
     bindTalkImages(feed);
     if (playgroundOpen && talkPlaygroundSlug) {
@@ -463,7 +473,7 @@
     if (!last) return;
     const list = last.querySelector(".talk-choice-list");
     if (!list) return;
-    const question = last.querySelector(".talk-question-text")?.textContent?.trim() || "";
+    const question = last.querySelector(".talk-follow-question")?.textContent?.trim() || "";
     list.querySelectorAll(".talk-choice").forEach((btn) => {
       btn.addEventListener("click", () => sendTalkChoice(btn, question, list));
     });
@@ -477,13 +487,47 @@
         wrap.classList.remove("is-pending");
         wrap.classList.add("is-ready");
       };
-      const hide = () => wrap.remove();
       img.addEventListener("load", show);
-      img.addEventListener("error", hide);
-      if (img.complete) {
-        if (img.naturalWidth > 0) show();
-        else hide();
-      }
+      img.addEventListener("error", show);
+      if (img.complete) show();
+    });
+  }
+
+  function currentThreadHint() {
+    const title = formatCleanLessonTitle(state.lessonTitle || state.boardTitle || document.querySelector("#currentDocName")?.textContent);
+    return title ? `Stay on ${title}.` : "Stay on this same idea.";
+  }
+
+  function bindTalkStarters(feed) {
+    feed.querySelectorAll("[data-talk-starter]").forEach((btn) => {
+      btn.addEventListener("click", () => {
+        const text = String(btn.getAttribute("data-talk-starter") || btn.textContent || "").trim();
+        if (!text || !window.primerChat || typeof window.primerChat.sendMessage !== "function") return;
+        window.primerChat.sendMessage(text);
+      });
+    });
+  }
+
+  function bindTalkNudges(feed) {
+    const last = feed.querySelector(".talk-turn-card:last-of-type");
+    last?.querySelectorAll("[data-talk-nudge]").forEach((btn) => {
+      btn.addEventListener("click", () => {
+        const kind = btn.getAttribute("data-talk-nudge");
+        if (kind === "listen") {
+          const text = last.querySelector(".talk-explanation-body")?.innerText?.trim() || "";
+          if (window.primerVoice && typeof window.primerVoice.speakCurrentLesson === "function") {
+            window.primerVoice.speakCurrentLesson(text);
+          }
+          return;
+        }
+        const hint = currentThreadHint();
+        const payload = kind === "simplify"
+          ? `${hint} Explain it more simply, with a new everyday picture.`
+          : `${hint} Give me two everyday examples of this.`;
+        if (window.primerChat && typeof window.primerChat.sendMessage === "function") {
+          window.primerChat.sendMessage(payload);
+        }
+      });
     });
   }
 
@@ -858,6 +902,7 @@
 
   window.addEventListener("resize", () => {
     if (document.body.classList.contains("talk-playground-desktop-view")) scaleDesktopPlayground();
+    growTalkComposer();
   });
 
   window.syncTalkModeFeed = (options) => syncTalkModeFeed(options);
@@ -896,8 +941,24 @@
   function growTalkComposer() {
     const input = document.getElementById("talkModeTextInput");
     if (!input) return;
+    syncTalkPlaceholder();
+    if (!String(input.value || "").trim()) {
+      input.style.height = "";
+      input.classList.remove("is-multiline");
+      return;
+    }
     input.style.height = "auto";
-    input.style.height = `${Math.min(Math.max(input.scrollHeight, 24), 160)}px`;
+    const next = Math.min(Math.max(input.scrollHeight, 22), 160);
+    input.style.height = `${next}px`;
+    input.classList.toggle("is-multiline", next > 32);
+  }
+
+  function syncTalkPlaceholder() {
+    const input = document.getElementById("talkModeTextInput");
+    if (!input) return;
+    input.placeholder = window.matchMedia("(max-width: 900px)").matches
+      ? "Ask a question…"
+      : "Ask a question or share a thought…";
   }
 
   function syncComposerSpeech() {
@@ -929,6 +990,7 @@
   });
 
   const talkComposer = document.querySelector("#talkModeTextInput");
+  growTalkComposer();
   talkComposer?.addEventListener("input", syncComposerSpeech);
   talkComposer?.addEventListener("keydown", (e) => {
     if (e.key === "Enter" && !e.shiftKey) {

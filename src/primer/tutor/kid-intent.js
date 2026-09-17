@@ -10,6 +10,15 @@ const EXPLICIT_SWITCH = /\b(now teach|teach me|i want to learn|explain|instead|w
 const CURIOUS_PIVOT = /\b(what about|how about|another question|one more thing|also (why|how|what|can|do|is)|ok(ay)? but|wait,? (what|why|how|can)|now (tell|teach|what|why|how)|i was wondering)\b/i;
 const CHOICE_REPLY = /^(you asked\s*:|i choose\b|i pick\b|my answer is\b|option\s*[a-c]\b|\(?\s*[a-c]\s*\)\s+\S)/i;
 const ANSWER_LEAD = /^(because|since|maybe|i think|i guess|the answer|it'?s because)\b/i;
+const STAY_THREAD = /^(simplify( this| that| it)?|give me (an |some |a few |two |2 )?examples?|an example|more examples?|listen( to (this|that|it))?|say (that|it|this) again|repeat that|in simple words|make it simpler)[\s.!?]*$/i;
+
+function isStayOnThread(text) {
+  const raw = String(text || "").trim();
+  if (!raw) return false;
+  if (STAY_THREAD.test(raw)) return true;
+  return /\b(simplify( this| that| it)?|more simply|in simple words|make it simpler|too (hard|complicated)|break it down|(give|show|tell) me (an |some |a few |two |2 )?examples?|everyday examples?)\b/i.test(raw)
+    && !/\b(instead|what about|how about|another question|teach me about|i want to learn)\b/i.test(raw);
+}
 
 function isChoiceReply(text) {
   return CHOICE_REPLY.test(String(text || "").trim());
@@ -19,6 +28,7 @@ function isNewAsk(text, understanding = {}) {
   const raw = String(text || understanding.raw || "").trim();
   if (!raw) return false;
   if (isChoiceReply(raw)) return false;
+  if (isStayOnThread(raw)) return false;
   if (understanding.justAnswer) return true;
   if (understanding.askingNewTopic) return true;
   const intent = understanding.intent;
@@ -45,9 +55,10 @@ function looksLikeQuizAnswer(text) {
 function shouldGrade({ text, askedBackLast, understanding } = {}) {
   if (isChoiceReply(text)) return true;
   if (!askedBackLast) return false;
+  if (isStayOnThread(text) || understanding?.intent === "examples") return false;
   if (isNewAsk(text, understanding)) return false;
   const intent = understanding?.intent;
-  if (["question", "explain", "homework", "fact", "goal", "meta", "voice", "drawing"].includes(intent)) {
+  if (["question", "explain", "homework", "fact", "goal", "meta", "voice", "drawing", "examples", "dont_understand", "continue"].includes(intent)) {
     return false;
   }
   if (understanding?.pictureComment || understanding?.wantsDraw) return false;
@@ -65,6 +76,7 @@ module.exports = {
   shouldGrade,
   explicitTopicSwitch,
   isChoiceReply,
+  isStayOnThread,
   ANSWER_LEAD,
   CURIOUS_PIVOT
 };
