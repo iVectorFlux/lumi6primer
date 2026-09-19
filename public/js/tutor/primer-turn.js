@@ -154,9 +154,10 @@
   }
 
   function applyPrimerGraphic(msg) {
-    const commands = (msg?.visualPlan && Array.isArray(msg.visualPlan.commands) && msg.visualPlan.commands.length)
+    const rawCommands = (msg?.visualPlan && Array.isArray(msg.visualPlan.commands) && msg.visualPlan.commands.length)
       ? msg.visualPlan.commands
       : (Array.isArray(msg?.canvasActions) ? msg.canvasActions : (msg?.tool ? [msg] : []));
+    const commands = rawCommands.filter((cmd) => cmd && cmd.tool !== "place_photo" && cmd.tool !== "svg_picture");
     if (!commands.length) return false;
     const interactive = commands.find((cmd) => cmd && cmd.tool === "lesson_interactive" && cmd.slug);
     if (interactive) {
@@ -180,15 +181,7 @@
         lastTeacher.dataset.interactiveTitle = interactive.title || "";
       }
     }
-    const photo = commands.find((cmd) => cmd && (cmd.tool === "place_photo" || cmd.tool === "svg_picture") && (cmd.href || cmd.svg));
-    const imgSrc = photo?.href || (photo?.svg ? `data:image/svg+xml;utf8,${encodeURIComponent(photo.svg)}` : "");
-    if (imgSrc) {
-      if (typeof window.Lumi6Lesson?.attachImage === "function") {
-        window.Lumi6Lesson.attachImage(imgSrc);
-      }
-      const lastTeacher = document.querySelector("#primerMessages .primer-msg.teacher:last-of-type");
-      if (lastTeacher) lastTeacher.dataset.image = imgSrc;
-    }
+    const photo = null;
     if (typeof window.syncTalkModeFeed === "function") {
       window.syncTalkModeFeed();
     }

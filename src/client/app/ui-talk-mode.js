@@ -185,18 +185,9 @@
             </div>`;
   }
 
-  function talkVisualHtml(step, titleText, isLast) {
+  function talkVisualHtml(step, titleText) {
     const hasInteractive = Boolean(step.interactive && step.interactive.slug);
-    const image = step.image ? talkImageHtml(step, titleText) : "";
-    const interactive = hasInteractive ? talkInteractiveHtml(step, titleText) : "";
-    if (image && interactive) {
-      return `${image}${interactive}`;
-    }
-    if (interactive) return interactive;
-    if (image) return image;
-    if (isLast && window.__primerGraphicLoading) {
-      return `<div class="talk-visual-pending talk-visual-pending-quiet"><p class="talk-wait-hint">Finding a picture…</p></div>`;
-    }
+    if (hasInteractive) return talkInteractiveHtml(step, titleText);
     return "";
   }
 
@@ -499,7 +490,7 @@
       return `
       <article class="talk-turn-card">
         ${step.asked ? childPromptHtml(step.asked) : ""}
-        <div class="talk-lumi6-box${(step.interactive || step.image || (idx === pairs.length - 1 && window.__primerGraphicLoading)) ? " has-visual" : ""}">
+        <div class="talk-lumi6-box${step.interactive ? " has-visual" : ""}">
           ${titleText ? `
           <div class="talk-lumi6-header">
             <span class="talk-topic-pill">${escapeHtml(titleText)}</span>
@@ -511,7 +502,7 @@
             </div>
           ` : ""}
 
-          ${talkVisualHtml(step, titleText, idx === pairs.length - 1)}
+          ${talkVisualHtml(step, titleText)}
 
           ${talkFollowHtml(question, choices)}
         </div>
@@ -602,6 +593,9 @@
     list.classList.add("is-locked");
     btn.classList.add("is-selected");
     const payload = `I choose (${letter}) ${choice.replace(/[,;:\s]+or\.?$/i, "").trim()}.`;
+    if (window.primerVoice && typeof window.primerVoice.beginThinking === "function") {
+      window.primerVoice.beginThinking();
+    }
     if (window.primerChat && typeof window.primerChat.sendMessage === "function") {
       window.primerChat.sendMessage(payload);
     }

@@ -478,33 +478,10 @@ class LearningOrchestrator {
       console.log("[PRIMER] Interactive already showing:", interactiveHit.slug);
     } else if (interactiveHit?.slug) {
         const widget = lessonInteractive.commandFor(interactiveHit);
-        // Wikipedia/Commons only. A companion picture is worth a second slot on the
-        // board when it is free; it is not worth paying an image model for.
-        const companion = await lessonGraphic.generate({
-          topic: graphicTitle || interactiveHit.title || spokenText,
-          scene: graphicPlan.scene || interactiveHit.title,
-          previousScene: lastScene,
-          spoken,
-          question: spokenText,
-          age: child?.age_years,
-          grade: child?.grade,
-          kind: graphicPlan.kind || "overview",
-          freeOnly: true,
-          timeoutMs: 14000
-        }).catch((err) => {
-          console.warn("[PRIMER] Companion image failed:", err.message);
-          return null;
-        });
         const pair = [];
-        if (companion?.href) {
-          companion.keepOthers = true;
-          companion.archivePrevious = true;
-          companion.pairWith = widget.slug;
-          pair.push(companion);
-        }
         widget.keepOthers = true;
-        widget.archivePrevious = !companion?.href;
-        widget.pairWith = companion?.href ? widget.slug : "";
+        widget.archivePrevious = true;
+        widget.pairWith = "";
         widget.openInPlayground = true;
         pair.push(widget);
         commands.push(...pair);
@@ -518,69 +495,11 @@ class LearningOrchestrator {
           visualPlan: { shouldDraw: true, commands: pair }
         });
         sentInteractive = true;
-        console.log("[PRIMER] Interactive matched:", interactiveHit.slug, companion?.href ? "(paired with image)" : "(no free image)");
+        console.log("[PRIMER] Interactive matched:", interactiveHit.slug, "(pictures paused)");
     }
 
     if (!sentInteractive) {
-      if (!graphicPlan.generate) {
-        console.log("[PRIMER] Graphic not requested:", graphicPlan.reason || graphicPlan.kind);
-      } else if (!lessonGraphic.isConfigured()) {
-        console.warn("[PRIMER] Graphic skipped: no image provider configured");
-      } else {
-        const iconSource = `${spokenText} ${graphicTitle}`;
-        this._emitStream(input, {
-          event: "graphic_loading",
-          title: "",
-          icon: topicIcon.pickIcon(iconSource, spoken),
-          iconMarkup: topicIcon.iconMarkup(iconSource, spoken)
-        });
-        const photo = await lessonGraphic.generate({
-          topic: graphicTitle,
-          scene: graphicPlan.scene,
-          previousScene: lastScene,
-          spoken,
-          question: spokenText,
-          age: child?.age_years,
-          grade: child?.grade,
-          kind: graphicPlan.kind,
-          timeoutMs: 28000
-        }).catch((err) => {
-          console.warn("[PRIMER] Graphic generate failed:", err.message);
-          return null;
-        });
-        if (photo?.href) {
-          photo.keepOthers = true;
-          photo.archivePrevious = false;
-          commands.push(photo);
-          state.conversationState = state.conversationState || {};
-          state.conversationState.lastGraphicScene = graphicPlan.scene;
-          state.conversationState.lastGraphicKind = graphicPlan.kind;
-          this._emitStream(input, {
-            event: "graphic",
-            canvasActions: [photo],
-            visualPlan: { shouldDraw: true, commands: [photo] }
-          });
-        } else {
-          console.warn("[PRIMER] Graphic produced no image for", graphicTitle, "— trying sketch fallback");
-          const sketch = await this._proposePicture(understanding, state);
-          const sketchCommands = this.canvas.buildCommands({
-            picture: sketch?.picture,
-            spoken,
-            wantsDraw: true,
-            force: true,
-            concept: graphicTitle,
-            studentInput: spokenText
-          });
-          if (sketchCommands.length) {
-            commands.push(...sketchCommands);
-            this._emitStream(input, {
-              event: "graphic",
-              canvasActions: sketchCommands,
-              visualPlan: { shouldDraw: true, commands: sketchCommands }
-            });
-          }
-        }
-      }
+      console.log("[PRIMER] Talk pictures paused — no image API calls");
     }
 
     const writeCmd = this.canvas.buildWriteCommand(spokenText, state.conversationState?.lastTeacherSpoken);

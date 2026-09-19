@@ -132,7 +132,7 @@ class ResponsePolicy {
 
     if (grade <= 5) {
       if (topic) return `What do you think makes ${topic} work that way?`;
-      return "Does that picture make sense, or should we explore it from a different angle?";
+      return "Does that make sense, or should we look at it another way?";
     }
     if (grade <= 8) {
       if (topic) return `What would happen if the main force in ${topic} suddenly changed?`;
@@ -207,13 +207,13 @@ class ResponsePolicy {
     }
     if (understanding?.pushback || understanding?.wantsReason || understanding?.wantsExplain || decision?.action === "explain") {
       return topic
-        ? `Let's break down ${topic} step-by-step from first principles so you can see exactly how it works. Ready for the first picture?`
+        ? `Let's break down ${topic} step-by-step from first principles so you can see exactly how it works. Ready for the first step?`
         : "Yes! Tell me what you'd like to explore, and I will explain the complete mechanism simply.";
     }
     const phase = decision?.phase || "think";
     if (phase === "story") {
       return topic
-        ? `Let's explore ${topic} together! Ready to picture how it starts?`
+        ? `Let's explore ${topic} together! Ready to see how it starts?`
         : "Hey! What would you like to discover today?";
     }
     if (phase === "learn") {
@@ -222,9 +222,9 @@ class ResponsePolicy {
         : "What would you like to learn about? Say it in a few words.";
     }
     if (phase === "think_again") return "Want to look at that from a fresh, new angle?";
-    if (phase === "become") return "You just saw that in a brand new way! What does the picture look like in your mind now?";
+    if (phase === "become") return "You just saw that in a brand new way! What do you understand now?";
     return topic
-      ? `Let's keep going with ${topic}. Does that mental picture make sense?`
+      ? `Let's keep going with ${topic}. Does that make sense so far?`
       : "I'm right here! What would you like to figure out together?";
   }
 

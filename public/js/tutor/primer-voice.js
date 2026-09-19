@@ -987,6 +987,7 @@
         clearTimeout(this.restartTimer);
         this.restartTimer = null;
       }
+      if (this.tts && typeof this.tts.cancel === "function") this.tts.cancel();
       this.isActive = false;
       this.state = "PROCESSING";
       this._pushToTalkTurn = false;
@@ -1471,10 +1472,6 @@
               graphicApplied = window.applyPrimerGraphic(msg) || graphicApplied;
             }
             if (this.state === "SPEAKING") this._syncVoiceButtonUI("speaking");
-            const imageUrl = msg?.url || msg?.href || (Array.isArray(msg?.canvasActions) && msg.canvasActions[0]?.href) || (Array.isArray(msg?.visualPlan?.commands) && msg.visualPlan.commands[0]?.href) || "";
-            if (imageUrl && window.Lumi6Lesson && typeof window.Lumi6Lesson.attachImage === "function") {
-              window.Lumi6Lesson.attachImage(imageUrl);
-            }
             if (typeof window.syncTalkModeFeed === "function") window.syncTalkModeFeed();
           },
           onAudio: (msg) => {
@@ -1616,7 +1613,8 @@
         speechText,
         () => this.showOverlay("speaking", "Speaking..."),
         () => {
-          if (this.state === "SPEAKING") this.state = "IDLE";
+          if (this.state !== "SPEAKING") return;
+          this.state = "IDLE";
           this._syncVoiceButtonUI(null);
           if (!this.isActive) this.hideOverlay();
         }
@@ -1658,6 +1656,7 @@
         : Promise.resolve();
 
       const finishTurn = () => {
+        if (this.state !== "SPEAKING") return;
         this._syncVoiceButtonUI(null);
         if (this._pushToTalkTurn) {
           this._pushToTalkTurn = false;
