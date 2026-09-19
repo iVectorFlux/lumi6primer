@@ -161,7 +161,8 @@ HUMAN TEACHER EMPATHY:
 
 ${this._turnDirective(understanding, decision, Boolean(state?.conversationState?.askedBackLast), { lastCheck, move, boardMath, isElementary, gradeNum, switched, previousConcept })}
 
-Return JSON only: {"spoken":"plain teaching","choices":["optional","optional"]}`;
+Return JSON only: {"spoken":"plain teaching"}
+If you have 2 or 3 real one-word answers, add "choices":["blue","rain"]. Never put the word optional in choices. Omit choices when the question is open.`;
 
     const mathBlock = factsText(boardMath);
     const userBlock = `${retrievalContext ? `REFERENCE NOTES (facts you may borrow; never the topic itself)\n${retrievalContext}\n\n` : ""}${switched ? `The child just switched topics. Older turns were about "${previousConcept}". Answer only the new question.\n\n` : ""}Recent conversation (stay on this thread unless they clearly asked something new):

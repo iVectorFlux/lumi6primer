@@ -12890,6 +12890,12 @@ User writes "Show air quality for Tokyo", names a place, and points to an empty 
             </div>`;
   }
 
+  function isRealChoiceLabel(text) {
+    const clean = String(text || "").replace(/\s+/g, " ").trim();
+    if (!clean || clean.length < 2 || clean.length > 40 || clean.includes("?")) return false;
+    return !/^(optional|option|options|choice|choices|n\/a|na|none|skip|placeholder|todo|tbd|[abc])$/i.test(clean);
+  }
+
   function talkFollowHtml(question, choices) {
     const shortChoices = (Array.isArray(choices) ? choices : [])
       .map((choice, i) => {
@@ -12897,12 +12903,13 @@ User writes "Show air quality for Tokyo", names a place, and points to an empty 
         const letter = String((typeof choice === "object" && choice.letter) || String.fromCharCode(97 + i)).toUpperCase();
         return { letter, text };
       })
-      .filter((choice) => choice.text && choice.text.length < 42 && !choice.text.includes("?"));
-    if (!question && !shortChoices.length) return "";
+      .filter((choice) => isRealChoiceLabel(choice.text));
+    if (!question && shortChoices.length < 2) return "";
+    const showChoices = shortChoices.length >= 2;
     return `
           <div class="talk-wonder">
             ${question ? `<p class="talk-follow-question">${escapeHtml(question)}</p>` : ""}
-            ${shortChoices.length ? `
+            ${showChoices ? `
               <div class="talk-choice-list" role="list">
                 ${shortChoices.map((choice) => `
                   <button type="button" class="talk-choice" role="listitem" data-choice-letter="${escapeHtml(choice.letter)}" data-choice-text="${escapeHtml(choice.text)}">
@@ -13076,10 +13083,10 @@ User writes "Show air quality for Tokyo", names a place, and points to an empty 
           .replace(/^[.,;:\s]+/, "")
           .replace(/[.;]+$/, "")
           .trim();
-        if (choice) choices.push({ letter: match[1].toLowerCase(), text: choice });
+        if (isRealChoiceLabel(choice)) choices.push({ letter: match[1].toLowerCase(), text: choice });
       }
-      if (choices.length >= 2) raw = raw.slice(0, blockStart).replace(/\s+/g, " ").trim();
-      else choices.length = 0;
+      raw = raw.slice(0, blockStart).replace(/\s+/g, " ").trim();
+      if (choices.length < 2) choices.length = 0;
     }
 
     const sentences = raw.split(/(?<=[.!?])\s+/).map((s) => s.trim()).filter(Boolean).filter((s) => !isDoubtCheck(s));

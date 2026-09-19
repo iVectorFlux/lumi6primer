@@ -131,8 +131,8 @@ class ResponsePolicy {
     if (understanding?.intent === "drawing") return "What did you want this diagram to show?";
 
     if (grade <= 5) {
-      if (topic) return `What do you think makes ${topic} work that way?`;
-      return "Does that make sense, or should we look at it another way?";
+      if (topic) return `If ${topic} suddenly stopped, what would change first?`;
+      return "What part of this do you want to look at next?";
     }
     if (grade <= 8) {
       if (topic) return `What would happen if the main force in ${topic} suddenly changed?`;

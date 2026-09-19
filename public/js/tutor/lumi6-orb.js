@@ -4,8 +4,10 @@
  */
 (function () {
   const STORAGE_KEY = "lumi6OrbTheme";
+  const FINISH_KEY = "lumi6OrbFinish";
   const PILL_SIZE = 56;
   const DEFAULT_THEME = "peach";
+  const DEFAULT_FINISH = "light";
   const IDLE = {
     speed: 1.0,
     zoom: 1.55,
@@ -48,6 +50,55 @@
     try { localStorage.setItem(STORAGE_KEY, key); } catch {}
   }
 
+  function readFinish() {
+    try {
+      const stored = String(localStorage.getItem(FINISH_KEY) || "").trim();
+      if (stored === "rich" || stored === "light") return stored;
+    } catch {}
+    return DEFAULT_FINISH;
+  }
+
+  function saveFinish(finish) {
+    try { localStorage.setItem(FINISH_KEY, finish); } catch {}
+  }
+
+  function mixColor(a, b, t) {
+    return [
+      a[0] + (b[0] - a[0]) * t,
+      a[1] + (b[1] - a[1]) * t,
+      a[2] + (b[2] - a[2]) * t
+    ];
+  }
+
+  function finishedPalette(palette, finish) {
+    if (!palette) return palette;
+    const rich = finish === "rich";
+    return {
+      name: palette.name,
+      subtitle: palette.subtitle,
+      glow: palette.glow,
+      c1: rich ? mixColor(palette.c1, palette.c3, 0.32) : mixColor(palette.c1, palette.c2, 0.28),
+      c2: rich ? mixColor(palette.c2, palette.c3, 0.28) : mixColor(palette.c2, palette.c3, 0.16),
+      c3: rich ? mixColor(palette.c3, palette.c4, 0.22) : palette.c3,
+      c4: rich ? mixColor(palette.c4, palette.c5, 0.16) : palette.c4,
+      c5: palette.c5
+    };
+  }
+
+  function currentPalette() {
+    const key = readTheme();
+    return finishedPalette(palettes()[key], readFinish()) || palettes()[key];
+  }
+
+  function paintOrbTheme(orb) {
+    if (!orb) return;
+    const key = readTheme();
+    const painted = currentPalette();
+    if (!painted) return;
+    orb.themeKey = key;
+    orb.setTheme(painted);
+  }
+
   function applyPreset(orb, stateName, shaderState) {
     if (!orb) return;
     const preset = STATE_PRESETS[stateName] || IDLE;
@@ -61,7 +112,7 @@
   function makeOrb(container, extra) {
     if (!container || typeof window.VoiceOrb !== "function") return null;
     container.innerHTML = "";
-    return new window.VoiceOrb(container, Object.assign({
+    const orb = new window.VoiceOrb(container, Object.assign({
       size: PILL_SIZE,
       theme: readTheme(),
       state: "idle",
@@ -73,6 +124,8 @@
       showShadow: false,
       interactive: false
     }, extra || {}));
+    paintOrbTheme(orb);
+    return orb;
   }
 
   function mountTalkOrb() {
@@ -132,17 +185,43 @@
     }
   }
 
+  function syncThemeButtons() {
+    const theme = readTheme();
+    const finish = readFinish();
+    document.querySelectorAll("[data-orb-theme]").forEach((btn) => {
+      btn.classList.toggle("is-selected", btn.getAttribute("data-orb-theme") === theme);
+    });
+    document.querySelectorAll("[data-orb-finish]").forEach((btn) => {
+      btn.classList.toggle("is-selected", btn.getAttribute("data-orb-finish") === finish);
+    });
+  }
+
+  function paintAllOrbs() {
+    paintOrbTheme(talkOrb);
+    paintOrbTheme(drawOrb);
+    paintOrbTheme(pickerOrb);
+    document.querySelectorAll("[data-orb-theme]").forEach((btn) => {
+      const key = btn.getAttribute("data-orb-theme");
+      const swatch = btn.querySelector(".orb-theme-swatch");
+      const painted = finishedPalette(palettes()[key], readFinish());
+      if (swatch && painted) swatch.style.background = swatchStyle(painted);
+    });
+    syncThemeButtons();
+  }
+
   function setTheme(key) {
     const themes = palettes();
     if (!themes[key]) return readTheme();
     saveTheme(key);
-    if (talkOrb) talkOrb.setTheme(key);
-    if (drawOrb) drawOrb.setTheme(key);
-    if (pickerOrb) pickerOrb.setTheme(key);
-    document.querySelectorAll("[data-orb-theme]").forEach((btn) => {
-      btn.classList.toggle("is-selected", btn.getAttribute("data-orb-theme") === key);
-    });
+    paintAllOrbs();
     return key;
+  }
+
+  function setFinish(finish) {
+    const next = finish === "rich" ? "rich" : "light";
+    saveFinish(next);
+    paintAllOrbs();
+    return next;
   }
 
   function rgb(c) {
@@ -161,23 +240,33 @@
     }
   }
 
-  function mountThemePicker(previewHost, listHost) {
+  function mountThemePicker(previewHost, listHost, finishHost) {
     destroyPicker();
     const themes = palettes();
     const current = readTheme();
+    const finish = readFinish();
     if (previewHost && typeof window.VoiceOrb === "function") {
       pickerOrb = makeOrb(previewHost, { showShadow: true, state: "idle" });
       applyPreset(pickerOrb, "idle");
+      paintOrbTheme(pickerOrb);
+    }
+    if (finishHost) {
+      finishHost.innerHTML = `
+        <button type="button" class="orb-finish-choice${finish === "light" ? " is-selected" : ""}" data-orb-finish="light">Light</button>
+        <button type="button" class="orb-finish-choice${finish === "rich" ? " is-selected" : ""}" data-orb-finish="rich">Rich</button>`;
+      finishHost.querySelectorAll("[data-orb-finish]").forEach((btn) => {
+        btn.addEventListener("click", () => setFinish(btn.getAttribute("data-orb-finish")));
+      });
     }
     if (!listHost) return;
     listHost.innerHTML = themeKeys().map((key) => {
-      const palette = themes[key];
+      const palette = finishedPalette(themes[key], finish);
       const selected = key === current ? " is-selected" : "";
       return `
         <button type="button" class="orb-theme-choice${selected}" data-orb-theme="${key}">
           <span class="orb-theme-swatch" style="background:${swatchStyle(palette)}" aria-hidden="true"></span>
           <span class="orb-theme-copy">
-            <span class="orb-theme-name">${palette.name || key}</span>
+            <span class="orb-theme-name">${themes[key].name || key}</span>
           </span>
         </button>`;
     }).join("");
@@ -238,6 +327,8 @@
     refreshDrawOrb,
     setTheme,
     getTheme: readTheme,
+    setFinish,
+    getFinish: readFinish,
     palettes,
     mountThemePicker,
     destroyPicker,

@@ -420,6 +420,10 @@
         this.elements.inputField.style.height = "auto";
         if (typeof window.growTalkComposer === "function") window.growTalkComposer();
       }
+      if (window.primerVoice) {
+        window.primerVoice._speechSeed = "";
+        window.primerVoice.pendingHeard = "";
+      }
 
       // Set loading state
       this.isSending = true;

@@ -333,8 +333,9 @@
         <button type="button" class="profile-close" data-profile="theme-back" aria-label="Back">&times;</button>
       </div>
       <h2 id="profileTitle">Choose theme</h2>
-      <p class="onboard-lead">Pick a color for the talk orb. Tap a name to try it.</p>
+      <p class="onboard-lead">Pick a color, then Light or Rich. Both keep the same orb motions.</p>
       <div class="orb-theme-preview" id="orbThemePreview"></div>
+      <div class="orb-theme-finish" id="orbThemeFinish" role="group" aria-label="Color look"></div>
       <div class="orb-theme-list" id="orbThemeList" role="listbox" aria-label="Orb themes"></div>
       <div class="onboard-actions">
         <button type="button" class="onboard-next" data-profile="theme-back">Back</button>
@@ -342,7 +343,8 @@
     if (window.Lumi6Orb) {
       window.Lumi6Orb.mountThemePicker(
         document.getElementById("orbThemePreview"),
-        document.getElementById("orbThemeList")
+        document.getElementById("orbThemeList"),
+        document.getElementById("orbThemeFinish")
       );
     }
   }

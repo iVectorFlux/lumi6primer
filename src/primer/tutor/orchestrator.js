@@ -10,7 +10,7 @@ const { understandLearner, historyFromTurns } = require("./understand.js");
 const { isWeakTopic, spokenCoversTopic, deniesTopic, topicsRelated, topicFromText } = require("../topic.js");
 const { shouldGrade, isNewAsk, explicitTopicSwitch } = require("./kid-intent.js");
 const { parseProposal, modelText, looksLikeJsonBlob } = require("./proposal.js");
-const { speechOnly, dedupeSpokenKeepChoices } = require("./spoken-parts.js");
+const { speechOnly, dedupeSpokenKeepChoices, isRealChoice } = require("./spoken-parts.js");
 const { lastQuestion, questionsMatch, preventRepeatQuestion } = require("./teaching-move.js");
 const { LearnerModel } = require("../learner/learner-model.js");
 const MemoryService = require("../learner/memory-service.js");
@@ -401,9 +401,11 @@ class LearningOrchestrator {
       understanding,
       child
     );
-    const extraChoices = Array.isArray(proposal?.choices) ? proposal.choices : decision?.choices;
-    if (Array.isArray(extraChoices) && extraChoices.length >= 2 && !/\(\s*a\s*\)/i.test(spoken)) {
-      spoken = `${spoken} ${extraChoices.map((choice, i) => `(${String.fromCharCode(97 + i)}) ${String(choice || "").trim()}`).filter((part) => /\).+\S/.test(part)).join(" ")}`.trim();
+    const extraChoices = (Array.isArray(proposal?.choices) ? proposal.choices : decision?.choices || [])
+      .map((choice) => String(choice || "").trim())
+      .filter((choice) => isRealChoice(choice));
+    if (extraChoices.length >= 2 && !/\(\s*a\s*\)/i.test(spoken)) {
+      spoken = `${spoken} ${extraChoices.map((choice, i) => `(${String.fromCharCode(97 + i)}) ${choice}`).join(" ")}`.trim();
     }
     spoken = dedupeSpokenKeepChoices(spoken);
     spoken = boardMath.ensureResult(spoken, mathFromTurn);
@@ -768,7 +770,7 @@ Explain the full physical intuition in 6-8 simple, vivid spoken sentences using 
 A follow-up question is optional. Do not quiz every time.
 Do not put (a)(b)(c) in spoken text.
 NEVER ask "what is this called", "what is your hypothesis", or dry vocabulary quizzes.
-Return JSON only: {"spoken":"plain teaching","choices":["optional"]}`;
+Return JSON only: {"spoken":"plain teaching"}`;
     const userText = `${systemPrompt}\n\nChild said: "${raw}"\nTeach: ${topic}`;
     if (groqTalk.isConfigured()) {
       try {

@@ -10,6 +10,14 @@ function cleanChoiceText(text) {
     .trim();
 }
 
+function isRealChoice(text) {
+  const clean = cleanChoiceText(text);
+  if (!clean || clean.length < 2 || clean.length > 40) return false;
+  if (/\?/.test(clean)) return false;
+  if (/^(optional|option|options|choice|choices|n\/a|na|none|skip|placeholder|todo|tbd|[abc])$/i.test(clean)) return false;
+  return true;
+}
+
 function extractSpokenParts(text) {
   let raw = String(text || "").replace(/\s+/g, " ").trim();
   const choices = [];
@@ -22,7 +30,7 @@ function extractSpokenParts(text) {
     let match;
     while ((match = re.exec(block))) {
       const choice = cleanChoiceText(match[2]);
-      if (choice) choices.push({ letter: match[1].toLowerCase(), text: choice });
+      if (isRealChoice(choice)) choices.push({ letter: match[1].toLowerCase(), text: choice });
     }
     if (choices.length >= 2) {
       raw = raw.slice(0, blockStart).replace(/\s+/g, " ").trim();
@@ -72,4 +80,4 @@ function dedupeSpokenKeepChoices(text) {
   return `${dedupeSentences(raw.slice(0, idx))} ${raw.slice(idx)}`.replace(/\s+/g, " ").trim();
 }
 
-module.exports = { extractSpokenParts, speechOnly, dedupeSentences, dedupeSpokenKeepChoices, cleanChoiceText };
+module.exports = { extractSpokenParts, speechOnly, dedupeSentences, dedupeSpokenKeepChoices, cleanChoiceText, isRealChoice };

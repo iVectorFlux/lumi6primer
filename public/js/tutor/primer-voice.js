@@ -541,7 +541,7 @@
         return;
       }
       if (!this._openerBlob) {
-        await this.waitOpenerAudio(1800);
+        await this.waitOpenerAudio(120);
       }
       let started = false;
       const cache = parts.map((part, i) => (
@@ -834,6 +834,7 @@
       this.bindMicTriggers(toggleBtn);
       const talkMic = document.getElementById("talkModeMicBtn");
       if (talkMic) this.bindMicTriggers(talkMic);
+      this.bindTalkBox();
 
       if (this.elements.stopBtn) {
         this.elements.stopBtn.onclick = (e) => {
@@ -892,6 +893,23 @@
       }
     }
 
+    bindTalkBox() {
+      const box = document.getElementById("talkModeTextInput");
+      if (!box || box._lumi6VoiceBound) return;
+      box._lumi6VoiceBound = true;
+      box.addEventListener("input", () => {
+        if (this._ignoreBoxInput) return;
+        const typed = String(box.value || "").trim();
+        this._speechSeed = typed;
+        this.pendingHeard = typed;
+        if (this.state === "LISTENING" && this.stt) {
+          this.stt._finalParts = [];
+          this.stt._interim = "";
+          this.stt.lastTranscript = "";
+        }
+      });
+    }
+
     startPushToTalk() {
       if (!this.isTalkModeActive()) return;
       this.paused = false;
@@ -902,6 +920,7 @@
       this.clearSpeechBuffer();
       const talkInput = document.getElementById("talkModeTextInput");
       this._speechSeed = String(talkInput?.value || "").trim();
+      this.pendingHeard = this._speechSeed;
       this.state = "LISTENING";
       this.showOverlay("listening", "Listening... speak now");
       this._syncVoiceButtonUI("listening");
@@ -928,20 +947,13 @@
         clearTimeout(this.restartTimer);
         this.restartTimer = null;
       }
-      const typed = String(document.getElementById("talkModeTextInput")?.value || "").trim();
-      const heard = String(typed || this.pendingHeard || this.stt?._fullText?.() || this.stt?.lastTranscript || "").trim();
+      const box = document.getElementById("talkModeTextInput");
+      const heard = String(box?.value || "").trim();
       this.isActive = false;
       this.state = "IDLE";
       this._pushToTalkTurn = false;
-      if (heard) {
-        const box = document.getElementById("talkModeTextInput");
-        if (box) {
-          box.value = heard;
-          if (typeof window.growTalkComposer === "function") window.growTalkComposer();
-        }
-        this.pendingHeard = heard;
-        this._speechSeed = heard;
-      }
+      this.pendingHeard = heard;
+      this._speechSeed = heard;
       if (this.stt) this.stt.stop();
       this._syncVoiceButtonUI(null);
       this.hideOverlay();
@@ -988,6 +1000,8 @@
         this.restartTimer = null;
       }
       if (this.tts && typeof this.tts.cancel === "function") this.tts.cancel();
+      this._speechSeed = "";
+      this.pendingHeard = "";
       this.isActive = false;
       this.state = "PROCESSING";
       this._pushToTalkTurn = false;
@@ -1093,6 +1107,7 @@
     }
 
     warmupMic() {
+      this.bindTalkBox();
       if (this.stt && !this.stt.recognition && typeof this.stt._bindEngine === "function") {
         this.stt._bindEngine();
       }
@@ -1262,7 +1277,7 @@
       this.tts.cancel();
 
       const talkInput = document.getElementById("talkModeTextInput");
-      this._speechSeed = String(talkInput?.value || this.pendingHeard || "").trim();
+      this._speechSeed = String(talkInput?.value || "").trim();
       this.pendingHeard = this._speechSeed;
       this.state = "LISTENING";
       const started = this.stt.start({ keepBuffer: false });
@@ -1334,7 +1349,9 @@
         this.showOverlay("student", queryText);
         const talkInput = document.getElementById("talkModeTextInput");
         if (talkInput) {
+          this._ignoreBoxInput = true;
           talkInput.value = queryText;
+          this._ignoreBoxInput = false;
           if (typeof window.growTalkComposer === "function") window.growTalkComposer();
         }
       }
@@ -1410,7 +1427,8 @@
       if (this.stt._committing) return;
       if (this.state === "LISTENING") {
         const talkInput = document.getElementById("talkModeTextInput");
-        this._speechSeed = String(talkInput?.value || this.pendingHeard || "").trim();
+        this._speechSeed = String(talkInput?.value || "").trim();
+        this.pendingHeard = this._speechSeed;
         this.scheduleAutoRestart(280);
       }
     }
@@ -1582,9 +1600,8 @@
       return unique.join(" ");
     }
 
-    shouldAutoSpeak({ fromVoice = false } = {}) {
-      if (fromVoice) return true;
-      return !this._autoSpokeLesson;
+    shouldAutoSpeak() {
+      return true;
     }
 
     speakCurrentLesson(text) {

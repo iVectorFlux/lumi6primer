@@ -215,7 +215,36 @@
   align-items: center;
   justify-content: center;
   min-height: 72px;
-  margin: 8px 0 16px;
+  margin: 8px 0 12px;
+}
+
+.orb-theme-finish {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  margin: 0 0 16px;
+}
+
+.orb-finish-choice {
+  min-height: 42px;
+  padding: 8px 12px;
+  border: 1px solid #ddd6fe;
+  border-radius: 14px;
+  background: #fff;
+  color: #4c1d95;
+  font: inherit;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.orb-finish-choice:hover,
+.orb-finish-choice.is-selected {
+  border-color: #7c3aed;
+  background: #f5f3ff;
+}
+
+.orb-finish-choice.is-selected {
+  box-shadow: 0 0 0 3px rgba(124, 58, 237, 0.16);
 }
 
 .orb-theme-preview .voice-orb-wrapper {
