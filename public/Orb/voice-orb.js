@@ -478,7 +478,11 @@
       this.smoothedZoom = this.options.zoom;
       this.time = 0.0;
       this.isRunning = true;
+      this.isPaused = false;
       this.isMicActive = false;
+      this._isPhone = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent)
+        || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
+      this._frameSkip = 0;
 
       // Audio Nodes
       this.audioContext = null;
@@ -656,7 +660,7 @@
     }
 
     _updateCanvasSize() {
-      const dpr = Math.min(window.devicePixelRatio || 1, 2.0);
+      const dpr = Math.min(window.devicePixelRatio || 1, this._isPhone ? 1.25 : 2.0);
       const rect = this.canvas.getBoundingClientRect();
       const w = Math.round((rect.width || this.options.size || 300) * dpr);
       const h = Math.round((rect.height || this.options.size || 300) * dpr);
@@ -794,9 +798,28 @@
       this.setAudioLevel(0.0);
     }
 
+    pause() {
+      this.isPaused = true;
+    }
+
+    resume() {
+      if (!this.isRunning || !this.isPaused) return;
+      this.isPaused = false;
+      this._lastFrameTime = performance.now();
+      requestAnimationFrame(this._renderLoop);
+    }
+
     destroy() {
       this.isRunning = false;
+      this.isPaused = true;
       this.stopMic();
+      if (this.gl) {
+        try {
+          const lose = this.gl.getExtension("WEBGL_lose_context");
+          if (lose) lose.loseContext();
+        } catch {}
+        this.gl = null;
+      }
       if (this.wrapper && this.wrapper.parentNode) {
         this.wrapper.parentNode.removeChild(this.wrapper);
       }
@@ -807,7 +830,14 @@
     // ==========================================
 
     _renderLoop(now) {
-      if (!this.isRunning) return;
+      if (!this.isRunning || this.isPaused) return;
+      if (this._isPhone && this.state === "idle") {
+        this._frameSkip = (this._frameSkip + 1) % 2;
+        if (this._frameSkip === 1) {
+          requestAnimationFrame(this._renderLoop);
+          return;
+        }
+      }
 
       const dt = Math.min((now - this._lastFrameTime) / 1000, 0.1);
       this._lastFrameTime = now;

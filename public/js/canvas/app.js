@@ -13254,6 +13254,10 @@ User writes "Show air quality for Tokyo", names a place, and points to an empty 
       window.primerVoice.turnOff();
     }
 
+    if (window.Lumi6Orb && typeof window.Lumi6Orb.setActiveMode === "function") {
+      window.Lumi6Orb.setActiveMode(currentAppViewMode);
+    }
+
     if (currentAppViewMode === "talk") {
       if (typeof window.hideTalkWait === "function") window.hideTalkWait();
       if (window.primerVoice && typeof window.primerVoice.warmupMic === "function") {
@@ -13761,34 +13765,16 @@ User writes "Show air quality for Tokyo", names a place, and points to an empty 
     talkPlaygroundSlug = "";
   }
 
-  function classHeading(klass) {
-    const grade = Number(klass);
-    return Number.isFinite(grade) && grade > 0 ? `Class ${grade}` : "More";
-  }
-
   function simCatalogHtml(items) {
-    const groups = new Map();
-    for (const item of items) {
-      const key = Number.isFinite(Number(item.klass)) ? Number(item.klass) : 0;
-      if (!groups.has(key)) groups.set(key, []);
-      groups.get(key).push(item);
-    }
-    return [...groups.entries()]
-      .sort((a, b) => a[0] - b[0])
-      .map(([klass, rows]) => `
-        <section class="sim-class-block">
-          <h2 class="sim-class-label">${escapeHtml(classHeading(klass))}</h2>
-          <div class="sim-pill-list">
-            ${rows.map((interactive) => {
-              const pill = interactive.pill || {};
-              const label = pill.title || interactive.title || interactive.slug;
-              const subtitle = pill.subtitle || interactive.concept || interactive.summary || "Tap to explore";
-              return nativeInteractivePillHtml(interactive, label, subtitle, "sim-pill-item");
-            }).join("")}
-          </div>
-        </section>
-      `)
-      .join("");
+    return `
+      <div class="sim-pill-list">
+        ${items.map((interactive) => {
+          const pill = interactive.pill || {};
+          const label = pill.title || interactive.title || interactive.slug;
+          const subtitle = pill.subtitle || interactive.concept || interactive.summary || "Tap to explore";
+          return nativeInteractivePillHtml(interactive, label, subtitle, "sim-pill-item");
+        }).join("")}
+      </div>`;
   }
 
   let simCatalogPromise = null;
@@ -13796,7 +13782,7 @@ User writes "Show air quality for Tokyo", names a place, and points to an empty 
   async function loadSimCatalog() {
     const feed = document.getElementById("simFeed");
     if (!feed) return;
-    if (feed.querySelector(".sim-class-block")) return;
+    if (feed.querySelector(".sim-pill-list")) return;
     if (!simCatalogPromise) {
       simCatalogPromise = (async () => {
         const headers = typeof window.Lumi6Profile?.authHeaders === "function"

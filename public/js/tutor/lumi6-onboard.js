@@ -187,13 +187,15 @@
     const dots = [1, 2, 3].map((n) => `<i class="${n === state.step ? "on" : ""}"></i>`).join("");
     if (state.step === 1) {
       root.innerHTML = `
-        <p class="onboard-kicker">Step 1 of 3</p>
-        <h2>What should I call you?</h2>
-        <p class="onboard-lead">A first name is perfect. Nicknames are welcome.</p>
-        <label class="onboard-field">
-          <span>Your name</span>
-          <input id="onboardName" type="text" maxlength="40" autocomplete="nickname" placeholder="e.g. Aanya" value="${escapeAttr(state.name)}">
-        </label>
+        <div class="onboard-scroll">
+          <p class="onboard-kicker">Step 1 of 3</p>
+          <h2>What should I call you?</h2>
+          <p class="onboard-lead">A first name is perfect. Nicknames are welcome.</p>
+          <label class="onboard-field">
+            <span>Your name</span>
+            <input id="onboardName" type="text" maxlength="40" autocomplete="nickname" placeholder="e.g. Aanya" value="${escapeAttr(state.name)}">
+          </label>
+        </div>
         <div class="onboard-actions">
           ${isEditingFromProfile() ? `<button type="button" class="onboard-back" data-onboard="cancel-edit">Cancel</button>` : ""}
           <button type="button" class="onboard-next" data-onboard="next">That's me</button>
@@ -204,11 +206,13 @@
     }
     if (state.step === 2) {
       root.innerHTML = `
-        <p class="onboard-kicker">Step 2 of 3</p>
-        <h2>Which class are you in?</h2>
-        <p class="onboard-lead">This helps me keep examples at your level.</p>
-        <div class="onboard-chips" role="listbox" aria-label="Class">
-          ${CLASSES.map((n) => `<button type="button" class="onboard-chip ${state.grade === n ? "selected" : ""}" data-grade="${n}">Class ${n}</button>`).join("")}
+        <div class="onboard-scroll">
+          <p class="onboard-kicker">Step 2 of 3</p>
+          <h2>Which class are you in?</h2>
+          <p class="onboard-lead">This helps me keep examples at your level.</p>
+          <div class="onboard-chips" role="listbox" aria-label="Class">
+            ${CLASSES.map((n) => `<button type="button" class="onboard-chip ${state.grade === n ? "selected" : ""}" data-grade="${n}">Class ${n}</button>`).join("")}
+          </div>
         </div>
         <div class="onboard-actions">
           <button type="button" class="onboard-back" data-onboard="back">Back</button>
@@ -218,11 +222,13 @@
       return;
     }
     root.innerHTML = `
-      <p class="onboard-kicker">Step 3 of 3</p>
-      <h2>What do you like?</h2>
-      <p class="onboard-lead">Pick a few. I will remember these for later.</p>
-      <div class="onboard-chips" role="group" aria-label="Interests">
-        ${INTERESTS.map((item) => `<button type="button" class="onboard-chip ${state.interests.includes(item.label) ? "selected" : ""}" data-interest="${item.label}">${item.label}</button>`).join("")}
+      <div class="onboard-scroll">
+        <p class="onboard-kicker">Step 3 of 3</p>
+        <h2>What do you like?</h2>
+        <p class="onboard-lead">Pick a few. I will remember these for later.</p>
+        <div class="onboard-chips" role="group" aria-label="Interests">
+          ${INTERESTS.map((item) => `<button type="button" class="onboard-chip ${state.interests.includes(item.label) ? "selected" : ""}" data-interest="${item.label}">${item.label}</button>`).join("")}
+        </div>
       </div>
       <div class="onboard-actions">
         <button type="button" class="onboard-back" data-onboard="back">Back</button>
@@ -303,20 +309,22 @@
     const grade = String(profile?.grade || "").replace(/^class\s+/i, "");
     const interests = normalizeInterests(profile?.interests);
     body.innerHTML = `
-      <div class="profile-head">
-        <p class="onboard-kicker">Your profile</p>
-        <button type="button" class="profile-close" data-profile="close" aria-label="Close">&times;</button>
+      <div class="onboard-scroll">
+        <div class="profile-head">
+          <p class="onboard-kicker">Your profile</p>
+          <button type="button" class="profile-close" data-profile="close" aria-label="Close">&times;</button>
+        </div>
+        <h2 id="profileTitle">${escapeAttr(name)}</h2>
+        <p class="onboard-lead">This is what Lumi6 uses when it talks and draws with you.</p>
+        <dl class="profile-facts">
+          <div><dt>Name</dt><dd>${escapeAttr(name)}</dd></div>
+          <div><dt>Email</dt><dd>${escapeAttr(email) || "Signed in"}</dd></div>
+          <div><dt>Class</dt><dd>${grade ? `Class ${escapeAttr(grade)}` : "Not set"}</dd></div>
+          <div><dt>Interests</dt><dd>${interests.length ? escapeAttr(interests.join(", ")) : "Not set"}</dd></div>
+          <div><dt>Pictures</dt><dd>${visualBandLabel(grade)}</dd></div>
+        </dl>
+        <button type="button" class="onboard-back orb-theme-open" data-profile="theme">Choose theme</button>
       </div>
-      <h2 id="profileTitle">${escapeAttr(name)}</h2>
-      <p class="onboard-lead">This is what Lumi6 uses when it talks and draws with you.</p>
-      <dl class="profile-facts">
-        <div><dt>Name</dt><dd>${escapeAttr(name)}</dd></div>
-        <div><dt>Email</dt><dd>${escapeAttr(email) || "Signed in"}</dd></div>
-        <div><dt>Class</dt><dd>${grade ? `Class ${escapeAttr(grade)}` : "Not set"}</dd></div>
-        <div><dt>Interests</dt><dd>${interests.length ? escapeAttr(interests.join(", ")) : "Not set"}</dd></div>
-        <div><dt>Pictures</dt><dd>${visualBandLabel(grade)}</dd></div>
-      </dl>
-      <button type="button" class="onboard-back orb-theme-open" data-profile="theme">Choose theme</button>
       <div class="onboard-actions">
         <button type="button" class="onboard-back" data-profile="close">Done</button>
         <button type="button" class="onboard-next" data-profile="edit">Edit</button>
@@ -328,15 +336,17 @@
     if (!body) return;
     if (window.Lumi6Orb) window.Lumi6Orb.destroyPicker();
     body.innerHTML = `
-      <div class="profile-head">
-        <p class="onboard-kicker">Voice orb</p>
-        <button type="button" class="profile-close" data-profile="theme-back" aria-label="Back">&times;</button>
+      <div class="onboard-scroll">
+        <div class="profile-head">
+          <p class="onboard-kicker">Voice orb</p>
+          <button type="button" class="profile-close" data-profile="theme-back" aria-label="Back">&times;</button>
+        </div>
+        <h2 id="profileTitle">Choose theme</h2>
+        <p class="onboard-lead">Pick a color, then Light or Rich. Both keep the same orb motions.</p>
+        <div class="orb-theme-preview" id="orbThemePreview"></div>
+        <div class="orb-theme-finish" id="orbThemeFinish" role="group" aria-label="Color look"></div>
+        <div class="orb-theme-list" id="orbThemeList" role="listbox" aria-label="Orb themes"></div>
       </div>
-      <h2 id="profileTitle">Choose theme</h2>
-      <p class="onboard-lead">Pick a color, then Light or Rich. Both keep the same orb motions.</p>
-      <div class="orb-theme-preview" id="orbThemePreview"></div>
-      <div class="orb-theme-finish" id="orbThemeFinish" role="group" aria-label="Color look"></div>
-      <div class="orb-theme-list" id="orbThemeList" role="listbox" aria-label="Orb themes"></div>
       <div class="onboard-actions">
         <button type="button" class="onboard-next" data-profile="theme-back">Back</button>
       </div>`;

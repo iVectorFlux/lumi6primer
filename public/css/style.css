@@ -2903,23 +2903,14 @@ button, a, .btool, .topbar-icon-btn, .zoom-btn, .share-btn, .nav-item {
 .sim-feed {
   display: flex;
   flex-direction: column;
-  gap: 22px;
-}
-
-.sim-class-label {
-  margin: 0 0 10px;
-  font-size: 13px;
-  font-weight: 700;
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
-  color: #6d28d9;
+  gap: 0;
 }
 
 .sim-pill-list {
   display: flex;
   flex-direction: column;
   align-items: stretch;
-  gap: 14px;
+  gap: 12px;
 }
 
 .sim-pill-item {

@@ -203,6 +203,8 @@
   /**
    * Modular Speech Synthesizer Wrapper (TTS)
    */
+  const SILENT_WAV = "data:audio/wav;base64,UklGRigAAABXQVZFZm10IBIAAAABAAEARKwAAIhYAQACABAAAABkYXRhAgAAAAEA";
+
   class SpeechSynthesizer {
     constructor() {
       this.isSupported = "speechSynthesis" in window || Boolean(window.Audio);
@@ -216,10 +218,25 @@
       this._openerBlob = null;
       this._openerText = "";
       this._openerWaiters = [];
+      this.isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent)
+        || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
+      this._bindUnlockGestures();
       if ("speechSynthesis" in window) {
         this.pickVoice();
         window.speechSynthesis.addEventListener("voiceschanged", () => this.pickVoice());
       }
+    }
+
+    _bindUnlockGestures() {
+      if (this._unlockBound) return;
+      this._unlockBound = true;
+      const unlock = () => this.unlockPlayback();
+      document.addEventListener("pointerdown", unlock, { passive: true });
+      document.addEventListener("touchstart", unlock, { passive: true });
+      document.addEventListener("click", unlock, { passive: true });
+      document.addEventListener("visibilitychange", () => {
+        if (!document.hidden) this.unlockPlayback();
+      });
     }
 
     pickVoice() {
@@ -246,27 +263,44 @@
         if (Ctx) {
           this.audioCtx = this.audioCtx || new Ctx();
           if (this.audioCtx.state === "suspended") this.audioCtx.resume();
-          const ctx = this.audioCtx;
-          const osc = ctx.createOscillator();
-          const gain = ctx.createGain();
-          gain.gain.value = 0;
-          osc.connect(gain);
-          gain.connect(ctx.destination);
-          osc.start();
-          osc.stop(ctx.currentTime + 0.01);
+          if (!this.isMobile) {
+            const ctx = this.audioCtx;
+            const osc = ctx.createOscillator();
+            const gain = ctx.createGain();
+            gain.gain.value = 0;
+            osc.connect(gain);
+            gain.connect(ctx.destination);
+            osc.start();
+            osc.stop(ctx.currentTime + 0.01);
+          }
           this.unlocked = true;
-          console.log("[PRIMER Voice] AudioContext unlocked, state:", ctx.state);
         }
       } catch (e) { console.warn("[PRIMER Voice] unlock error:", e.message); }
       try {
         const p = this.ensurePlayer();
-        p.load();
+        p.playsInline = true;
+        if (!this._primedPlayer) {
+          const prevMuted = p.muted;
+          p.muted = true;
+          p.src = SILENT_WAV;
+          const play = p.play();
+          if (play && typeof play.then === "function") {
+            play.then(() => {
+              p.pause();
+              p.muted = prevMuted;
+              p.removeAttribute("src");
+              p.load();
+              this._primedPlayer = true;
+              this.unlocked = true;
+            }).catch(() => {
+              p.muted = prevMuted;
+            });
+          }
+        }
       } catch (e) {}
-      if ("speechSynthesis" in window) {
+      if (!this.isMobile && "speechSynthesis" in window) {
         try {
-          const u = new SpeechSynthesisUtterance("");
-          u.volume = 0.01;
-          window.speechSynthesis.speak(u);
+          window.speechSynthesis.resume();
         } catch (e) {}
       }
     }
@@ -355,6 +389,10 @@
         return;
       }
 
+      if (this.isMobile) {
+        this._playBlobFallback(blob, generation, text, onStart, onEnd);
+        return;
+      }
       const Ctx = window.AudioContext || window.webkitAudioContext;
       if (Ctx) {
         this.audioCtx = this.audioCtx || new Ctx();
@@ -409,7 +447,7 @@
       player.onerror = () => {
         if (generation !== this.generation) return;
         console.warn("[Lumi6 Voice] Audio element error");
-        if (onEnd) onEnd();
+        this.speakBrowser(text, onStart, onEnd);
       };
       player.src = this.objectUrl;
       const play = player.play();
@@ -417,7 +455,7 @@
         play.catch((err) => {
           console.warn("[Lumi6 Voice] Audio play blocked:", err && err.message);
           if (generation !== this.generation) return;
-          if (onEnd) onEnd();
+          this.speakBrowser(text, onStart, onEnd);
         });
       }
     }
@@ -541,7 +579,7 @@
         return;
       }
       if (!this._openerBlob) {
-        await this.waitOpenerAudio(120);
+        await this.waitOpenerAudio(this.isMobile ? 80 : 120);
       }
       let started = false;
       const cache = parts.map((part, i) => (
@@ -553,8 +591,12 @@
           cache[i + 2] = this.audioForChunk(parts[i + 2], false);
         }
         if (!cache[i]) cache[i] = this.audioForChunk(parts[i], i === 0);
-        let blob = await cache[i].catch(() => null);
-        if (!blob) blob = await this.fetchTtsBlob(parts[i], 12000).catch(() => null);
+        const waitMs = this.isMobile && i === 0 ? 2200 : 12000;
+        let blob = await Promise.race([
+          cache[i].catch(() => null),
+          this.pause(waitMs, generation).then(() => null)
+        ]);
+        if (!blob && !(this.isMobile && i === 0)) blob = await this.fetchTtsBlob(parts[i], 12000).catch(() => null);
         if (!blob) {
           if (generation === this.generation) {
             this.speakBrowser(parts.slice(i).join(" "), started ? null : onStart, onEnd);
@@ -589,7 +631,7 @@
         return;
       }
       try {
-        window.speechSynthesis.cancel();
+        if (!this.isMobile) window.speechSynthesis.cancel();
         window.speechSynthesis.resume();
       } catch {}
       if (!this.voice) this.pickVoice();
@@ -678,7 +720,7 @@
           if (onEnd) onEnd();
         }
       };
-      setTimeout(speakNext, 10);
+      setTimeout(speakNext, this.isMobile ? 60 : 10);
     }
 
     releaseAudio() {

@@ -28,7 +28,49 @@
   let talkState = "idle";
   let talkVoiceActive = false;
   let talkVoiceTimer = null;
+  let activeMode = "talk";
   const drawBusy = new Set();
+
+  function pauseOrb(orb) {
+    if (orb && typeof orb.pause === "function") orb.pause();
+  }
+
+  function resumeOrb(orb) {
+    if (orb && typeof orb.resume === "function") orb.resume();
+  }
+
+  function syncRunningOrbs() {
+    if (document.hidden) {
+      pauseOrb(talkOrb);
+      pauseOrb(drawOrb);
+      pauseOrb(pickerOrb);
+      return;
+    }
+    if (pickerOrb) {
+      resumeOrb(pickerOrb);
+      pauseOrb(talkOrb);
+      pauseOrb(drawOrb);
+      return;
+    }
+    if (activeMode === "talk") {
+      resumeOrb(talkOrb);
+      pauseOrb(drawOrb);
+    } else if (activeMode === "draw") {
+      resumeOrb(drawOrb);
+      pauseOrb(talkOrb);
+    } else {
+      pauseOrb(talkOrb);
+      pauseOrb(drawOrb);
+    }
+  }
+
+  function setActiveMode(mode) {
+    const next = mode === "draw" || mode === "sim" ? mode : "talk";
+    activeMode = next;
+    if (next === "talk") mountTalkOrb();
+    if (next === "draw") mountDrawOrb();
+    syncRunningOrbs();
+  }
 
   function palettes() {
     return window.VoiceOrb?.getPalettes?.() || window.VoiceOrbPalettes || {};
@@ -238,6 +280,7 @@
       try { pickerOrb.destroy(); } catch {}
       pickerOrb = null;
     }
+    syncRunningOrbs();
   }
 
   function mountThemePicker(previewHost, listHost, finishHost) {
@@ -249,6 +292,7 @@
       pickerOrb = makeOrb(previewHost, { showShadow: true, state: "idle" });
       applyPreset(pickerOrb, "idle");
       paintOrbTheme(pickerOrb);
+      syncRunningOrbs();
     }
     if (finishHost) {
       finishHost.innerHTML = `
@@ -314,8 +358,15 @@
   }
 
   function boot() {
-    mountTalkOrb();
-    mountDrawOrb();
+    const start = /[?&]mode=sim/.test(location.search)
+      ? "sim"
+      : /[?&]mode=talk/.test(location.search)
+        ? "talk"
+        : document.body.classList.contains("mode-draw-active")
+          ? "draw"
+          : "talk";
+    setActiveMode(start);
+    document.addEventListener("visibilitychange", syncRunningOrbs);
   }
 
   window.Lumi6Orb = {
@@ -325,6 +376,7 @@
     setTalkVoiceActive,
     setDrawBusy,
     refreshDrawOrb,
+    setActiveMode,
     setTheme,
     getTheme: readTheme,
     setFinish,
