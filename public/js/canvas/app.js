@@ -12983,7 +12983,7 @@ User writes "Show air quality for Tokyo", names a place, and points to an empty 
   }
 
   /** Designed HTML pill when the sim has one; compact native pill otherwise. */
-  function talkInteractivePillHtml(step, titleText, extraClass = "") {
+  function talkInteractivePillHtml(step, titleText, extraClass = "", lazy = false) {
     const interactive = step.interactive;
     const pill = interactive.pill || {};
     const label = pill.title || interactive.title || titleText;
@@ -12994,18 +12994,44 @@ User writes "Show air quality for Tokyo", names a place, and points to an empty 
     const href = interactive.hrefPill || interactive.href || `/api/primer/interactive/${encodeURIComponent(interactive.slug)}?embed=1&mode=pill`;
     const src = href.includes("mode=") ? href : `${href}${href.includes("?") ? "&" : "?"}mode=pill`;
     const extra = extraClass ? ` ${extraClass}` : "";
+    const srcAttr = lazy
+      ? `data-src="${escapeHtml(src)}" src="about:blank"`
+      : `src="${escapeHtml(src)}"`;
     return `
             <div class="talk-interactive-pill-wrapper${extra}" data-interactive-slug="${escapeHtml(interactive.slug)}" ${interactiveMetaAttrs(interactive)}>
               <iframe
                 class="talk-lesson-pill"
                 ${interactiveMetaAttrs(interactive)}
-                src="${escapeHtml(src)}"
+                ${srcAttr}
                 title="${escapeHtml(label)}"
                 sandbox="allow-scripts allow-same-origin"
                 loading="lazy"
               ></iframe>
               <div class="talk-interactive-stage" hidden aria-hidden="true"></div>
             </div>`;
+  }
+
+  function lazyLoadSimPills(root) {
+    const frames = [...(root?.querySelectorAll("iframe.talk-lesson-pill[data-src]") || [])];
+    if (!frames.length) return;
+    const load = (frame) => {
+      const src = frame.getAttribute("data-src");
+      if (!src || frame.dataset.loaded === "1") return;
+      frame.dataset.loaded = "1";
+      frame.setAttribute("src", src);
+    };
+    if (!("IntersectionObserver" in window)) {
+      frames.forEach(load);
+      return;
+    }
+    const observer = new IntersectionObserver((entries) => {
+      for (const entry of entries) {
+        if (!entry.isIntersecting) continue;
+        load(entry.target);
+        observer.unobserve(entry.target);
+      }
+    }, { root: document.getElementById("simScrollArea") || null, rootMargin: "240px 0px" });
+    frames.forEach((frame) => observer.observe(frame));
   }
 
   function talkInteractiveHtml(step, titleText) {
@@ -13768,12 +13794,21 @@ User writes "Show air quality for Tokyo", names a place, and points to an empty 
   function simCatalogHtml(items) {
     return `
       <div class="sim-pill-list">
-        ${items.map((interactive) => {
-          const pill = interactive.pill || {};
-          const label = pill.title || interactive.title || interactive.slug;
-          const subtitle = pill.subtitle || interactive.concept || interactive.summary || "Tap to explore";
-          return nativeInteractivePillHtml(interactive, label, subtitle, "sim-pill-item");
-        }).join("")}
+        ${items.map((interactive) => talkInteractivePillHtml(
+          {
+            interactive: {
+              ...interactive,
+              scenario: true,
+              pill: interactive.pill || {
+                title: interactive.title || interactive.slug,
+                subtitle: interactive.concept || interactive.summary || "Tap to explore"
+              }
+            }
+          },
+          interactive.title || interactive.slug,
+          "sim-pill-item",
+          true
+        )).join("")}
       </div>`;
   }
 
@@ -13804,6 +13839,7 @@ User writes "Show air quality for Tokyo", names a place, and points to an empty 
         ? simCatalogHtml(items)
         : `<p class="sim-feed-status">No interactives yet.</p>`;
       bindTalkPlayground(feed);
+      lazyLoadSimPills(feed);
     } catch {
       feed.innerHTML = `<p class="sim-feed-status">Could not load interactives. Try again.</p>`;
     }

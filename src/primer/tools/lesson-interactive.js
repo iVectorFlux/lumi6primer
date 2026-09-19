@@ -282,6 +282,7 @@ ${MOBILE_SEL},${DESKTOP_SEL},${HIDDEN_OVERLAY},.mobile-phone-frame,.desktop-card
 .pill-info,.pill-content{flex:1 1 auto!important;min-width:0!important;display:flex!important;flex-direction:column!important;gap:2px!important}
 .pill-title,.pill-formula,.pill-subtitle{letter-spacing:normal!important;word-spacing:normal!important;white-space:nowrap!important;overflow:hidden!important;text-overflow:ellipsis!important;max-width:100%!important}
 .pill-expand-btn{display:flex!important;flex:0 0 36px!important}
+canvas,video{display:none!important}
 `;
 
 const SCENARIO_MOBILE_CSS = `
@@ -532,9 +533,14 @@ function patchHiddenCanvasWork(html) {
   );
 }
 
+function stripInteractiveScripts(html) {
+  return String(html || "").replace(/<script\b[^>]*>[\s\S]*?<\/script>/gi, "");
+}
+
 function embedHtml(html, options = {}) {
-  const source = patchHiddenCanvasWork(String(html || ""));
+  let source = patchHiddenCanvasWork(String(html || ""));
   if (!source) return source;
+  if (options.mode === "pill") source = stripInteractiveScripts(source);
   const scenario = isScenarioHtml(source);
   const css = scenario ? scenarioEmbedCss(options.mode) : EMBED_CSS;
   const tag = `<style id="lumi-embed">${css}</style>`;
