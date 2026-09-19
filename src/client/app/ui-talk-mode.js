@@ -194,8 +194,8 @@
     }
     if (interactive) return interactive;
     if (image) return image;
-    if (isLast && window.__primerGraphicLoading && typeof window.lumiWaitHtml === "function") {
-      return `<div class="talk-visual-pending">${window.lumiWaitHtml("visual")}</div>`;
+    if (isLast && window.__primerGraphicLoading) {
+      return `<div class="talk-visual-pending talk-visual-pending-quiet"><p class="talk-wait-hint">Finding a picture…</p></div>`;
     }
     return "";
   }
@@ -412,6 +412,13 @@
     } else {
       closeTalkPlayground();
       render();
+      requestAnimationFrame(() => {
+        requestAnimationFrame(() => {
+          if (window.Lumi6Orb && typeof window.Lumi6Orb.refreshDrawOrb === "function") {
+            window.Lumi6Orb.refreshDrawOrb();
+          }
+        });
+      });
     }
   }
 
@@ -1041,6 +1048,9 @@
     const input = document.querySelector("#talkModeTextInput");
     const val = input?.value?.trim();
     if (!val) return;
+    if (window.primerVoice && typeof window.primerVoice.stopDictation === "function") {
+      window.primerVoice.stopDictation();
+    }
     input.value = "";
     growTalkComposer();
     if (window.primerChat && typeof window.primerChat.sendMessage === "function") {

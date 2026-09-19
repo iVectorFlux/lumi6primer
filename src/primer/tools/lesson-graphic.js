@@ -69,17 +69,73 @@ async function searchEducationalGraphic(topic, spoken) {
   return null;
 }
 
-function graphicQueries(topic, spoken) {
-  const strip = (value) => String(value || "")
+const QUERY_STOP = new Set(["the","and","for","from","with","this","that","into","about","why","are","is","so","how","what","when","where","who","can","you","me","my","your","our","its","too","very","just","than","then","they","them","their","been","being","have","has","had","was","were","will","would","could","should","does","did","not","but","far","away"]);
+const PERSON_PAGE = /\b(born \d|is an? (american|british|english|irish|australian|canadian|indian|french|german|italian|spanish)?\s*(actor|actress|singer|rapper|politician|footballer|soccer player|player|writer|author|director|comedian|musician|model))\b/i;
+const PERSON_TITLE = /\b(film|album|song|novel|episode|actor|actress|politician|biography|discography)\b/i;
+const BAD_IMAGE = /portrait|headshot|selfie|mugshot|autograph|signature|logo|icon|flag|disambig|symbol|coat_of_arms|wordmark|poster|cover_art|album|screenshot/i;
+
+function stripPrompt(value) {
+  return String(value || "")
     .replace(/^(can you |could you |please )?(teach me about|teach me|tell me about|explain to me|explain|what is|what's|whats|why is|why are|why do|why does|how does|how do|how to|i want to learn about)\s+/i, "")
     .replace(/[?.!]+$/g, "")
     .replace(/\s+/g, " ")
     .trim();
-  const main = strip(topic);
-  const spokenClean = strip(spoken);
-  const words = main.split(/\s+/).filter((word) => word.length > 2 && !/^(the|and|for|from|with|this|that|into|about)$/i.test(word));
-  const short = words.slice(-3).join(" ");
-  return [...new Set([main, spokenClean, short, short ? `${short} diagram` : "", main ? `${main} diagram` : ""].filter((query) => query && query.length >= 2))].slice(0, 5);
+}
+
+function topicKeywords(text) {
+  return String(text || "")
+    .toLowerCase()
+    .split(/[^a-z0-9]+/)
+    .filter((word) => word.length > 2 && !QUERY_STOP.has(word));
+}
+
+function expandTopic(main) {
+  const t = String(main || "").toLowerCase();
+  if (/\bstars?\b/.test(t) && /\b(far|distance|away|distant|faraway)\b/.test(t)) {
+    return ["star distance", "stellar distance astronomy", "stars night sky"];
+  }
+  if (/\bsky\b/.test(t) && /\bblue\b/.test(t)) return ["rayleigh scattering", "blue sky atmosphere"];
+  if (/\bwater cycle\b/.test(t)) return ["water cycle diagram", "hydrologic cycle"];
+  if (/\bphotosynth/.test(t)) return ["photosynthesis diagram"];
+  if (/\bvolcano/.test(t)) return ["volcano diagram", "volcanic eruption"];
+  if (/\bgravity\b/.test(t)) return ["gravity physics", "newton gravity"];
+  return [];
+}
+
+function graphicQueries(topic, spoken) {
+  const main = stripPrompt(topic);
+  const spokenClean = stripPrompt(spoken);
+  const words = topicKeywords(`${main} ${spokenClean}`);
+  const core = words.slice(0, 5).join(" ");
+  const extras = expandTopic(`${main} ${spokenClean}`);
+  return [...new Set([
+    core,
+    extras[0],
+    extras[1],
+    extras[2],
+    core ? `${core} science` : "",
+    core ? `${core} diagram` : "",
+    spokenClean,
+    main
+  ].filter((query) => query && query.length >= 3))].slice(0, 6);
+}
+
+function scoreEducationalPage(page, query, imgUrl) {
+  const title = String(page.title || "");
+  const extract = String(page.extract || "");
+  const hay = `${title} ${extract} ${imgUrl || ""}`;
+  if (!imgUrl || /\.(webm|ogv|mp4|avi|mov)$/i.test(imgUrl) || BAD_IMAGE.test(hay)) return -100;
+  if (PERSON_PAGE.test(extract) || PERSON_TITLE.test(title)) return -90;
+  const qWords = topicKeywords(query);
+  let score = 0;
+  const lower = hay.toLowerCase();
+  for (const word of qWords) {
+    if (lower.includes(word)) score += 4;
+  }
+  if (/\b(diagram|illustration|chart|map|telescope|galaxy|planet|astronomy|physics|chemistry|biology|science|cycle|orbit)\b/i.test(hay)) score += 8;
+  if (/\.svg(\?|$)/i.test(imgUrl)) score += 4;
+  if (qWords.length && score < 4) return -20;
+  return score;
 }
 
 async function searchWikipediaImage(query) {
@@ -90,15 +146,18 @@ async function searchWikipediaImage(query) {
     });
     if (!res.ok) return null;
     const data = await res.json();
-    const pages = Object.values(data?.query?.pages || {}).sort((a, b) => (a.index || 0) - (b.index || 0));
-    for (const page of pages) {
-      const imgUrl = page.original?.source || page.thumbnail?.source;
-      if (imgUrl && !/\.(webm|ogv|mp4|avi|mov)$/i.test(imgUrl) && !/icon|logo|flag|disambig|symbol|coat_of_arms/i.test(imgUrl)) {
-        const fetched = await downloadImageAsBase64(imgUrl);
-        if (fetched) {
-          console.log(`[PRIMER] Educational graphic found via Wikipedia for "${query}": ${page.title}`);
-          return { mime: fetched.mime, b64: fetched.b64, model: "wikimedia:wikipedia" };
-        }
+    const pages = Object.values(data?.query?.pages || {})
+      .map((page) => {
+        const imgUrl = page.original?.source || page.thumbnail?.source || "";
+        return { page, imgUrl, score: scoreEducationalPage(page, query, imgUrl) };
+      })
+      .filter((item) => item.score >= 4)
+      .sort((a, b) => b.score - a.score || (a.page.index || 0) - (b.page.index || 0));
+    for (const item of pages) {
+      const fetched = await downloadImageAsBase64(item.imgUrl);
+      if (fetched) {
+        console.log(`[PRIMER] Educational graphic found via Wikipedia for "${query}": ${item.page.title} (${item.score})`);
+        return { mime: fetched.mime, b64: fetched.b64, model: "wikimedia:wikipedia" };
       }
     }
   } catch (err) {
@@ -108,23 +167,26 @@ async function searchWikipediaImage(query) {
 }
 
 async function searchCommonsImage(query) {
-  const commonsUrl = `https://commons.wikimedia.org/w/api.php?action=query&generator=search&gsrnamespace=6&gsrsearch=${encodeURIComponent(`${query} diagram illustration science`)}&gsrlimit=8&prop=imageinfo&iiprop=url|mime|size&iiurlwidth=1280&format=json&origin=*`;
+  const commonsUrl = `https://commons.wikimedia.org/w/api.php?action=query&generator=search&gsrnamespace=6&gsrsearch=${encodeURIComponent(`${query} diagram illustration science -portrait -headshot`)}&gsrlimit=8&prop=imageinfo|extracts&iiprop=url|mime|size|extmetadata&iiurlwidth=1280&format=json&origin=*`;
   try {
     const res = await fetch(commonsUrl, {
       headers: { "User-Agent": "Lumi6EducationalTutor/1.0 (https://lumi6.com)" }
     });
     if (!res.ok) return null;
     const data = await res.json();
-    const pages = Object.values(data?.query?.pages || {});
-    for (const page of pages) {
-      const info = page.imageinfo?.[0];
-      const imgUrl = info?.thumburl || info?.url;
-      if (imgUrl && !/\.(webm|ogv|mp4|avi|mov)$/i.test(imgUrl) && !/icon|logo|flag|symbol|coat_of_arms/i.test(imgUrl)) {
-        const fetched = await downloadImageAsBase64(imgUrl);
-        if (fetched) {
-          console.log(`[PRIMER] Educational graphic found via Commons for "${query}": ${page.title}`);
-          return { mime: fetched.mime, b64: fetched.b64, model: "wikimedia:commons" };
-        }
+    const pages = Object.values(data?.query?.pages || {})
+      .map((page) => {
+        const info = page.imageinfo?.[0];
+        const imgUrl = info?.thumburl || info?.url || "";
+        return { page, imgUrl, score: scoreEducationalPage(page, query, imgUrl) };
+      })
+      .filter((item) => item.score >= 4)
+      .sort((a, b) => b.score - a.score);
+    for (const item of pages) {
+      const fetched = await downloadImageAsBase64(item.imgUrl);
+      if (fetched) {
+        console.log(`[PRIMER] Educational graphic found via Commons for "${query}": ${item.page.title} (${item.score})`);
+        return { mime: fetched.mime, b64: fetched.b64, model: "wikimedia:commons" };
       }
     }
   } catch (err) {

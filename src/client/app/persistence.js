@@ -1813,14 +1813,22 @@
   async function visualizeSelection() {
     const selection = state.selection;
     if (!selection || selection.phase !== "active" || state.visualizingSelection || selectionHasTypesetDraft(selection)) return false;
+    state.visualizingSelection = true;
+    if (window.Lumi6Orb && typeof window.Lumi6Orb.setDrawBusy === "function") {
+      window.Lumi6Orb.setDrawBusy(true, "visualize");
+    }
+    updateSelectionToolbar();
     const packed = buildSelectionImage(selection);
     if (!packed?.atlasImage) {
       if (selectionVisualizeButton) selectionVisualizeButton.textContent = t("selectionVisualizeFailed");
       setStatusKey("selectionEmpty");
+      state.visualizingSelection = false;
+      if (window.Lumi6Orb && typeof window.Lumi6Orb.setDrawBusy === "function") {
+        window.Lumi6Orb.setDrawBusy(false, "visualize");
+      }
+      updateSelectionToolbar();
       return false;
     }
-    state.visualizingSelection = true;
-    updateSelectionToolbar();
     try {
       const image = await compactSelectionImage(packed.atlasImage);
       const response = await fetch("/api/primer/visualize", {
@@ -1859,6 +1867,9 @@
       return false;
     } finally {
       state.visualizingSelection = false;
+      if (window.Lumi6Orb && typeof window.Lumi6Orb.setDrawBusy === "function") {
+        window.Lumi6Orb.setDrawBusy(false, "visualize");
+      }
       updateSelectionToolbar();
     }
   }

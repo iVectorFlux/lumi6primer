@@ -2387,8 +2387,10 @@ User writes "Show air quality for Tokyo", names a place, and points to an empty 
     state.busy = Boolean(value);
     embodiment.classList.toggle("working", state.busy);
     embodiment.setAttribute("aria-busy", String(state.busy));
-    if (state.busy) showSummon();
-    else hideSummon();
+    if (window.Lumi6Orb && typeof window.Lumi6Orb.setDrawBusy === "function") {
+      window.Lumi6Orb.setDrawBusy(state.busy, "ai");
+    }
+    hideSummon();
   }
   function setNavigating(value) {
     clearTimeout(state.navigationTimer);
@@ -7793,14 +7795,22 @@ User writes "Show air quality for Tokyo", names a place, and points to an empty 
   async function visualizeSelection() {
     const selection = state.selection;
     if (!selection || selection.phase !== "active" || state.visualizingSelection || selectionHasTypesetDraft(selection)) return false;
+    state.visualizingSelection = true;
+    if (window.Lumi6Orb && typeof window.Lumi6Orb.setDrawBusy === "function") {
+      window.Lumi6Orb.setDrawBusy(true, "visualize");
+    }
+    updateSelectionToolbar();
     const packed = buildSelectionImage(selection);
     if (!packed?.atlasImage) {
       if (selectionVisualizeButton) selectionVisualizeButton.textContent = t("selectionVisualizeFailed");
       setStatusKey("selectionEmpty");
+      state.visualizingSelection = false;
+      if (window.Lumi6Orb && typeof window.Lumi6Orb.setDrawBusy === "function") {
+        window.Lumi6Orb.setDrawBusy(false, "visualize");
+      }
+      updateSelectionToolbar();
       return false;
     }
-    state.visualizingSelection = true;
-    updateSelectionToolbar();
     try {
       const image = await compactSelectionImage(packed.atlasImage);
       const response = await fetch("/api/primer/visualize", {
@@ -7839,6 +7849,9 @@ User writes "Show air quality for Tokyo", names a place, and points to an empty 
       return false;
     } finally {
       state.visualizingSelection = false;
+      if (window.Lumi6Orb && typeof window.Lumi6Orb.setDrawBusy === "function") {
+        window.Lumi6Orb.setDrawBusy(false, "visualize");
+      }
       updateSelectionToolbar();
     }
   }
@@ -13034,8 +13047,8 @@ User writes "Show air quality for Tokyo", names a place, and points to an empty 
     }
     if (interactive) return interactive;
     if (image) return image;
-    if (isLast && window.__primerGraphicLoading && typeof window.lumiWaitHtml === "function") {
-      return `<div class="talk-visual-pending">${window.lumiWaitHtml("visual")}</div>`;
+    if (isLast && window.__primerGraphicLoading) {
+      return `<div class="talk-visual-pending talk-visual-pending-quiet"><p class="talk-wait-hint">Finding a picture…</p></div>`;
     }
     return "";
   }
@@ -13252,6 +13265,13 @@ User writes "Show air quality for Tokyo", names a place, and points to an empty 
     } else {
       closeTalkPlayground();
       render();
+      requestAnimationFrame(() => {
+        requestAnimationFrame(() => {
+          if (window.Lumi6Orb && typeof window.Lumi6Orb.refreshDrawOrb === "function") {
+            window.Lumi6Orb.refreshDrawOrb();
+          }
+        });
+      });
     }
   }
 
@@ -13881,6 +13901,9 @@ User writes "Show air quality for Tokyo", names a place, and points to an empty 
     const input = document.querySelector("#talkModeTextInput");
     const val = input?.value?.trim();
     if (!val) return;
+    if (window.primerVoice && typeof window.primerVoice.stopDictation === "function") {
+      window.primerVoice.stopDictation();
+    }
     input.value = "";
     growTalkComposer();
     if (window.primerChat && typeof window.primerChat.sendMessage === "function") {

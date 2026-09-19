@@ -134,13 +134,16 @@
     window.__primerGraphicLoading = true;
     if (typeof window.syncTalkModeFeed === "function") window.syncTalkModeFeed();
     const el = document.getElementById("primerGraphicLoader");
-    if (el) {
-      el.hidden = false;
-      if (!el.querySelector(".lumi-wait") && typeof window.lumiWaitHtml === "function") {
-        el.innerHTML = window.lumiWaitHtml("visual");
-      }
-      if (typeof window.mountLumiWaiters === "function") window.mountLumiWaiters(el);
+    if (!el) return;
+    if (document.body.classList.contains("mode-talk-active")) {
+      el.hidden = true;
+      return;
     }
+    el.hidden = false;
+    if (!el.querySelector(".lumi-wait") && typeof window.lumiWaitHtml === "function") {
+      el.innerHTML = window.lumiWaitHtml("visual");
+    }
+    if (typeof window.mountLumiWaiters === "function") window.mountLumiWaiters(el);
   }
 
   function hidePrimerGraphicLoader() {
@@ -429,6 +432,9 @@
       this.isSending = true;
       window.__primerWaiting = true;
       if (this.elements.sendBtn) this.elements.sendBtn.disabled = true;
+      if (window.primerVoice && typeof window.primerVoice.beginThinking === "function") {
+        window.primerVoice.beginThinking();
+      }
       this.showLoading();
       if (typeof window.syncTalkModeFeed === "function") window.syncTalkModeFeed();
 
@@ -465,13 +471,17 @@
             speakTalk(msg);
           },
           onGraphicLoading: (msg) => {
-            if (window.primerVoice && typeof window.primerVoice._syncVoiceButtonUI === "function") {
-              window.primerVoice._syncVoiceButtonUI("processing");
+            const voice = window.primerVoice;
+            if (voice && voice.state !== "SPEAKING" && typeof voice._syncVoiceButtonUI === "function") {
+              voice._syncVoiceButtonUI("processing");
             }
             showPrimerGraphicLoader(msg?.title, msg);
           },
           onGraphic: (msg) => {
             graphicApplied = applyPrimerGraphic(msg) || graphicApplied;
+            if (voice && voice.state === "SPEAKING" && typeof voice._syncVoiceButtonUI === "function") {
+              voice._syncVoiceButtonUI("speaking");
+            }
           },
           onAudio: (msg) => {
             if (voice && voice.tts && typeof voice.tts.acceptOpenerAudio === "function") {
@@ -501,6 +511,11 @@
         this.isSending = false;
         if (this.elements.sendBtn) this.elements.sendBtn.disabled = false;
         this.elements.inputField?.focus();
+        const voice = window.primerVoice;
+        if (voice && voice.state === "PROCESSING" && typeof voice._syncVoiceButtonUI === "function") {
+          voice.state = "IDLE";
+          voice._syncVoiceButtonUI(null);
+        }
       }
     }
 

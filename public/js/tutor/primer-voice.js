@@ -89,7 +89,7 @@
     return data;
   }
 
-  const END_OF_SPEECH_MS = 1400;
+  const END_OF_SPEECH_MS = 4500;
 
   /**
    * Modular Speech Recognition Wrapper (STT)
@@ -737,7 +737,7 @@
         onResult: (text) => this.handleSttResult(text),
         onError: (err) => this.handleSttError(err),
         onEnd: () => this.handleSttEnd(),
-        onTurnComplete: (text) => this.commitHeardTurn(text)
+        onTurnComplete: null
       });
       this.tts = new SpeechSynthesizer();
       this.syncer = new WhiteboardSyncer();
@@ -860,15 +860,13 @@
         return;
       }
       if (this.state === "SPEAKING") {
-        this.turnOff();
-        window.setTimeout(() => {
-          if (this.isTalkModeActive() && this.state === "IDLE") this.startPushToTalk();
-        }, 80);
+        this.tts.cancel();
+        this.stopDictation();
         return;
       }
       if (this.state === "PROCESSING") return;
       if (this.state === "LISTENING" && this.isActive) {
-        this.endPushToTalk();
+        this.stopDictation();
         return;
       }
       this.tts.unlockPlayback();
@@ -909,24 +907,39 @@
     }
 
     endPushToTalk() {
-      if (this.state !== "LISTENING" && !this.isActive) return;
+      this.stopDictation();
+    }
+
+    stopDictation() {
       if (this._silenceTimer) {
         clearTimeout(this._silenceTimer);
         this._silenceTimer = null;
       }
+      if (this.restartTimer) {
+        clearTimeout(this.restartTimer);
+        this.restartTimer = null;
+      }
       const typed = String(document.getElementById("talkModeTextInput")?.value || "").trim();
       const heard = String(typed || this.pendingHeard || this.stt?._fullText?.() || this.stt?.lastTranscript || "").trim();
+      this.isActive = false;
+      this.state = "IDLE";
+      this._pushToTalkTurn = false;
+      if (heard) {
+        const box = document.getElementById("talkModeTextInput");
+        if (box) {
+          box.value = heard;
+          if (typeof window.growTalkComposer === "function") window.growTalkComposer();
+        }
+        this.pendingHeard = heard;
+        this._speechSeed = heard;
+      }
       if (this.stt) this.stt.stop();
       this._syncVoiceButtonUI(null);
-
-      if (heard && heard.length >= 2) {
-        this.commitHeardTurn(heard);
-      } else {
-        this.turnOff();
-      }
+      this.hideOverlay();
     }
 
     _syncVoiceButtonUI(stateName) {
+      if (this.state === "SPEAKING" && stateName && stateName !== "speaking") return;
       const btns = [this.elements?.toggleBtn, document.getElementById("talkModeMicBtn")].filter(Boolean);
       const mic = document.getElementById("talkModeMicBtn");
       btns.forEach((btn) => {
@@ -934,13 +947,17 @@
         if (stateName) btn.classList.add(`primer-${stateName}`);
       });
       if (mic) {
-        const mark = stateName === "speaking"
-          ? `<span class="talk-mic-eq" aria-hidden="true"><span></span><span></span><span></span></span>`
-          : stateName === "processing"
-            ? `<span class="talk-mic-think" aria-hidden="true"><span class="talk-mic-ring"></span><svg class="talk-mic-glyph" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/></svg></span>`
-            : `<svg class="talk-mic-glyph" viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg>`;
-        if (mic.innerHTML !== mark) mic.innerHTML = mark;
         mic.setAttribute("aria-label", stateName === "speaking" ? "Lumi6 is speaking" : stateName === "processing" ? "Lumi6 is thinking" : stateName === "listening" ? "Listening — tap to send" : "Tap to talk");
+      }
+      if (window.Lumi6Orb && typeof window.Lumi6Orb.setTalkState === "function") {
+        const orbState = stateName === "speaking"
+          ? "speaking"
+          : stateName === "processing"
+            ? "thinking"
+            : stateName === "listening" || stateName === "holding"
+              ? "listening"
+              : "idle";
+        window.Lumi6Orb.setTalkState(orbState);
       }
       if (this.elements?.label) {
         this.elements.label.textContent = stateName === "speaking" ? "Speaking..." : stateName === "listening" ? "Listening..." : stateName === "processing" ? "Thinking..." : "Lumi6";
@@ -950,6 +967,22 @@
 
     handleMicButtonClick() {
       this.toggleTapToTalk();
+    }
+
+    beginThinking() {
+      if (this._silenceTimer) {
+        clearTimeout(this._silenceTimer);
+        this._silenceTimer = null;
+      }
+      if (this.restartTimer) {
+        clearTimeout(this.restartTimer);
+        this.restartTimer = null;
+      }
+      this.isActive = false;
+      this.state = "PROCESSING";
+      this._pushToTalkTurn = false;
+      if (this.stt) this.stt.stop();
+      this._syncVoiceButtonUI("processing");
     }
 
     friendlyName(raw) {
@@ -1240,7 +1273,15 @@
     }
 
     scheduleAutoRestart(delayMs = 300) {
-      // Push-to-talk only: do not reopen the mic after a turn finishes.
+      if (this.restartTimer) {
+        clearTimeout(this.restartTimer);
+        this.restartTimer = null;
+      }
+      if (!this.isActive || this.paused || this.state !== "LISTENING") return;
+      this.restartTimer = setTimeout(() => {
+        this.restartTimer = null;
+        if (this.isActive && this.state === "LISTENING") this.startListening();
+      }, delayMs);
     }
 
     isHeardEcho(queryText) {
@@ -1264,6 +1305,9 @@
       const spoken = String(text || "").trim();
       const seed = String(this._speechSeed || "").trim();
       const queryText = seed ? (spoken ? `${seed} ${spoken}` : seed) : spoken;
+      if (this.state === "LISTENING" && spoken && window.Lumi6Orb && typeof window.Lumi6Orb.setTalkVoiceActive === "function") {
+        window.Lumi6Orb.setTalkVoiceActive(true);
+      }
       if (queryText) {
         this.pendingHeard = queryText;
         this.showOverlay("student", queryText);
@@ -1276,8 +1320,8 @@
       if (this._silenceTimer) clearTimeout(this._silenceTimer);
       if (this.pendingHeard && this.pendingHeard.length >= 2) {
         this._silenceTimer = setTimeout(() => {
-          if (this.state === "LISTENING" && this.isActive) this.endPushToTalk();
-        }, 1600);
+          if (this.state === "LISTENING" && this.isActive) this.stopDictation();
+        }, END_OF_SPEECH_MS);
       }
     }
 
@@ -1397,7 +1441,7 @@
             this.speakAndDraw(msg, queryText, { draw: false });
           },
           onGraphicLoading: (msg) => {
-            this._syncVoiceButtonUI("processing");
+            if (this.state !== "SPEAKING") this._syncVoiceButtonUI("processing");
             if (typeof window.showPrimerGraphicLoader === "function") {
               window.showPrimerGraphicLoader(msg?.title, msg);
             }
@@ -1406,6 +1450,7 @@
             if (typeof window.applyPrimerGraphic === "function") {
               graphicApplied = window.applyPrimerGraphic(msg) || graphicApplied;
             }
+            if (this.state === "SPEAKING") this._syncVoiceButtonUI("speaking");
             const imageUrl = msg?.url || msg?.href || (Array.isArray(msg?.canvasActions) && msg.canvasActions[0]?.href) || (Array.isArray(msg?.visualPlan?.commands) && msg.visualPlan.commands[0]?.href) || "";
             if (imageUrl && window.Lumi6Lesson && typeof window.Lumi6Lesson.attachImage === "function") {
               window.Lumi6Lesson.attachImage(imageUrl);

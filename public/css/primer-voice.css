@@ -210,7 +210,6 @@ body.mode-talk-active #primerVoiceOverlay.primer-visible {
 }
 
 /* Mic button holding state (Push-to-Talk) */
-.talk-mic-btn.primer-holding,
 #primerVoiceToggle.primer-holding {
   background: #dc2626 !important;
   color: #ffffff !important;
@@ -218,23 +217,15 @@ body.mode-talk-active #primerVoiceOverlay.primer-visible {
   box-shadow: 0 0 0 6px rgba(239, 68, 68, 0.35) !important;
 }
 
-.talk-mic-btn.primer-listening {
-  background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
-  color: #ffffff;
-  animation: primerVoiceOrbPulse 1.4s infinite alternate;
-}
-
-.talk-mic-btn.primer-processing {
-  background: #fff7ed;
-  color: #ea580c;
-  box-shadow: 0 0 0 3px rgba(234, 88, 12, 0.35), 0 8px 18px rgba(234, 88, 12, 0.22);
-  animation: talkMicThink 1.1s ease-in-out infinite;
-}
-
+.talk-mic-btn.primer-holding,
+.talk-mic-btn.primer-listening,
+.talk-mic-btn.primer-processing,
 .talk-mic-btn.primer-speaking {
-  background: linear-gradient(135deg, #7c3aed 0%, #4c1d95 100%);
-  color: #ffffff;
-  box-shadow: 0 0 0 3px rgba(124, 58, 237, 0.28);
+  background: transparent !important;
+  color: inherit !important;
+  box-shadow: none !important;
+  animation: none !important;
+  transform: none !important;
 }
 
 @keyframes primerKidBob {

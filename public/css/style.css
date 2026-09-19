@@ -1678,75 +1678,66 @@ body.mode-draw-active .sketch-tool-group {
   bottom: 56px;
   left: 50%;
   right: auto;
-  margin-left: -36px;
+  margin-left: -28px;
   transform: none;
-  width: 72px;
-  height: 72px;
+  width: 56px;
+  height: 56px;
   pointer-events: none;
-  overflow: visible;
+  overflow: hidden;
+  background: transparent;
+  box-shadow: none;
 }
 
 .ai-orb {
   position: absolute;
   z-index: 3;
-  inset: 6px;
+  inset: 0;
   display: grid;
-  width: 60px;
-  height: 60px;
+  width: 56px;
+  height: 56px;
   place-items: center;
   padding: 0;
   pointer-events: auto;
   border: none;
   border-radius: 50%;
-  background:
-    radial-gradient(circle at 32% 28%, rgba(255, 255, 255, 0.42) 0 14%, transparent 40%),
-    radial-gradient(circle at 50% 50%, #4c1d95 0 46%, #1e0a3c 100%);
-  box-shadow:
-    0 0 0 4px rgba(255, 255, 255, 0.35),
-    0 12px 28px rgba(30, 10, 60, 0.45);
+  background: transparent;
+  box-shadow: none;
   cursor: pointer;
   touch-action: none;
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  transition: transform 0.2s ease;
 }
 
 .ai-orb:hover {
   transform: scale(1.06);
-  box-shadow:
-    0 0 0 6px rgba(255, 255, 255, 0.7),
-    0 14px 32px rgba(91, 79, 232, 0.38);
+  box-shadow: none;
+}
+
+.draw-voice-orb,
+.draw-voice-orb .voice-orb-wrapper,
+.draw-voice-orb canvas,
+.talk-voice-orb,
+.talk-voice-orb .voice-orb-wrapper,
+.talk-voice-orb canvas {
+  width: 56px;
+  height: 56px;
+  overflow: hidden;
+  border-radius: 50%;
+  background: transparent !important;
+  box-shadow: none !important;
+  pointer-events: none;
 }
 
 .ai-orb::before {
-  content: '';
-  position: absolute;
-  width: 70%;
-  height: 70%;
-  border: 1.5px solid rgba(255, 255, 255, 0.45);
-  border-radius: 50%;
+  display: none;
 }
 
-/* Hide old orb decorations */
+/* Hide old orb decorations — thinking is the WebGL orb, not a spinner */
 .arcane-crystal,
 .reactor-core,
-.einstein-portrait { display: none !important; }
-
-.orb-aura, .orb-runes, .orb-particle { position: absolute; pointer-events: none; opacity: 0; }
-.orb-aura { inset: 0; border: 1px solid rgba(91, 79, 232, 0.25); border-radius: 50%; box-shadow: 0 0 18px rgba(91, 79, 232, 0.4); }
-.orb-runes { inset: -7px; border: 1px dashed rgba(91, 79, 232, 0.45); border-radius: 50%; }
-.orb-particle { width: 4px; height: 4px; border-radius: 50%; background: #A5B4FF; box-shadow: 0 0 7px 2px rgba(91, 79, 232, 0.5); }
-.particle-one { top: 0; left: 10px; }
-.particle-two { right: 0; bottom: 15px; }
-.particle-three { left: 5px; bottom: 3px; }
-
-.ai-embodiment.working .orb-aura,
-.ai-embodiment.working .orb-runes,
-.ai-embodiment.working .orb-particle { opacity: 1; }
-
-.ai-embodiment.working .orb-aura { animation: aura-pulse 1.7s ease-in-out infinite alternate; }
-.ai-embodiment.working .orb-runes { animation: rune-spin 7s linear infinite; }
-.ai-embodiment.working .particle-one { animation: particle-one 1.9s ease-in-out infinite; }
-.ai-embodiment.working .particle-two { animation: particle-two 2.3s ease-in-out infinite; }
-.ai-embodiment.working .particle-three { animation: particle-three 1.6s ease-in-out infinite; }
+.einstein-portrait,
+.orb-aura,
+.orb-runes,
+.orb-particle { display: none !important; }
 
 @keyframes aura-pulse { to { transform: scale(1.3); opacity: .25; box-shadow: 0 0 32px 8px rgba(91,79,232,.6); } }
 @keyframes rune-spin { to { transform: rotate(360deg); } }
@@ -2726,14 +2717,17 @@ button, a, .btool, .topbar-icon-btn, .zoom-btn, .share-btn, .nav-item {
     right: 12px;
     bottom: calc(28px + env(safe-area-inset-bottom));
     transform: none;
-    width: 60px;
-    height: 60px;
+    width: 56px;
+    height: 56px;
+    margin-left: 0;
   }
 
   .ai-orb {
-    width: 48px;
-    height: 48px;
-    inset: 6px;
+    width: 56px;
+    height: 56px;
+    inset: 0;
+    background: transparent;
+    box-shadow: none;
   }
 
   .ai-radial {
@@ -3487,6 +3481,16 @@ body.mode-sim-active .canvas-footer {
   margin-top: 8px;
 }
 
+.talk-visual-pending-quiet {
+  padding: 8px 0 2px;
+}
+
+.talk-visual-pending-quiet .talk-wait-hint {
+  margin: 0;
+  color: #6b7280;
+  font-size: 14px;
+}
+
 .talk-visual-pending .lumi-wait-stage {
   width: 132px;
   height: 152px;
@@ -3810,41 +3814,38 @@ iframe.talk-lesson-pill {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 48px;
-  height: 48px;
+  width: 56px;
+  height: 56px;
   padding: 0;
   border-radius: 50%;
   border: none;
-  background: linear-gradient(135deg, #ec4899 0%, #db2777 100%);
-  color: #ffffff;
+  background: transparent;
+  color: inherit;
   cursor: pointer;
-  box-shadow: 0 4px 12px rgba(219, 39, 119, 0.3);
-  transition: background 0.2s ease, box-shadow 0.2s ease, transform 0.16s ease;
+  box-shadow: none;
+  transition: transform 0.16s ease;
   flex-shrink: 0;
+  overflow: hidden;
 }
 
 .talk-mic-btn:hover {
   transform: translateY(-1px);
-  box-shadow: 0 6px 16px rgba(219, 39, 119, 0.4);
 }
 
 .talk-mic-btn.primer-holding,
-.talk-mic-btn.primer-listening {
-  background: linear-gradient(135deg, #f43f5e 0%, #e11d48 100%);
-  box-shadow: 0 0 0 4px rgba(244, 63, 94, 0.22);
-}
-
-.talk-mic-btn.primer-processing {
-  background: #fff7ed;
-  color: #ea580c;
-  box-shadow: 0 0 0 3px rgba(234, 88, 12, 0.35), 0 8px 18px rgba(234, 88, 12, 0.22);
-  animation: talkMicThink 1.1s ease-in-out infinite;
-}
-
+.talk-mic-btn.primer-listening,
+.talk-mic-btn.primer-processing,
 .talk-mic-btn.primer-speaking {
-  background: linear-gradient(135deg, #7c3aed 0%, #4c1d95 100%);
-  color: #fff;
-  box-shadow: 0 0 0 3px rgba(124, 58, 237, 0.28);
+  background: transparent;
+  box-shadow: none;
+  animation: none;
+}
+
+.talk-voice-orb,
+.talk-voice-orb .voice-orb-wrapper {
+  width: 56px;
+  height: 56px;
+  pointer-events: none;
 }
 
 @keyframes talkMicThink {

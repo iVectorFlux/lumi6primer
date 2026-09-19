@@ -883,8 +883,10 @@
     state.busy = Boolean(value);
     embodiment.classList.toggle("working", state.busy);
     embodiment.setAttribute("aria-busy", String(state.busy));
-    if (state.busy) showSummon();
-    else hideSummon();
+    if (window.Lumi6Orb && typeof window.Lumi6Orb.setDrawBusy === "function") {
+      window.Lumi6Orb.setDrawBusy(state.busy, "ai");
+    }
+    hideSummon();
   }
   function setNavigating(value) {
     clearTimeout(state.navigationTimer);

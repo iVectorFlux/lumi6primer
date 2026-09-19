@@ -256,6 +256,7 @@
 
   function closeProfilePanel() {
     const el = profilePanel();
+    if (window.Lumi6Orb) window.Lumi6Orb.destroyPicker();
     if (el) el.hidden = true;
   }
 
@@ -286,6 +287,11 @@
       const action = event.target.closest("[data-profile]")?.dataset.profile;
       if (action === "close") closeProfilePanel();
       if (action === "edit") openEditFromProfile();
+      if (action === "theme") renderThemeChooser();
+      if (action === "theme-back") {
+        if (window.Lumi6Orb) window.Lumi6Orb.destroyPicker();
+        renderProfileBody(window.supabaseAuth?.user || null, state.profile || readLocal() || {});
+      }
     });
   }
 
@@ -310,10 +316,35 @@
         <div><dt>Interests</dt><dd>${interests.length ? escapeAttr(interests.join(", ")) : "Not set"}</dd></div>
         <div><dt>Pictures</dt><dd>${visualBandLabel(grade)}</dd></div>
       </dl>
+      <button type="button" class="onboard-back orb-theme-open" data-profile="theme">Choose theme</button>
       <div class="onboard-actions">
         <button type="button" class="onboard-back" data-profile="close">Done</button>
         <button type="button" class="onboard-next" data-profile="edit">Edit</button>
       </div>`;
+  }
+
+  function renderThemeChooser() {
+    const body = document.getElementById("lumi6ProfileBody");
+    if (!body) return;
+    if (window.Lumi6Orb) window.Lumi6Orb.destroyPicker();
+    body.innerHTML = `
+      <div class="profile-head">
+        <p class="onboard-kicker">Voice orb</p>
+        <button type="button" class="profile-close" data-profile="theme-back" aria-label="Back">&times;</button>
+      </div>
+      <h2 id="profileTitle">Choose theme</h2>
+      <p class="onboard-lead">Pick a color for the talk orb. Tap a name to try it.</p>
+      <div class="orb-theme-preview" id="orbThemePreview"></div>
+      <div class="orb-theme-list" id="orbThemeList" role="listbox" aria-label="Orb themes"></div>
+      <div class="onboard-actions">
+        <button type="button" class="onboard-next" data-profile="theme-back">Back</button>
+      </div>`;
+    if (window.Lumi6Orb) {
+      window.Lumi6Orb.mountThemePicker(
+        document.getElementById("orbThemePreview"),
+        document.getElementById("orbThemeList")
+      );
+    }
   }
 
   async function openProfilePanel() {
@@ -326,6 +357,7 @@
     el.hidden = false;
     const user = await currentUser(6);
     const remote = await loadRemoteProfile();
+    if (document.getElementById("orbThemeList")) return;
     if (remote) {
       saveLocal(remote);
       renderProfileBody(user, remote);

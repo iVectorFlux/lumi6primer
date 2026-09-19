@@ -79,13 +79,8 @@
     nodes.forEach((el) => play(el, data));
   }
 
-  function showTalkWait(kind) {
-    const el = document.getElementById("talkWait");
-    if (!el) return;
-    el.innerHTML = waitHtml(kind || "think");
-    el.hidden = false;
-    el.classList.add("is-on");
-    requestAnimationFrame(() => mountWaiters(el));
+  function showTalkWait() {
+    hideTalkWait();
   }
 
   function hideTalkWait() {
