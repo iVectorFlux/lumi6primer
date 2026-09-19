@@ -94,7 +94,18 @@ function fromFiles() {
   return ITEMS.map((item) => {
     const html = readHtmlFile(item.slug);
     if (!html) return null;
-    return { ...item, keywords: keywordsFromTitle(item.title), searchText: stemPhrase([item.title, ...(item.topics || [])].join(" ")), html, enabled: true, id: item.slug };
+    const scenario = isScenarioHtml(html);
+    return {
+      ...item,
+      keywords: keywordsFromTitle(item.title),
+      searchText: stemPhrase([item.title, ...(item.topics || [])].join(" ")),
+      html,
+      enabled: true,
+      id: item.slug,
+      klass: item.klass || item.grade_min || null,
+      scenario,
+      pill: item.pill || (scenario ? { title: item.title, subtitle: item.summary || "" } : null)
+    };
   }).filter(Boolean);
 }
 
@@ -158,7 +169,7 @@ async function getBySlug(slug, store) {
 }
 
 function interactiveHref(slug, mode) {
-  const base = `/api/primer/interactive/${encodeURIComponent(itemSlug(slug))}?embed=1&v=20260962`;
+  const base = `/api/primer/interactive/${encodeURIComponent(itemSlug(slug))}?embed=1&v=20260968`;
   return mode ? `${base}&mode=${encodeURIComponent(mode)}` : base;
 }
 
@@ -175,7 +186,7 @@ function commandFor(item) {
     slug,
     title: item.title || slug,
     subject: item.subject || "",
-    klass: item.klass || null,
+    klass: item.klass || item.grade_min || null,
     idea: item.idea || "",
     concept: item.concept || "",
     summary: item.summary || "",
@@ -261,12 +272,16 @@ ${TITLE_SEL},.view-switcher,.switch-btn,.specs-bar,.top-header,
 `;
 
 const SCENARIO_PILL_CSS = `
-html,body{width:100%!important;height:auto!important;min-height:0!important;max-height:88px!important;margin:0!important;padding:0!important;overflow:hidden!important;background:transparent!important}
-body{display:block!important;align-items:stretch!important}
-${PILL_SEL}{display:flex!important;flex-direction:column!important;width:100%!important;overflow:hidden!important;max-height:88px!important}
-.showcase-container,.showcase-grid-top{display:flex!important;flex-direction:column!important;height:auto!important}
+html,body{width:100%!important;height:80px!important;min-height:0!important;max-height:80px!important;margin:0!important;padding:0!important;overflow:hidden!important;background:transparent!important}
+body{display:block!important;position:relative!important}
+${PILL_SEL}{display:block!important;width:100%!important;height:80px!important;overflow:visible!important;padding:0!important;margin:0!important}
+.showcase-container,.showcase-grid-top,.view-section,.showcase-item{display:block!important;width:100%!important;height:auto!important;min-height:0!important;margin:0!important;padding:0!important;gap:0!important}
 ${MOBILE_SEL},${DESKTOP_SEL},${HIDDEN_OVERLAY},.mobile-phone-frame,.desktop-card,${TITLE_SEL}{display:none!important}
-.chat-pill-card,#chatPillCard,#chatPillTrigger,#openDrawerCard{display:flex!important;width:100%!important;max-width:100%!important;margin:0!important;cursor:pointer}
+.chat-pill-card,#chatPillCard,#chatPillTrigger,#openDrawerCard{position:fixed!important;top:4px!important;left:4px!important;display:flex!important;flex-direction:row!important;align-items:center!important;justify-content:flex-start!important;gap:12px!important;width:min(350px,calc(100% - 8px))!important;max-width:350px!important;height:72px!important;margin:0!important;z-index:40!important;cursor:pointer;box-sizing:border-box!important}
+.pill-icon-box{display:flex!important;width:76px!important;height:52px!important;flex:0 0 76px!important;overflow:hidden!important}
+.pill-info,.pill-content{flex:1 1 auto!important;min-width:0!important;display:flex!important;flex-direction:column!important;gap:2px!important}
+.pill-title,.pill-formula,.pill-subtitle{letter-spacing:normal!important;word-spacing:normal!important;white-space:nowrap!important;overflow:hidden!important;text-overflow:ellipsis!important;max-width:100%!important}
+.pill-expand-btn{display:flex!important;flex:0 0 36px!important}
 `;
 
 const SCENARIO_MOBILE_CSS = `
@@ -403,6 +418,11 @@ function scenarioBootScript(mode) {
     }
     if (typeof setMode === "function") {
       try { setMode(mode); } catch (e) {}
+    } else if (mode === "pill") {
+      var switcher = document.querySelector('.switch-btn[data-view="pill"], [data-view="pill"]');
+      if (switcher) {
+        try { switcher.click(); } catch (e) {}
+      }
     }
     showSections();
     paint();

@@ -12939,11 +12939,38 @@ User writes "Show air quality for Tokyo", names a place, and points to an empty 
     ].join("\n                  ");
   }
 
-  /** Native pill iframe from the interactive HTML — tap expands in the parent. */
+  function nativeInteractivePillHtml(interactive, label, subtitle, extraClass = "") {
+    const extra = extraClass ? ` ${extraClass}` : "";
+    return `
+            <div class="talk-interactive-pill-wrapper${extra}" data-interactive-slug="${escapeHtml(interactive.slug)}" ${interactiveMetaAttrs(interactive)}>
+              <button type="button" class="talk-interactive-pill" data-expand-interactive title="${escapeHtml(label)}">
+                <span class="talk-pill-icon" aria-hidden="true">
+                  <svg width="32" height="24" viewBox="0 0 32 24" fill="none">
+                    <polygon points="6,20 26,20 6,6" fill="rgba(139,92,246,0.12)" stroke="#8b5cf6" stroke-width="1.8"/>
+                    <rect x="6" y="15" width="5" height="5" fill="none" stroke="#94a3b8" stroke-width="1"/>
+                  </svg>
+                </span>
+                <span class="talk-pill-body">
+                  <span class="talk-pill-title">${escapeHtml(label)}</span>
+                  <span class="talk-pill-sub">${escapeHtml(subtitle)}</span>
+                </span>
+                <span class="talk-pill-action" aria-hidden="true">
+                  <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="15 3 21 3 21 9"/><polyline points="9 21 3 21 3 15"/><line x1="21" y1="3" x2="14" y2="10"/><line x1="3" y1="21" x2="10" y2="14"/></svg>
+                </span>
+              </button>
+              <div class="talk-interactive-stage" hidden aria-hidden="true"></div>
+            </div>`;
+  }
+
+  /** Designed HTML pill when the sim has one; compact native pill otherwise. */
   function talkInteractivePillHtml(step, titleText, extraClass = "") {
     const interactive = step.interactive;
     const pill = interactive.pill || {};
     const label = pill.title || interactive.title || titleText;
+    const subtitle = pill.subtitle || interactive.concept || interactive.summary || "Tap to explore";
+    if (!interactive.scenario && !pill.title) {
+      return nativeInteractivePillHtml(interactive, label, subtitle, extraClass);
+    }
     const href = interactive.hrefPill || interactive.href || `/api/primer/interactive/${encodeURIComponent(interactive.slug)}?embed=1&mode=pill`;
     const src = href.includes("mode=") ? href : `${href}${href.includes("?") ? "&" : "?"}mode=pill`;
     const extra = extraClass ? ` ${extraClass}` : "";
@@ -13438,7 +13465,7 @@ User writes "Show air quality for Tokyo", names a place, and points to an empty 
     const pill = wrapper.querySelector("iframe.talk-lesson-pill");
     const data = { ...wrapper.dataset, ...(pill?.dataset || {}), ...(trigger.dataset || {}) };
     const slug = data.slug || data.interactiveSlug || wrapper.dataset.interactiveSlug || "";
-    const label = pill?.getAttribute("title") || trigger.getAttribute?.("title") || slug;
+    const label = pill?.getAttribute("title") || trigger.getAttribute?.("title") || trigger.querySelector?.(".talk-pill-title")?.textContent?.trim() || slug;
     if (!frame) {
       frame = document.createElement("iframe");
       frame.className = "talk-lesson-interactive";
@@ -13500,7 +13527,7 @@ User writes "Show air quality for Tokyo", names a place, and points to an empty 
   function applyInteractiveHeight(frame, height) {
     if (!frame || !height) return;
     if (frame.classList.contains("talk-lesson-pill")) {
-      frame.style.height = `${Math.max(72, Math.min(height, 88))}px`;
+      frame.style.height = `${Math.max(72, Math.min(height, 80))}px`;
       return;
     }
     const inPlayground = Boolean(frame.closest("#talkPlaygroundStage"));
@@ -13728,7 +13755,12 @@ User writes "Show air quality for Tokyo", names a place, and points to an empty 
         <section class="sim-class-block">
           <h2 class="sim-class-label">${escapeHtml(classHeading(klass))}</h2>
           <div class="sim-pill-list">
-            ${rows.map((interactive) => talkInteractivePillHtml({ interactive }, interactive.title || interactive.slug, "sim-pill-item")).join("")}
+            ${rows.map((interactive) => {
+              const pill = interactive.pill || {};
+              const label = pill.title || interactive.title || interactive.slug;
+              const subtitle = pill.subtitle || interactive.concept || interactive.summary || "Tap to explore";
+              return nativeInteractivePillHtml(interactive, label, subtitle, "sim-pill-item");
+            }).join("")}
           </div>
         </section>
       `)
@@ -13761,6 +13793,7 @@ User writes "Show air quality for Tokyo", names a place, and points to an empty 
       feed.innerHTML = items.length
         ? simCatalogHtml(items)
         : `<p class="sim-feed-status">No interactives yet.</p>`;
+      bindTalkPlayground(feed);
     } catch {
       feed.innerHTML = `<p class="sim-feed-status">Could not load interactives. Try again.</p>`;
     }

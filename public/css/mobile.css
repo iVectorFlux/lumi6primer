@@ -461,7 +461,7 @@ button,
   iframe.talk-lesson-pill {
     width: 100%;
     max-width: none;
-    height: 88px;
+    height: 80px;
   }
 
   .talk-playground {
