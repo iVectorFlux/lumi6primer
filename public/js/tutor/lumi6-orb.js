@@ -14,6 +14,7 @@
   };
   const STATE_PRESETS = {
     idle: IDLE,
+    ready: { speed: 1.22, zoom: 1.52, turb: 1.15, grain: 1.05 },
     listening: { speed: 1.6, zoom: 1.52, turb: 2.4, grain: 1.8 },
     thinking: { speed: 1.55, zoom: 1.50, turb: 1.9, grain: 1.25 },
     speaking: { speed: 2.0, zoom: 1.52, turb: 1.7, grain: 0.6 }
@@ -47,14 +48,14 @@
     try { localStorage.setItem(STORAGE_KEY, key); } catch {}
   }
 
-  function applyPreset(orb, stateName) {
+  function applyPreset(orb, stateName, shaderState) {
     if (!orb) return;
     const preset = STATE_PRESETS[stateName] || IDLE;
     orb.setSpeed(preset.speed);
     orb.setZoom(preset.zoom);
     orb.setTurbulence(preset.turb);
     orb.setGrain(preset.grain);
-    orb.setState(stateName);
+    orb.setState(shaderState || (stateName === "ready" ? "listening" : stateName));
   }
 
   function makeOrb(container, extra) {
@@ -86,21 +87,30 @@
     if (!talkOrb) mountTalkOrb();
     if (!talkOrb) return;
     if (talkState === "listening") {
-      applyPreset(talkOrb, talkVoiceActive ? "listening" : "idle");
+      applyPreset(talkOrb, talkVoiceActive ? "listening" : "ready");
       return;
     }
     applyPreset(talkOrb, talkState);
   }
 
   function setTalkState(stateName) {
-    const next = STATE_PRESETS[stateName] ? stateName : "idle";
+    const next = stateName === "listening" || stateName === "thinking" || stateName === "speaking" ? stateName : "idle";
+    const enteredListen = next === "listening" && talkState !== "listening";
     talkState = next;
-    if (next !== "listening") {
+    if (talkState !== "listening") {
       talkVoiceActive = false;
       if (talkVoiceTimer) {
         clearTimeout(talkVoiceTimer);
         talkVoiceTimer = null;
       }
+    } else if (enteredListen) {
+      talkVoiceActive = true;
+      if (talkVoiceTimer) clearTimeout(talkVoiceTimer);
+      talkVoiceTimer = setTimeout(() => {
+        talkVoiceTimer = null;
+        talkVoiceActive = false;
+        applyTalkVisual();
+      }, 720);
     }
     applyTalkVisual();
   }

@@ -13258,6 +13258,9 @@ User writes "Show air quality for Tokyo", names a place, and points to an empty 
 
     if (currentAppViewMode === "talk") {
       if (typeof window.hideTalkWait === "function") window.hideTalkWait();
+      if (window.primerVoice && typeof window.primerVoice.warmupMic === "function") {
+        window.primerVoice.warmupMic();
+      }
       syncTalkModeFeed({ scroll: true });
     } else if (currentAppViewMode === "sim") {
       if (typeof window.hideTalkWait === "function") window.hideTalkWait();

@@ -156,24 +156,32 @@
 
     start({ keepBuffer = false } = {}) {
       if (!this.isSupported) return false;
-      if (this.isListening) {
-        try { this.recognition.abort(); } catch {}
-        this.isListening = false;
-        return false;
-      }
+      if (this.isListening) return true;
       if (!keepBuffer) {
         this._finalParts = [];
         this._interim = "";
         this.lastTranscript = "";
-        this._bindEngine();
       }
+      if (!this.recognition) this._bindEngine();
       try {
         this.recognition.start();
         this.isListening = true;
         return true;
       } catch (err) {
-        this.isListening = false;
-        return false;
+        const already = /already started|started/i.test(String(err?.message || err || ""));
+        if (already) {
+          this.isListening = true;
+          return true;
+        }
+        this._bindEngine();
+        try {
+          this.recognition.start();
+          this.isListening = true;
+          return true;
+        } catch {
+          this.isListening = false;
+          return false;
+        }
       }
     }
 
@@ -870,6 +878,8 @@
         return;
       }
       this.tts.unlockPlayback();
+      this.state = "LISTENING";
+      this._syncVoiceButtonUI("listening");
       this.startPushToTalk();
     }
 
@@ -892,15 +902,14 @@
       this.clearSpeechBuffer();
       const talkInput = document.getElementById("talkModeTextInput");
       this._speechSeed = String(talkInput?.value || "").trim();
-      this.tts.cancel();
       this.state = "LISTENING";
       this.showOverlay("listening", "Listening... speak now");
       this._syncVoiceButtonUI("listening");
       const tryStart = (attempt) => {
         if (!this.isTalkModeActive() || this.state !== "LISTENING" || !this.isActive) return;
         const started = this.stt ? this.stt.start({ keepBuffer: false }) : false;
-        if (!started && attempt < 4) {
-          window.setTimeout(() => tryStart(attempt + 1), 90 * (attempt + 1));
+        if (!started && attempt < 3) {
+          window.setTimeout(() => tryStart(attempt + 1), 40);
         }
       };
       tryStart(0);
@@ -1082,7 +1091,18 @@
       this.startListening();
     }
 
-    primeMic() {}
+    warmupMic() {
+      if (this.stt && !this.stt.recognition && typeof this.stt._bindEngine === "function") {
+        this.stt._bindEngine();
+      }
+      if (this.tts && typeof this.tts.unlockPlayback === "function") {
+        try { this.tts.unlockPlayback(); } catch {}
+      }
+    }
+
+    primeMic() {
+      this.warmupMic();
+    }
 
     listenAfterSpeech() {
       if (this._openingListen) return;
