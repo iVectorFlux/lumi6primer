@@ -519,6 +519,10 @@
       this.wrapper.style.justifyContent = 'center';
       this.wrapper.style.userSelect = 'none';
       this.wrapper.style.touchAction = 'none';
+      this.wrapper.style.borderRadius = '50%';
+      this.wrapper.style.overflow = 'hidden';
+      this.wrapper.style.aspectRatio = '1 / 1';
+      this.wrapper.style.flexShrink = '0';
 
       const size = this.options.size;
       const sizePx = typeof size === 'number' ? `${size}px` : size;
@@ -548,6 +552,9 @@
       this.canvas.style.height = '100%';
       this.canvas.style.display = 'block';
       this.canvas.style.borderRadius = '50%';
+      this.canvas.style.aspectRatio = '1 / 1';
+      this.canvas.style.overflow = 'hidden';
+      this.canvas.style.flexShrink = '0';
       this.wrapper.appendChild(this.canvas);
 
       this.container.appendChild(this.wrapper);
@@ -662,8 +669,10 @@
     _updateCanvasSize() {
       const dpr = Math.min(window.devicePixelRatio || 1, this._isPhone ? 1.25 : 2.0);
       const rect = this.canvas.getBoundingClientRect();
-      const w = Math.round((rect.width || this.options.size || 300) * dpr);
-      const h = Math.round((rect.height || this.options.size || 300) * dpr);
+      const rawDim = Math.min(rect.width || this.options.size || 300, rect.height || this.options.size || 300);
+      const sizePx = Math.max(16, rawDim);
+      const w = Math.round(sizePx * dpr);
+      const h = w;
 
       if (this.canvas.width !== w || this.canvas.height !== h) {
         this.canvas.width = w;

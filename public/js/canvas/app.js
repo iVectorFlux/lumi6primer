@@ -1430,6 +1430,29 @@ User writes "Show air quality for Tokyo", names a place, and points to an empty 
     if (!state.summonEnabled) hideSummon();
     updateSettingsPanel();
   }
+  window.Lumi6AppSettings = {
+    setAuto: (enabled) => {
+      state.auto = Boolean(enabled);
+      localStorage.setItem("lumi6-auto", String(state.auto));
+      updateAutoControl();
+      updateSettingsPanel();
+    },
+    getAuto: () => Boolean(state.auto),
+    setAiFont: (font) => {
+      state.aiFont = font;
+      localStorage.setItem("lumi6-ai-font", font);
+      const sel = document.querySelector("#aiFont");
+      if (sel) sel.value = font;
+      if (typeof positionTextEditors === "function") positionTextEditors();
+    },
+    getAiFont: () => state.aiFont || '"Patrick Hand", "Segoe Print", "Comic Sans MS", cursive',
+    setSummonEnabled: (enabled) => {
+      setSummonEnabled(enabled);
+    },
+    getSummonEnabled: () => Boolean(state.summonEnabled),
+    openSettings,
+    closeSettings
+  };
   function maybeStartOnboarding() {
     return false;
   }
@@ -12166,21 +12189,25 @@ User writes "Show air quality for Tokyo", names a place, and points to an empty 
   });
   changelogLayer.addEventListener("keydown", handleChangelogKeydown);
   settingsButton.addEventListener("click", () => {
+    if (typeof window.Lumi6Profile?.openPanel === "function") {
+      window.Lumi6Profile.openPanel();
+      return;
+    }
     if (settings.open) closeSettings();
     else openSettings();
   });
-  settingsCloseButton.addEventListener("click", () => closeSettings());
-  settingsBackdrop.addEventListener("pointerdown", () => closeSettings());
-  settingsPanel.addEventListener("pointerdown", (event) => event.stopPropagation());
-  settingsAutoToggle.addEventListener("click", () => setAutoEnabled(!state.auto));
-  summonToggle.addEventListener("click", () => setSummonEnabled(!state.summonEnabled));
-  settingsTourButton.addEventListener("click", () => {
+  settingsCloseButton?.addEventListener("click", () => closeSettings());
+  settingsBackdrop?.addEventListener("pointerdown", () => closeSettings());
+  settingsPanel?.addEventListener("pointerdown", (event) => event.stopPropagation());
+  settingsAutoToggle?.addEventListener("click", () => setAutoEnabled(!state.auto));
+  summonToggle?.addEventListener("click", () => setSummonEnabled(!state.summonEnabled));
+  settingsTourButton?.addEventListener("click", () => {
     closeSettings(false);
     replayFeatureTour();
   });
-  settingsChangelogButton.addEventListener("click", () => {
+  settingsChangelogButton?.addEventListener("click", () => {
     closeSettings(false);
-    maybeShowChangelog(true);
+    openChangelog(true);
   });
   window.addEventListener("keydown", (event) => {
     if (event.key === "Escape" && settings.open) {
@@ -12998,7 +13025,8 @@ User writes "Show air quality for Tokyo", names a place, and points to an empty 
       ? `data-src="${escapeHtml(src)}" src="about:blank"`
       : `src="${escapeHtml(src)}"`;
     return `
-            <div class="talk-interactive-pill-wrapper${extra}" data-interactive-slug="${escapeHtml(interactive.slug)}" ${interactiveMetaAttrs(interactive)}>
+            <div class="talk-interactive-pill-wrapper${extra}" data-interactive-slug="${escapeHtml(interactive.slug)}" ${interactiveMetaAttrs(interactive)} data-expand-interactive role="button" tabindex="0" title="Open ${escapeHtml(label)}">
+              <button type="button" class="talk-pill-open" data-expand-interactive aria-label="Open ${escapeHtml(label)}"></button>
               <iframe
                 class="talk-lesson-pill"
                 ${interactiveMetaAttrs(interactive)}
@@ -13551,10 +13579,12 @@ User writes "Show air quality for Tokyo", names a place, and points to an empty 
   }
 
   function bindTalkPlayground(feed) {
-    feed.querySelectorAll("[data-expand-interactive]").forEach((btn) => {
-      btn.addEventListener("click", () => {
-        const frame = btn.closest(".talk-interactive-wrapper")?.querySelector("iframe.talk-lesson-interactive")
-          || ensureInteractiveFrame(btn);
+    if (!feed) return;
+    feed.querySelectorAll("[data-expand-interactive], .talk-interactive-pill-wrapper").forEach((btn) => {
+      btn.addEventListener("click", (e) => {
+        e.preventDefault();
+        const frame = btn.closest(".talk-interactive-wrapper")?.querySelector("iframe.talk-lesson-interactive:not(.talk-lesson-pill)")
+          || ensureInteractiveFrame(btn, isPhoneViewport() ? "drawer" : "desktop");
         if (frame) openTalkPlayground(frame);
       });
     });
@@ -13866,6 +13896,9 @@ User writes "Show air quality for Tokyo", names a place, and points to an empty 
   bindModeBtn("#modeDrawBtn", "draw");
   bindModeBtn("#modeTalkBtn", "talk");
   bindModeBtn("#modeSimBtn", "sim");
+  bindModeBtn("#topbarModeDrawBtn", "draw");
+  bindModeBtn("#topbarModeTalkBtn", "talk");
+  bindModeBtn("#topbarModeSimBtn", "sim");
 
   const talkMic = document.querySelector("#talkModeMicBtn");
   if (talkMic && window.primerVoice && typeof window.primerVoice.bindMicTriggers === "function") {

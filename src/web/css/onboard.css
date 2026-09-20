@@ -1,0 +1,510 @@
+#lumi6Onboard,
+#lumi6ProfilePanel {
+  position: fixed;
+  inset: 0;
+  z-index: 12000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  background: rgba(15, 23, 42, 0.45);
+  backdrop-filter: saturate(180%) blur(20px);
+  -webkit-backdrop-filter: saturate(180%) blur(20px);
+}
+
+#lumi6Onboard[hidden],
+#lumi6ProfilePanel[hidden] {
+  display: none !important;
+}
+
+.profile-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 4px;
+}
+
+.profile-close {
+  width: 32px;
+  height: 32px;
+  border: 0;
+  border-radius: 980px;
+  background: rgba(120, 120, 128, 0.12);
+  color: #6e6e73;
+  font-size: 20px;
+  line-height: 1;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.15s ease;
+}
+
+.profile-close:hover {
+  background: rgba(120, 120, 128, 0.22);
+}
+
+.onboard-card {
+  width: min(500px, calc(100vw - 32px));
+  max-height: min(88vh, 640px);
+  display: flex;
+  flex-direction: column;
+  padding: 24px 28px 20px;
+  border: 0;
+  border-radius: 22px;
+  background: #fff;
+  box-shadow: 0 20px 48px rgba(0, 0, 0, 0.14), 0 0 0 1px rgba(0, 0, 0, 0.05);
+  color: #1e293b;
+  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", Helvetica, Arial, sans-serif;
+  overflow: hidden;
+  box-sizing: border-box;
+}
+
+.onboard-scroll {
+  flex: 1 1 auto;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding-right: 4px;
+  -webkit-overflow-scrolling: touch;
+}
+
+.onboard-card h2 {
+  margin: 0 0 6px;
+  font-family: inherit;
+  font-size: 24px;
+  line-height: 1.2;
+  font-weight: 700;
+  letter-spacing: -0.025em;
+}
+
+.onboard-kicker {
+  margin: 0;
+  font-size: 11px;
+  font-weight: 650;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: #64748b;
+}
+
+.onboard-lead {
+  margin: 0 0 12px;
+  font-size: 14.5px;
+  line-height: 1.45;
+  color: #64748b;
+}
+
+.profile-facts {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 8px;
+  margin: 12px 0 10px;
+}
+
+.profile-facts > div {
+  padding: 8px 12px;
+  border-radius: 12px;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+}
+
+.profile-facts > div.fact-full {
+  grid-column: span 2;
+}
+
+.profile-facts dt {
+  font-size: 10.5px;
+  font-weight: 650;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: #64748b;
+}
+
+.profile-facts dd {
+  margin: 2px 0 0;
+  font-size: 14.5px;
+  font-weight: 600;
+  word-break: break-word;
+  color: #0f172a;
+}
+
+/* ── Embedded Settings Section in Profile ──────────────────────── */
+.profile-settings-group {
+  margin: 12px 0 6px;
+  padding: 10px 14px;
+  border-radius: 14px;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+}
+
+.profile-settings-title {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: #64748b;
+  margin: 0 0 8px;
+}
+
+.profile-settings-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 6px 0;
+  border-bottom: 1px solid #edf2f7;
+}
+
+.profile-settings-row:last-child {
+  border-bottom: 0;
+}
+
+.profile-settings-label {
+  font-size: 13.5px;
+  font-weight: 550;
+  color: #1e293b;
+}
+
+.profile-settings-select {
+  padding: 5px 10px;
+  font-size: 13px;
+  font-weight: 500;
+  border-radius: 8px;
+  border: 1px solid #cbd5e1;
+  background: #fff;
+  color: #1e293b;
+  cursor: pointer;
+}
+
+.onboard-field {
+  display: grid;
+  gap: 6px;
+  margin: 14px 0 8px;
+  font-weight: 590;
+  color: #64748b;
+  font-size: 12.5px;
+}
+
+.onboard-field input {
+  height: 44px;
+  padding: 0 14px;
+  border: 0;
+  border-radius: 12px;
+  background: #f8fafc;
+  font: inherit;
+  font-size: 16px;
+  font-weight: 400;
+  color: #0f172a;
+  box-shadow: 0 0 0 1px rgba(60, 60, 67, 0.14);
+}
+
+.onboard-field input:focus {
+  outline: none;
+  background: #fff;
+  box-shadow: 0 0 0 3px rgba(109, 92, 255, 0.28);
+}
+
+.onboard-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: 8px 0 14px;
+}
+
+.onboard-chip {
+  border: 1px solid #e2e8f0;
+  border-radius: 980px;
+  background: #f8fafc;
+  color: #1e293b;
+  padding: 7px 14px;
+  font: inherit;
+  font-size: 13.5px;
+  font-weight: 550;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.onboard-chip:hover {
+  background: #edf2f7;
+  border-color: #cbd5e1;
+}
+
+.onboard-chip.selected {
+  background: #6d5cff;
+  color: #fff;
+  border-color: #6d5cff;
+}
+
+.onboard-actions {
+  flex: 0 0 auto;
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-top: 12px;
+  padding-top: 10px;
+  border-top: 1px solid #edf2f7;
+}
+
+.onboard-next,
+.onboard-back {
+  min-height: 40px;
+  padding: 0 18px;
+  border-radius: 980px;
+  font: inherit;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: opacity 0.15s ease, transform 0.1s ease;
+}
+
+.onboard-next {
+  border: 0;
+  background: #6d5cff;
+  color: #fff;
+}
+
+.onboard-next:hover {
+  background: #5b4be0;
+}
+
+.onboard-back {
+  border: 0;
+  background: rgba(120, 120, 128, 0.12);
+  color: #1e293b;
+}
+
+.onboard-back:hover {
+  background: rgba(120, 120, 128, 0.2);
+}
+
+.onboard-next:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.onboard-dots {
+  display: flex;
+  justify-content: center;
+  gap: 6px;
+  margin-top: 14px;
+}
+
+.onboard-dots i {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: rgba(120, 120, 128, 0.28);
+}
+
+.onboard-dots i.on {
+  background: #6d5cff;
+}
+
+#onboardNotice {
+  margin: 10px 0 0;
+  padding: 8px 12px;
+  border-radius: 10px;
+  background: #fff2f2;
+  color: #d70015;
+  font-size: 13.5px;
+  font-weight: 550;
+}
+
+/* ── Voice Orb Themes & Finishes in Onboard / Profile ─────────── */
+.orb-theme-open {
+  width: 100%;
+  margin: 10px 0 4px;
+  justify-content: center;
+}
+
+.orb-theme-preview {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 64px;
+  margin: 6px 0 10px;
+}
+
+.orb-theme-finish {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  margin: 0 0 12px;
+}
+
+.orb-finish-choice {
+  min-height: 38px;
+  padding: 6px 12px;
+  border: 1px solid rgba(60, 60, 67, 0.15);
+  border-radius: 12px;
+  background: #fff;
+  color: #1d1d1f;
+  font: inherit;
+  font-size: 13.5px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.orb-finish-choice:hover,
+.orb-finish-choice.is-selected {
+  border-color: #6d5cff;
+  background: rgba(109, 92, 255, 0.08);
+}
+
+.orb-finish-choice.is-selected {
+  box-shadow: 0 0 0 2.5px rgba(109, 92, 255, 0.2);
+}
+
+.orb-theme-preview .voice-orb-wrapper {
+  width: 52px;
+  height: 52px;
+}
+
+.orb-theme-list {
+  display: grid;
+  gap: 6px;
+  margin: 0 0 12px;
+  max-height: min(40vh, 320px);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+
+.orb-theme-choice {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  min-height: 48px;
+  padding: 6px 10px;
+  border: 1px solid rgba(60, 60, 67, 0.12);
+  border-radius: 14px;
+  background: #fff;
+  color: #1d1d1f;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.orb-theme-choice:hover,
+.orb-theme-choice.is-selected {
+  border-color: #6d5cff;
+  background: rgba(109, 92, 255, 0.06);
+}
+
+.orb-theme-choice.is-selected {
+  box-shadow: 0 0 0 2.5px rgba(109, 92, 255, 0.16);
+}
+
+.orb-theme-swatch {
+  flex: 0 0 42px;
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  box-shadow: inset 0 0 0 1px rgba(15, 23, 42, 0.06);
+}
+
+.orb-theme-copy {
+  min-width: 0;
+}
+
+.orb-theme-name {
+  display: block;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+@media (max-width: 640px) {
+  #lumi6Onboard,
+  #lumi6ProfilePanel {
+    padding: 10px;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .onboard-card {
+    width: 100%;
+    max-height: min(90dvh, 560px);
+    min-height: 0;
+    padding: 18px 16px 14px;
+    border-radius: 18px;
+  }
+
+  .onboard-card h2 {
+    font-size: 21px;
+    margin-bottom: 4px;
+  }
+
+  .onboard-lead {
+    font-size: 13.5px;
+    margin-bottom: 8px;
+  }
+
+  .profile-facts {
+    grid-template-columns: 1fr 1fr;
+    gap: 6px;
+    margin: 8px 0;
+  }
+
+  .profile-facts > div {
+    padding: 6px 10px;
+  }
+
+  .profile-facts dd {
+    font-size: 13.5px;
+  }
+
+  .profile-settings-group {
+    margin: 8px 0 4px;
+    padding: 8px 12px;
+  }
+
+  .profile-settings-row {
+    padding: 5px 0;
+  }
+
+  .profile-settings-label {
+    font-size: 13px;
+  }
+
+  .onboard-chip {
+    min-height: 38px;
+    padding: 6px 12px;
+    font-size: 13px;
+  }
+
+  .onboard-chips {
+    gap: 6px;
+    margin: 6px 0 10px;
+  }
+
+  .onboard-field {
+    margin: 10px 0 6px;
+  }
+
+  .onboard-field input {
+    height: 40px;
+    font-size: 15px;
+  }
+
+  .onboard-actions {
+    margin-top: 10px;
+    padding-top: 8px;
+  }
+
+  .onboard-next,
+  .onboard-back {
+    min-height: 38px;
+    font-size: 13.5px;
+  }
+
+  .orb-theme-list {
+    max-height: 220px;
+    overflow-y: auto;
+    margin-bottom: 8px;
+  }
+}

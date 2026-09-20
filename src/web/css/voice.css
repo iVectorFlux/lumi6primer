@@ -1,0 +1,68 @@
+/* Voice chrome is parked; Talk uses the composer mic. JS still creates these nodes. */
+#primerVoiceToggle,
+#primerVoiceToggle #primerVoiceLabel,
+#primerVoiceOverlay,
+#primerVoiceOverlay.primer-visible,
+body.mode-talk-active #primerVoiceOverlay,
+body.mode-talk-active #primerVoiceOverlay.primer-visible {
+  display: none !important;
+  opacity: 0 !important;
+  pointer-events: none !important;
+}
+
+/* ── 3D WebGL Voice Orb Housing ──────────────────────────────── */
+.draw-voice-orb,
+.draw-voice-orb .voice-orb-wrapper,
+.draw-voice-orb canvas {
+  width: 56px;
+  height: 56px;
+  max-width: 56px;
+  max-height: 56px;
+  aspect-ratio: 1 / 1;
+  overflow: hidden;
+  border-radius: 50% !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  pointer-events: none;
+  flex-shrink: 0;
+}
+
+.draw-voice-orb {
+  display: grid;
+  place-items: center;
+}
+
+.talk-voice-orb,
+.talk-voice-orb .voice-orb-wrapper,
+.talk-voice-orb canvas {
+  width: 100% !important;
+  height: 100% !important;
+  aspect-ratio: 1 / 1 !important;
+  overflow: hidden !important;
+  border-radius: 50% !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  pointer-events: none;
+  flex-shrink: 0;
+  display: block;
+}
+
+.talk-voice-orb {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+}
+
+.talk-mic-btn.primer-speaking {
+  background: transparent;
+  box-shadow: none;
+  animation: none;
+}
+
+.talk-mic-think {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+}

@@ -437,6 +437,12 @@ function scenarioBootScript(mode) {
           askParentExpand();
         }, true);
       });
+      document.addEventListener("click", function(){
+        askParentExpand();
+      }, true);
+      document.addEventListener("touchend", function(){
+        askParentExpand();
+      }, true);
     }
     if (tries++ < 8) setTimeout(function(){ showSections(); paint(); }, 90);
   }

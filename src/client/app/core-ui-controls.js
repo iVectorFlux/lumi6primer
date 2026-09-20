@@ -558,6 +558,29 @@
     if (!state.summonEnabled) hideSummon();
     updateSettingsPanel();
   }
+  window.Lumi6AppSettings = {
+    setAuto: (enabled) => {
+      state.auto = Boolean(enabled);
+      localStorage.setItem("lumi6-auto", String(state.auto));
+      updateAutoControl();
+      updateSettingsPanel();
+    },
+    getAuto: () => Boolean(state.auto),
+    setAiFont: (font) => {
+      state.aiFont = font;
+      localStorage.setItem("lumi6-ai-font", font);
+      const sel = document.querySelector("#aiFont");
+      if (sel) sel.value = font;
+      if (typeof positionTextEditors === "function") positionTextEditors();
+    },
+    getAiFont: () => state.aiFont || '"Patrick Hand", "Segoe Print", "Comic Sans MS", cursive',
+    setSummonEnabled: (enabled) => {
+      setSummonEnabled(enabled);
+    },
+    getSummonEnabled: () => Boolean(state.summonEnabled),
+    openSettings,
+    closeSettings
+  };
   function maybeStartOnboarding() {
     return false;
   }

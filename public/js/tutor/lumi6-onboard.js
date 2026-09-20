@@ -298,6 +298,53 @@
         if (window.Lumi6Orb) window.Lumi6Orb.destroyPicker();
         renderProfileBody(window.supabaseAuth?.user || null, state.profile || readLocal() || {});
       }
+      const autoBtn = event.target.closest("#profileAutoToggle");
+      if (autoBtn) {
+        const current = autoBtn.classList.contains("on");
+        const next = !current;
+        autoBtn.classList.toggle("on", next);
+        autoBtn.setAttribute("aria-checked", String(next));
+        if (window.Lumi6AppSettings?.setAuto) {
+          window.Lumi6AppSettings.setAuto(next);
+        } else {
+          try { localStorage.setItem("lumi6-auto", String(next)); } catch {}
+          const mainToggle = document.querySelector("#settingsAutoToggle");
+          if (mainToggle) {
+            mainToggle.classList.toggle("on", next);
+            mainToggle.setAttribute("aria-checked", String(next));
+          }
+        }
+      }
+      const summonBtn = event.target.closest("#profileSummonToggle");
+      if (summonBtn) {
+        const current = summonBtn.classList.contains("on");
+        const next = !current;
+        summonBtn.classList.toggle("on", next);
+        summonBtn.setAttribute("aria-checked", String(next));
+        if (window.Lumi6AppSettings?.setSummonEnabled) {
+          window.Lumi6AppSettings.setSummonEnabled(next);
+        } else {
+          try { localStorage.setItem("lumi6-summon-enabled", String(next)); } catch {}
+          const mainToggle = document.querySelector("#summonToggle");
+          if (mainToggle) {
+            mainToggle.classList.toggle("on", next);
+            mainToggle.setAttribute("aria-checked", String(next));
+          }
+        }
+      }
+    });
+
+    el.addEventListener("change", (event) => {
+      if (event.target?.id === "profileAiFont") {
+        const val = event.target.value;
+        if (window.Lumi6AppSettings?.setAiFont) {
+          window.Lumi6AppSettings.setAiFont(val);
+        } else {
+          try { localStorage.setItem("lumi6-ai-font", val); } catch {}
+          const mainSelect = document.querySelector("#aiFont");
+          if (mainSelect) mainSelect.value = val;
+        }
+      }
     });
   }
 
@@ -308,26 +355,48 @@
     const name = profile?.name || "Learner";
     const grade = String(profile?.grade || "").replace(/^class\s+/i, "");
     const interests = normalizeInterests(profile?.interests);
+    const autoOn = window.Lumi6AppSettings?.getAuto ? window.Lumi6AppSettings.getAuto() : (localStorage.getItem("lumi6-auto") !== "false");
+    const summonOn = window.Lumi6AppSettings?.getSummonEnabled ? window.Lumi6AppSettings.getSummonEnabled() : (localStorage.getItem("lumi6-summon-enabled") !== "false");
+    const currentFont = window.Lumi6AppSettings?.getAiFont ? window.Lumi6AppSettings.getAiFont() : (localStorage.getItem("lumi6-ai-font") || '"Patrick Hand", "Segoe Print", "Comic Sans MS", cursive');
+
     body.innerHTML = `
       <div class="onboard-scroll">
         <div class="profile-head">
-          <p class="onboard-kicker">Your profile</p>
+          <p class="onboard-kicker">Learner Profile</p>
           <button type="button" class="profile-close" data-profile="close" aria-label="Close">&times;</button>
         </div>
         <h2 id="profileTitle">${escapeAttr(name)}</h2>
-        <p class="onboard-lead">This is what Lumi6 uses when it talks and draws with you.</p>
+        <p class="onboard-lead">Personalized for your learning level and interests.</p>
         <dl class="profile-facts">
-          <div><dt>Name</dt><dd>${escapeAttr(name)}</dd></div>
-          <div><dt>Email</dt><dd>${escapeAttr(email) || "Signed in"}</dd></div>
           <div><dt>Class</dt><dd>${grade ? `Class ${escapeAttr(grade)}` : "Not set"}</dd></div>
-          <div><dt>Interests</dt><dd>${interests.length ? escapeAttr(interests.join(", ")) : "Not set"}</dd></div>
-          <div><dt>Pictures</dt><dd>${visualBandLabel(grade)}</dd></div>
+          <div><dt>Account</dt><dd>${escapeAttr(email) || "Signed in"}</dd></div>
+          <div class="fact-full"><dt>Interests</dt><dd>${interests.length ? escapeAttr(interests.join(", ")) : "All topics"}</dd></div>
         </dl>
-        <button type="button" class="onboard-back orb-theme-open" data-profile="theme">Choose theme</button>
+
+        <section class="profile-settings-group" aria-label="AI Settings">
+          <h3 class="profile-settings-title">Settings</h3>
+          <div class="profile-settings-row">
+            <span class="profile-settings-label">Auto AI</span>
+            <button id="profileAutoToggle" class="settings-switch${autoOn ? " on" : ""}" type="button" role="switch" aria-checked="${autoOn}"><span class="settings-switch-thumb" aria-hidden="true"></span></button>
+          </div>
+          <div class="profile-settings-row">
+            <label class="profile-settings-label" for="profileAiFont">AI font</label>
+            <select id="profileAiFont" class="profile-settings-select" aria-label="AI font">
+              <option value='"Patrick Hand", "Segoe Print", "Comic Sans MS", cursive' ${currentFont.includes("Patrick") ? "selected" : ""}>Handwritten</option>
+              <option value='"Lora", Georgia, "Times New Roman", serif' ${currentFont.includes("Lora") ? "selected" : ""}>Storybook (Lora)</option>
+            </select>
+          </div>
+          <div class="profile-settings-row">
+            <span class="profile-settings-label">Show while AI thinks</span>
+            <button id="profileSummonToggle" class="settings-switch${summonOn ? " on" : ""}" type="button" role="switch" aria-checked="${summonOn}"><span class="settings-switch-thumb" aria-hidden="true"></span></button>
+          </div>
+        </section>
+
+        <button type="button" class="onboard-back orb-theme-open" data-profile="theme">Choose Voice Orb Theme</button>
       </div>
       <div class="onboard-actions">
         <button type="button" class="onboard-back" data-profile="close">Done</button>
-        <button type="button" class="onboard-next" data-profile="edit">Edit</button>
+        <button type="button" class="onboard-next" data-profile="edit">Edit Profile</button>
       </div>`;
   }
 

@@ -1379,21 +1379,25 @@
   });
   changelogLayer.addEventListener("keydown", handleChangelogKeydown);
   settingsButton.addEventListener("click", () => {
+    if (typeof window.Lumi6Profile?.openPanel === "function") {
+      window.Lumi6Profile.openPanel();
+      return;
+    }
     if (settings.open) closeSettings();
     else openSettings();
   });
-  settingsCloseButton.addEventListener("click", () => closeSettings());
-  settingsBackdrop.addEventListener("pointerdown", () => closeSettings());
-  settingsPanel.addEventListener("pointerdown", (event) => event.stopPropagation());
-  settingsAutoToggle.addEventListener("click", () => setAutoEnabled(!state.auto));
-  summonToggle.addEventListener("click", () => setSummonEnabled(!state.summonEnabled));
-  settingsTourButton.addEventListener("click", () => {
+  settingsCloseButton?.addEventListener("click", () => closeSettings());
+  settingsBackdrop?.addEventListener("pointerdown", () => closeSettings());
+  settingsPanel?.addEventListener("pointerdown", (event) => event.stopPropagation());
+  settingsAutoToggle?.addEventListener("click", () => setAutoEnabled(!state.auto));
+  summonToggle?.addEventListener("click", () => setSummonEnabled(!state.summonEnabled));
+  settingsTourButton?.addEventListener("click", () => {
     closeSettings(false);
     replayFeatureTour();
   });
-  settingsChangelogButton.addEventListener("click", () => {
+  settingsChangelogButton?.addEventListener("click", () => {
     closeSettings(false);
-    maybeShowChangelog(true);
+    openChangelog(true);
   });
   window.addEventListener("keydown", (event) => {
     if (event.key === "Escape" && settings.open) {

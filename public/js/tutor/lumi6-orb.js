@@ -5,7 +5,7 @@
 (function () {
   const STORAGE_KEY = "lumi6OrbTheme";
   const FINISH_KEY = "lumi6OrbFinish";
-  const PILL_SIZE = 56;
+  const PILL_SIZE = 44;
   const DEFAULT_THEME = "peach";
   const DEFAULT_FINISH = "light";
   const IDLE = {

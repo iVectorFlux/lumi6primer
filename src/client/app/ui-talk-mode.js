@@ -145,7 +145,8 @@
       ? `data-src="${escapeHtml(src)}" src="about:blank"`
       : `src="${escapeHtml(src)}"`;
     return `
-            <div class="talk-interactive-pill-wrapper${extra}" data-interactive-slug="${escapeHtml(interactive.slug)}" ${interactiveMetaAttrs(interactive)}>
+            <div class="talk-interactive-pill-wrapper${extra}" data-interactive-slug="${escapeHtml(interactive.slug)}" ${interactiveMetaAttrs(interactive)} data-expand-interactive role="button" tabindex="0" title="Open ${escapeHtml(label)}">
+              <button type="button" class="talk-pill-open" data-expand-interactive aria-label="Open ${escapeHtml(label)}"></button>
               <iframe
                 class="talk-lesson-pill"
                 ${interactiveMetaAttrs(interactive)}
@@ -698,10 +699,12 @@
   }
 
   function bindTalkPlayground(feed) {
-    feed.querySelectorAll("[data-expand-interactive]").forEach((btn) => {
-      btn.addEventListener("click", () => {
-        const frame = btn.closest(".talk-interactive-wrapper")?.querySelector("iframe.talk-lesson-interactive")
-          || ensureInteractiveFrame(btn);
+    if (!feed) return;
+    feed.querySelectorAll("[data-expand-interactive], .talk-interactive-pill-wrapper").forEach((btn) => {
+      btn.addEventListener("click", (e) => {
+        e.preventDefault();
+        const frame = btn.closest(".talk-interactive-wrapper")?.querySelector("iframe.talk-lesson-interactive:not(.talk-lesson-pill)")
+          || ensureInteractiveFrame(btn, isPhoneViewport() ? "drawer" : "desktop");
         if (frame) openTalkPlayground(frame);
       });
     });
@@ -1013,6 +1016,9 @@
   bindModeBtn("#modeDrawBtn", "draw");
   bindModeBtn("#modeTalkBtn", "talk");
   bindModeBtn("#modeSimBtn", "sim");
+  bindModeBtn("#topbarModeDrawBtn", "draw");
+  bindModeBtn("#topbarModeTalkBtn", "talk");
+  bindModeBtn("#topbarModeSimBtn", "sim");
 
   const talkMic = document.querySelector("#talkModeMicBtn");
   if (talkMic && window.primerVoice && typeof window.primerVoice.bindMicTriggers === "function") {
