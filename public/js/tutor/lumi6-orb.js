@@ -9,17 +9,17 @@
   const DEFAULT_THEME = "peach";
   const DEFAULT_FINISH = "light";
   const IDLE = {
-    speed: 1.0,
+    speed: 0.65,
     zoom: 1.55,
-    turb: 0.7,
-    grain: 0.8
+    turb: 0.35,
+    grain: 0.5
   };
   const STATE_PRESETS = {
     idle: IDLE,
-    ready: { speed: 1.22, zoom: 1.52, turb: 1.15, grain: 1.05 },
-    listening: { speed: 1.6, zoom: 1.52, turb: 2.4, grain: 1.8 },
-    thinking: { speed: 1.55, zoom: 1.50, turb: 1.9, grain: 1.25 },
-    speaking: { speed: 2.0, zoom: 1.52, turb: 1.7, grain: 0.6 }
+    ready: { speed: 0.75, zoom: 1.53, turb: 0.45, grain: 0.6 },
+    listening: { speed: 1.45, zoom: 1.52, turb: 1.6, grain: 1.2 },
+    thinking: { speed: 1.25, zoom: 1.50, turb: 0.95, grain: 0.8 },
+    speaking: { speed: 1.6, zoom: 1.52, turb: 1.35, grain: 0.5 }
   };
 
   let talkOrb = null;
@@ -148,7 +148,8 @@
     orb.setZoom(preset.zoom);
     orb.setTurbulence(preset.turb);
     orb.setGrain(preset.grain);
-    orb.setState(shaderState || (stateName === "ready" ? "listening" : stateName));
+    const effectiveShaderState = shaderState || (stateName === "ready" ? "idle" : stateName);
+    orb.setState(effectiveShaderState);
   }
 
   function makeOrb(container, extra) {
@@ -190,35 +191,29 @@
 
   function setTalkState(stateName) {
     const next = stateName === "listening" || stateName === "thinking" || stateName === "speaking" ? stateName : "idle";
-    const enteredListen = next === "listening" && talkState !== "listening";
     talkState = next;
-    if (talkState !== "listening") {
-      talkVoiceActive = false;
-      if (talkVoiceTimer) {
-        clearTimeout(talkVoiceTimer);
-        talkVoiceTimer = null;
-      }
-    } else if (enteredListen) {
-      talkVoiceActive = true;
-      if (talkVoiceTimer) clearTimeout(talkVoiceTimer);
-      talkVoiceTimer = setTimeout(() => {
-        talkVoiceTimer = null;
-        talkVoiceActive = false;
-        applyTalkVisual();
-      }, 720);
+    if (talkVoiceTimer) {
+      clearTimeout(talkVoiceTimer);
+      talkVoiceTimer = null;
     }
+    talkVoiceActive = false;
     applyTalkVisual();
   }
 
-  function setTalkVoiceActive(active, holdMs = 560) {
+  function setTalkVoiceActive(active, holdMs = 280) {
     if (talkState !== "listening") return;
     if (talkVoiceTimer) {
       clearTimeout(talkVoiceTimer);
       talkVoiceTimer = null;
     }
-    talkVoiceActive = Boolean(active);
+    if (!active) {
+      talkVoiceActive = false;
+      applyTalkVisual();
+      return;
+    }
+    talkVoiceActive = true;
     applyTalkVisual();
-    if (talkVoiceActive && holdMs > 0) {
+    if (holdMs > 0) {
       talkVoiceTimer = setTimeout(() => {
         talkVoiceTimer = null;
         talkVoiceActive = false;

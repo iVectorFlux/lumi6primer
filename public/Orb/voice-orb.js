@@ -712,6 +712,10 @@
       const validStates = ['idle', 'listening', 'thinking', 'speaking'];
       if (!validStates.includes(stateName)) return;
       this.state = stateName;
+      if (stateName === 'idle') {
+        this.targetAudioLevel = 0.0;
+        this.audioLevel = 0.0;
+      }
       if (typeof this.options.onStateChange === 'function') {
         this.options.onStateChange(stateName);
       }

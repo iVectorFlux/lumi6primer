@@ -346,7 +346,7 @@
         if (generation !== this.generation) return;
         console.warn("[Lumi6 Voice] TTS watchdog — releasing mic");
         endOnce();
-      }, 90000);
+      }, 16000);
       const wrapEnd = () => {
         clearTimeout(watchdog);
         endOnce();
@@ -658,7 +658,12 @@
         } catch {}
       }, 5000);
 
+      let utterTimer = null;
       const cleanup = () => {
+        if (utterTimer) {
+          clearTimeout(utterTimer);
+          utterTimer = null;
+        }
         if (this._speechHeartbeat) {
           clearInterval(this._speechHeartbeat);
           this._speechHeartbeat = null;
@@ -676,6 +681,10 @@
           if (onEnd) onEnd();
           return;
         }
+        if (utterTimer) {
+          clearTimeout(utterTimer);
+          utterTimer = null;
+        }
         try {
           window.speechSynthesis.resume();
         } catch {}
@@ -691,7 +700,11 @@
           started = true;
           if (onStart) onStart();
         };
-        utterance.onend = () => {
+        const advance = () => {
+          if (utterTimer) {
+            clearTimeout(utterTimer);
+            utterTimer = null;
+          }
           if (generation !== this.generation) {
             cleanup();
             return;
@@ -699,20 +712,18 @@
           index += 1;
           speakNext();
         };
+        utterance.onend = advance;
         utterance.onerror = (e) => {
           console.warn("[Lumi6 Voice] speech utterance error:", e);
-          if (generation !== this.generation) {
-            cleanup();
-            return;
-          }
-          index += 1;
-          if (index >= parts.length) {
-            cleanup();
-            if (onEnd) onEnd();
-          } else {
-            speakNext();
-          }
+          advance();
         };
+        // Watchdog for this specific sentence chunk (approx 80ms per character + 3s buffer)
+        const chunkTimeout = Math.max(3500, parts[index].length * 120 + 2000);
+        utterTimer = setTimeout(() => {
+          if (generation !== this.generation) return;
+          console.warn("[Lumi6 Voice] utterance chunk timeout — advancing");
+          advance();
+        }, chunkTimeout);
         try {
           window.speechSynthesis.speak(utterance);
         } catch (err) {
@@ -997,6 +1008,9 @@
       this.pendingHeard = heard;
       this._speechSeed = heard;
       if (this.stt) this.stt.stop();
+      if (window.Lumi6Orb && typeof window.Lumi6Orb.setTalkVoiceActive === "function") {
+        window.Lumi6Orb.setTalkVoiceActive(false, 0);
+      }
       this._syncVoiceButtonUI(null);
       this.hideOverlay();
     }
@@ -1048,6 +1062,9 @@
       this.state = "PROCESSING";
       this._pushToTalkTurn = false;
       if (this.stt) this.stt.stop();
+      if (window.Lumi6Orb && typeof window.Lumi6Orb.setTalkVoiceActive === "function") {
+        window.Lumi6Orb.setTalkVoiceActive(false, 0);
+      }
       this._syncVoiceButtonUI("processing");
     }
 
@@ -1115,20 +1132,26 @@
     speakThenListen(line) {
       if (!this.isActive || !line) return;
       this.lastSpoken = line;
-      this.showOverlay("speaking", line);
-      this.state = "SPEAKING";
-      this._syncVoiceButtonUI("speaking");
       if (this._welcomeWatch) {
         clearTimeout(this._welcomeWatch);
         this._welcomeWatch = null;
       }
       this._welcomeWatch = setTimeout(() => {
         if (this.isActive && this.state === "SPEAKING") this.listenAfterSpeech();
-      }, 12000);
+      }, 14000);
       this.tts.speak(
         line,
-        () => this.stt.stop(),
-        () => this.listenAfterSpeech()
+        () => {
+          this.state = "SPEAKING";
+          this.stt.stop();
+          this._syncVoiceButtonUI("speaking");
+          this.showOverlay("speaking", line);
+        },
+        () => {
+          this.state = "IDLE";
+          this._syncVoiceButtonUI(null);
+          this.listenAfterSpeech();
+        }
       );
     }
 
@@ -1295,6 +1318,9 @@
       }
       this._openingListen = false;
       this.tts.cancel();
+      if (window.Lumi6Orb && typeof window.Lumi6Orb.setTalkVoiceActive === "function") {
+        window.Lumi6Orb.setTalkVoiceActive(false, 0);
+      }
       this._syncVoiceButtonUI(null);
       this.elements.overlay.classList.remove("primer-live");
       this.autoHideOverlay(0);
@@ -1337,13 +1363,19 @@
 
     stopListening() {
       this.stt.stop();
+      if (window.Lumi6Orb && typeof window.Lumi6Orb.setTalkVoiceActive === "function") {
+        window.Lumi6Orb.setTalkVoiceActive(false, 0);
+      }
       this._syncVoiceButtonUI(null);
     }
 
     interrupt() {
-      if (this.state === "SPEAKING") {
-        this.tts.cancel();
+      this.state = "IDLE";
+      this.tts.cancel();
+      if (window.Lumi6Orb && typeof window.Lumi6Orb.setTalkVoiceActive === "function") {
+        window.Lumi6Orb.setTalkVoiceActive(false, 0);
       }
+      this._syncVoiceButtonUI(null);
       if (this.restartTimer) {
         clearTimeout(this.restartTimer);
         this.restartTimer = null;
@@ -1384,7 +1416,7 @@
       const seed = String(this._speechSeed || "").trim();
       const queryText = seed ? (spoken ? `${seed} ${spoken}` : seed) : spoken;
       if (this.state === "LISTENING" && spoken && window.Lumi6Orb && typeof window.Lumi6Orb.setTalkVoiceActive === "function") {
-        window.Lumi6Orb.setTalkVoiceActive(true);
+        window.Lumi6Orb.setTalkVoiceActive(true, 280);
       }
       if (queryText) {
         this.pendingHeard = queryText;
@@ -1661,18 +1693,22 @@
       if (!this.isTalkModeActive()) return;
       const teacherText = data?.spokenResponse || data?.teacherResponse || data?.spoken;
       const speechText = this.cleanTextForSpeech(teacherText);
-      if (!speechText || !this.tts) return;
+      if (!speechText || !this.tts) {
+        this.state = "IDLE";
+        this._syncVoiceButtonUI(null);
+        return;
+      }
       this._autoSpokeLesson = true;
       this.lastSpoken = speechText;
       if (typeof this.tts.unlockPlayback === "function") this.tts.unlockPlayback();
-      this.state = "SPEAKING";
-      this._syncVoiceButtonUI("speaking");
-      this.showOverlay("speaking", "Speaking...");
       this.tts.speak(
         speechText,
-        () => this.showOverlay("speaking", "Speaking..."),
         () => {
-          if (this.state !== "SPEAKING") return;
+          this.state = "SPEAKING";
+          this._syncVoiceButtonUI("speaking");
+          this.showOverlay("speaking", "Speaking...");
+        },
+        () => {
           this.state = "IDLE";
           this._syncVoiceButtonUI(null);
           if (!this.isActive) this.hideOverlay();
@@ -1690,9 +1726,7 @@
         (Array.isArray(data.canvasActions) && data.canvasActions.length > 0)
       );
 
-      this.state = "SPEAKING";
       const teacherText = data.spokenResponse || data.teacherResponse || data.spoken;
-
       const speechText = this.cleanTextForSpeech(teacherText);
       this.lastSpoken = speechText || teacherText || "";
       this._autoSpokeLesson = true;
@@ -1706,16 +1740,15 @@
       }
 
       this.stt.stop();
-      this._syncVoiceButtonUI("speaking");
-      this.showOverlay("speaking", "Speaking...");
 
-      const drawPromise = shouldDraw
-        ? this.syncer.executeVisualPlan(data.visualPlan, data.drawingResult, data.canvasActions)
-          .catch((err) => console.error("[PRIMER Voice] Board draw failed:", err))
-        : Promise.resolve();
+      // Launch whiteboard plan in parallel/background so it does not delay speech state end
+      if (shouldDraw) {
+        this.syncer.executeVisualPlan(data.visualPlan, data.drawingResult, data.canvasActions)
+          .catch((err) => console.error("[PRIMER Voice] Board draw failed:", err));
+      }
 
       const finishTurn = () => {
-        if (this.state !== "SPEAKING") return;
+        this.state = "IDLE";
         this._syncVoiceButtonUI(null);
         if (this._pushToTalkTurn) {
           this._pushToTalkTurn = false;
@@ -1723,32 +1756,35 @@
           return;
         }
         if (this.paused) {
-          this.state = "IDLE";
           this.showPausedOverlay();
           return;
         }
         if (this._holdListen) {
           this._awaitingListen = true;
-          this.state = "IDLE";
           return;
         }
         if (this.isActive) {
-          this.state = "IDLE";
+          this.listenAfterSpeech();
         } else {
-          this.state = "IDLE";
           this.hideOverlay();
         }
       };
 
+      if (!speechText && !data.audioBase64) {
+        finishTurn();
+        return;
+      }
+
       this.tts.speak(
         speechText,
         () => {
+          this.state = "SPEAKING";
           this.stt.stop();
           this._syncVoiceButtonUI("speaking");
           this.showOverlay("speaking", "Speaking...");
         },
         () => {
-          drawPromise.finally(finishTurn);
+          finishTurn();
         },
         data.audioBase64 ? { base64: data.audioBase64, contentType: data.audioContentType } : null
       );
