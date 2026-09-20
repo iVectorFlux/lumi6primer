@@ -555,8 +555,9 @@ body.mode-sim-active .topbar-edit-actions { display: none; }
   border-radius: 50% !important;
   overflow: hidden !important;
   flex-shrink: 0 !important;
-  background: radial-gradient(circle at 35% 30%, #c4b5ff 0%, #6d5cff 58%, #4f3de0 100%) !important;
-  box-shadow: 0 10px 24px rgba(109, 92, 255, 0.38) !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  border: 0 !important;
 }
 .ai-orb:hover { transform: scale(1.04); }
 .ai-radial {

@@ -941,12 +941,8 @@ body.mode-draw-active .sketch-tool-group {
   pointer-events: auto;
   border: none;
   border-radius: 50%;
-  background:
-    radial-gradient(circle at 32% 28%, rgba(255, 255, 255, 0.42) 0 14%, transparent 40%),
-    radial-gradient(circle at 50% 50%, #4c1d95 0 46%, #1e0a3c 100%);
-  box-shadow:
-    0 0 0 4px rgba(255, 255, 255, 0.35),
-    0 12px 28px rgba(30, 10, 60, 0.45);
+  background: transparent !important;
+  box-shadow: none !important;
   cursor: pointer;
   touch-action: none;
   transition: transform 0.2s ease, box-shadow 0.2s ease;
@@ -954,18 +950,11 @@ body.mode-draw-active .sketch-tool-group {
 
 .ai-orb:hover {
   transform: scale(1.06);
-  box-shadow:
-    0 0 0 6px rgba(255, 255, 255, 0.7),
-    0 14px 32px rgba(91, 79, 232, 0.38);
+  box-shadow: none !important;
 }
 
 .ai-orb::before {
-  content: '';
-  position: absolute;
-  width: 70%;
-  height: 70%;
-  border: 1.5px solid rgba(255, 255, 255, 0.45);
-  border-radius: 50%;
+  display: none !important;
 }
 
 /* Hide old orb decorations */

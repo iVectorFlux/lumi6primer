@@ -278,11 +278,12 @@ ${PILL_SEL}{display:block!important;width:100%!important;height:80px!important;o
 .showcase-container,.showcase-grid-top,.view-section,.showcase-item{display:block!important;width:100%!important;height:auto!important;min-height:0!important;margin:0!important;padding:0!important;gap:0!important}
 ${MOBILE_SEL},${DESKTOP_SEL},${HIDDEN_OVERLAY},.mobile-phone-frame,.desktop-card,${TITLE_SEL}{display:none!important}
 .chat-pill-card,#chatPillCard,#chatPillTrigger,#openDrawerCard{position:fixed!important;top:4px!important;left:4px!important;display:flex!important;flex-direction:row!important;align-items:center!important;justify-content:flex-start!important;gap:12px!important;width:min(350px,calc(100% - 8px))!important;max-width:350px!important;height:72px!important;margin:0!important;z-index:40!important;cursor:pointer;box-sizing:border-box!important}
-.pill-icon-box{display:flex!important;width:76px!important;height:52px!important;flex:0 0 76px!important;overflow:hidden!important}
+.pill-icon-box{display:flex!important;width:76px!important;height:52px!important;flex:0 0 76px!important;overflow:hidden!important;align-items:center!important;justify-content:center!important}
+.pill-icon-box canvas,.pill-icon-box svg,.pill-icon-box img,.pill-icon-box video{display:block!important;max-width:100%!important;max-height:100%!important;object-fit:contain!important}
 .pill-info,.pill-content{flex:1 1 auto!important;min-width:0!important;display:flex!important;flex-direction:column!important;gap:2px!important}
 .pill-title,.pill-formula,.pill-subtitle{letter-spacing:normal!important;word-spacing:normal!important;white-space:nowrap!important;overflow:hidden!important;text-overflow:ellipsis!important;max-width:100%!important}
 .pill-expand-btn{display:flex!important;flex:0 0 36px!important}
-canvas,video{display:none!important}
+canvas:not(.pill-icon-box canvas):not(.chat-pill-card canvas),video:not(.pill-icon-box video):not(.chat-pill-card video){display:none!important}
 `;
 
 const SCENARIO_MOBILE_CSS = `
@@ -546,7 +547,6 @@ function stripInteractiveScripts(html) {
 function embedHtml(html, options = {}) {
   let source = patchHiddenCanvasWork(String(html || ""));
   if (!source) return source;
-  if (options.mode === "pill") source = stripInteractiveScripts(source);
   const scenario = isScenarioHtml(source);
   const css = scenario ? scenarioEmbedCss(options.mode) : EMBED_CSS;
   const tag = `<style id="lumi-embed">${css}</style>`;

@@ -130,7 +130,7 @@
   }
 
   /** Designed HTML pill when the sim has one; compact native pill otherwise. */
-  function talkInteractivePillHtml(step, titleText, extraClass = "", lazy = false) {
+  function talkInteractivePillHtml(step, titleText, extraClass = "") {
     const interactive = step.interactive;
     const pill = interactive.pill || {};
     const label = pill.title || interactive.title || titleText;
@@ -141,45 +141,19 @@
     const href = interactive.hrefPill || interactive.href || `/api/primer/interactive/${encodeURIComponent(interactive.slug)}?embed=1&mode=pill`;
     const src = href.includes("mode=") ? href : `${href}${href.includes("?") ? "&" : "?"}mode=pill`;
     const extra = extraClass ? ` ${extraClass}` : "";
-    const srcAttr = lazy
-      ? `data-src="${escapeHtml(src)}" src="about:blank"`
-      : `src="${escapeHtml(src)}"`;
     return `
             <div class="talk-interactive-pill-wrapper${extra}" data-interactive-slug="${escapeHtml(interactive.slug)}" ${interactiveMetaAttrs(interactive)} data-expand-interactive role="button" tabindex="0" title="Open ${escapeHtml(label)}">
               <button type="button" class="talk-pill-open" data-expand-interactive aria-label="Open ${escapeHtml(label)}"></button>
               <iframe
                 class="talk-lesson-pill"
                 ${interactiveMetaAttrs(interactive)}
-                ${srcAttr}
+                src="${escapeHtml(src)}"
                 title="${escapeHtml(label)}"
                 sandbox="allow-scripts allow-same-origin"
                 loading="lazy"
               ></iframe>
               <div class="talk-interactive-stage" hidden aria-hidden="true"></div>
             </div>`;
-  }
-
-  function lazyLoadSimPills(root) {
-    const frames = [...(root?.querySelectorAll("iframe.talk-lesson-pill[data-src]") || [])];
-    if (!frames.length) return;
-    const load = (frame) => {
-      const src = frame.getAttribute("data-src");
-      if (!src || frame.dataset.loaded === "1") return;
-      frame.dataset.loaded = "1";
-      frame.setAttribute("src", src);
-    };
-    if (!("IntersectionObserver" in window)) {
-      frames.forEach(load);
-      return;
-    }
-    const observer = new IntersectionObserver((entries) => {
-      for (const entry of entries) {
-        if (!entry.isIntersecting) continue;
-        load(entry.target);
-        observer.unobserve(entry.target);
-      }
-    }, { root: document.getElementById("simScrollArea") || null, rootMargin: "240px 0px" });
-    frames.forEach((frame) => observer.observe(frame));
   }
 
   function talkInteractiveHtml(step, titleText) {
@@ -660,13 +634,14 @@
   }
 
   function ensureInteractiveFrame(trigger, mode = "mobile") {
-    const wrapper = trigger.closest?.(".talk-interactive-pill-wrapper, .talk-interactive-wrapper") || trigger;
+    const wrapper = trigger?.closest?.(".talk-interactive-pill-wrapper, .talk-interactive-wrapper, .sim-pill-item") || trigger;
     if (!wrapper) return null;
     const stage = wrapper.querySelector(".talk-interactive-stage") || wrapper;
-    let frame = wrapper.querySelector("iframe.talk-lesson-interactive:not(.talk-lesson-pill)");
     const pill = wrapper.querySelector("iframe.talk-lesson-pill");
     const data = { ...wrapper.dataset, ...(pill?.dataset || {}), ...(trigger.dataset || {}) };
     const slug = data.slug || data.interactiveSlug || wrapper.dataset.interactiveSlug || "";
+    let frame = wrapper.querySelector("iframe.talk-lesson-interactive:not(.talk-lesson-pill)")
+      || (talkPlaygroundSlug && talkPlaygroundSlug === slug ? document.querySelector("#talkPlaygroundStage iframe.talk-lesson-interactive") : null);
     const label = pill?.getAttribute("title") || trigger.getAttribute?.("title") || trigger.querySelector?.(".talk-pill-title")?.textContent?.trim() || slug;
     if (!frame) {
       frame = document.createElement("iframe");
@@ -700,11 +675,15 @@
 
   function bindTalkPlayground(feed) {
     if (!feed) return;
-    feed.querySelectorAll("[data-expand-interactive], .talk-interactive-pill-wrapper").forEach((btn) => {
+    feed.querySelectorAll("[data-expand-interactive], .talk-interactive-pill-wrapper, .sim-pill-item").forEach((btn) => {
+      if (btn._playgroundBound) return;
+      btn._playgroundBound = true;
       btn.addEventListener("click", (e) => {
         e.preventDefault();
-        const frame = btn.closest(".talk-interactive-wrapper")?.querySelector("iframe.talk-lesson-interactive:not(.talk-lesson-pill)")
-          || ensureInteractiveFrame(btn, isPhoneViewport() ? "drawer" : "desktop");
+        e.stopPropagation();
+        const wrapper = btn.closest(".talk-interactive-pill-wrapper, .talk-interactive-wrapper, .sim-pill-item") || btn;
+        const frame = wrapper.closest(".talk-interactive-wrapper")?.querySelector("iframe.talk-lesson-interactive:not(.talk-lesson-pill)")
+          || ensureInteractiveFrame(wrapper, isPhoneViewport() ? "drawer" : "desktop");
         if (frame) openTalkPlayground(frame);
       });
     });
@@ -956,8 +935,7 @@
             }
           },
           interactive.title || interactive.slug,
-          "sim-pill-item",
-          true
+          "sim-pill-item"
         )).join("")}
       </div>`;
   }
@@ -989,7 +967,6 @@
         ? simCatalogHtml(items)
         : `<p class="sim-feed-status">No interactives yet.</p>`;
       bindTalkPlayground(feed);
-      lazyLoadSimPills(feed);
     } catch {
       feed.innerHTML = `<p class="sim-feed-status">Could not load interactives. Try again.</p>`;
     }
@@ -1026,6 +1003,11 @@
   }
 
   document.getElementById("talkPlaygroundClose")?.addEventListener("click", closeTalkPlayground);
+  document.getElementById("talkPlayground")?.addEventListener("click", (e) => {
+    if (e.target.id === "talkPlayground" || e.target.id === "talkPlaygroundScroll" || e.target.classList.contains("talk-playground-scale")) {
+      closeTalkPlayground();
+    }
+  });
   document.getElementById("talkPlaygroundExpand")?.addEventListener("click", () => {
     const expanded = document.body.classList.contains("talk-playground-fullscreen");
     setPlaygroundFullscreen(!expanded);
