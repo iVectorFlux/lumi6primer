@@ -13643,11 +13643,13 @@ User writes "Show air quality for Tokyo", names a place, and points to an empty 
     if (!sheet || !stage || !home) return;
     talkPlaygroundSlug = frame.dataset.slug || "";
     home.dataset.playgroundHome = "1";
-    const scenario = frame.dataset.scenario === "1";
+    const scenario = frame.dataset.scenario === "1" || frame.dataset.scenario === "true" || frame.dataset.scenario === true;
     if (title) title.textContent = "";
     fillPlaygroundChrome(frame);
+    frame.classList.add("is-ready");
     stage.replaceChildren(frame);
     sheet.hidden = false;
+    sheet.classList.remove("is-loading");
     document.body.classList.toggle("talk-playground-scenario", scenario);
     const phone = isPhoneViewport();
     document.body.classList.toggle("talk-playground-mobile", phone);
@@ -13658,10 +13660,12 @@ User writes "Show air quality for Tokyo", names a place, and points to an empty 
     syncPlaygroundExpandLabel();
     if (typeof window.hideTalkWait === "function") window.hideTalkWait();
     const afterLoad = () => {
+      frame.classList.add("is-ready");
       applyEmbedLayout(frame, false);
       sizePlaygroundFrame(frame);
       nudgeInteractive(frame);
-      setTimeout(() => nudgeInteractive(frame), 200);
+      setTimeout(() => nudgeInteractive(frame), 100);
+      setTimeout(() => nudgeInteractive(frame), 300);
       setTimeout(() => nudgeInteractive(frame), 700);
     };
     frame.addEventListener("load", afterLoad, { once: true });
