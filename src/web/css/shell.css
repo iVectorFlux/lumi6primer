@@ -819,7 +819,7 @@ body.mode-sim-active .topbar-edit-actions { display: none; }
 .talk-bar-container {
   display: flex !important;
   flex-wrap: nowrap !important;
-  align-items: flex-end !important;
+  align-items: center !important;
   gap: 10px !important;
   width: 100%;
   max-width: 720px;
@@ -840,33 +840,28 @@ body.mode-sim-active .topbar-edit-actions { display: none; }
   padding: 0 !important;
   border: 0 !important;
   border-radius: 50% !important;
-  background: linear-gradient(145deg, #c4b5ff 0%, #6d5cff 48%, #4f3de0 100%) !important;
-  color: #fff !important;
-  box-shadow: 0 6px 16px rgba(109, 92, 255, 0.32) !important;
+  background: transparent !important;
+  color: inherit !important;
+  box-shadow: none !important;
   appearance: none;
   -webkit-appearance: none;
   position: relative !important;
+  margin: 0 !important;
+  align-self: center !important;
+  cursor: pointer;
 }
 .talk-mic-btn:hover {
-  background: linear-gradient(145deg, #d2c6ff 0%, #6d5cff 50%, #4f3de0 100%) !important;
-  color: #fff !important;
-  transform: scale(1.04) !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  transform: scale(1.06) !important;
 }
 .talk-mic-btn.primer-listening,
-.talk-mic-btn.primer-holding {
-  background: linear-gradient(145deg, #ff6b6b 0%, #ff3b30 100%) !important;
-  color: #fff !important;
-  animation: talkMicPulse 1.05s ease-in-out infinite !important;
-}
-.talk-mic-btn.primer-speaking {
-  background: linear-gradient(145deg, #c4b5ff 0%, #6d5cff 100%) !important;
-  color: #fff !important;
-  animation: talkMicPulse 1.25s ease-in-out infinite !important;
-}
+.talk-mic-btn.primer-holding,
+.talk-mic-btn.primer-speaking,
 .talk-mic-btn.primer-processing {
-  background: linear-gradient(145deg, #ffe8c7 0%, #ffd089 100%) !important;
-  color: #b25000 !important;
-  animation: talkMicThink 1.05s ease-in-out infinite !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  animation: none !important;
 }
 
 .talk-input-form {

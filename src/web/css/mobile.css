@@ -438,14 +438,22 @@ button,
 
   .talk-bar-container {
     gap: 8px;
+    align-items: center !important;
   }
 
   .talk-mic-btn {
-    width: 44px;
-    height: 44px;
-    padding: 0;
+    width: 44px !important;
+    height: 44px !important;
+    max-width: 44px !important;
+    max-height: 44px !important;
+    aspect-ratio: 1 / 1 !important;
+    padding: 0 !important;
     font-size: 13px;
     gap: 0;
+    background: transparent !important;
+    box-shadow: none !important;
+    border: none !important;
+    align-self: center !important;
   }
 
   .talk-mic-btn svg {
@@ -667,6 +675,10 @@ button,
     border-radius: 50% !important;
     overflow: hidden !important;
     flex: 0 0 44px !important;
+    background: transparent !important;
+    box-shadow: none !important;
+    border: none !important;
+    align-self: center !important;
   }
 
   .talk-scroll-area {

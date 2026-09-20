@@ -47,16 +47,16 @@ body.mode-talk-active #primerVoiceOverlay.primer-visible {
   display: block;
 }
 
-.talk-voice-orb {
-  display: flex !important;
-  align-items: center !important;
-  justify-content: center !important;
-}
-
-.talk-mic-btn.primer-speaking {
-  background: transparent;
-  box-shadow: none;
-  animation: none;
+.talk-mic-btn,
+.talk-mic-btn:hover,
+.talk-mic-btn.primer-speaking,
+.talk-mic-btn.primer-listening,
+.talk-mic-btn.primer-holding,
+.talk-mic-btn.primer-processing {
+  background: transparent !important;
+  box-shadow: none !important;
+  animation: none !important;
+  border: none !important;
 }
 
 .talk-mic-think {
