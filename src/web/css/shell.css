@@ -790,15 +790,13 @@ body.mode-sim-active .topbar-edit-actions { display: none; }
 .talk-child-prompt {
   align-self: flex-end;
   max-width: 78%;
-  padding: 12px 18px;
+  padding: 11px 16px;
   border-radius: 20px 20px 6px 20px;
-  background: var(--talk-pill-user-bg, linear-gradient(135deg, #fffbeb 0%, #fef3c7 100%)) !important;
-  color: var(--talk-pill-user-color, #78350f) !important;
-  border: 1px solid var(--talk-pill-user-border, rgba(245, 158, 11, 0.28)) !important;
-  box-shadow: var(--talk-pill-user-shadow, 0 4px 16px rgba(245, 158, 11, 0.12)) !important;
-  transition: background 0.22s ease, color 0.22s ease, border-color 0.22s ease, box-shadow 0.22s ease !important;
+  background: var(--blue) !important;
+  color: #fff !important;
+  box-shadow: none !important;
 }
-.talk-child-prompt .talk-child-text { margin: 0; font-size: 17px; line-height: 1.4; color: var(--talk-pill-user-color, #78350f) !important; }
+.talk-child-prompt .talk-child-text { margin: 0; font-size: 17px; line-height: 1.4; color: #fff !important; }
 
 .talk-turn-card {
   display: flex;
@@ -1005,18 +1003,12 @@ body.mode-sim-active .topbar-edit-actions { display: none; }
   padding: 0 !important;
   border: 0 !important;
   border-radius: 50% !important;
-  background: var(--talk-pill-send-bg, linear-gradient(135deg, #f59e0b 0%, #b45309 100%)) !important;
+  background: linear-gradient(145deg, #c4b5ff 0%, #6d5cff 55%, #4f3de0 100%) !important;
   color: #fff !important;
   appearance: none;
   -webkit-appearance: none;
   align-self: flex-end !important;
   margin-bottom: 0px !important;
-  box-shadow: 0 3px 12px var(--talk-pill-glow, rgba(245, 158, 11, 0.35)) !important;
-  transition: transform 0.18s ease, box-shadow 0.18s ease, background 0.22s ease !important;
-}
-.talk-send-action-btn:hover {
-  background: var(--talk-pill-send-hover-bg, linear-gradient(135deg, #d97706 0%, #92400e 100%)) !important;
-  transform: scale(1.06) !important;
 }
 .talk-send-action-btn svg {
   width: 18px !important;
