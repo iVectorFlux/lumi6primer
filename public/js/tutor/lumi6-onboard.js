@@ -186,9 +186,22 @@
     if (!root) return;
     const dots = [1, 2, 3].map((n) => `<i class="${n === state.step ? "on" : ""}"></i>`).join("");
     if (state.step === 1) {
+      const avatar = (window.PrimerAvatar && typeof window.PrimerAvatar.getOrAssign === "function")
+        ? window.PrimerAvatar.getOrAssign()
+        : null;
+      const mascotHtml = avatar
+        ? `<div class="onboard-mascot-row">
+            <div class="onboard-mascot-badge" title="${escapeAttr(avatar.label)}">
+              <img src="${avatar.file}" alt="${escapeAttr(avatar.label)}" class="onboard-mascot-img">
+            </div>
+            <span class="onboard-mascot-tag">Your Mascot: <strong>${escapeAttr(avatar.label)}</strong></span>
+          </div>`
+        : "";
+
       root.innerHTML = `
         <div class="onboard-scroll">
           <p class="onboard-kicker">Step 1 of 3</p>
+          ${mascotHtml}
           <h2>What should I call you?</h2>
           <p class="onboard-lead">A first name is perfect. Nicknames are welcome.</p>
           <label class="onboard-field">
@@ -298,6 +311,25 @@
         if (window.Lumi6Orb) window.Lumi6Orb.destroyPicker();
         renderProfileBody(window.supabaseAuth?.user || null, state.profile || readLocal() || {});
       }
+      const rerollBtn = event.target.closest("#profileRerollBtn");
+      if (rerollBtn && window.PrimerAvatar) {
+        window.PrimerAvatar.reroll();
+        renderProfileBody(window.supabaseAuth?.user || null, state.profile || readLocal() || {});
+        return;
+      }
+      const trigger = event.target.closest("#profileAvatarPickerTrigger");
+      if (trigger) {
+        const grid = el.querySelector("#profileAvatarGrid");
+        if (grid) grid.hidden = !grid.hidden;
+        return;
+      }
+      const choice = event.target.closest("[data-avatar-id]");
+      if (choice && window.PrimerAvatar) {
+        const id = choice.dataset.avatarId;
+        window.PrimerAvatar.set(id);
+        renderProfileBody(window.supabaseAuth?.user || null, state.profile || readLocal() || {});
+        return;
+      }
       const autoBtn = event.target.closest("#profileAutoToggle");
       if (autoBtn) {
         const current = autoBtn.classList.contains("on");
@@ -334,6 +366,16 @@
       }
     });
 
+    el.addEventListener("keydown", (event) => {
+      if (event.key === "Enter" || event.key === " ") {
+        if (event.target?.id === "profileAvatarPickerTrigger") {
+          event.preventDefault();
+          const grid = el.querySelector("#profileAvatarGrid");
+          if (grid) grid.hidden = !grid.hidden;
+        }
+      }
+    });
+
     el.addEventListener("change", (event) => {
       if (event.target?.id === "profileAiFont") {
         const val = event.target.value;
@@ -359,13 +401,43 @@
     const summonOn = window.Lumi6AppSettings?.getSummonEnabled ? window.Lumi6AppSettings.getSummonEnabled() : (localStorage.getItem("lumi6-summon-enabled") !== "false");
     const currentFont = window.Lumi6AppSettings?.getAiFont ? window.Lumi6AppSettings.getAiFont() : (localStorage.getItem("lumi6-ai-font") || '"Patrick Hand", "Segoe Print", "Comic Sans MS", cursive');
 
+    const avatar = (window.PrimerAvatar && typeof window.PrimerAvatar.getOrAssign === "function")
+      ? window.PrimerAvatar.getOrAssign()
+      : { id: "avatar-01", name: "monkey", label: "Monkey", file: "/avatars/avatar-01-monkey.svg" };
+    const allAvatars = (window.PrimerAvatar && typeof window.PrimerAvatar.getAll === "function")
+      ? window.PrimerAvatar.getAll()
+      : [avatar];
+
     body.innerHTML = `
       <div class="onboard-scroll">
         <div class="profile-head">
           <p class="onboard-kicker">Learner Profile</p>
           <button type="button" class="profile-close" data-profile="close" aria-label="Close">&times;</button>
         </div>
-        <h2 id="profileTitle">${escapeAttr(name)}</h2>
+
+        <div class="profile-user-header">
+          <div class="profile-avatar-wrapper" id="profileAvatarPickerTrigger" role="button" tabindex="0" title="Click to choose an animal avatar">
+            <img src="${avatar.file}" alt="${escapeAttr(avatar.label)}" class="profile-avatar-image">
+            <span class="profile-avatar-badge-tag">${escapeAttr(avatar.label)}</span>
+          </div>
+          <div class="profile-user-meta">
+            <h2 id="profileTitle">${escapeAttr(name)}</h2>
+            <button type="button" class="profile-reroll-btn" id="profileRerollBtn" title="Randomize animal avatar">
+              <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"/></svg>
+              <span>Randomize Avatar</span>
+            </button>
+          </div>
+        </div>
+
+        <div class="profile-avatar-grid" id="profileAvatarGrid" hidden>
+          ${allAvatars.map((a) => `
+            <button type="button" class="profile-avatar-choice${a.id === avatar.id ? " active" : ""}" data-avatar-id="${a.id}" title="${escapeAttr(a.label)}">
+              <img src="${a.file}" alt="${escapeAttr(a.label)}">
+              <span>${escapeAttr(a.label)}</span>
+            </button>
+          `).join("")}
+        </div>
+
         <p class="onboard-lead">Personalized for your learning level and interests.</p>
         <dl class="profile-facts">
           <div><dt>Class</dt><dd>${grade ? `Class ${escapeAttr(grade)}` : "Not set"}</dd></div>

@@ -1,0 +1,130 @@
+[
+  {
+    "id": "avatar-01",
+    "name": "monkey",
+    "label": "Monkey",
+    "file": "/avatars/avatar-01-monkey.svg",
+    "row": 0,
+    "col": 0
+  },
+  {
+    "id": "avatar-02",
+    "name": "bear",
+    "label": "Bear",
+    "file": "/avatars/avatar-02-bear.svg",
+    "row": 0,
+    "col": 1
+  },
+  {
+    "id": "avatar-03",
+    "name": "raccoon",
+    "label": "Raccoon",
+    "file": "/avatars/avatar-03-raccoon.svg",
+    "row": 0,
+    "col": 2
+  },
+  {
+    "id": "avatar-04",
+    "name": "lion",
+    "label": "Lion",
+    "file": "/avatars/avatar-04-lion.svg",
+    "row": 0,
+    "col": 3
+  },
+  {
+    "id": "avatar-05",
+    "name": "fox",
+    "label": "Fox",
+    "file": "/avatars/avatar-05-fox.svg",
+    "row": 1,
+    "col": 0
+  },
+  {
+    "id": "avatar-06",
+    "name": "puppy",
+    "label": "Puppy",
+    "file": "/avatars/avatar-06-puppy.svg",
+    "row": 1,
+    "col": 1
+  },
+  {
+    "id": "avatar-07",
+    "name": "dog",
+    "label": "Dog",
+    "file": "/avatars/avatar-07-dog.svg",
+    "row": 1,
+    "col": 2
+  },
+  {
+    "id": "avatar-08",
+    "name": "pig",
+    "label": "Pig",
+    "file": "/avatars/avatar-08-pig.svg",
+    "row": 1,
+    "col": 3
+  },
+  {
+    "id": "avatar-09",
+    "name": "deer",
+    "label": "Deer",
+    "file": "/avatars/avatar-09-deer.svg",
+    "row": 2,
+    "col": 0
+  },
+  {
+    "id": "avatar-10",
+    "name": "cat",
+    "label": "Cat",
+    "file": "/avatars/avatar-10-cat.svg",
+    "row": 2,
+    "col": 1
+  },
+  {
+    "id": "avatar-11",
+    "name": "tiger",
+    "label": "Tiger",
+    "file": "/avatars/avatar-11-tiger.svg",
+    "row": 2,
+    "col": 2
+  },
+  {
+    "id": "avatar-12",
+    "name": "panda",
+    "label": "Panda",
+    "file": "/avatars/avatar-12-panda.svg",
+    "row": 2,
+    "col": 3
+  },
+  {
+    "id": "avatar-13",
+    "name": "zebra",
+    "label": "Zebra",
+    "file": "/avatars/avatar-13-zebra.svg",
+    "row": 3,
+    "col": 0
+  },
+  {
+    "id": "avatar-14",
+    "name": "koala",
+    "label": "Koala",
+    "file": "/avatars/avatar-14-koala.svg",
+    "row": 3,
+    "col": 1
+  },
+  {
+    "id": "avatar-15",
+    "name": "rabbit",
+    "label": "Rabbit",
+    "file": "/avatars/avatar-15-rabbit.svg",
+    "row": 3,
+    "col": 2
+  },
+  {
+    "id": "avatar-16",
+    "name": "hamster",
+    "label": "Hamster",
+    "file": "/avatars/avatar-16-hamster.svg",
+    "row": 3,
+    "col": 3
+  }
+]

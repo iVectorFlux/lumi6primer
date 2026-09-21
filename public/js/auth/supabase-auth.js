@@ -135,6 +135,10 @@
       document.addEventListener("submit", (e) => {
         if (e.target.id === "authLoginForm") this.handleLogin(e);
       });
+
+      window.addEventListener("primer-avatar-changed", () => {
+        this.renderUserBadge();
+      });
     }
 
     switchTab(tabId) {
@@ -215,9 +219,18 @@
       if (this.user || localName) {
         const display = localName || (this.user?.email ? this.user.email.split("@")[0] : "Student");
         const initial = String(display).charAt(0).toUpperCase();
+        const avatar = (window.PrimerAvatar && typeof window.PrimerAvatar.getOrAssign === "function")
+          ? window.PrimerAvatar.getOrAssign()
+          : null;
+        const avatarImg = avatar
+          ? `<img src="${avatar.file}" alt="${avatar.label || display}" class="sidebar-avatar-img" onerror="this.parentElement.classList.remove('has-image');this.remove();">`
+          : initial;
+        const hasImgClass = avatar ? " has-image" : "";
+        const avatarTitle = avatar ? `${avatar.label} · ${display}` : display;
+
         container.innerHTML = `
           <div class="sidebar-user-card" id="openProfileCard" role="button" tabindex="0" title="Open profile">
-            <div class="sidebar-user-avatar">${initial}</div>
+            <div class="sidebar-user-avatar${hasImgClass}" title="${avatarTitle}">${avatarImg}</div>
             <div class="sidebar-user-info">
               <span class="sidebar-user-name" title="${display}">${display}</span>
               <span class="sidebar-user-role">Student</span>
