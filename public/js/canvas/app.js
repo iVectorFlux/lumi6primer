@@ -13900,9 +13900,20 @@ User writes "Show air quality for Tokyo", names a place, and points to an empty 
 
   function syncComposerSpeech() {
     growTalkComposer();
+    const value = String(document.getElementById("talkModeTextInput")?.value || "").trim();
+    if (window.Lumi6Orb && typeof window.Lumi6Orb.setTalkState === "function") {
+      const voice = window.primerVoice;
+      const isVoiceBusy = voice && (voice.state === "SPEAKING" || voice.state === "THINKING");
+      if (!isVoiceBusy) {
+        if (value.length > 0) {
+          window.Lumi6Orb.setTalkState("listening");
+        } else if (!voice || voice.state !== "LISTENING") {
+          window.Lumi6Orb.setTalkState("idle");
+        }
+      }
+    }
     const voice = window.primerVoice;
     if (!voice || voice.state === "LISTENING") return;
-    const value = String(document.getElementById("talkModeTextInput")?.value || "").trim();
     voice._speechSeed = value;
     voice.pendingHeard = value;
     if (voice.stt) {
@@ -13935,6 +13946,22 @@ User writes "Show air quality for Tokyo", names a place, and points to an empty 
   talkComposer?.addEventListener("paste", () => setTimeout(syncComposerSpeech, 0));
   talkComposer?.addEventListener("change", syncComposerSpeech);
   talkComposer?.addEventListener("keyup", syncComposerSpeech);
+  talkComposer?.addEventListener("focus", () => {
+    const value = String(document.getElementById("talkModeTextInput")?.value || "").trim();
+    const voice = window.primerVoice;
+    const isVoiceBusy = voice && (voice.state === "SPEAKING" || voice.state === "THINKING");
+    if (!isVoiceBusy && window.Lumi6Orb && value.length > 0) {
+      window.Lumi6Orb.setTalkState("listening");
+    }
+  });
+  talkComposer?.addEventListener("blur", () => {
+    const value = String(document.getElementById("talkModeTextInput")?.value || "").trim();
+    const voice = window.primerVoice;
+    const isVoiceBusy = voice && (voice.state === "SPEAKING" || voice.state === "THINKING" || voice.state === "LISTENING");
+    if (!isVoiceBusy && window.Lumi6Orb && value.length === 0) {
+      window.Lumi6Orb.setTalkState("idle");
+    }
+  });
   talkComposer?.addEventListener("keydown", (e) => {
     if (e.key === "Enter" && !e.shiftKey) {
       e.preventDefault();

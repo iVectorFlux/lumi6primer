@@ -164,6 +164,12 @@
 
       // Happy flash transition on click
       this.happyFlashTimer = 0;
+      this.postSpeakingWinkTimer = 0;
+      this.isHovered = false;
+      this.speechPhaseTimer = 0;
+      this.beatNoseActive = true;
+      this.greetingTimer = 0.45;
+      this.hasGreeted = false;
 
       // Body motion
       this.bodyTilt = 0;
@@ -249,15 +255,21 @@
         this.targetLookY = Math.max(-0.9, Math.min(0.9, dy));
       };
 
+      const onPointerEnter = () => {
+        this.isHovered = true;
+      };
+
       const onPointerLeave = () => {
+        this.isHovered = false;
         if (this.state === 'idle' && (this.expression === 'normal' || !this.expression)) {
           this.targetLookX = 0;
           this.targetLookY = 0;
         }
       };
 
-      window.addEventListener('pointermove', onPointerMove, { passive: true });
+      this.canvas.addEventListener('pointerenter', onPointerEnter);
       this.canvas.addEventListener('pointerleave', onPointerLeave);
+      window.addEventListener('pointermove', onPointerMove, { passive: true });
 
       // On Click / Tap: Flash happy eyes and transition into listening if in idle!
       this.canvas.addEventListener('click', () => {
@@ -269,9 +281,19 @@
       });
 
       this._cleanupEvents = () => {
-        window.removeEventListener('pointermove', onPointerMove);
+        this.canvas.removeEventListener('pointerenter', onPointerEnter);
         this.canvas.removeEventListener('pointerleave', onPointerLeave);
+        window.removeEventListener('pointermove', onPointerMove);
       };
+    }
+
+    triggerHappyToListen() {
+      this.happyFlashTimer = 0.45;
+      setTimeout(() => {
+        if (this.state === 'idle') {
+          this.setState('listening');
+        }
+      }, 350);
     }
 
     // ==========================================
@@ -296,30 +318,38 @@
         this.alertSpeakingTimer = 0;
         // User instruction: "in listening it should not be looking down, always up!"
         this.targetLookX = 0;
-        this.targetLookY = -0.78; // ALWAYS LOOKING UP
+        this.targetLookY = -0.80; // Looking up curiously
         this.statusMark = null;
         this._hasSpokenInTurn = false;
         this._lastSpokeTime = performance.now();
       } else if (newState === 'thinking') {
         this.alertPerkTimer = 0;
         this.alertSpeakingTimer = 0;
-        this.targetLookX = 0.60;
-        this.targetLookY = -0.75; // Pondering look upwards
-        this.statusMark = '...'; // Only ponder has floating dots!
+        this.targetLookX = 0.58;
+        this.targetLookY = -0.78; // Pondering look upwards to the corner
+        this.statusMark = null; // No outside circulating dots!
       } else if (newState === 'speaking') {
         this.alertPerkTimer = 0;
-        // User request: "when it goeas from idle to speaking it should be in alert first but should be for 1 seconds and then -----"
+        this.speechPhaseTimer = 0;
+        this.beatNoseActive = true;
+        // User request: alert for 1 second when moving from idle to speaking
         if (prevState === 'idle') {
-          this.alertSpeakingTimer = 1.0; // In Alert for 1 full second before speaking begins!
+          this.alertSpeakingTimer = 1.0;
         } else {
           this.alertSpeakingTimer = 0;
         }
         this.targetLookX = 0;
         this.targetLookY = 0;
-        this.statusMark = null; // No floating wave!
+        this.statusMark = null;
         this._hasSpokenInTurn = true;
         this._lastSpokeTime = performance.now();
       } else {
+        // IDLE STATE:
+        // User request: when speaking ends, wink at last, then come to squint mode!
+        if (prevState === 'speaking') {
+          this.postSpeakingWinkTimer = 0.85; // Celebratory wink before returning to squint!
+          this.triggerWink();
+        }
         this.alertPerkTimer = 0;
         this.alertSpeakingTimer = 0;
         this.targetLookX = 0;
@@ -595,7 +625,18 @@
         this.lookY += (this.targetLookY - this.lookY) * gazeLerp;
       }
 
-      // 2. Happy Flash Transition (on click)
+      // Opening welcome greeting: starts in cozy squint, briefly flashes happy greeting, settles into squint!
+      if (!this.hasGreeted) {
+        if (this.greetingTimer > 0) {
+          this.greetingTimer -= dt;
+          if (this.greetingTimer <= 0) {
+            this.hasGreeted = true;
+            this.happyFlashTimer = 0.65;
+          }
+        }
+      }
+
+      // 2. Happy Flash Transition (on click / greeting)
       if (this.happyFlashTimer > 0) {
         this.happyFlashTimer -= dt;
       }
@@ -742,12 +783,12 @@
 
       } else if (this.state === 'listening') {
         // =========================================================================
-        // REFINED LISTENING MODE:
-        // - "remove the vibration its too much ether has slow motion than vibration or slow vibratiion"
-        //   -> Zero jitter! Calibrated, serene, slow-motion breathing float.
-        // - "in listening it should not be lookig down, always up!"
-        //   -> Eyes always gaze steadily upward at the user.
-        // - Alert perk for 1 full second when entered from idle.
+        // CURIOUS LISTENING MODE:
+        // - "in listening mode its just moving the eyes up it should also be curious when ask"
+        // - Inquisitive attentive gaze (always upwards toward user)
+        // - Asymmetric curiosity: attentive eye difference & head cocked inquisitively
+        // - Dynamic voice curiosity: when user speaks (audioLevel > 0.1), eyes widen
+        //   in fascinated attention and head tilts inquisitively
         // =========================================================================
         let alertScale = 1.0;
         let alertPerkOffsetY = 0;
@@ -757,89 +798,180 @@
           const p = Math.max(0, this.alertPerkTimer / 1.0); // 1.0s alert duration
           alertScale = 1.0 + p * 0.38; // 1.38x wide alert eyes
           alertPerkOffsetY = -3.8 * Math.sin(p * Math.PI); // Perk up lift
-          // Smoothly eases into steady upward gaze
-          this.targetLookY = -0.78 * (0.60 + (1.0 - p) * 0.40);
+          this.targetLookY = -0.80 * (0.60 + (1.0 - p) * 0.40);
         } else {
-          this.targetLookY = -0.78; // Always gaze upward toward speaker
+          this.targetLookY = -0.80; // Always gaze upward toward speaker
         }
 
-        // Gentle, calm, slow-motion drift (zero high-frequency vibration)
-        this.targetLookX = Math.sin(this.time * 0.8) * 0.06;
-        this.targetBodyTilt = 0.012 * Math.sin(this.time * 0.7);
+        // Inquisitive head tilt (cocked head in curiosity when listening)
+        const curiousTilt = 0.05 + Math.sin(this.time * 0.8) * 0.02;
+        this.targetBodyTilt = curiousTilt;
 
-        // Smooth subtle dilation on voice (damped, zero flutter)
-        const voiceDilation = Math.min(0.10, this.audioLevel * 0.10);
-        lScaleX = (lScaleX + voiceDilation) * alertScale;
-        lScaleY = (lScaleY + voiceDilation) * alertScale;
-        rScaleX = (rScaleX + voiceDilation) * alertScale;
-        rScaleY = (rScaleY + voiceDilation) * alertScale;
+        // Curious subtle gaze drift with attention
+        this.targetLookX = Math.sin(this.time * 0.6) * 0.10;
 
-        // Serene slow-motion breathing float (smooth ~5s cycle, zero vibration)
+        // Curious asymmetric eyes: one eye slightly more open and attentive
+        const voiceCuriosity = Math.min(0.18, this.audioLevel * 0.25);
+        lScaleY = (1.20 + voiceCuriosity) * alertScale;
+        lScaleX = (1.05 + voiceCuriosity * 0.5) * alertScale;
+        rScaleY = (0.94 + voiceCuriosity * 0.8) * alertScale;
+        rScaleX = (1.00 + voiceCuriosity * 0.4) * alertScale;
+
+        // Serene slow-motion breathing float (zero jitter)
         this.hoverOffsetY = Math.sin(this.time * 1.2) * 1.2 + alertPerkOffsetY;
         this.bodySquashX = 1.0;
         this.bodySquashY = 1.0;
 
       } else if (this.state === 'thinking') {
-        // THINKING MODE:
-        // Pondering look upwards to the corner, gentle thoughtful sway
-        this.targetLookX = 0.60 + Math.sin(this.time * 1.4) * 0.12;
-        this.targetLookY = -0.75;
+        // =========================================================================
+        // PONDER THINKING MODE:
+        // - "ponder when thinking" (zero floating outside dots)
+        // - Deep pondering look upwards into the corner
+        // - Asymmetric ponder brow: one eye thoughtfully squinted, one focused
+        // - Thoughtful head tilt and slow contemplative gaze sway
+        // =========================================================================
+        const t = this.time;
+        // Pondering look upwards to corner, with slow contemplative drift
+        this.targetLookX = 0.58 + Math.sin(t * 1.2) * 0.08;
+        this.targetLookY = -0.78 + Math.cos(t * 0.8) * 0.05;
 
-        lScaleY *= 0.85;
-        rScaleY *= 0.75;
+        // Thoughtful ponder squint: right eye squinted in calculation, left focused
+        lScaleY = 1.15;
+        lScaleX = 0.98;
+        rScaleY = 0.48; // contemplative squint
+        rScaleX = 1.08;
 
-        this.targetBodyTilt = -0.03 + Math.sin(this.time * 1.8) * 0.02;
-        this.hoverOffsetY = Math.sin(this.time * 2.0) * 2.4;
-        this.bodySquashX = 0.98;
-        this.bodySquashY = 0.98;
+        this.targetBodyTilt = 0.07 + Math.sin(t * 1.4) * 0.02; // contemplative head tilt
+        this.hoverOffsetY = Math.sin(t * 1.6) * 1.4;
+        this.bodySquashX = 1.0;
+        this.bodySquashY = 1.0;
 
       } else if (this.state === 'speaking') {
         // =========================================================================
-        // REFINED SPEAKING MODE:
-        // User request:
-        // "when it goeas from idle to speaking it should be in alert first but should be for 1 seconds and then -----"
+        // SPEAKING MODE: STORYTELLING PHRASING (ANTI-MONOTONY SYSTEM)
+        // Breaks long paragraphs into 4 dynamic conversational beats (~3.2s each):
+        // Beat 0: Direct Engagement (looks at user, rhythmic talking cadence)
+        // Beat 1: Thoughtful Recall / Explaining Concept (looks up-right, head tilt)
+        // Beat 2: Illustrative Storytelling (glances side-to-side, animated cadence)
+        // Beat 3: Affirmative Micro-Nod & Breath Pause (pauses wiggle, nods, confirms point)
         // =========================================================================
         if (this.alertSpeakingTimer > 0) {
           this.alertSpeakingTimer -= dt;
-          // In Alert for 1.0 full second!
-          lScaleX = 1.35;
-          lScaleY = 1.35;
-          rScaleX = 1.35;
-          rScaleY = 1.35;
+          lScaleX = 1.35; lScaleY = 1.35;
+          rScaleX = 1.35; rScaleY = 1.35;
           this.hoverOffsetY = -3.5;
-          this.targetLookX = 0;
-          this.targetLookY = 0;
+          this.targetLookX = 0; this.targetLookY = 0;
           this.targetBodyTilt = 0;
-          this.bodySquashX = 1.0;
-          this.bodySquashY = 1.0;
+          this.bodySquashX = 1.0; this.bodySquashY = 1.0;
 
         } else {
-          // 1.0s alert finished -> Active Speaking Mode!
-          const speechCadence = Math.abs(
-            Math.sin(this.time * 7.5) * Math.cos(this.time * 3.8) +
-            Math.sin(this.time * 13.0) * 0.30
-          );
-          const voiceVol = Math.max(speechCadence * 0.75, this.audioLevel);
+          this.speechPhaseTimer += dt;
+          const phaseDuration = 3.2;
+          const cycleTime = this.speechPhaseTimer % (phaseDuration * 4);
+          const currentBeat = Math.floor(cycleTime / phaseDuration); // 0, 1, 2, 3
+          const beatProgress = (cycleTime % phaseDuration) / phaseDuration; // 0.0 to 1.0
+          const t = this.time;
 
-          this.targetLookX = Math.sin(this.time * 1.8) * 0.10;
-          this.targetLookY = 0;
+          let beatNoseActive = true;
+          let beatSquint = 0;
 
-          // Joyful squint talking eyes on stressed syllables
-          const syllableSquint = voiceVol * 0.50;
-          lScaleY = Math.max(0.24, 1.0 - syllableSquint);
-          rScaleY = Math.max(0.24, 1.0 - syllableSquint);
+          if (currentBeat === 0) {
+            // Beat 0: Direct Engagement (connecting directly with user)
+            this.targetLookX = Math.sin(t * 0.8) * 0.12;
+            this.targetLookY = -0.15 + Math.sin(t * 1.1) * 0.08;
+            this.targetBodyTilt = Math.sin(t * 1.2) * 0.02;
+            this.hoverOffsetY = Math.sin(t * 2.0) * 1.4;
 
-          // Natural syllable bounce
-          this.hoverOffsetY = -Math.abs(Math.sin(this.time * 7.0)) * (2.8 + voiceVol * 3.2);
-          this.targetBodyTilt = Math.sin(this.time * 4.0) * 0.025;
-          this.bodySquashX = 0.98 + voiceVol * 0.04;
-          this.bodySquashY = 1.0 + voiceVol * 0.05;
+          } else if (currentBeat === 1) {
+            // Beat 1: Thoughtful Recall / Explaining Concept
+            this.targetLookX = 0.48 + Math.sin(t * 0.9) * 0.10;
+            this.targetLookY = -0.58 + Math.cos(t * 0.7) * 0.08;
+            this.targetBodyTilt = 0.04 + Math.sin(t * 1.2) * 0.02;
+            this.hoverOffsetY = Math.sin(t * 1.8) * 1.5;
+
+          } else if (currentBeat === 2) {
+            // Beat 2: Illustrative Storytelling (looking side to side)
+            this.targetLookX = Math.sin(t * 1.8) * 0.55;
+            this.targetLookY = -0.22 + Math.cos(t * 1.4) * 0.12;
+            this.targetBodyTilt = Math.sin(t * 1.8) * 0.04;
+            this.hoverOffsetY = Math.sin(t * 2.2) * 1.6;
+
+          } else {
+            // Beat 3: Affirmative Micro-Nod & Breath Pause (Sentence conclusion)
+            this.targetLookX = 0;
+            this.targetLookY = -0.05;
+            // Affirmative micro-nod
+            const nod = Math.sin(beatProgress * Math.PI * 2) * 2.2;
+            this.hoverOffsetY = nod;
+            this.targetBodyTilt = Math.sin(beatProgress * Math.PI) * 0.03;
+            // In the middle of beat 3, pause nose wiggle momentarily like taking a breath!
+            if (beatProgress > 0.35 && beatProgress < 0.75) {
+              beatNoseActive = false;
+              beatSquint = 0.22; // smiling breath
+            }
+          }
+
+          this.beatNoseActive = beatNoseActive;
+
+          // Talking cadence eye squint on syllables
+          const speechCadence = Math.abs(Math.sin(t * 6.5) * Math.cos(t * 3.2));
+          const voiceVol = Math.max(speechCadence * 0.65, this.audioLevel);
+          const talkSquint = voiceVol * 0.32 + beatSquint;
+          lScaleY = Math.max(0.38, 1.0 - talkSquint);
+          rScaleY = Math.max(0.38, 1.0 - talkSquint);
+
+          // Audio energy peak emphasis pop
+          if (this.audioLevel > 0.40) {
+            lScaleX *= 1.08;
+            rScaleX *= 1.08;
+            lScaleY *= 1.10;
+            rScaleY *= 1.10;
+          }
+
+          // Asymmetric curiosity on side glances
+          if (this.targetLookX > 0.25) {
+            lScaleY *= 1.12; rScaleY *= 0.88;
+          } else if (this.targetLookX < -0.25) {
+            rScaleY *= 1.12; lScaleY *= 0.88;
+          }
         }
 
       } else {
         // IDLE MODE:
-        this.hoverOffsetY = Math.sin(this.time * 1.8) * 1.8;
-        this.targetBodyTilt = 0;
+        if (this.postSpeakingWinkTimer > 0) {
+          this.postSpeakingWinkTimer -= dt;
+          // Post-speaking celebratory wink 😉 before settling into squint!
+          const winkP = Math.sin(Math.PI * Math.max(0, Math.min(1, this.postSpeakingWinkTimer / 0.85)));
+          this.targetBodyTilt = 0.06 * winkP;
+          this.hoverOffsetY = -1.8 * winkP;
+          this.targetLookX = 0.12;
+          this.targetLookY = -0.15;
+          rScaleY = 0.14; // winking right eye
+          lScaleY = 1.15; // smiling bright left eye
+        } else if (this.expression === 'normal' || !this.expression) {
+          // Default idle mode is SQUINT MODE (User: "put it on squint mode")
+          if (this.isHovered) {
+            // Perks up awake on hover to show interactivity!
+            lScaleY = 1.15;
+            rScaleY = 1.15;
+            lScaleX = 1.05;
+            rScaleX = 1.05;
+            this.hoverOffsetY = -2.0;
+          } else {
+            // Calm, relaxed, resting squint eyes
+            lScaleY = 0.25;
+            rScaleY = 0.25;
+            lScaleX = 1.08;
+            rScaleX = 1.08;
+            this.hoverOffsetY = Math.sin(this.time * 1.5) * 1.5;
+            this.targetBodyTilt = 0;
+            this.targetLookX = 0;
+            this.targetLookY = 0;
+          }
+        } else {
+          this.hoverOffsetY = Math.sin(this.time * 1.8) * 1.8;
+          this.targetBodyTilt = 0;
+        }
         this.bodySquashX = 1.0;
         this.bodySquashY = 1.0;
       }
@@ -906,9 +1038,10 @@
 
       // -------------------------------------------------------------
       // 1. Draw Pill Body: Pristine Seamless Gradient (ZERO SHADOW!)
+      // Exact pixel alignment with chatbox height
       // -------------------------------------------------------------
-      const pillW = w * 0.88;
-      const pillH = h * 0.82;
+      const pillW = w * 0.94;
+      const pillH = h * 0.94;
       const pillR = pillH / 2;
 
       const x0 = -pillW / 2;
@@ -945,15 +1078,12 @@
       // 3. Draw Nose (User requested: "add nose in speaking maybe")
       // In speaking mode: appears and wiggles AFTER the 1.0s alert finishes!
       // -------------------------------------------------------------
+      // -------------------------------------------------------------
+      // 3. Draw Nose
+      // In speaking mode: appears and vibrates playfully with speech!
+      // -------------------------------------------------------------
       if ((this.state === 'speaking' && this.alertSpeakingTimer <= 0) || this.options.showNoseAlways) {
         this._drawNose(ctx, pillW, pillH, eyeCol);
-      }
-
-      // -------------------------------------------------------------
-      // 4. Floating Thinking Dots (ONLY in Ponder / Thinking mode!)
-      // -------------------------------------------------------------
-      if (this.statusMark === '...') {
-        this._drawThinkingDots(ctx, pillW * 0.38, -pillH * 0.48, eyeCol);
       }
 
       ctx.restore();
@@ -968,8 +1098,8 @@
       ctx.translate(eyeX, eyeY);
       ctx.scale(scaleX, scaleY);
 
-      // A. Happy Flash on Click or Happy Expression
-      if (this.happyFlashTimer > 0 || this.expression === 'happy' || (this.state === 'speaking' && this.alertSpeakingTimer <= 0 && scaleY < 0.38)) {
+      // A. Happy Flash on Click, Happy Expression, Speaking Squint, or Post-Speaking Wink
+      if (this.happyFlashTimer > 0 || this.expression === 'happy' || (this.state === 'speaking' && this.alertSpeakingTimer <= 0 && scaleY < 0.38) || (isRight && this.postSpeakingWinkTimer > 0)) {
         ctx.beginPath();
         ctx.arc(0, eyeR * 0.3, eyeR * 1.05, Math.PI * 1.15, Math.PI * 1.85, false);
         ctx.lineWidth = Math.max(2.4, this.height * 0.045);
@@ -1028,30 +1158,50 @@
         ctx.fillStyle = '#ffffff';
         ctx.fill();
 
-      // F. Proud Expression (Confident upturned smug crescents with blush dots)
+      // F. Proud Expression (Triumphant smiling crescent + bold proud brows + golden sparkles)
       } else if (this.expression === 'proud') {
-        // Confident smug upturned closed crescent arc
+        // 1. Triumphant smiling crescent arch (peaks UPWARDS)
         ctx.beginPath();
-        ctx.arc(0, -eyeR * 0.20, eyeR * 0.95, Math.PI * 0.16, Math.PI * 0.84, false);
-        ctx.lineWidth = Math.max(2.6, this.height * 0.05);
+        ctx.arc(0, eyeR * 0.35, eyeR * 1.05, Math.PI * 1.14, Math.PI * 1.86, false);
+        ctx.lineWidth = Math.max(2.8, this.height * 0.054);
         ctx.strokeStyle = eyeColor;
         ctx.lineCap = 'round';
         ctx.stroke();
 
-        // Cute proud pink/glow blush dot below each eye
+        // 2. Outward proud winged eye flick
         ctx.beginPath();
-        ctx.arc(isRight ? eyeR * 0.45 : -eyeR * 0.45, eyeR * 0.85, eyeR * 0.32, 0, Math.PI * 2);
-        ctx.fillStyle = eyeColor === '#ffffff' ? 'rgba(255, 255, 255, 0.45)' : 'rgba(244, 63, 94, 0.60)';
-        ctx.fill();
+        const flickX = isRight ? eyeR * 0.95 : -eyeR * 0.95;
+        const flickDir = isRight ? 1 : -1;
+        ctx.moveTo(flickX, eyeR * 0.12);
+        ctx.lineTo(flickX + flickDir * eyeR * 0.45, -eyeR * 0.18);
+        ctx.lineWidth = Math.max(2.4, this.height * 0.046);
+        ctx.stroke();
 
-      // G. Classic Bead Eyes
+        // 3. Bold confident proud eyebrow slanted up toward center
+        ctx.beginPath();
+        const browInnerX = isRight ? -eyeR * 0.70 : eyeR * 0.70;
+        const browOuterX = isRight ? eyeR * 1.05 : -eyeR * 1.05;
+        const browPeakY = -eyeR * 1.05;
+        const browOuterY = -eyeR * 0.65;
+        ctx.moveTo(browInnerX, browPeakY);
+        ctx.lineTo(browOuterX, browOuterY);
+        ctx.lineWidth = Math.max(2.6, this.height * 0.05);
+        ctx.stroke();
+
+        // 4. Proud sparkle star at the cheek
+        const starColor = eyeColor;
+        const starX = isRight ? eyeR * 1.15 : -eyeR * 1.15;
+        const starY = eyeR * 0.85;
+        this._drawStar(ctx, starX, starY, 4, eyeR * 0.55, eyeR * 0.20, starColor);
+
+      // G. Classic Bead Eyes / Squint Slit Eyes
       } else {
         ctx.beginPath();
         ctx.arc(0, 0, eyeR, 0, Math.PI * 2);
         ctx.fillStyle = eyeColor;
         ctx.fill();
 
-        // Eye Specular Catchlight (Twinkle in upper right)
+        // Eye Specular Catchlight (Twinkle in upper right when eye is open)
         if (scaleY > 0.35) {
           ctx.beginPath();
           ctx.arc(eyeR * 0.35, -eyeR * 0.35, eyeR * 0.34, 0, Math.PI * 2);
@@ -1064,11 +1214,12 @@
     }
 
     _drawNose(ctx, pillW, pillH, eyeColor) {
-      // Delicate, cute quick line that wiggles playfully during speech
+      // Delicate cute quick line that wiggles and vibrates playfully during speech
       const noseLen = pillH * 0.16;
       const noseY = pillH * 0.12;
-      const wiggle = (this.state === 'speaking' && this.alertSpeakingTimer <= 0) 
-        ? Math.sin(this.time * 16.0) * (0.8 + this.audioLevel * 1.8) 
+      const wiggleActive = (this.state === 'speaking' && this.alertSpeakingTimer <= 0 && this.beatNoseActive !== false);
+      const wiggle = wiggleActive 
+        ? Math.sin(this.time * 20.0) * (0.9 + this.audioLevel * 2.0) 
         : 0;
 
       ctx.save();

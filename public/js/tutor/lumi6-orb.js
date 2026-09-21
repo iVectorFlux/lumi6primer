@@ -168,10 +168,22 @@
       try { talkPill.destroy(); } catch {}
       talkPill = null;
     }
-    talkPill = makePill(host, 52, 34, {
+    talkPill = makePill(host, 68, 44, {
       state: talkState,
       trackPointer: true
     });
+
+    const micBtn = document.getElementById("talkModeMicBtn");
+    if (micBtn && !micBtn._vpHoverBound) {
+      micBtn._vpHoverBound = true;
+      micBtn.addEventListener("pointerenter", () => {
+        if (talkPill) talkPill.isHovered = true;
+      });
+      micBtn.addEventListener("pointerleave", () => {
+        if (talkPill) talkPill.isHovered = false;
+      });
+    }
+
     return talkPill;
   }
 
