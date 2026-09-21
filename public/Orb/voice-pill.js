@@ -32,56 +32,128 @@
       subtitle: 'Warm Spiced Cognac',
       bodyGrad: ['#f59e0b', '#b45309'],
       defaultEyeColor: 'black',
-      accent: '#78350f'
+      accent: '#78350f',
+      primary: '#f59e0b',
+      sendBg: 'linear-gradient(135deg, #f59e0b 0%, #b45309 100%)',
+      sendHoverBg: 'linear-gradient(135deg, #d97706 0%, #92400e 100%)',
+      glow: 'rgba(245, 158, 11, 0.35)',
+      dots: '#f59e0b',
+      userBubbleBg: 'linear-gradient(135deg, #fffbeb 0%, #fef3c7 100%)',
+      userBubbleColor: '#78350f',
+      userBubbleBorder: 'rgba(245, 158, 11, 0.28)',
+      userBubbleShadow: '0 4px 16px rgba(245, 158, 11, 0.12)'
     },
     violet: {
       name: 'Cyber Violet',
       subtitle: 'Electric Plum Indigo',
       bodyGrad: ['#a855f7', '#6b21a8'],
       defaultEyeColor: 'black',
-      accent: '#581c87'
+      accent: '#581c87',
+      primary: '#a855f7',
+      sendBg: 'linear-gradient(135deg, #a855f7 0%, #6b21a8 100%)',
+      sendHoverBg: 'linear-gradient(135deg, #9333ea 0%, #581c87 100%)',
+      glow: 'rgba(168, 85, 247, 0.35)',
+      dots: '#a855f7',
+      userBubbleBg: 'linear-gradient(135deg, #faf5ff 0%, #f3e8ff 100%)',
+      userBubbleColor: '#581c87',
+      userBubbleBorder: 'rgba(168, 85, 247, 0.25)',
+      userBubbleShadow: '0 4px 16px rgba(168, 85, 247, 0.12)'
     },
     emerald: {
       name: 'Emerald Jade',
       subtitle: 'Lush Seafoam Forest',
       bodyGrad: ['#10b981', '#047857'],
       defaultEyeColor: 'black',
-      accent: '#064e3b'
+      accent: '#064e3b',
+      primary: '#10b981',
+      sendBg: 'linear-gradient(135deg, #10b981 0%, #047857 100%)',
+      sendHoverBg: 'linear-gradient(135deg, #059669 0%, #064e3b 100%)',
+      glow: 'rgba(16, 185, 129, 0.35)',
+      dots: '#10b981',
+      userBubbleBg: 'linear-gradient(135deg, #f0fdf4 0%, #d1fae5 100%)',
+      userBubbleColor: '#064e3b',
+      userBubbleBorder: 'rgba(16, 185, 129, 0.25)',
+      userBubbleShadow: '0 4px 16px rgba(16, 185, 129, 0.12)'
     },
     azure: {
       name: 'Ocean Azure',
       subtitle: 'Sky Sapphire Cobalt',
       bodyGrad: ['#0ea5e9', '#1d4ed8'],
       defaultEyeColor: 'black',
-      accent: '#1e3a8a'
+      accent: '#1e3a8a',
+      primary: '#0ea5e9',
+      sendBg: 'linear-gradient(135deg, #0ea5e9 0%, #1d4ed8 100%)',
+      sendHoverBg: 'linear-gradient(135deg, #0284c7 0%, #1e40af 100%)',
+      glow: 'rgba(14, 165, 233, 0.35)',
+      dots: '#0ea5e9',
+      userBubbleBg: 'linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%)',
+      userBubbleColor: '#0c4a6e',
+      userBubbleBorder: 'rgba(14, 165, 233, 0.25)',
+      userBubbleShadow: '0 4px 16px rgba(14, 165, 233, 0.12)'
     },
     coral: {
       name: 'Sunset Coral',
       subtitle: 'Fiery Rose Peach',
       bodyGrad: ['#f43f5e', '#ea580c'],
       defaultEyeColor: 'black',
-      accent: '#9f1239'
+      accent: '#9f1239',
+      primary: '#f43f5e',
+      sendBg: 'linear-gradient(135deg, #f43f5e 0%, #ea580c 100%)',
+      sendHoverBg: 'linear-gradient(135deg, #e11d48 0%, #c2410c 100%)',
+      glow: 'rgba(244, 63, 94, 0.35)',
+      dots: '#f43f5e',
+      userBubbleBg: 'linear-gradient(135deg, #fff1f2 0%, #ffe4e6 100%)',
+      userBubbleColor: '#881337',
+      userBubbleBorder: 'rgba(244, 63, 94, 0.25)',
+      userBubbleShadow: '0 4px 16px rgba(244, 63, 94, 0.12)'
     },
     gunmetal: {
       name: 'Titanium Steel',
       subtitle: 'Brushed Silver Slate',
       bodyGrad: ['#94a3b8', '#475569'],
       defaultEyeColor: 'black',
-      accent: '#1e293b'
+      accent: '#1e293b',
+      primary: '#64748b',
+      sendBg: 'linear-gradient(135deg, #94a3b8 0%, #475569 100%)',
+      sendHoverBg: 'linear-gradient(135deg, #64748b 0%, #334155 100%)',
+      glow: 'rgba(148, 163, 184, 0.35)',
+      dots: '#64748b',
+      userBubbleBg: 'linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%)',
+      userBubbleColor: '#1e293b',
+      userBubbleBorder: 'rgba(148, 163, 184, 0.35)',
+      userBubbleShadow: '0 4px 16px rgba(71, 85, 105, 0.10)'
     },
     obsidian: {
       name: 'Obsidian Slate',
       subtitle: 'Deep Graphite Dark',
       bodyGrad: ['#334155', '#0f172a'],
       defaultEyeColor: 'white', // Automatic white on dark
-      accent: '#38bdf8'
+      accent: '#38bdf8',
+      primary: '#38bdf8',
+      sendBg: 'linear-gradient(135deg, #334155 0%, #0f172a 100%)',
+      sendHoverBg: 'linear-gradient(135deg, #1e293b 0%, #020617 100%)',
+      glow: 'rgba(51, 65, 85, 0.40)',
+      dots: '#38bdf8',
+      userBubbleBg: 'linear-gradient(135deg, #f1f5f9 0%, #e2e8f0 100%)',
+      userBubbleColor: '#0f172a',
+      userBubbleBorder: 'rgba(51, 65, 85, 0.28)',
+      userBubbleShadow: '0 4px 16px rgba(15, 23, 42, 0.10)'
     },
     puredark: {
       name: 'Matte Carbon',
       subtitle: 'Minimalist Pitch Black',
       bodyGrad: ['#27272a', '#09090b'],
       defaultEyeColor: 'white', // Automatic white on dark
-      accent: '#ffffff'
+      accent: '#ffffff',
+      primary: '#27272a',
+      sendBg: 'linear-gradient(135deg, #27272a 0%, #09090b 100%)',
+      sendHoverBg: 'linear-gradient(135deg, #18181b 0%, #000000 100%)',
+      glow: 'rgba(39, 39, 42, 0.45)',
+      dots: '#52525b',
+      userBubbleBg: 'linear-gradient(135deg, #fafafa 0%, #f4f4f5 100%)',
+      userBubbleColor: '#18181b',
+      userBubbleBorder: 'rgba(39, 39, 42, 0.25)',
+      userBubbleShadow: '0 4px 16px rgba(0, 0, 0, 0.10)'
     }
   };
 
@@ -122,6 +194,9 @@
       this.paletteKey = this.options.palette in PALETTES ? this.options.palette : 'amber';
       this.expression = this.options.expression;
       this.eyeColorMode = this.options.eyeColorMode;
+
+      // Apply theme CSS custom properties for talk UI (send button, user bubble, loading dots)
+      VoicePill.applyThemeTokens(this.paletteKey);
 
       // Audio & Speech Simulation
       this.audioLevel = 0.0;
@@ -381,6 +456,7 @@
       if (PALETTES[key]) {
         this.paletteKey = key;
         this.options.palette = key;
+        VoicePill.applyThemeTokens(key);
       }
     }
 
@@ -1323,6 +1399,23 @@
       ctx.restore();
     }
   }
+
+  VoicePill.applyThemeTokens = function(key) {
+    const p = PALETTES[key] || PALETTES.amber;
+    if (typeof document === 'undefined' || !document.documentElement) return;
+    const root = document.documentElement;
+    root.style.setProperty('--talk-pill-primary', p.dots || p.bodyGrad[0]);
+    root.style.setProperty('--talk-pill-color-1', p.bodyGrad[0]);
+    root.style.setProperty('--talk-pill-color-2', p.bodyGrad[1]);
+    root.style.setProperty('--talk-pill-send-bg', p.sendBg || `linear-gradient(135deg, ${p.bodyGrad[0]} 0%, ${p.bodyGrad[1]} 100%)`);
+    root.style.setProperty('--talk-pill-send-hover-bg', p.sendHoverBg || p.bodyGrad[1]);
+    root.style.setProperty('--talk-pill-glow', p.glow || 'rgba(0,0,0,0.15)');
+    root.style.setProperty('--talk-pill-dots', p.dots || p.bodyGrad[0]);
+    root.style.setProperty('--talk-pill-user-bg', p.userBubbleBg);
+    root.style.setProperty('--talk-pill-user-color', p.userBubbleColor);
+    root.style.setProperty('--talk-pill-user-border', p.userBubbleBorder);
+    root.style.setProperty('--talk-pill-user-shadow', p.userBubbleShadow);
+  };
 
   VoicePill.PALETTES = PALETTES;
   return VoicePill;

@@ -270,6 +270,9 @@
     savePillPalette(key);
     if (talkPill) talkPill.setPalette(key);
     if (pickerPill) pickerPill.setPalette(key);
+    if (window.VoicePill && typeof window.VoicePill.applyThemeTokens === "function") {
+      window.VoicePill.applyThemeTokens(key);
+    }
     return key;
   }
 
@@ -680,6 +683,10 @@
           : "talk";
     setActiveMode(start);
     document.addEventListener("visibilitychange", syncRunningOrbs);
+    const activeKey = readPillPalette();
+    if (window.VoicePill && typeof window.VoicePill.applyThemeTokens === "function") {
+      window.VoicePill.applyThemeTokens(activeKey);
+    }
   }
 
   window.Lumi6Orb = {

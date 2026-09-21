@@ -1922,9 +1922,11 @@ body.mode-sim-active .pen-preview-badge {
   max-width: 82%;
   padding: 14px 20px;
   border-radius: 22px 22px 6px 22px;
-  background: linear-gradient(135deg, #7c3aed 0%, #6d28d9 100%);
-  color: #ffffff;
-  box-shadow: 0 4px 16px rgba(109, 40, 217, 0.2);
+  background: var(--talk-pill-user-bg, linear-gradient(135deg, #fffbeb 0%, #fef3c7 100%));
+  color: var(--talk-pill-user-color, #78350f);
+  border: 1px solid var(--talk-pill-user-border, rgba(245, 158, 11, 0.28));
+  box-shadow: var(--talk-pill-user-shadow, 0 4px 16px rgba(245, 158, 11, 0.12));
+  transition: background 0.22s ease, color 0.22s ease, border-color 0.22s ease, box-shadow 0.22s ease;
 }
 
 .talk-child-prompt .talk-child-badge {
@@ -1933,6 +1935,7 @@ body.mode-sim-active .pen-preview-badge {
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.06em;
+  color: var(--talk-pill-user-color, #78350f);
   opacity: 0.82;
   margin-bottom: 4px;
 }
@@ -1943,6 +1946,7 @@ body.mode-sim-active .pen-preview-badge {
   font-weight: 500;
   letter-spacing: -0.01em;
   line-height: 1.5;
+  color: var(--talk-pill-user-color, #78350f);
 }
 
 /* Lumi6 Response Box */
@@ -2373,8 +2377,9 @@ iframe.talk-lesson-pill {
   width: 7px;
   height: 7px;
   border-radius: 50%;
-  background: #7c3aed;
+  background: var(--talk-pill-dots, #f59e0b);
   animation: talkThinkBounce 1s ease-in-out infinite;
+  transition: background 0.22s ease;
 }
 
 .talk-thinking-dots span:nth-child(2) { animation-delay: 0.15s; }
@@ -2555,17 +2560,26 @@ iframe.talk-lesson-pill {
   height: 36px;
   border-radius: 50%;
   border: none;
-  background: #7c3aed;
+  background: var(--talk-pill-send-bg, linear-gradient(135deg, #f59e0b 0%, #b45309 100%));
   color: #ffffff;
   display: grid;
   place-items: center;
   cursor: pointer;
-  transition: all 0.14s ease;
+  transition: all 0.18s ease;
   flex-shrink: 0;
+  box-shadow: 0 3px 12px var(--talk-pill-glow, rgba(245, 158, 11, 0.35));
 }
 
 .talk-send-action-btn:hover {
-  background: #6d28d9;
+  background: var(--talk-pill-send-hover-bg, linear-gradient(135deg, #d97706 0%, #92400e 100%));
+  transform: scale(1.05);
+}
+
+.talk-send-action-btn svg {
+  width: 18px;
+  height: 18px;
+  fill: none;
+  stroke: #ffffff !important;
 }
 
 .talk-playground {

@@ -35,4 +35,17 @@
   --kid-bar-bg: rgba(255, 255, 255, 0.92);
   --kid-bar-border: 1px solid var(--separator);
   --kid-bar-shadow: var(--shadow);
+
+  /* Dynamic Talk Pill Theme Tokens (Synchronized with selected pill palette) */
+  --talk-pill-primary: #f59e0b;
+  --talk-pill-color-1: #f59e0b;
+  --talk-pill-color-2: #b45309;
+  --talk-pill-send-bg: linear-gradient(135deg, #f59e0b 0%, #b45309 100%);
+  --talk-pill-send-hover-bg: linear-gradient(135deg, #d97706 0%, #92400e 100%);
+  --talk-pill-glow: rgba(245, 158, 11, 0.35);
+  --talk-pill-dots: #f59e0b;
+  --talk-pill-user-bg: linear-gradient(135deg, #fffbeb 0%, #fef3c7 100%);
+  --talk-pill-user-color: #78350f;
+  --talk-pill-user-border: rgba(245, 158, 11, 0.28);
+  --talk-pill-user-shadow: 0 4px 16px rgba(245, 158, 11, 0.12);
 }
