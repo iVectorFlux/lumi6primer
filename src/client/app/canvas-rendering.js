@@ -623,20 +623,6 @@
       specs.push({ key:`${key}:cancel`, kind:"cancel", box, activate:() => itemIndex === null ? rejectPending() : rejectPendingItem(itemIndex), priority:5 });
       specs.push({ key:`${key}:accept`, kind:"accept", box, activate:() => itemIndex === null ? acceptPending() : acceptPendingItem(itemIndex), priority:5 });
       if (pendingCopyable(target)) specs.push({ key:`${key}:copy`, kind:"copy", box, activate:() => void copyPendingText(itemIndex), priority:5 });
-      if (target?.textCommand || pendingCopyable(target)) specs.push({
-        key:`${key}:reply`,
-        kind:"reply",
-        box,
-        label: t("boardReply"),
-        widgetTool: true,
-        widgetToolGroup: `${key}-reply`,
-        groupBaseWidth: widgetToolLabelWidth(t("boardReply"), 86),
-        groupOffset: 0,
-        baseWidth: widgetToolLabelWidth(t("boardReply"), 86),
-        baseHeight: 34,
-        activate: () => openBoardReplyFromPending(itemIndex),
-        priority: 7,
-      });
     };
     if (pending.items) pending.items.forEach((item, index) => add(`pending-item:${index}`, pendingItemBounds(item), index, item));
     else add("pending", draftBounds(pending));

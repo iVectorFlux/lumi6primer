@@ -442,14 +442,16 @@ button,
   }
 
   .talk-mic-btn {
-    width: 44px !important;
-    height: 44px !important;
-    max-width: 44px !important;
-    max-height: 44px !important;
-    aspect-ratio: 1 / 1 !important;
+    width: 50px !important;
+    height: 32px !important;
+    max-width: 50px !important;
+    max-height: 32px !important;
+    flex: 0 0 50px !important;
+    aspect-ratio: auto !important;
     padding: 0 !important;
     font-size: 13px;
     gap: 0;
+    border-radius: 9999px !important;
     background: transparent !important;
     box-shadow: none !important;
     border: none !important;
@@ -462,21 +464,32 @@ button,
   }
 
   .talk-input-form {
-    min-height: 44px;
-    padding: 4px 4px 4px 14px;
+    min-height: 42px;
+    padding: 3px 3px 3px 12px;
     align-items: center;
+  }
+
+  .talk-input-form.is-multiline {
+    border-radius: 18px !important;
+    align-items: flex-end !important;
+    padding: 5px 5px 5px 12px !important;
   }
 
   .talk-input-field {
     font-size: 16px; /* prevent iOS zoom */
     line-height: 22px;
-    height: 22px;
+    height: auto;
+    min-height: 22px;
+    max-height: 140px;
     padding: 0;
+    overflow-y: auto;
   }
 
   .talk-send-action-btn {
     width: 32px;
     height: 32px;
+    align-self: flex-end;
+    margin-bottom: 0px;
   }
 
   .sketch-topbar-tools {

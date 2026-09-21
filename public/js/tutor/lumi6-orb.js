@@ -1,66 +1,106 @@
 /**
- * Talk-mode voice orb + profile theme picker.
- * Uses the 56px pill size and the studio's default grain / zoom / turbulence.
+ * Voice Pill integration for Talk Mode, Draw Mode, and Profile Theme Customizer.
+ * Backed by VoicePill with 8 curated vibrant gradient palettes, eye-styling, and facial expressions.
  */
 (function () {
-  const STORAGE_KEY = "lumi6OrbTheme";
-  const FINISH_KEY = "lumi6OrbFinish";
-  const PILL_SIZE = 44;
-  const DEFAULT_THEME = "peach";
-  const DEFAULT_FINISH = "light";
-  const IDLE = {
-    speed: 0.65,
-    zoom: 1.55,
-    turb: 0.35,
-    grain: 0.5
-  };
-  const STATE_PRESETS = {
-    idle: IDLE,
-    ready: { speed: 0.75, zoom: 1.53, turb: 0.45, grain: 0.6 },
-    listening: { speed: 1.45, zoom: 1.52, turb: 1.6, grain: 1.2 },
-    thinking: { speed: 1.25, zoom: 1.50, turb: 0.95, grain: 0.8 },
-    speaking: { speed: 1.6, zoom: 1.52, turb: 1.35, grain: 0.5 }
-  };
+  const STORAGE_KEY = "lumi6VoicePillPalette";
+  const EYE_COLOR_KEY = "lumi6VoicePillEyeColor";
+  const DEFAULT_PALETTE = "amber";
+  const DEFAULT_EYE_COLOR = "auto";
 
-  let talkOrb = null;
-  let drawOrb = null;
-  let pickerOrb = null;
+  let talkPill = null;
+  let drawPill = null;
+  let pickerPill = null;
   let talkState = "idle";
-  let talkVoiceActive = false;
-  let talkVoiceTimer = null;
   let activeMode = "talk";
   const drawBusy = new Set();
 
-  function pauseOrb(orb) {
-    if (orb && typeof orb.pause === "function") orb.pause();
+  function getPalettes() {
+    return window.VoicePill?.PALETTES || {
+      amber: { name: 'Amber Ember', subtitle: 'Warm Spiced Cognac', bodyGrad: ['#f59e0b', '#b45309'], defaultEyeColor: 'black', accent: '#78350f' },
+      violet: { name: 'Cyber Violet', subtitle: 'Electric Plum Indigo', bodyGrad: ['#a855f7', '#6b21a8'], defaultEyeColor: 'black', accent: '#581c87' },
+      emerald: { name: 'Emerald Jade', subtitle: 'Lush Seafoam Forest', bodyGrad: ['#10b981', '#047857'], defaultEyeColor: 'black', accent: '#064e3b' },
+      azure: { name: 'Ocean Azure', subtitle: 'Sky Sapphire Cobalt', bodyGrad: ['#0ea5e9', '#1d4ed8'], defaultEyeColor: 'black', accent: '#1e3a8a' },
+      coral: { name: 'Sunset Coral', subtitle: 'Fiery Rose Peach', bodyGrad: ['#f43f5e', '#ea580c'], defaultEyeColor: 'black', accent: '#9f1239' },
+      gunmetal: { name: 'Titanium Steel', subtitle: 'Brushed Silver Slate', bodyGrad: ['#94a3b8', '#475569'], defaultEyeColor: 'black', accent: '#1e293b' },
+      obsidian: { name: 'Obsidian Slate', subtitle: 'Deep Graphite Dark', bodyGrad: ['#334155', '#0f172a'], defaultEyeColor: 'white', accent: '#38bdf8' },
+      puredark: { name: 'Matte Carbon', subtitle: 'Minimalist Pitch Black', bodyGrad: ['#27272a', '#09090b'], defaultEyeColor: 'white', accent: '#ffffff' }
+    };
   }
 
-  function resumeOrb(orb) {
-    if (orb && typeof orb.resume === "function") orb.resume();
+  function paletteKeys() {
+    return Object.keys(getPalettes());
   }
 
-  function syncRunningOrbs() {
+  function readPalette() {
+    try {
+      const stored = String(localStorage.getItem(STORAGE_KEY) || "").trim().toLowerCase();
+      if (stored && getPalettes()[stored]) return stored;
+      // Graceful fallback from legacy orb theme
+      const legacy = String(localStorage.getItem("lumi6OrbTheme") || "").trim().toLowerCase();
+      if (legacy) {
+        if (legacy.includes("coral") || legacy.includes("rose") || legacy.includes("peach")) return "coral";
+        if (legacy.includes("emerald") || legacy.includes("forest") || legacy.includes("mint") || legacy.includes("sage")) return "emerald";
+        if (legacy.includes("ocean") || legacy.includes("sky") || legacy.includes("azure") || legacy.includes("cobalt")) return "azure";
+        if (legacy.includes("galaxy") || legacy.includes("plum") || legacy.includes("violet") || legacy.includes("aurora") || legacy.includes("amethyst")) return "violet";
+        if (legacy.includes("slate") || legacy.includes("mono") || legacy.includes("silver")) return "gunmetal";
+        if (legacy.includes("dark") || legacy.includes("night") || legacy.includes("black")) return "obsidian";
+      }
+    } catch {}
+    return DEFAULT_PALETTE;
+  }
+
+  function savePalette(key) {
+    try {
+      localStorage.setItem(STORAGE_KEY, key);
+      localStorage.setItem("lumi6OrbTheme", key);
+    } catch {}
+  }
+
+  function readEyeColorMode() {
+    try {
+      const stored = String(localStorage.getItem(EYE_COLOR_KEY) || "").trim().toLowerCase();
+      if (["auto", "black", "white"].includes(stored)) return stored;
+    } catch {}
+    return DEFAULT_EYE_COLOR;
+  }
+
+  function saveEyeColorMode(mode) {
+    try {
+      localStorage.setItem(EYE_COLOR_KEY, mode);
+    } catch {}
+  }
+
+  function pausePill(pill) {
+    if (pill && typeof pill.pause === "function") pill.pause();
+  }
+
+  function resumePill(pill) {
+    if (pill && typeof pill.resume === "function") pill.resume();
+  }
+
+  function syncRunningPills() {
     if (document.hidden) {
-      pauseOrb(talkOrb);
-      pauseOrb(drawOrb);
-      pauseOrb(pickerOrb);
+      pausePill(talkPill);
+      pausePill(drawPill);
+      pausePill(pickerPill);
       return;
     }
-    if (pickerOrb) {
-      resumeOrb(pickerOrb);
-      pauseOrb(talkOrb);
-      pauseOrb(drawOrb);
+    if (pickerPill) {
+      resumePill(pickerPill);
+      pausePill(talkPill);
+      pausePill(drawPill);
       return;
     }
     if (activeMode === "talk") {
-      resumeOrb(talkOrb);
-      pauseOrb(drawOrb);
+      resumePill(talkPill);
+      pausePill(drawPill);
     } else if (activeMode === "draw") {
-      resumeOrb(drawOrb);
-      pauseOrb(talkOrb);
+      resumePill(drawPill);
+      pausePill(talkPill);
     } else {
-      pauseOrb(talkOrb);
-      pauseOrb(drawOrb);
+      pausePill(talkPill);
+      pausePill(drawPill);
     }
   }
 
@@ -69,279 +109,114 @@
     activeMode = next;
     if (next === "talk") mountTalkOrb();
     if (next === "draw") mountDrawOrb();
-    syncRunningOrbs();
+    syncRunningPills();
   }
 
-  function palettes() {
-    return window.VoiceOrb?.getPalettes?.() || window.VoiceOrbPalettes || {};
+  function paintPill(pill) {
+    if (!pill) return;
+    const pal = readPalette();
+    const eye = readEyeColorMode();
+    pill.setPalette(pal);
+    pill.setEyeColorMode(eye);
   }
 
-  function themeKeys() {
-    return Object.keys(palettes());
+  function paintAllPills() {
+    paintPill(talkPill);
+    paintPill(drawPill);
+    paintPill(pickerPill);
   }
 
-  function readTheme() {
-    try {
-      const stored = String(localStorage.getItem(STORAGE_KEY) || "").trim();
-      if (stored && palettes()[stored]) return stored;
-    } catch {}
-    return palettes()[DEFAULT_THEME] ? DEFAULT_THEME : themeKeys()[0] || DEFAULT_THEME;
+  function setPalette(key) {
+    const pals = getPalettes();
+    if (!pals[key]) return readPalette();
+    savePalette(key);
+    paintAllPills();
+    return key;
   }
 
-  function saveTheme(key) {
-    try { localStorage.setItem(STORAGE_KEY, key); } catch {}
+  function setEyeColorMode(mode) {
+    if (!["auto", "black", "white"].includes(mode)) return readEyeColorMode();
+    saveEyeColorMode(mode);
+    paintAllPills();
+    return mode;
   }
 
-  function readFinish() {
-    try {
-      const stored = String(localStorage.getItem(FINISH_KEY) || "").trim();
-      if (stored === "rich" || stored === "light") return stored;
-    } catch {}
-    return DEFAULT_FINISH;
-  }
-
-  function saveFinish(finish) {
-    try { localStorage.setItem(FINISH_KEY, finish); } catch {}
-  }
-
-  function mixColor(a, b, t) {
-    return [
-      a[0] + (b[0] - a[0]) * t,
-      a[1] + (b[1] - a[1]) * t,
-      a[2] + (b[2] - a[2]) * t
-    ];
-  }
-
-  function finishedPalette(palette, finish) {
-    if (!palette) return palette;
-    const rich = finish === "rich";
-    return {
-      name: palette.name,
-      subtitle: palette.subtitle,
-      glow: palette.glow,
-      c1: rich ? mixColor(palette.c1, palette.c3, 0.32) : mixColor(palette.c1, palette.c2, 0.28),
-      c2: rich ? mixColor(palette.c2, palette.c3, 0.28) : mixColor(palette.c2, palette.c3, 0.16),
-      c3: rich ? mixColor(palette.c3, palette.c4, 0.22) : palette.c3,
-      c4: rich ? mixColor(palette.c4, palette.c5, 0.16) : palette.c4,
-      c5: palette.c5
-    };
-  }
-
-  function currentPalette() {
-    const key = readTheme();
-    return finishedPalette(palettes()[key], readFinish()) || palettes()[key];
-  }
-
-  function paintOrbTheme(orb) {
-    if (!orb) return;
-    const key = readTheme();
-    const painted = currentPalette();
-    if (!painted) return;
-    orb.themeKey = key;
-    orb.setTheme(painted);
-  }
-
-  function applyPreset(orb, stateName, shaderState) {
-    if (!orb) return;
-    const preset = STATE_PRESETS[stateName] || IDLE;
-    orb.setSpeed(preset.speed);
-    orb.setZoom(preset.zoom);
-    orb.setTurbulence(preset.turb);
-    orb.setGrain(preset.grain);
-    const effectiveShaderState = shaderState || (stateName === "ready" ? "idle" : stateName);
-    orb.setState(effectiveShaderState);
-  }
-
-  function makeOrb(container, extra) {
-    if (!container || typeof window.VoiceOrb !== "function") return null;
+  function makePill(container, width, height, extra = {}) {
+    if (!container || typeof window.VoicePill !== "function") return null;
     container.innerHTML = "";
-    const orb = new window.VoiceOrb(container, Object.assign({
-      size: PILL_SIZE,
-      theme: readTheme(),
+    const pill = new window.VoicePill(container, Object.assign({
+      width,
+      height,
+      palette: readPalette(),
+      eyeColorMode: readEyeColorMode(),
       state: "idle",
-      reactToMic: false,
-      speed: IDLE.speed,
-      turbulence: IDLE.turb,
-      zoom: IDLE.zoom,
-      grain: IDLE.grain,
-      showShadow: false,
-      interactive: false
-    }, extra || {}));
-    paintOrbTheme(orb);
-    return orb;
+      expression: "normal",
+      trackPointer: true,
+      showNoseOnSpeaking: true
+    }, extra));
+    return pill;
   }
 
   function mountTalkOrb() {
     const host = document.getElementById("talkVoiceOrb");
-    if (!host || talkOrb || typeof window.VoiceOrb !== "function") return talkOrb;
-    talkOrb = makeOrb(host);
-    applyTalkVisual();
-    return talkOrb;
-  }
-
-  function applyTalkVisual() {
-    if (!talkOrb) mountTalkOrb();
-    if (!talkOrb) return;
-    if (talkState === "listening") {
-      applyPreset(talkOrb, talkVoiceActive ? "listening" : "ready");
-      return;
+    if (!host || typeof window.VoicePill !== "function") return talkPill;
+    if (talkPill && host.contains(talkPill.canvas)) {
+      talkPill.setState(talkState);
+      return talkPill;
     }
-    applyPreset(talkOrb, talkState);
+    if (talkPill) {
+      try { talkPill.destroy(); } catch {}
+      talkPill = null;
+    }
+    talkPill = makePill(host, 52, 34, {
+      state: talkState,
+      trackPointer: true
+    });
+    return talkPill;
   }
 
   function setTalkState(stateName) {
     const next = stateName === "listening" || stateName === "thinking" || stateName === "speaking" ? stateName : "idle";
     talkState = next;
-    if (talkVoiceTimer) {
-      clearTimeout(talkVoiceTimer);
-      talkVoiceTimer = null;
+    if (!talkPill) mountTalkOrb();
+    if (talkPill) {
+      talkPill.setState(next);
     }
-    talkVoiceActive = false;
-    applyTalkVisual();
   }
 
   function setTalkVoiceActive(active, holdMs = 280) {
-    if (talkState !== "listening") return;
-    if (talkVoiceTimer) {
-      clearTimeout(talkVoiceTimer);
-      talkVoiceTimer = null;
+    if (!talkPill) return;
+    if (active) {
+      talkPill.setAudioLevel(0.8);
+      if (holdMs > 0) {
+        setTimeout(() => {
+          if (talkPill) talkPill.setAudioLevel(0.0);
+        }, holdMs);
+      }
+    } else {
+      talkPill.setAudioLevel(0.0);
     }
-    if (!active) {
-      talkVoiceActive = false;
-      applyTalkVisual();
-      return;
-    }
-    talkVoiceActive = true;
-    applyTalkVisual();
-    if (holdMs > 0) {
-      talkVoiceTimer = setTimeout(() => {
-        talkVoiceTimer = null;
-        talkVoiceActive = false;
-        applyTalkVisual();
-      }, holdMs);
-    }
-  }
-
-  function syncThemeButtons() {
-    const theme = readTheme();
-    const finish = readFinish();
-    document.querySelectorAll("[data-orb-theme]").forEach((btn) => {
-      btn.classList.toggle("is-selected", btn.getAttribute("data-orb-theme") === theme);
-    });
-    document.querySelectorAll("[data-orb-finish]").forEach((btn) => {
-      btn.classList.toggle("is-selected", btn.getAttribute("data-orb-finish") === finish);
-    });
-  }
-
-  function paintAllOrbs() {
-    paintOrbTheme(talkOrb);
-    paintOrbTheme(drawOrb);
-    paintOrbTheme(pickerOrb);
-    document.querySelectorAll("[data-orb-theme]").forEach((btn) => {
-      const key = btn.getAttribute("data-orb-theme");
-      const swatch = btn.querySelector(".orb-theme-swatch");
-      const painted = finishedPalette(palettes()[key], readFinish());
-      if (swatch && painted) swatch.style.background = swatchStyle(painted);
-    });
-    syncThemeButtons();
-  }
-
-  function setTheme(key) {
-    const themes = palettes();
-    if (!themes[key]) return readTheme();
-    saveTheme(key);
-    paintAllOrbs();
-    return key;
-  }
-
-  function setFinish(finish) {
-    const next = finish === "rich" ? "rich" : "light";
-    saveFinish(next);
-    paintAllOrbs();
-    return next;
-  }
-
-  function rgb(c) {
-    return `rgb(${Math.round(c[0] * 255)}, ${Math.round(c[1] * 255)}, ${Math.round(c[2] * 255)})`;
-  }
-
-  function swatchStyle(palette) {
-    if (!palette) return "";
-    return `radial-gradient(circle at 32% 28%, ${rgb(palette.c1)} 0%, ${rgb(palette.c2)} 26%, ${rgb(palette.c3)} 52%, ${rgb(palette.c4)} 78%, ${rgb(palette.c5)} 100%)`;
-  }
-
-  function destroyPicker() {
-    if (pickerOrb) {
-      try { pickerOrb.destroy(); } catch {}
-      pickerOrb = null;
-    }
-    syncRunningOrbs();
-  }
-
-  function mountThemePicker(previewHost, listHost, finishHost) {
-    destroyPicker();
-    const themes = palettes();
-    const current = readTheme();
-    const finish = readFinish();
-    if (previewHost && typeof window.VoiceOrb === "function") {
-      pickerOrb = makeOrb(previewHost, { showShadow: true, state: "idle" });
-      applyPreset(pickerOrb, "idle");
-      paintOrbTheme(pickerOrb);
-      syncRunningOrbs();
-    }
-    if (finishHost) {
-      finishHost.innerHTML = `
-        <button type="button" class="orb-finish-choice${finish === "light" ? " is-selected" : ""}" data-orb-finish="light">Light</button>
-        <button type="button" class="orb-finish-choice${finish === "rich" ? " is-selected" : ""}" data-orb-finish="rich">Rich</button>`;
-      finishHost.querySelectorAll("[data-orb-finish]").forEach((btn) => {
-        btn.addEventListener("click", () => setFinish(btn.getAttribute("data-orb-finish")));
-      });
-    }
-    if (!listHost) return;
-    listHost.innerHTML = themeKeys().map((key) => {
-      const palette = finishedPalette(themes[key], finish);
-      const selected = key === current ? " is-selected" : "";
-      return `
-        <button type="button" class="orb-theme-choice${selected}" data-orb-theme="${key}">
-          <span class="orb-theme-swatch" style="background:${swatchStyle(palette)}" aria-hidden="true"></span>
-          <span class="orb-theme-copy">
-            <span class="orb-theme-name">${themes[key].name || key}</span>
-          </span>
-        </button>`;
-    }).join("");
-    listHost.querySelectorAll("[data-orb-theme]").forEach((btn) => {
-      btn.addEventListener("click", () => setTheme(btn.getAttribute("data-orb-theme")));
-    });
-  }
-
-  function drawOrbNeedsRemount() {
-    if (!drawOrb) return true;
-    const canvas = drawOrb.canvas;
-    return !canvas || canvas.width < 8 || canvas.height < 8;
   }
 
   function mountDrawOrb() {
     const host = document.getElementById("drawVoiceOrb");
-    if (!host || typeof window.VoiceOrb !== "function") return drawOrb;
-    if (drawOrb && !drawOrbNeedsRemount()) {
-      applyPreset(drawOrb, drawBusy.size ? "thinking" : "idle");
-      return drawOrb;
+    if (!host || typeof window.VoicePill !== "function") return drawPill;
+    if (drawPill && host.contains(drawPill.canvas)) {
+      drawPill.setState(drawBusy.size ? "thinking" : "idle");
+      return drawPill;
     }
-    if (drawOrb) {
-      try { drawOrb.destroy(); } catch {}
-      drawOrb = null;
+    if (drawPill) {
+      try { drawPill.destroy(); } catch {}
+      drawPill = null;
     }
-    drawOrb = makeOrb(host);
-    applyPreset(drawOrb, drawBusy.size ? "thinking" : "idle");
-    return drawOrb;
+    drawPill = makePill(host, 66, 42, {
+      state: drawBusy.size ? "thinking" : "idle",
+      trackPointer: true
+    });
+    return drawPill;
   }
 
   function refreshDrawOrb() {
-    if (drawOrb && !drawOrbNeedsRemount()) {
-      try { drawOrb._updateCanvasSize(); } catch {}
-      applyPreset(drawOrb, drawBusy.size ? "thinking" : "idle");
-      return drawOrb;
-    }
     return mountDrawOrb();
   }
 
@@ -349,7 +224,175 @@
     const key = String(reason || "draw");
     if (busy) drawBusy.add(key);
     else drawBusy.delete(key);
-    refreshDrawOrb();
+    if (!drawPill) mountDrawOrb();
+    if (drawPill) {
+      drawPill.setState(drawBusy.size ? "thinking" : "idle");
+    }
+  }
+
+  function destroyPicker() {
+    if (pickerPill) {
+      try { pickerPill.destroy(); } catch {}
+      pickerPill = null;
+    }
+    syncRunningPills();
+  }
+
+  function mountThemePicker(containerOrPreviewHost, legacyListHost, legacyFinishHost) {
+    destroyPicker();
+    const currentPal = readPalette();
+    const currentEye = readEyeColorMode();
+    const pals = getPalettes();
+
+    let mountHost = containerOrPreviewHost;
+    if (!mountHost) return;
+
+    // Handle single container or legacy multi-host
+    if (legacyListHost || !mountHost.classList.contains("voice-pill-customizer-host")) {
+      const parent = mountHost.closest(".onboard-scroll") || mountHost.parentElement;
+      if (parent && !parent.querySelector(".voice-pill-customizer")) {
+        mountHost = parent;
+      }
+    }
+
+    mountHost.innerHTML = `
+      <div class="voice-pill-customizer">
+        <!-- 1. Hero Preview Stage -->
+        <div class="vp-preview-stage">
+          <div class="vp-preview-mount" id="voicePillHeroMount"></div>
+          <p class="vp-preview-hint">Tap pill to trigger reactions &bull; Follows your cursor</p>
+        </div>
+
+        <!-- 2. Eye Color Contrast Selector -->
+        <div class="vp-section">
+          <div class="vp-section-header">
+            <span class="vp-section-title">Eye Styling</span>
+            <span class="vp-section-sub">Smart contrast adapt or fixed</span>
+          </div>
+          <div class="vp-eye-selector" id="vpEyeSelect" role="radiogroup" aria-label="Eye color">
+            <button type="button" class="vp-eye-btn${currentEye === 'auto' ? ' active' : ''}" data-eye-mode="auto">
+              <span class="vp-eye-dot auto"></span> Auto Contrast
+            </button>
+            <button type="button" class="vp-eye-btn${currentEye === 'black' ? ' active' : ''}" data-eye-mode="black">
+              <span class="vp-eye-dot black"></span> Deep Black
+            </button>
+            <button type="button" class="vp-eye-btn${currentEye === 'white' ? ' active' : ''}" data-eye-mode="white">
+              <span class="vp-eye-dot white"></span> Luminous White
+            </button>
+          </div>
+        </div>
+
+        <!-- 3. Expressions Suite -->
+        <div class="vp-section">
+          <div class="vp-section-header">
+            <span class="vp-section-title">Test Gestures</span>
+            <span class="vp-section-sub">Tap expression to preview</span>
+          </div>
+          <div class="vp-expr-chips" id="vpExprChips">
+            <button type="button" class="vp-chip active" data-expr="normal">Normal</button>
+            <button type="button" class="vp-chip" data-expr="happy">Happy ✨</button>
+            <button type="button" class="vp-chip" data-expr="stars">Stars ⭐</button>
+            <button type="button" class="vp-chip" data-expr="heart">Heart ♥</button>
+            <button type="button" class="vp-chip" data-expr="proud">Proud 😊</button>
+            <button type="button" class="vp-chip" data-expr="wink">Wink 😉</button>
+            <button type="button" class="vp-chip" data-expr="ponder">Ponder 💭</button>
+            <button type="button" class="vp-chip" data-expr="dizzy">Dizzy 🌀</button>
+          </div>
+        </div>
+
+        <!-- 4. Palette Selection Grid -->
+        <div class="vp-section">
+          <div class="vp-section-header">
+            <span class="vp-section-title">Curated Palettes</span>
+            <span class="vp-section-sub">8 vibrant gradients</span>
+          </div>
+          <div class="vp-palette-grid" id="vpPaletteGrid" role="listbox" aria-label="Voice pill palettes">
+            ${paletteKeys().map((key) => {
+              const p = pals[key];
+              const grad = `linear-gradient(135deg, ${p.bodyGrad[0]}, ${p.bodyGrad[1]})`;
+              const active = key === currentPal ? " active" : "";
+              return `
+                <button type="button" class="vp-palette-card${active}" data-palette="${key}" role="option" aria-selected="${key === currentPal}">
+                  <span class="vp-swatch" style="background: ${grad};" aria-hidden="true"></span>
+                  <span class="vp-card-info">
+                    <span class="vp-card-name">${p.name}</span>
+                    <span class="vp-card-sub">${p.subtitle}</span>
+                  </span>
+                </button>
+              `;
+            }).join("")}
+          </div>
+        </div>
+      </div>
+    `;
+
+    const heroMount = mountHost.querySelector("#voicePillHeroMount");
+    if (heroMount && typeof window.VoicePill === "function") {
+      pickerPill = new window.VoicePill(heroMount, {
+        width: 120,
+        height: 74,
+        palette: currentPal,
+        eyeColorMode: currentEye,
+        state: "idle",
+        expression: "normal",
+        trackPointer: true
+      });
+      syncRunningPills();
+
+      // Tap on hero preview cycles through fun reactions
+      const expressions = ["happy", "stars", "heart", "proud", "wink", "normal"];
+      let exprIndex = 0;
+      heroMount.addEventListener("click", () => {
+        if (!pickerPill) return;
+        exprIndex = (exprIndex + 1) % expressions.length;
+        const next = expressions[exprIndex];
+        pickerPill.setExpression(next);
+        mountHost.querySelectorAll("#vpExprChips .vp-chip").forEach((btn) => {
+          btn.classList.toggle("active", btn.getAttribute("data-expr") === next);
+        });
+      });
+    }
+
+    // Bind eye color selector
+    mountHost.querySelectorAll("#vpEyeSelect .vp-eye-btn").forEach((btn) => {
+      btn.addEventListener("click", () => {
+        const mode = btn.getAttribute("data-eye-mode");
+        mountHost.querySelectorAll("#vpEyeSelect .vp-eye-btn").forEach((b) => b.classList.remove("active"));
+        btn.classList.add("active");
+        setEyeColorMode(mode);
+        if (pickerPill) pickerPill.setEyeColorMode(mode);
+      });
+    });
+
+    // Bind expression chips
+    mountHost.querySelectorAll("#vpExprChips .vp-chip").forEach((btn) => {
+      btn.addEventListener("click", () => {
+        const expr = btn.getAttribute("data-expr");
+        mountHost.querySelectorAll("#vpExprChips .vp-chip").forEach((b) => b.classList.remove("active"));
+        btn.classList.add("active");
+        if (pickerPill) pickerPill.setExpression(expr);
+      });
+    });
+
+    // Bind palette cards
+    mountHost.querySelectorAll("#vpPaletteGrid .vp-palette-card").forEach((card) => {
+      card.addEventListener("click", () => {
+        const key = card.getAttribute("data-palette");
+        mountHost.querySelectorAll("#vpPaletteGrid .vp-palette-card").forEach((c) => {
+          c.classList.remove("active");
+          c.setAttribute("aria-selected", "false");
+        });
+        card.classList.add("active");
+        card.setAttribute("aria-selected", "true");
+        setPalette(key);
+        if (pickerPill) pickerPill.setPalette(key);
+
+        // If dark theme (obsidian or puredark) on auto eye mode, refresh preview
+        if (readEyeColorMode() === "auto" && pickerPill) {
+          pickerPill.setEyeColorMode("auto");
+        }
+      });
+    });
   }
 
   function boot() {
@@ -361,7 +404,7 @@
           ? "draw"
           : "talk";
     setActiveMode(start);
-    document.addEventListener("visibilitychange", syncRunningOrbs);
+    document.addEventListener("visibilitychange", syncRunningPills);
   }
 
   window.Lumi6Orb = {
@@ -372,14 +415,16 @@
     setDrawBusy,
     refreshDrawOrb,
     setActiveMode,
-    setTheme,
-    getTheme: readTheme,
-    setFinish,
-    getFinish: readFinish,
-    palettes,
+    setPalette,
+    getPalette: readPalette,
+    setTheme: setPalette,
+    getTheme: readPalette,
+    setEyeColorMode,
+    getEyeColorMode: readEyeColorMode,
+    palettes: getPalettes,
     mountThemePicker,
     destroyPicker,
-    PILL_SIZE
+    PILL_SIZE: 44
   };
 
   if (document.readyState === "loading") {

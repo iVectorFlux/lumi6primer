@@ -176,7 +176,6 @@
       return true;
     }
     if (action === "copy") return armPendingCopy(event, hit, itemIndex);
-    if (action === "reply") return openBoardReplyFromPending(itemIndex);
     if (state.mode === "select" && (hit === "move" || hit === "batch-move")) {
       const box = itemIndex == null
         ? draftBounds(state.pending)

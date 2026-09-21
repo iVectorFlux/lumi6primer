@@ -905,16 +905,16 @@ body.mode-sim-active .topbar-edit-actions { display: none; }
   display: inline-flex !important;
   align-items: center !important;
   justify-content: center !important;
-  flex: 0 0 44px !important;
-  width: 44px !important;
-  height: 44px !important;
-  max-width: 44px !important;
-  max-height: 44px !important;
-  aspect-ratio: 1 / 1 !important;
+  flex: 0 0 54px !important;
+  width: 54px !important;
+  height: 36px !important;
+  max-width: 54px !important;
+  max-height: 36px !important;
+  aspect-ratio: auto !important;
   overflow: hidden !important;
   padding: 0 !important;
   border: 0 !important;
-  border-radius: 50% !important;
+  border-radius: 9999px !important;
   background: transparent !important;
   color: inherit !important;
   box-shadow: none !important;
@@ -924,6 +924,7 @@ body.mode-sim-active .topbar-edit-actions { display: none; }
   margin: 0 !important;
   align-self: center !important;
   cursor: pointer;
+  transition: transform 0.15s ease;
 }
 .talk-mic-btn:hover {
   background: transparent !important;
@@ -953,8 +954,14 @@ body.mode-sim-active .topbar-edit-actions { display: none; }
   border-radius: 980px !important;
   box-shadow: none !important;
   overflow: hidden !important;
+  transition: border-radius 0.15s ease, box-shadow 0.15s ease, background 0.15s ease !important;
 }
 .talk-input-form:focus-within { box-shadow: 0 0 0 3.5px rgba(109, 92, 255, 0.28) !important; background: #fff !important; }
+.talk-input-form.is-multiline {
+  border-radius: 20px !important;
+  align-items: flex-end !important;
+  padding: 6px 6px 6px 16px !important;
+}
 .talk-input-field,
 .talk-input-form input,
 .talk-input-form textarea {
@@ -963,7 +970,7 @@ body.mode-sim-active .topbar-edit-actions { display: none; }
   flex: 1 1 auto !important;
   min-width: 0 !important;
   width: 100% !important;
-  height: 24px !important;
+  height: 24px;
   min-height: 24px !important;
   max-height: 160px;
   margin: 0 !important;
@@ -974,13 +981,12 @@ body.mode-sim-active .topbar-edit-actions { display: none; }
   resize: none !important;
   background: transparent !important;
   box-shadow: none !important;
-  appearance: none !important;
-  -webkit-appearance: none !important;
   font-family: var(--sys-font) !important;
   font-size: 17px !important;
   line-height: 24px !important;
   color: var(--label) !important;
   vertical-align: middle;
+  overflow-y: auto;
 }
 .talk-input-field::placeholder { color: var(--tertiary) !important; }
 .talk-send-action-btn {
@@ -997,6 +1003,8 @@ body.mode-sim-active .topbar-edit-actions { display: none; }
   color: #fff !important;
   appearance: none;
   -webkit-appearance: none;
+  align-self: flex-end !important;
+  margin-bottom: 0px !important;
 }
 .talk-send-action-btn svg {
   width: 18px !important;

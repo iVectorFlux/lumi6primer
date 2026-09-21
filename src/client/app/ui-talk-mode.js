@@ -1026,15 +1026,22 @@
     const input = document.getElementById("talkModeTextInput");
     if (!input) return;
     syncTalkPlaceholder();
+    const form = input.closest(".talk-input-form") || input.form;
+    const micBtn = document.getElementById("talkModeMicBtn");
     if (!String(input.value || "").trim()) {
       input.style.height = "";
       input.classList.remove("is-multiline");
+      form?.classList.remove("is-multiline");
+      if (micBtn) micBtn.style.alignSelf = "";
       return;
     }
     input.style.height = "auto";
-    const next = Math.min(Math.max(input.scrollHeight, 22), 160);
+    const next = Math.min(Math.max(input.scrollHeight, 24), 160);
     input.style.height = `${next}px`;
-    input.classList.toggle("is-multiline", next > 32);
+    const isMulti = next > 32;
+    input.classList.toggle("is-multiline", isMulti);
+    form?.classList.toggle("is-multiline", isMulti);
+    if (micBtn) micBtn.style.alignSelf = isMulti ? "flex-end" : "";
   }
 
   function syncTalkPlaceholder() {
@@ -1079,6 +1086,9 @@
   const talkComposer = document.querySelector("#talkModeTextInput");
   growTalkComposer();
   talkComposer?.addEventListener("input", syncComposerSpeech);
+  talkComposer?.addEventListener("paste", () => setTimeout(syncComposerSpeech, 0));
+  talkComposer?.addEventListener("change", syncComposerSpeech);
+  talkComposer?.addEventListener("keyup", syncComposerSpeech);
   talkComposer?.addEventListener("keydown", (e) => {
     if (e.key === "Enter" && !e.shiftKey) {
       e.preventDefault();

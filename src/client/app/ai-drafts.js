@@ -203,8 +203,7 @@
         [prefix + "accept"]: { x: clampX(box.x + box.w + s * 0.62), y: actionY },
       };
     if (includeCopy) {
-      actions[prefix + "copy"] = { x: clampX(box.x + box.w / 2 - s * 0.95), y: actionY };
-      actions[prefix + "reply"] = { x: clampX(box.x + box.w / 2 + s * 0.95), y: actionY };
+      actions[prefix + "copy"] = { x: clampX(box.x + box.w / 2), y: actionY };
     }
     return actions;
   }
@@ -215,7 +214,7 @@
     context.lineCap = context.lineJoin = "round";
     for (const [action, point] of Object.entries(actions)) {
       const kind = action.replace(/^item-/, ""),
-        accent = kind === "cancel" ? "#fb7185" : kind === "accept" ? "#4ade80" : kind === "reply" ? "#a78bfa" : "#60a5fa";
+        accent = kind === "cancel" ? "#fb7185" : kind === "accept" ? "#4ade80" : "#60a5fa";
       context.fillStyle = "#111827f2";
       context.strokeStyle = "#ffffffd9";
       context.lineWidth = 1.15 / state.scale;
@@ -238,12 +237,6 @@
         context.moveTo(point.x - radius * 0.42, point.y);
         context.lineTo(point.x - radius * 0.1, point.y + radius * 0.3);
         context.lineTo(point.x + radius * 0.46, point.y - radius * 0.38);
-      } else if (kind === "reply") {
-        context.moveTo(point.x - radius * 0.32, point.y + radius * 0.3);
-        context.lineTo(point.x - radius * 0.32, point.y - radius * 0.26);
-        context.lineTo(point.x + radius * 0.32, point.y - radius * 0.26);
-        context.moveTo(point.x, point.y - radius * 0.26);
-        context.lineTo(point.x, point.y + radius * 0.34);
       } else {
         const size = radius * 0.72,
           offset = radius * 0.2,
@@ -687,7 +680,6 @@
     requestAnimationLayerRender();
     if (pendingAnimationControlTarget()) showAnimationControls();
     releaseSelectionAITransformLock();
-    maybeOfferBoardReply(p);
   }
   function startPending(image, x, y, revision, meta, command) {
     return new Promise((resolve) => {
@@ -743,7 +735,6 @@
         if (p.revealProgress < 1) requestAnimationFrame(step);
         else {
           setStatusKey("draftReady");
-          maybeOfferBoardReply(p);
         }
       }
       requestAnimationFrame(step);
@@ -774,23 +765,13 @@
       render();
       requestAnimationLayerRender();
       if (pendingAnimationControlTarget()) showAnimationControls();
-      maybeOfferBoardReply(state.pending);
     });
   }
   function pendingTextIsQuestion(target) {
     const text = String(pendingCopyValue(target) || target?.textCommand?.text || target?.command?.text || "");
     return /[?？]/.test(text) || /\b(what do you want|what should i|how can i help|tell me what|want me to)\b/i.test(text);
   }
-  function maybeOfferBoardReply(pending) {
-    if (!pending || state.textEditors.size) return;
-    const items = pending.items || (pending.textCommand ? [pending] : []);
-    const index = items.findIndex((item) => item?.textCommand && pendingTextIsQuestion(item));
-    if (index < 0) return;
-    window.setTimeout(() => {
-      if (state.pending !== pending || state.textEditors.size) return;
-      openBoardReplyFromPending(pending.items ? index : null);
-    }, 280);
-  }
+  function maybeOfferBoardReply(_pending) {}
   function commitPendingBatch(p) {
     for (const item of p.items) commitPendingItem(item);
   }

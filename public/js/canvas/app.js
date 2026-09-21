@@ -5097,20 +5097,6 @@ User writes "Show air quality for Tokyo", names a place, and points to an empty 
       specs.push({ key:`${key}:cancel`, kind:"cancel", box, activate:() => itemIndex === null ? rejectPending() : rejectPendingItem(itemIndex), priority:5 });
       specs.push({ key:`${key}:accept`, kind:"accept", box, activate:() => itemIndex === null ? acceptPending() : acceptPendingItem(itemIndex), priority:5 });
       if (pendingCopyable(target)) specs.push({ key:`${key}:copy`, kind:"copy", box, activate:() => void copyPendingText(itemIndex), priority:5 });
-      if (target?.textCommand || pendingCopyable(target)) specs.push({
-        key:`${key}:reply`,
-        kind:"reply",
-        box,
-        label: t("boardReply"),
-        widgetTool: true,
-        widgetToolGroup: `${key}-reply`,
-        groupBaseWidth: widgetToolLabelWidth(t("boardReply"), 86),
-        groupOffset: 0,
-        baseWidth: widgetToolLabelWidth(t("boardReply"), 86),
-        baseHeight: 34,
-        activate: () => openBoardReplyFromPending(itemIndex),
-        priority: 7,
-      });
     };
     if (pending.items) pending.items.forEach((item, index) => add(`pending-item:${index}`, pendingItemBounds(item), index, item));
     else add("pending", draftBounds(pending));
@@ -9522,8 +9508,7 @@ User writes "Show air quality for Tokyo", names a place, and points to an empty 
         [prefix + "accept"]: { x: clampX(box.x + box.w + s * 0.62), y: actionY },
       };
     if (includeCopy) {
-      actions[prefix + "copy"] = { x: clampX(box.x + box.w / 2 - s * 0.95), y: actionY };
-      actions[prefix + "reply"] = { x: clampX(box.x + box.w / 2 + s * 0.95), y: actionY };
+      actions[prefix + "copy"] = { x: clampX(box.x + box.w / 2), y: actionY };
     }
     return actions;
   }
@@ -9534,7 +9519,7 @@ User writes "Show air quality for Tokyo", names a place, and points to an empty 
     context.lineCap = context.lineJoin = "round";
     for (const [action, point] of Object.entries(actions)) {
       const kind = action.replace(/^item-/, ""),
-        accent = kind === "cancel" ? "#fb7185" : kind === "accept" ? "#4ade80" : kind === "reply" ? "#a78bfa" : "#60a5fa";
+        accent = kind === "cancel" ? "#fb7185" : kind === "accept" ? "#4ade80" : "#60a5fa";
       context.fillStyle = "#111827f2";
       context.strokeStyle = "#ffffffd9";
       context.lineWidth = 1.15 / state.scale;
@@ -9557,12 +9542,6 @@ User writes "Show air quality for Tokyo", names a place, and points to an empty 
         context.moveTo(point.x - radius * 0.42, point.y);
         context.lineTo(point.x - radius * 0.1, point.y + radius * 0.3);
         context.lineTo(point.x + radius * 0.46, point.y - radius * 0.38);
-      } else if (kind === "reply") {
-        context.moveTo(point.x - radius * 0.32, point.y + radius * 0.3);
-        context.lineTo(point.x - radius * 0.32, point.y - radius * 0.26);
-        context.lineTo(point.x + radius * 0.32, point.y - radius * 0.26);
-        context.moveTo(point.x, point.y - radius * 0.26);
-        context.lineTo(point.x, point.y + radius * 0.34);
       } else {
         const size = radius * 0.72,
           offset = radius * 0.2,
@@ -10006,7 +9985,6 @@ User writes "Show air quality for Tokyo", names a place, and points to an empty 
     requestAnimationLayerRender();
     if (pendingAnimationControlTarget()) showAnimationControls();
     releaseSelectionAITransformLock();
-    maybeOfferBoardReply(p);
   }
   function startPending(image, x, y, revision, meta, command) {
     return new Promise((resolve) => {
@@ -10062,7 +10040,6 @@ User writes "Show air quality for Tokyo", names a place, and points to an empty 
         if (p.revealProgress < 1) requestAnimationFrame(step);
         else {
           setStatusKey("draftReady");
-          maybeOfferBoardReply(p);
         }
       }
       requestAnimationFrame(step);
@@ -10093,23 +10070,13 @@ User writes "Show air quality for Tokyo", names a place, and points to an empty 
       render();
       requestAnimationLayerRender();
       if (pendingAnimationControlTarget()) showAnimationControls();
-      maybeOfferBoardReply(state.pending);
     });
   }
   function pendingTextIsQuestion(target) {
     const text = String(pendingCopyValue(target) || target?.textCommand?.text || target?.command?.text || "");
     return /[?？]/.test(text) || /\b(what do you want|what should i|how can i help|tell me what|want me to)\b/i.test(text);
   }
-  function maybeOfferBoardReply(pending) {
-    if (!pending || state.textEditors.size) return;
-    const items = pending.items || (pending.textCommand ? [pending] : []);
-    const index = items.findIndex((item) => item?.textCommand && pendingTextIsQuestion(item));
-    if (index < 0) return;
-    window.setTimeout(() => {
-      if (state.pending !== pending || state.textEditors.size) return;
-      openBoardReplyFromPending(pending.items ? index : null);
-    }, 280);
-  }
+  function maybeOfferBoardReply(_pending) {}
   function commitPendingBatch(p) {
     for (const item of p.items) commitPendingItem(item);
   }
@@ -10986,7 +10953,6 @@ User writes "Show air quality for Tokyo", names a place, and points to an empty 
       return true;
     }
     if (action === "copy") return armPendingCopy(event, hit, itemIndex);
-    if (action === "reply") return openBoardReplyFromPending(itemIndex);
     if (state.mode === "select" && (hit === "move" || hit === "batch-move")) {
       const box = itemIndex == null
         ? draftBounds(state.pending)
@@ -13906,15 +13872,22 @@ User writes "Show air quality for Tokyo", names a place, and points to an empty 
     const input = document.getElementById("talkModeTextInput");
     if (!input) return;
     syncTalkPlaceholder();
+    const form = input.closest(".talk-input-form") || input.form;
+    const micBtn = document.getElementById("talkModeMicBtn");
     if (!String(input.value || "").trim()) {
       input.style.height = "";
       input.classList.remove("is-multiline");
+      form?.classList.remove("is-multiline");
+      if (micBtn) micBtn.style.alignSelf = "";
       return;
     }
     input.style.height = "auto";
-    const next = Math.min(Math.max(input.scrollHeight, 22), 160);
+    const next = Math.min(Math.max(input.scrollHeight, 24), 160);
     input.style.height = `${next}px`;
-    input.classList.toggle("is-multiline", next > 32);
+    const isMulti = next > 32;
+    input.classList.toggle("is-multiline", isMulti);
+    form?.classList.toggle("is-multiline", isMulti);
+    if (micBtn) micBtn.style.alignSelf = isMulti ? "flex-end" : "";
   }
 
   function syncTalkPlaceholder() {
@@ -13959,6 +13932,9 @@ User writes "Show air quality for Tokyo", names a place, and points to an empty 
   const talkComposer = document.querySelector("#talkModeTextInput");
   growTalkComposer();
   talkComposer?.addEventListener("input", syncComposerSpeech);
+  talkComposer?.addEventListener("paste", () => setTimeout(syncComposerSpeech, 0));
+  talkComposer?.addEventListener("change", syncComposerSpeech);
+  talkComposer?.addEventListener("keyup", syncComposerSpeech);
   talkComposer?.addEventListener("keydown", (e) => {
     if (e.key === "Enter" && !e.shiftKey) {
       e.preventDefault();

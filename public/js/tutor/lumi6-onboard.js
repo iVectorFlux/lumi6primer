@@ -392,7 +392,7 @@
           </div>
         </section>
 
-        <button type="button" class="onboard-back orb-theme-open" data-profile="theme">Choose Voice Orb Theme</button>
+        <button type="button" class="onboard-back orb-theme-open" data-profile="theme">Choose Voice Theme</button>
       </div>
       <div class="onboard-actions">
         <button type="button" class="onboard-back" data-profile="close">Done</button>
@@ -407,23 +407,19 @@
     body.innerHTML = `
       <div class="onboard-scroll">
         <div class="profile-head">
-          <p class="onboard-kicker">Voice orb</p>
+          <p class="onboard-kicker">AI Character</p>
           <button type="button" class="profile-close" data-profile="theme-back" aria-label="Back">&times;</button>
         </div>
-        <h2 id="profileTitle">Choose theme</h2>
-        <p class="onboard-lead">Pick a color, then Light or Rich. Both keep the same orb motions.</p>
-        <div class="orb-theme-preview" id="orbThemePreview"></div>
-        <div class="orb-theme-finish" id="orbThemeFinish" role="group" aria-label="Color look"></div>
-        <div class="orb-theme-list" id="orbThemeList" role="listbox" aria-label="Orb themes"></div>
+        <h2 id="profileTitle">Voice Pill Theme</h2>
+        <p class="onboard-lead">Customize gradient colors, eye styling, and reactions for your AI tutor.</p>
+        <div class="voice-pill-customizer-host" id="voicePillCustomizerHost"></div>
       </div>
       <div class="onboard-actions">
-        <button type="button" class="onboard-next" data-profile="theme-back">Back</button>
+        <button type="button" class="onboard-next" data-profile="theme-back">Done</button>
       </div>`;
     if (window.Lumi6Orb) {
       window.Lumi6Orb.mountThemePicker(
-        document.getElementById("orbThemePreview"),
-        document.getElementById("orbThemeList"),
-        document.getElementById("orbThemeFinish")
+        document.getElementById("voicePillCustomizerHost")
       );
     }
   }
