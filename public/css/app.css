@@ -2953,18 +2953,34 @@ body.mode-talk-active #primerVoiceOverlay.primer-visible {
   place-items: center;
 }
 
-.talk-voice-orb,
-.talk-voice-orb .voice-orb-wrapper,
-.talk-voice-orb canvas {
-  width: 100% !important;
-  height: 100% !important;
-  aspect-ratio: 1 / 1 !important;
-  overflow: hidden !important;
-  border-radius: 50% !important;
+/* ── Talk Mode Voice Pill Housing ──────────────────────────────── */
+.talk-voice-orb {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 68px;
+  height: 44px;
+  max-width: 68px;
+  max-height: 44px;
   background: transparent !important;
   box-shadow: none !important;
   pointer-events: none;
   flex-shrink: 0;
+}
+
+.talk-voice-orb .voice-pill-wrapper {
+  pointer-events: auto;
+  border-radius: 9999px;
+  overflow: hidden;
+}
+
+.talk-voice-orb canvas {
+  width: 68px !important;
+  height: 44px !important;
+  aspect-ratio: auto !important;
+  border-radius: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
   display: block;
 }
 
@@ -3263,11 +3279,27 @@ body.mode-talk-active #primerVoiceOverlay.primer-visible {
   box-sizing: border-box;
 }
 
+.profile-card {
+  width: min(640px, calc(100vw - 32px)) !important;
+  max-height: min(92vh, 760px) !important;
+}
+
+#lumi6ProfileBody {
+  display: flex;
+  flex-direction: column;
+  flex: 1 1 auto;
+  min-height: 0;
+  height: 100%;
+  overflow: hidden;
+}
+
 .onboard-scroll {
   flex: 1 1 auto;
-  overflow-y: auto;
+  min-height: 0;
+  overflow-y: auto !important;
   overscroll-behavior: contain;
-  padding-right: 4px;
+  padding-right: 6px;
+  padding-bottom: 24px;
   -webkit-overflow-scrolling: touch;
 }
 
@@ -3534,6 +3566,17 @@ body.mode-talk-active #primerVoiceOverlay.primer-visible {
   padding: 2px 0 8px;
 }
 
+.vp-tab-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  width: 100%;
+}
+
+.vp-tab-panel[hidden] {
+  display: none !important;
+}
+
 .vp-preview-stage {
   display: flex;
   flex-direction: column;
@@ -3644,6 +3687,49 @@ body.mode-talk-active #primerVoiceOverlay.primer-visible {
   border: 1px solid #94a3b8;
 }
 
+/* ── Component Mode Tabs (Talk Pill vs Board Orb) ── */
+.vp-mode-tabs {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 8px;
+  background: #f1f5f9;
+  padding: 4px;
+  border-radius: 14px;
+  margin-bottom: 2px;
+}
+
+.vp-mode-tab {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 10px 12px;
+  border-radius: 10px;
+  border: none;
+  background: transparent;
+  font: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  color: #64748b;
+  cursor: pointer;
+  transition: all 0.18s ease;
+}
+
+.vp-mode-tab:hover {
+  color: #1e293b;
+}
+
+.vp-mode-tab.active {
+  background: #ffffff;
+  color: #4f3de0;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
+}
+
+.vp-tab-icon {
+  font-size: 15px;
+  line-height: 1;
+}
+
 .vp-expr-chips {
   display: flex;
   flex-wrap: wrap;
@@ -3679,8 +3765,7 @@ body.mode-talk-active #primerVoiceOverlay.primer-visible {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
   gap: 7px;
-  max-height: 220px;
-  overflow-y: auto;
+  max-height: none;
   padding-right: 2px;
   overscroll-behavior: contain;
 }
@@ -3716,6 +3801,47 @@ body.mode-talk-active #primerVoiceOverlay.primer-visible {
   height: 20px;
   border-radius: 9999px;
   box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.08);
+}
+
+.vp-swatch.circle {
+  width: 22px;
+  height: 22px;
+  flex: 0 0 22px;
+  border-radius: 50%;
+}
+
+.vp-finish-selector {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 6px;
+}
+
+.vp-finish-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 8px 12px;
+  border-radius: 12px;
+  border: 1.5px solid #e2e8f0;
+  background: #ffffff;
+  font: inherit;
+  font-size: 12px;
+  font-weight: 600;
+  color: #334155;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.vp-finish-btn:hover {
+  border-color: #cbd5e1;
+  background: #f8fafc;
+}
+
+.vp-finish-btn.active {
+  border-color: #6d5cff;
+  background: rgba(109, 92, 255, 0.08);
+  color: #4f3de0;
+  box-shadow: 0 0 0 2px rgba(109, 92, 255, 0.15);
 }
 
 .vp-card-info {

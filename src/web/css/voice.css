@@ -32,18 +32,34 @@ body.mode-talk-active #primerVoiceOverlay.primer-visible {
   place-items: center;
 }
 
-.talk-voice-orb,
-.talk-voice-orb .voice-orb-wrapper,
-.talk-voice-orb canvas {
-  width: 100% !important;
-  height: 100% !important;
-  aspect-ratio: 1 / 1 !important;
-  overflow: hidden !important;
-  border-radius: 50% !important;
+/* ── Talk Mode Voice Pill Housing ──────────────────────────────── */
+.talk-voice-orb {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 68px;
+  height: 44px;
+  max-width: 68px;
+  max-height: 44px;
   background: transparent !important;
   box-shadow: none !important;
   pointer-events: none;
   flex-shrink: 0;
+}
+
+.talk-voice-orb .voice-pill-wrapper {
+  pointer-events: auto;
+  border-radius: 9999px;
+  overflow: hidden;
+}
+
+.talk-voice-orb canvas {
+  width: 68px !important;
+  height: 44px !important;
+  aspect-ratio: auto !important;
+  border-radius: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
   display: block;
 }
 

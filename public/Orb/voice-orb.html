@@ -1,0 +1,1476 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="AI Voice Orb — Volumetric fluid cloud orb for conversational AI interfaces. 12 curated philosophical palettes, hardware-accelerated WebGL dynamics, and real-time audio reactivity.">
+  <title>AI Voice Orb Studio — 12 Thematic Palettes & Fluid Dynamics</title>
+
+  <!-- Modern Typography -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+
+  <style>
+    :root {
+      --bg-main: #fbfaf8;
+      --bg-card: #ffffff;
+      --border-subtle: #efeae4;
+      --border-focus: #ffb89e;
+      --text-primary: #191716;
+      --text-secondary: #666360;
+      --text-muted: #9c9792;
+      --accent-peach: #ffb4a2;
+      --accent-glow: rgba(255, 180, 155, 0.32);
+      --font-sans: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      --font-mono: 'JetBrains Mono', monospace;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: var(--font-sans);
+      background-color: var(--bg-main);
+      color: var(--text-primary);
+      min-height: 100vh;
+      line-height: 1.5;
+      overflow-x: hidden;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* Ambient Soft Studio Glow */
+    .ambient-bg {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      background: radial-gradient(circle at 50% 12%, #ffffff 0%, #fff9f5 42%, #f8f1eb 85%, #f2eae2 100%);
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    .page-container {
+      position: relative;
+      z-index: 1;
+      max-width: 1240px;
+      margin: 0 auto;
+      padding: 24px 20px 80px;
+    }
+
+    /* Top Navigation */
+    .top-nav {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 32px;
+    }
+
+    .nav-back-link {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 16px;
+      border-radius: 999px;
+      background: #ffffff;
+      border: 1px solid var(--border-subtle);
+      color: var(--text-secondary);
+      text-decoration: none;
+      font-size: 13px;
+      font-weight: 500;
+      transition: all 0.2s ease;
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.02);
+    }
+
+    .nav-back-link:hover {
+      color: var(--text-primary);
+      border-color: var(--border-focus);
+      transform: translateX(-2px);
+    }
+
+    .nav-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 14px;
+      border-radius: 999px;
+      background: #fff5ee;
+      border: 1px solid #ffd8be;
+      color: #b25d48;
+      font-size: 12px;
+      font-weight: 600;
+    }
+
+    .pulse-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: #ff8b70;
+      box-shadow: 0 0 0 0 rgba(255, 139, 112, 0.7);
+      animation: pulse 2s infinite;
+    }
+
+    @keyframes pulse {
+      0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(255, 139, 112, 0.7); }
+      70% { transform: scale(1); box-shadow: 0 0 0 6px rgba(255, 139, 112, 0); }
+      100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(255, 139, 112, 0); }
+    }
+
+    /* Hero Header */
+    .hero-header {
+      text-align: center;
+      max-width: 720px;
+      margin: 0 auto 36px;
+    }
+
+    .hero-title {
+      font-size: clamp(28px, 4vw, 42px);
+      font-weight: 800;
+      letter-spacing: -0.03em;
+      color: #191716;
+      margin-bottom: 12px;
+      line-height: 1.15;
+    }
+
+    .hero-subtitle {
+      font-size: 16px;
+      color: var(--text-secondary);
+      font-weight: 400;
+      line-height: 1.6;
+    }
+
+    /* Main Showcase Grid */
+    .showcase-grid {
+      display: grid;
+      grid-template-columns: 1fr 390px;
+      gap: 24px;
+      margin-bottom: 48px;
+    }
+
+    @media (max-width: 980px) {
+      .showcase-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    /* Center Stage Card */
+    .stage-card {
+      background: #ffffff;
+      border: 1px solid var(--border-subtle);
+      border-radius: 28px;
+      padding: 36px 28px 28px;
+      box-shadow: 0 10px 30px -8px rgba(210, 180, 160, 0.12);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .stage-canvas-area {
+      min-height: 350px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+      width: 100%;
+      margin-bottom: 24px;
+    }
+
+    /* Live State Capsule */
+    .state-capsule {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 6px 14px;
+      border-radius: 999px;
+      background: #ffffff;
+      border: 1px solid #f2e9e2;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.03);
+      font-size: 13px;
+      font-weight: 600;
+      color: #383431;
+      margin-bottom: 20px;
+      transition: all 0.3s ease;
+    }
+
+    .state-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: #fdc5a5;
+      transition: background 0.3s ease;
+    }
+
+    .state-capsule.idle .state-dot { background: #b0c4de; }
+    .state-capsule.listening .state-dot { background: #ff8b70; animation: pulse 1.5s infinite; }
+    .state-capsule.thinking .state-dot { background: #c084fc; animation: pulse 1.2s infinite; }
+    .state-capsule.speaking .state-dot { background: #ff6b6b; animation: pulse 0.8s infinite; }
+
+    /* Audio meter bar */
+    .audio-meter-container {
+      width: 100%;
+      max-width: 340px;
+      margin-top: 18px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .meter-label-row {
+      width: 100%;
+      display: flex;
+      justify-content: space-between;
+      font-size: 11px;
+      color: var(--text-muted);
+      font-family: var(--font-mono);
+    }
+
+    .meter-track {
+      width: 100%;
+      height: 6px;
+      background: #f7f1eb;
+      border-radius: 999px;
+      overflow: hidden;
+      position: relative;
+    }
+
+    .meter-fill {
+      height: 100%;
+      width: 0%;
+      background: linear-gradient(90deg, #fdc5a5, #ff8b70);
+      border-radius: 999px;
+      transition: width 0.06s ease;
+    }
+
+    /* Controls Deck inside Stage */
+    .stage-controls-deck {
+      width: 100%;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      padding-top: 20px;
+      border-top: 1px solid #f6f0ea;
+    }
+
+    /* Segmented State Switcher */
+    .segmented-control {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      background: #f7f2ed;
+      padding: 4px;
+      border-radius: 14px;
+      gap: 4px;
+    }
+
+    .segmented-btn {
+      padding: 8px 12px;
+      border: none;
+      background: transparent;
+      border-radius: 10px;
+      font-family: var(--font-sans);
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--text-secondary);
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    .segmented-btn.active {
+      background: #ffffff;
+      color: #1a1716;
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
+    }
+
+    /* Action Buttons Row */
+    .action-buttons-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      justify-content: center;
+    }
+
+    .btn-action {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 10px 18px;
+      border-radius: 12px;
+      font-family: var(--font-sans);
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+      border: 1px solid var(--border-subtle);
+      background: #ffffff;
+      color: var(--text-primary);
+    }
+
+    .btn-action:hover {
+      border-color: #ffd8be;
+      background: #fffbf9;
+      transform: translateY(-1px);
+    }
+
+    .btn-action.primary {
+      background: linear-gradient(135deg, #ff8b70 0%, #fa6952 100%);
+      color: #ffffff;
+      border-color: transparent;
+      box-shadow: 0 4px 14px rgba(255, 107, 82, 0.25);
+    }
+
+    .btn-action.primary:hover {
+      box-shadow: 0 6px 18px rgba(255, 107, 82, 0.35);
+      transform: translateY(-1px);
+    }
+
+    .btn-action.active-mic {
+      background: #ef4444;
+      color: #ffffff;
+      border-color: transparent;
+      animation: micPulse 1.5s infinite;
+    }
+
+    @keyframes micPulse {
+      0% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.4); }
+      70% { box-shadow: 0 0 0 10px rgba(239, 68, 68, 0); }
+      100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); }
+    }
+
+    /* Slider Card */
+    .slider-card {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .slider-header {
+      display: flex;
+      justify-content: space-between;
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--text-secondary);
+    }
+
+    .slider-value {
+      font-family: var(--font-mono);
+      font-weight: 600;
+      color: #b25d48;
+    }
+
+    input[type="range"] {
+      width: 100%;
+      height: 36px;
+      -webkit-appearance: none;
+      background: transparent;
+      touch-action: none;
+      cursor: pointer;
+    }
+
+    input[type="range"]:focus {
+      outline: none;
+    }
+
+    input[type="range"]::-webkit-slider-runnable-track {
+      width: 100%;
+      height: 6px;
+      background: #f4ece5;
+      border-radius: 999px;
+    }
+
+    input[type="range"]::-webkit-slider-thumb {
+      height: 22px;
+      width: 22px;
+      border-radius: 50%;
+      background: #ff8b70;
+      cursor: pointer;
+      -webkit-appearance: none;
+      margin-top: -8px;
+      box-shadow: 0 2px 6px rgba(255, 107, 82, 0.35);
+      border: 2px solid #ffffff;
+      transition: transform 0.15s ease, background 0.15s ease;
+    }
+
+    input[type="range"]::-webkit-slider-thumb:hover {
+      transform: scale(1.15);
+      background: #ff7354;
+    }
+
+    /* Side Customizer Card */
+    .side-panel {
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+
+    .panel-card {
+      background: #ffffff;
+      border: 1px solid var(--border-subtle);
+      border-radius: 24px;
+      padding: 22px;
+      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.02);
+    }
+
+    .card-title {
+      font-size: 15px;
+      font-weight: 700;
+      color: #1a1716;
+      margin-bottom: 14px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    /* 12 Palettes Grid */
+    .palette-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 10px;
+      max-height: 480px;
+      overflow-y: auto;
+      padding-right: 4px;
+    }
+
+    .palette-grid::-webkit-scrollbar {
+      width: 5px;
+    }
+
+    .palette-grid::-webkit-scrollbar-thumb {
+      background: #e2dad2;
+      border-radius: 999px;
+    }
+
+    /* Color Range / Gradient Tone Intensity Selector */
+    .color-range-selector {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 6px;
+      padding: 5px;
+      background: #faf6f0;
+      border: 1px solid #f0e6dc;
+      border-radius: 14px;
+      margin-bottom: 14px;
+    }
+
+    .range-tone-btn {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 5px;
+      padding: 8px 4px;
+      border-radius: 9px;
+      background: transparent;
+      border: 1px solid transparent;
+      cursor: pointer;
+      font-family: var(--font-sans);
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--text-secondary);
+      transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    .range-tone-btn:hover {
+      color: var(--text-primary);
+      background: rgba(255, 255, 255, 0.65);
+    }
+
+    .range-tone-btn.active {
+      background: #ffffff;
+      color: #b25d48;
+      border-color: #ffd8be;
+      box-shadow: 0 2px 8px rgba(255, 180, 162, 0.22);
+    }
+
+    .tone-preview-dot {
+      width: 13px;
+      height: 13px;
+      border-radius: 50%;
+      box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.1);
+      transition: transform 0.2s ease;
+    }
+
+    .range-tone-btn.active .tone-preview-dot {
+      transform: scale(1.2);
+    }
+
+    .tone-preview-dot.light {
+      background: linear-gradient(135deg, #fff5f0 0%, #ffdacf 100%);
+    }
+
+    .tone-preview-dot.standard {
+      background: linear-gradient(135deg, #ffa084 0%, #d45b40 100%);
+    }
+
+    .tone-preview-dot.rich {
+      background: linear-gradient(135deg, #ff5e36 0%, #b82305 100%);
+    }
+
+    .tone-preview-dot.dark {
+      background: linear-gradient(135deg, #872818 0%, #2e0a0a 100%);
+    }
+
+    .palette-btn {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 6px;
+      padding: 10px 12px;
+      border-radius: 14px;
+      border: 1px solid #f0eae3;
+      background: #ffffff;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      text-align: left;
+    }
+
+    .palette-btn:hover {
+      border-color: #ffd8be;
+      background: #fffdfb;
+      transform: translateY(-1px);
+    }
+
+    .palette-btn.active {
+      border-color: #ff8b70;
+      background: #fff8f5;
+      box-shadow: 0 2px 8px rgba(255, 139, 112, 0.16);
+    }
+
+    .palette-swatches {
+      display: flex;
+      gap: 4px;
+    }
+
+    .palette-dot {
+      width: 14px;
+      height: 14px;
+      border-radius: 50%;
+      border: 1px solid rgba(0, 0, 0, 0.06);
+    }
+
+    .palette-name {
+      font-size: 12px;
+      font-weight: 700;
+      color: #1a1716;
+      line-height: 1.2;
+    }
+
+    .palette-sub {
+      font-size: 10px;
+      color: var(--text-secondary);
+      line-height: 1.2;
+    }
+
+    /* Multi-Size Embed Gallery */
+    .sizes-section {
+      margin-bottom: 48px;
+    }
+
+    .section-heading {
+      font-size: 20px;
+      font-weight: 800;
+      color: #1a1716;
+      margin-bottom: 6px;
+    }
+
+    .section-subheading {
+      font-size: 13px;
+      color: var(--text-secondary);
+      margin-bottom: 20px;
+    }
+
+    .sizes-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+      gap: 20px;
+    }
+
+    .size-card {
+      background: #ffffff;
+      border: 1px solid var(--border-subtle);
+      border-radius: 20px;
+      padding: 24px 20px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+      gap: 16px;
+      transition: all 0.2s ease;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.02);
+    }
+
+    .size-card:hover {
+      border-color: #ffd8be;
+      transform: translateY(-2px);
+      box-shadow: 0 8px 24px rgba(255, 180, 162, 0.12);
+    }
+
+    .size-preview-box {
+      height: 160px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 100%;
+    }
+
+    .size-info-title {
+      font-size: 14px;
+      font-weight: 700;
+      color: #1a1716;
+    }
+
+    .size-info-desc {
+      font-size: 12px;
+      color: var(--text-secondary);
+      line-height: 1.4;
+    }
+
+    .size-pill-tag {
+      font-family: var(--font-mono);
+      font-size: 11px;
+      padding: 3px 8px;
+      border-radius: 6px;
+      background: #f7f2ed;
+      color: #7b6257;
+    }
+
+    .size-state-badge {
+      font-family: var(--font-mono);
+      font-size: 11px;
+      padding: 3px 8px;
+      border-radius: 6px;
+      background: #fff5ee;
+      color: #b25d48;
+      border: 1px solid #ffd8be;
+    }
+
+    /* Integration Snippets & Code Block */
+    .integration-section {
+      background: #ffffff;
+      border: 1px solid var(--border-subtle);
+      border-radius: 24px;
+      padding: 28px;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.02);
+      margin-bottom: 40px;
+    }
+
+    .code-tabs {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 14px;
+      border-bottom: 1px solid #f4ece5;
+      padding-bottom: 8px;
+    }
+
+    .code-tab-btn {
+      padding: 6px 14px;
+      background: transparent;
+      border: none;
+      border-radius: 8px;
+      font-family: var(--font-sans);
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--text-secondary);
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    .code-tab-btn.active {
+      background: #fff5ee;
+      color: #b25d48;
+    }
+
+    .code-box-wrapper {
+      position: relative;
+    }
+
+    .code-pre {
+      background: #1e1e24;
+      color: #e5e7eb;
+      border-radius: 14px;
+      padding: 18px 20px;
+      font-family: var(--font-mono);
+      font-size: 13px;
+      line-height: 1.6;
+      overflow-x: auto;
+    }
+
+    .btn-copy-code {
+      position: absolute;
+      top: 12px;
+      right: 12px;
+      padding: 6px 12px;
+      border-radius: 8px;
+      background: rgba(255, 255, 255, 0.12);
+      border: 1px solid rgba(255, 255, 255, 0.18);
+      color: #ffffff;
+      font-family: var(--font-sans);
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    .btn-copy-code:hover {
+      background: rgba(255, 255, 255, 0.22);
+    }
+  </style>
+</head>
+<body>
+  <div class="ambient-bg"></div>
+
+  <div class="page-container">
+    <!-- Top Navigation -->
+    <nav class="top-nav">
+      <a href="voice-pill.html" class="nav-back-link" style="color: #2563eb; font-weight: 600; border: 1px solid #bfdbfe; background: #eff6ff;">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><rect x="3" y="6" width="18" height="12" rx="6"/></svg>
+        Voice Pill Studio →
+      </a>
+      <a href="roleplay-orb.html" class="nav-back-link" style="color: #b25d48; font-weight: 600; border: 1px solid #ffd8be; background: #fff5ee;">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7"/></svg>
+        Full-Page View →
+      </a>
+      <a href="breathing.html" class="nav-back-link" style="color: #d97757; font-weight: 600; border: 1px solid #ffd8be; background: #fff5ee;">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M12 2a10 10 0 1 0 10 10A10 10 0 0 0 12 2zm0 14a4 4 0 1 1 4-4 4 4 0 0 1-4 4z"/></svg>
+        Deep Breathing →
+      </a>
+      <div class="nav-badge">
+        <span class="pulse-dot"></span>
+        AI Voice Orb Studio
+      </div>
+    </nav>
+
+    <!-- Hero Header -->
+    <header class="hero-header">
+      <h1 class="hero-title">Fluid AI Voice Orb Studio</h1>
+      <p class="hero-subtitle">
+        A volumetric, hardware-accelerated 3D fluid cloud orb designed for voice talk modes. Featuring 12 curated philosophical palettes, slow-motion billows, and live speech reactivity.
+      </p>
+    </header>
+
+    <!-- Main Showcase Grid -->
+    <main class="showcase-grid">
+      <!-- Center Stage -->
+      <section class="stage-card">
+        <div class="state-capsule idle" id="liveStateBadge">
+          <span class="state-dot"></span>
+          <span id="liveStateLabel">Idle and serene</span>
+          <span class="size-pill-tag" id="liveDiameterBadge" style="margin-left: 4px; font-weight: 700; color: #b25d48; background: #fff4ed; border-color: #ffd8be;">280px</span>
+        </div>
+
+        <div class="stage-canvas-area">
+          <div id="heroOrbContainer"></div>
+        </div>
+
+        <div class="audio-meter-container">
+          <div class="meter-label-row">
+            <span>Speech energy</span>
+            <span id="audioLevelReadout">0%</span>
+          </div>
+          <div class="meter-track">
+            <div class="meter-fill" id="meterFill"></div>
+          </div>
+        </div>
+
+        <!-- Controls Deck -->
+        <div class="stage-controls-deck">
+          <!-- State Switcher -->
+          <div class="segmented-control">
+            <button class="segmented-btn active" data-state="idle">Idle</button>
+            <button class="segmented-btn" data-state="listening">Listening</button>
+            <button class="segmented-btn" data-state="thinking">Thinking</button>
+            <button class="segmented-btn" data-state="speaking">Speaking</button>
+          </div>
+
+          <!-- Actions Row -->
+          <div class="action-buttons-row">
+            <button class="btn-action primary" id="btnToggleMic">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"></path><path d="M19 10v2a7 7 0 0 1-14 0v-2"></path><line x1="12" y1="19" x2="12" y2="22"></line></svg>
+              <span id="micBtnText">Enable live mic</span>
+            </button>
+            <button class="btn-action" id="btnSimulateSpeech">
+              💬 Simulate speech burst
+            </button>
+            <button class="btn-action" id="btnSimulateResponse">
+              🤖 Simulate response
+            </button>
+          </div>
+
+          <!-- Manual Energy Slider -->
+          <div class="slider-card">
+            <div class="slider-header">
+              <span>Manual speech level test</span>
+              <span class="slider-value" id="manualLevelVal">0.00</span>
+            </div>
+            <input type="range" id="sliderEnergy" min="0" max="1" step="0.01" value="0">
+          </div>
+        </div>
+      </section>
+
+      <!-- Side Customizer -->
+      <aside class="side-panel">
+        <!-- 12 Palette Philosophies -->
+        <div class="panel-card">
+          <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px;">
+            <h2 class="card-title" style="margin-bottom: 0;">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><path d="M12 2a7 7 0 0 0 7 7c0 2-2 3-2 3"></path></svg>
+              12 Curated Philosophies
+            </h2>
+            <span style="font-size: 11px; color: var(--text-muted); font-family: var(--font-mono);">Color Range</span>
+          </div>
+
+          <!-- Color Range / Gradient Tone Intensity Selector -->
+          <div class="color-range-selector" id="colorRangeSelector">
+            <button class="range-tone-btn" data-tone="light" title="Light / Pastel / Luminous gradient">
+              <span class="tone-preview-dot light"></span>
+              <span>Light</span>
+            </button>
+            <button class="range-tone-btn active" data-tone="standard" title="Balanced / Original authentic palette">
+              <span class="tone-preview-dot standard"></span>
+              <span>Balanced</span>
+            </button>
+            <button class="range-tone-btn" data-tone="rich" title="Rich / Saturated / Radiant gradient">
+              <span class="tone-preview-dot rich"></span>
+              <span>Rich</span>
+            </button>
+            <button class="range-tone-btn" data-tone="dark" title="Deep / Dark moody jewel gradient">
+              <span class="tone-preview-dot dark"></span>
+              <span>Deep</span>
+            </button>
+          </div>
+
+          <div class="palette-grid" id="paletteGrid">
+            <!-- Populated via JavaScript for clean maintainability -->
+          </div>
+        </div>
+
+        <!-- Motion Dynamics -->
+        <div class="panel-card">
+          <h2 class="card-title">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/></svg>
+            Fluid Dynamics & Grain
+          </h2>
+          <div class="slider-card" style="margin-bottom: 12px;">
+            <div class="slider-header">
+              <span>Cloud motion speed</span>
+              <span class="slider-value" id="speedVal">1.0x</span>
+            </div>
+            <input type="range" id="sliderSpeed" min="0.2" max="3.0" step="0.1" value="1.0">
+          </div>
+
+          <div class="slider-card" style="margin-bottom: 12px;">
+            <div class="slider-header">
+              <span>Breathing zoom scale</span>
+              <span class="slider-value" id="zoomVal">1.55x</span>
+            </div>
+            <input type="range" id="sliderZoom" min="1.30" max="2.20" step="0.05" value="1.55">
+          </div>
+
+          <div class="slider-card" style="margin-bottom: 12px;">
+            <div class="slider-header">
+              <span>Fluid fold turbulence</span>
+              <span class="slider-value" id="turbVal">0.7x</span>
+            </div>
+            <input type="range" id="sliderTurb" min="0.4" max="2.6" step="0.1" value="0.7">
+          </div>
+
+          <div class="slider-card">
+            <div class="slider-header">
+              <span>Tactile film grain</span>
+              <span class="slider-value" id="grainVal">0.8x</span>
+            </div>
+            <input type="range" id="sliderGrain" min="0.0" max="2.5" step="0.1" value="0.8">
+          </div>
+
+          <!-- Standard Calibration Reset Button -->
+          <button class="btn-action" id="btnResetStandard" style="width: 100%; margin-top: 14px; justify-content: center; font-size: 13px; padding: 9px 14px; font-weight: 600; background: #ffffff; border: 1px solid #ffd8be; color: #b25d48;">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"></path><path d="M3 3v5h5"></path></svg>
+            Reset to standard calibration
+          </button>
+          <div id="resetToast" style="display: none; text-align: center; font-size: 11px; color: #b25d48; margin-top: 6px; font-weight: 600; font-family: var(--font-mono);">✓ Calibrated to golden standard defaults</div>
+        </div>
+      </aside>
+    </main>
+
+    <!-- Multi-Size Embed Gallery -->
+    <section class="sizes-section">
+      <h2 class="section-heading">Responsive Display Scales</h2>
+      <p class="section-subheading">Seamlessly synchronized across all screen formats — from compact 56px status capsules to high-resolution 200px voice assistants.</p>
+
+      <div class="sizes-grid">
+        <div class="size-card">
+          <div class="size-preview-box">
+            <div id="sizePreview56"></div>
+          </div>
+          <div>
+            <div class="size-info-title">Compact Capsule</div>
+            <div class="size-info-desc">Header or floating status pill</div>
+          </div>
+          <div style="display: flex; gap: 6px; align-items: center;">
+            <span class="size-pill-tag" id="dimTag56">56px diameter</span>
+            <span class="size-state-badge" id="stateTag56">Idle</span>
+          </div>
+        </div>
+
+        <div class="size-card">
+          <div class="size-preview-box">
+            <div id="sizePreview80"></div>
+          </div>
+          <div>
+            <div class="size-info-title">Chat Bubble</div>
+            <div class="size-info-desc">Mobile bottom sheet or in-line talk mode</div>
+          </div>
+          <div style="display: flex; gap: 6px; align-items: center;">
+            <span class="size-pill-tag" id="dimTag80">80px diameter</span>
+            <span class="size-state-badge" id="stateTag80">Idle</span>
+          </div>
+        </div>
+
+        <div class="size-card">
+          <div class="size-preview-box">
+            <div id="sizePreview140"></div>
+          </div>
+          <div>
+            <div class="size-info-title">Dialog Assistant</div>
+            <div class="size-info-desc">Voice modal dialog or centered card</div>
+          </div>
+          <div style="display: flex; gap: 6px; align-items: center;">
+            <span class="size-pill-tag" id="dimTag140">140px diameter</span>
+            <span class="size-state-badge" id="stateTag140">Idle</span>
+          </div>
+        </div>
+
+        <div class="size-card">
+          <div class="size-preview-box">
+            <div id="sizePreview200"></div>
+          </div>
+          <div>
+            <div class="size-info-title">Full Studio Hero</div>
+            <div class="size-info-desc">Immersive full-screen conversational agent</div>
+          </div>
+          <div style="display: flex; gap: 6px; align-items: center;">
+            <span class="size-pill-tag" id="dimTag200">200px diameter</span>
+            <span class="size-state-badge" id="stateTag200">Idle</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Integration Snippets -->
+    <section class="integration-section">
+      <h2 class="section-heading">Embed in Any Web Application</h2>
+      <p class="section-subheading">Zero external dependencies. Works with Vanilla HTML, React, Vue, Next.js, or Web Components.</p>
+
+      <div class="code-tabs">
+        <button class="code-tab-btn active" data-snippet="html">Web Component</button>
+        <button class="code-tab-btn" data-snippet="js">Vanilla JavaScript</button>
+        <button class="code-tab-btn" data-snippet="full">Complete HTML Boilerplate</button>
+      </div>
+
+      <div class="code-box-wrapper">
+        <button class="btn-copy-code" id="btnCopyCode">Copy Code</button>
+        <pre class="code-pre"><code id="codeSnippetContent"></code></pre>
+      </div>
+    </section>
+  </div>
+
+  <!-- Voice Orb Engine -->
+  <script src="voice-orb.js"></script>
+
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      // 1. Calibrated State Presets for Automated Fluid Dynamics & Grain Adaptation
+      const STATE_PRESETS = {
+        idle: {
+          speed: 1.1,
+          zoom: 1.55,
+          turb: 0.85,
+          grain: 0.55,
+          label: 'Idle: Steady resting baseline size'
+        },
+        listening: {
+          speed: 2.2,
+          zoom: 1.55,
+          turb: 1.35,
+          grain: 0.55,
+          label: 'Listening: Fast 150px ↔ 160px flutter back and forth'
+        },
+        thinking: {
+          speed: 1.3,
+          zoom: 1.55,
+          turb: 1.25,
+          grain: 0.60,
+          label: 'Thinking: Steady 180px resting position'
+        },
+        speaking: {
+          speed: 2.1,
+          zoom: 1.55,
+          turb: 1.40,
+          grain: 0.50,
+          label: 'Speaking: Dynamic 180px ↔ 210px+ speech cadence swell'
+        }
+      };
+
+      // 2. Initialize Hero Voice Orb (Starting at 1.55x default Idle zoom for plush full sphere)
+      const heroContainer = document.getElementById('heroOrbContainer');
+      const heroOrb = new VoiceOrb(heroContainer, {
+        size: 280,
+        theme: 'peach',
+        state: 'idle',
+        speed: 1.0,
+        zoom: 1.55,
+        turbulence: 0.7,
+        grain: 0.8,
+        showShadow: true,
+        interactive: true,
+        onAudioLevel: (level) => {
+          document.getElementById('meterFill').style.width = Math.round(level * 100) + '%';
+          document.getElementById('audioLevelReadout').textContent = Math.round(level * 100) + '%';
+          previewOrbs.forEach(orb => orb.setAudioLevel(level));
+        },
+        onScaleChange: (scale, diameterPx) => {
+          const el = document.getElementById('liveDiameterBadge');
+          if (el) el.textContent = `${diameterPx}px`;
+        }
+      });
+
+      // 3. Initialize Multi-Size Previews (Synchronized display scales)
+      const orb56 = new VoiceOrb(document.getElementById('sizePreview56'), {
+        size: 56, theme: 'peach', state: 'idle', speed: 1.0, zoom: 1.55, turbulence: 0.7, grain: 0.8,
+        onScaleChange: (s, d) => { const el = document.getElementById('dimTag56'); if (el) el.textContent = `${d}px diameter`; }
+      });
+      const orb80 = new VoiceOrb(document.getElementById('sizePreview80'), {
+        size: 80, theme: 'peach', state: 'idle', speed: 1.0, zoom: 1.55, turbulence: 0.7, grain: 0.8,
+        onScaleChange: (s, d) => { const el = document.getElementById('dimTag80'); if (el) el.textContent = `${d}px diameter`; }
+      });
+      const orb140 = new VoiceOrb(document.getElementById('sizePreview140'), {
+        size: 140, theme: 'peach', state: 'idle', speed: 1.0, zoom: 1.55, turbulence: 0.7, grain: 0.8,
+        onScaleChange: (s, d) => { const el = document.getElementById('dimTag140'); if (el) el.textContent = `${d}px diameter`; }
+      });
+      const orb200 = new VoiceOrb(document.getElementById('sizePreview200'), {
+        size: 200, theme: 'peach', state: 'idle', speed: 1.0, zoom: 1.55, turbulence: 0.7, grain: 0.8,
+        onScaleChange: (s, d) => { const el = document.getElementById('dimTag200'); if (el) el.textContent = `${d}px diameter`; }
+      });
+
+      const allOrbs = [heroOrb, orb56, orb80, orb140, orb200];
+      const previewOrbs = [orb56, orb80, orb140, orb200];
+
+      // Broadcast helper to keep all orbs in synchronized lockstep
+      function syncAll(fn) {
+        allOrbs.forEach(fn);
+      }
+
+      // 4. Color Range / Tone Transformation & Palette Population
+      const paletteGrid = document.getElementById('paletteGrid');
+      const palettes = VoiceOrb.getPalettes();
+      let currentTone = 'standard';
+      let currentThemeKey = 'peach';
+
+      // Transform theme colors based on Tone Range (Light, Balanced, Rich, Deep)
+      function transformTheme(baseTheme, tone) {
+        if (!baseTheme) return baseTheme;
+        if (tone === 'standard') return baseTheme;
+
+        const copy = {
+          name: baseTheme.name,
+          subtitle: baseTheme.subtitle,
+          glow: baseTheme.glow,
+          c1: [...baseTheme.c1],
+          c2: [...baseTheme.c2],
+          c3: [...baseTheme.c3],
+          c4: [...baseTheme.c4],
+          c5: [...baseTheme.c5]
+        };
+
+        const transformColor = (rgb, index) => {
+          let [r, g, b] = rgb;
+          if (tone === 'light') {
+            // Light / Pastel / Luminous gradient
+            const lift = index === 0 ? 0.18 : index === 1 ? 0.24 : index === 2 ? 0.32 : index === 3 ? 0.38 : 0.45;
+            r = r + (1.0 - r) * lift;
+            g = g + (1.0 - g) * lift;
+            b = b + (1.0 - b) * lift;
+          } else if (tone === 'rich') {
+            // Rich / Vibrant / Saturated
+            const lum = 0.299 * r + 0.587 * g + 0.114 * b;
+            r = Math.min(1.0, Math.max(0.0, lum + (r - lum) * 1.45));
+            g = Math.min(1.0, Math.max(0.0, lum + (g - lum) * 1.45));
+            b = Math.min(1.0, Math.max(0.0, lum + (b - lum) * 1.45));
+            r = Math.pow(r, 1.12);
+            g = Math.pow(g, 1.12);
+            b = Math.pow(b, 1.12);
+          } else if (tone === 'dark') {
+            // Deep / Dark / Moody jewel tones
+            if (index === 0) {
+              r = r * 0.92; g = g * 0.92; b = b * 0.92;
+            } else if (index === 1) {
+              r = r * 0.78; g = g * 0.78; b = b * 0.78;
+            } else if (index === 2) {
+              r = r * 0.58; g = g * 0.58; b = b * 0.58;
+            } else if (index === 3) {
+              r = r * 0.42; g = g * 0.42; b = b * 0.42;
+            } else {
+              r = r * 0.28; g = g * 0.28; b = b * 0.28;
+            }
+          }
+          return [Math.min(1.0, Math.max(0.0, r)), Math.min(1.0, Math.max(0.0, g)), Math.min(1.0, Math.max(0.0, b))];
+        };
+
+        copy.c1 = transformColor(copy.c1, 0);
+        copy.c2 = transformColor(copy.c2, 1);
+        copy.c3 = transformColor(copy.c3, 2);
+        copy.c4 = transformColor(copy.c4, 3);
+        copy.c5 = transformColor(copy.c5, 4);
+
+        if (tone === 'light') {
+          copy.glow = 'rgba(255, 210, 190, 0.25)';
+        } else if (tone === 'rich') {
+          copy.glow = 'rgba(255, 120, 60, 0.45)';
+        } else if (tone === 'dark') {
+          copy.glow = 'rgba(180, 50, 20, 0.50)';
+        }
+
+        return copy;
+      }
+
+      function renderPaletteButtons() {
+        paletteGrid.innerHTML = '';
+        Object.keys(palettes).forEach((key) => {
+          const rawPal = palettes[key];
+          const pal = transformTheme(rawPal, currentTone);
+          const btn = document.createElement('button');
+          btn.className = 'palette-btn' + (key === currentThemeKey ? ' active' : '');
+          btn.dataset.theme = key;
+
+          const toRgb = (c) => `rgb(${Math.round(c[0]*255)}, ${Math.round(c[1]*255)}, ${Math.round(c[2]*255)})`;
+
+          btn.innerHTML = `
+            <div class="palette-swatches">
+              <span class="palette-dot" style="background: ${toRgb(pal.c1)};"></span>
+              <span class="palette-dot" style="background: ${toRgb(pal.c2)};"></span>
+              <span class="palette-dot" style="background: ${toRgb(pal.c3)};"></span>
+              <span class="palette-dot" style="background: ${toRgb(pal.c4)};"></span>
+            </div>
+            <span class="palette-name">${pal.name}</span>
+            <span class="palette-sub">${pal.subtitle || ''}</span>
+          `;
+
+          btn.addEventListener('click', () => {
+            document.querySelectorAll('.palette-btn').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            currentThemeKey = key;
+            const themeToApply = transformTheme(palettes[key], currentTone);
+            syncAll(orb => orb.setTheme(themeToApply));
+          });
+
+          paletteGrid.appendChild(btn);
+        });
+      }
+
+      renderPaletteButtons();
+
+      // Hook up Color Range Tone Buttons (Light, Balanced, Rich, Deep)
+      const rangeToneBtns = document.querySelectorAll('.range-tone-btn');
+      rangeToneBtns.forEach(btn => {
+        btn.addEventListener('click', () => {
+          rangeToneBtns.forEach(b => b.classList.remove('active'));
+          btn.classList.add('active');
+          currentTone = btn.dataset.tone;
+
+          // Re-render swatches to reflect new tone
+          renderPaletteButtons();
+
+          // Apply transformed theme to all active orbs
+          const activeTheme = transformTheme(palettes[currentThemeKey], currentTone);
+          syncAll(orb => orb.setTheme(activeTheme));
+        });
+      });
+
+      // 5. State Switcher & Automated Slider Adaptation
+      const stateButtons = document.querySelectorAll('.segmented-btn');
+      const stateBadge = document.getElementById('liveStateBadge');
+      const stateLabel = document.getElementById('liveStateLabel');
+
+      const sliderSpeed = document.getElementById('sliderSpeed');
+      const speedVal = document.getElementById('speedVal');
+      const sliderZoom = document.getElementById('sliderZoom');
+      const zoomVal = document.getElementById('zoomVal');
+      const sliderTurb = document.getElementById('sliderTurb');
+      const turbVal = document.getElementById('turbVal');
+      const sliderGrain = document.getElementById('sliderGrain');
+      const grainVal = document.getElementById('grainVal');
+
+      const stateTagElements = {
+        56: document.getElementById('stateTag56'),
+        80: document.getElementById('stateTag80'),
+        140: document.getElementById('stateTag140'),
+        200: document.getElementById('stateTag200')
+      };
+
+      let currentGlobalState = 'idle';
+
+      function updateStateUI(state, applyPreset = true) {
+        currentGlobalState = state;
+        const preset = STATE_PRESETS[state] || STATE_PRESETS.idle;
+
+        stateButtons.forEach(b => b.classList.toggle('active', b.dataset.state === state));
+        stateBadge.className = 'state-capsule ' + state;
+        stateLabel.textContent = preset.label;
+
+        // Automatically update the fluid dynamics & grain sliders to the calibrated preset
+        if (applyPreset) {
+          sliderSpeed.value = preset.speed;
+          speedVal.textContent = preset.speed.toFixed(1) + 'x';
+
+          sliderZoom.value = preset.zoom;
+          zoomVal.textContent = preset.zoom.toFixed(2) + 'x';
+
+          sliderTurb.value = preset.turb;
+          turbVal.textContent = preset.turb.toFixed(1) + 'x';
+
+          sliderGrain.value = preset.grain;
+          grainVal.textContent = preset.grain.toFixed(1) + 'x';
+
+          syncAll(orb => {
+            orb.setState(state);
+            orb.setSpeed(preset.speed);
+            orb.setZoom(preset.zoom);
+            orb.setTurbulence(preset.turb);
+            orb.setGrain(preset.grain);
+          });
+        } else {
+          syncAll(orb => orb.setState(state));
+        }
+
+        // Update display scale badges
+        const stateTitle = state.charAt(0).toUpperCase() + state.slice(1);
+        Object.values(stateTagElements).forEach(el => {
+          if (el) el.textContent = stateTitle;
+        });
+      }
+
+      stateButtons.forEach(btn => {
+        btn.addEventListener('click', () => {
+          updateStateUI(btn.dataset.state, true);
+        });
+      });
+
+      // 6. Live Mic Toggle
+      const btnToggleMic = document.getElementById('btnToggleMic');
+      const micBtnText = document.getElementById('micBtnText');
+
+      btnToggleMic.addEventListener('click', async () => {
+        if (heroOrb.isMicActive) {
+          heroOrb.stopMic();
+          btnToggleMic.classList.remove('active-mic');
+          btnToggleMic.classList.add('primary');
+          micBtnText.textContent = 'Enable live mic';
+          updateStateUI('idle', true);
+        } else {
+          const ok = await heroOrb.startMic();
+          if (ok) {
+            btnToggleMic.classList.remove('primary');
+            btnToggleMic.classList.add('active-mic');
+            micBtnText.textContent = 'Stop microphone';
+            updateStateUI('listening', true);
+            stateLabel.textContent = 'Listening to live microphone...';
+          } else {
+            alert('Microphone access could not be acquired. Please ensure mic permissions are allowed.');
+          }
+        }
+      });
+
+      // Simulation triggers
+      let simInterval = null;
+      const stopSim = () => {
+        if (simInterval) clearInterval(simInterval);
+      };
+
+      document.getElementById('btnSimulateSpeech').addEventListener('click', () => {
+        stopSim();
+        updateStateUI('listening', true);
+        stateLabel.textContent = 'User asking question (speech burst)...';
+
+        let t = 0;
+        simInterval = setInterval(() => {
+          t += 0.1;
+          const energy = Math.abs(Math.sin(t * 3.5) * 0.7 + Math.cos(t * 7.2) * 0.25);
+          syncAll(orb => orb.setAudioLevel(energy));
+          document.getElementById('meterFill').style.width = Math.round(energy * 100) + '%';
+          document.getElementById('audioLevelReadout').textContent = Math.round(energy * 100) + '%';
+
+          if (t > 4.0) {
+            stopSim();
+            syncAll(orb => orb.setAudioLevel(0.0));
+            updateStateUI('thinking', true);
+          }
+        }, 50);
+      });
+
+      document.getElementById('btnSimulateResponse').addEventListener('click', () => {
+        stopSim();
+        updateStateUI('speaking', true);
+        stateLabel.textContent = 'AI voice answering (expressive speech)...';
+
+        let t = 0;
+        simInterval = setInterval(() => {
+          t += 0.08;
+          const energy = Math.abs(Math.sin(t * 2.8) * 0.8 + Math.sin(t * 5.4) * 0.2);
+          syncAll(orb => orb.setAudioLevel(energy));
+          document.getElementById('meterFill').style.width = Math.round(energy * 100) + '%';
+          document.getElementById('audioLevelReadout').textContent = Math.round(energy * 100) + '%';
+
+          if (t > 5.5) {
+            stopSim();
+            syncAll(orb => orb.setAudioLevel(0.0));
+            updateStateUI('idle', true);
+          }
+        }, 50);
+      });
+
+      // 7. Manual Energy Slider
+      const sliderEnergy = document.getElementById('sliderEnergy');
+      const manualVal = document.getElementById('manualLevelVal');
+      sliderEnergy.addEventListener('input', (e) => {
+        stopSim();
+        const val = parseFloat(e.target.value);
+        manualVal.textContent = val.toFixed(2);
+        syncAll(orb => orb.setAudioLevel(val));
+        document.getElementById('meterFill').style.width = Math.round(val * 100) + '%';
+        document.getElementById('audioLevelReadout').textContent = Math.round(val * 100) + '%';
+      });
+
+      // 8. Dynamics Sliders (Manual Overrides Synchronized Across All Views)
+      sliderSpeed.addEventListener('input', (e) => {
+        const val = parseFloat(e.target.value);
+        speedVal.textContent = val.toFixed(1) + 'x';
+        syncAll(orb => orb.setSpeed(val));
+      });
+
+      sliderZoom.addEventListener('input', (e) => {
+        const val = Math.max(1.30, parseFloat(e.target.value));
+        zoomVal.textContent = val.toFixed(2) + 'x';
+        syncAll(orb => orb.setZoom(val));
+      });
+
+      sliderTurb.addEventListener('input', (e) => {
+        const val = parseFloat(e.target.value);
+        turbVal.textContent = val.toFixed(1) + 'x';
+        syncAll(orb => orb.setTurbulence(val));
+      });
+
+      sliderGrain.addEventListener('input', (e) => {
+        const val = parseFloat(e.target.value);
+        grainVal.textContent = val.toFixed(1) + 'x';
+        syncAll(orb => orb.setGrain(val));
+      });
+
+      // 9. Reset to Standard Calibration
+      const btnResetStandard = document.getElementById('btnResetStandard');
+      const resetToast = document.getElementById('resetToast');
+      btnResetStandard.addEventListener('click', () => {
+        stopSim();
+        sliderEnergy.value = 0.0;
+        manualVal.textContent = '0.00';
+        syncAll(orb => orb.setAudioLevel(0.0));
+        document.getElementById('meterFill').style.width = '0%';
+        document.getElementById('audioLevelReadout').textContent = '0%';
+
+        // Re-apply golden presets for active state
+        updateStateUI(currentGlobalState, true);
+
+        if (resetToast) {
+          resetToast.style.display = 'block';
+          setTimeout(() => {
+            resetToast.style.display = 'none';
+          }, 2200);
+        }
+      });
+
+      // Initialize at Idle with golden calibration (1.30x zoom)
+      updateStateUI('idle', true);
+
+      // 8. Code Snippet Tabs
+      const snippetSnippets = {
+        html: `<!-- 1. Include the standalone Voice Orb library -->
+<script src="voice-orb.js"><\/script>
+
+<!-- 2. Drop the custom element anywhere in your app -->
+<!-- Theme options: peach | apricot | rose | sunset | kids | sky | oceanic | himalayan | indic | desert | forest | cosmic -->
+<voice-orb size="140" theme="peach" state="listening" react-to-mic></voice-orb>`,
+        
+        js: `// 1. Target container in HTML
+// <div id="ai-voice-orb"></div>
+
+// 2. Initialize with JavaScript
+const orb = new VoiceOrb(document.getElementById('ai-voice-orb'), {
+  size: 140,              // Diameter in pixels
+  theme: 'indic',         // 12 curated themes (e.g. 'peach', 'sky', 'kids', 'indic', etc.)
+  state: 'listening',     // 'idle' | 'listening' | 'thinking' | 'speaking'
+  reactToMic: true        // Hook directly to browser microphone
+});
+
+// Programmatic controls:
+orb.setState('speaking');
+orb.setAudioLevel(0.85);   // Energy 0.0 to 1.0
+orb.setTheme('oceanic');`,
+
+        full: `<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>My Conversational Voice Assistant</title>
+  <style>
+    body {
+      margin: 0;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: radial-gradient(circle at 50% 50%, #ffffff 0%, #fbf8f5 100%);
+    }
+  </style>
+</head>
+<body>
+  <!-- Voice Orb Component -->
+  <voice-orb size="180" theme="peach" state="listening" react-to-mic></voice-orb>
+
+  <script src="voice-orb.js"><\/script>
+</body>
+</html>`
+      };
+
+      const codeTabBtns = document.querySelectorAll('.code-tab-btn');
+      const codeBlock = document.getElementById('codeSnippetContent');
+      codeBlock.textContent = snippetSnippets.html;
+
+      codeTabBtns.forEach(btn => {
+        btn.addEventListener('click', () => {
+          codeTabBtns.forEach(b => b.classList.remove('active'));
+          btn.classList.add('active');
+          const snip = btn.dataset.snippet;
+          codeBlock.textContent = snippetSnippets[snip];
+        });
+      });
+
+      // Copy Code Button
+      const copyBtn = document.getElementById('btnCopyCode');
+      copyBtn.addEventListener('click', () => {
+        navigator.clipboard.writeText(codeBlock.textContent).then(() => {
+          const prev = copyBtn.textContent;
+          copyBtn.textContent = 'Copied!';
+          setTimeout(() => {
+            copyBtn.textContent = prev;
+          }, 2000);
+        });
+      });
+    });
+  </script>
+</body>
+</html>

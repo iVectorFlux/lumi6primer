@@ -208,23 +208,43 @@
         return (length(p) - baseR) + disp;
 
       } else if (u_state < 1.5) {
-        // --- STATE 1: LISTENING ---
-        // Attentive, alert ear: Good amount of cloud movement, faster turbulence,
-        // and inward acoustic sound absorption waves
-        q.yz *= rot(0.20 + 0.08 * sin(t * 0.9));
-        q.xz *= rot(t * 0.75); // Fast, active circulation
+        // --- STATE 1: LISTENING (FAST 3D MULTIDIRECTIONAL CLOUDS & CANDLE FLAME PUSHBACK) ---
+        // 1. Fast, vivid 3D multi-axis tumbling across X, Y, and Z axes (no single-axis drift!)
+        vec3 qRoll = q;
+        float rollSpeed = t * 1.6;
+        qRoll.yz *= rot(0.25 + 0.14 * sin(rollSpeed * 0.9));
+        qRoll.xz *= rot(rollSpeed * 0.92); // Active, continuous 3D rotation
+        qRoll.xy *= rot(sin(rollSpeed * 0.75) * 0.45); // Deep vertical & diagonal tumbling
 
-        // Concentric acoustic ripples travelling inward:
-        float r = length(p);
-        float soundAbsorption = sin(r * 10.0 - t * 4.2) * (0.030 + u_audio * 0.10);
+        // Distinct, bold 3D volumetric cloud billows churning across all 3 dimensions
+        float billowX = sin(qRoll.x * 2.6 + rollSpeed * 1.2) * cos(qRoll.y * 2.0 - rollSpeed * 0.9);
+        float billowY = sin(qRoll.y * 2.5 - rollSpeed * 1.1) * cos(qRoll.z * 2.2 + rollSpeed * 1.0);
+        float billowZ = cos(qRoll.z * 2.6 + rollSpeed * 1.3) * sin(qRoll.x * 1.9 + rollSpeed * 0.8);
+        float gyroid3D = dot(sin(qRoll * 2.2 + rollSpeed * 0.6), cos(qRoll.yzx * 2.2 - rollSpeed * 0.7)) * 0.06;
 
-        // Responsive billowing folds with active turbulence
-        float fold = sin(q.y * 2.6 + t * 1.6) * cos(q.x * 2.2 - t * 1.2) * (1.0 + u_audio * 1.3);
-        float billow = cos(q.z * 2.8 + q.x * 1.8 + t * 1.4);
-        float gyroid = dot(sin(q * 2.6 + t * 0.9), cos(q.yzx * 2.6 - t * 1.0));
+        float cloudMotion3D = (billowX * 0.15 + billowY * 0.14 + billowZ * 0.13 + gyroid3D);
 
-        float disp = (fold * 0.13 + billow * 0.09 + soundAbsorption + gyroid * 0.04) * (u_turbulence * 1.28);
-        return (length(p) - (baseR + u_audio * 0.07)) + disp;
+        // 2. The Candle Flame Breath Deflection:
+        // Incoming voice acts like a gentle breath blowing toward a candle flame:
+        // the front face of the cloud parts and is pushed backwards toward the wall!
+        float rxy = length(p.xy);
+        float frontMask = smoothstep(-0.25, 0.45, p.z / baseR);
+        float breathFunnel = smoothstep(0.90, 0.05, rxy);
+
+        // Candle breath push depth (very pronounced when speaking or pulsing)
+        float candlePush = (0.28 + u_audio * 0.85) * pow(breathFunnel, 1.35) * frontMask;
+
+        // Radial cloud parting around the stagnation point (smoke/flame parting around breath)
+        vec2 radialParting = normalize(p.xy + vec2(0.0001)) * (candlePush * 0.40);
+        qRoll.xy += radialParting;
+        qRoll.z += candlePush * 0.95; // Clouds swept backwards toward the wall
+
+        // Organic candle flame flutter along trailing edges
+        float flameFlutter = sin(qRoll.y * 3.6 - rollSpeed * 2.2) * cos(qRoll.x * 3.0 + rollSpeed * 1.8) * (0.05 + u_audio * 0.10) * smoothstep(0.15, 0.80, rxy);
+
+        // Displace surface: candlePush depresses the front backwards into the rear wall!
+        float disp = (candlePush * 0.90 + flameFlutter + cloudMotion3D) * u_turbulence;
+        return (length(p) - (baseR + u_audio * 0.05)) + disp;
 
       } else if (u_state < 2.5) {
         // --- STATE 2: THINKING ---
@@ -246,13 +266,18 @@
 
       } else {
         // --- STATE 3: SPEAKING ---
-        // Fast, turbulent, bombarding phonetic speech bursts & outward acoustic waves
+        // Fast, turbulent, bombarding phonetic speech bursts with discrete subtle shockwave every ~2.2s
         q.yz *= rot(0.26 + 0.12 * sin(t * 1.2));
         q.xz *= rot(t * 0.85); // Rapid outward momentum
 
-        // Acoustic radiation waves travelling outward from core:
-        float r = length(p);
-        float outwardWave = sin(r * 8.5 - t * 5.6) * (0.042 + u_audio * 0.12);
+        // Discrete subtle acoustic shockwave pulse once every ~2.2 seconds:
+        float shockPeriod = 2.2;
+        float shockCycle = mod(t, shockPeriod);
+        float shockProgress = shockCycle / shockPeriod;
+        float waveRadius = shockProgress * (baseR * 1.32);
+        float distFromWave = abs(length(p) - waveRadius);
+        float shockEnvelope = smoothstep(0.08, 0.35, shockProgress) * (1.0 - smoothstep(0.65, 0.95, shockProgress));
+        float subtleShockwave = exp(-distFromWave * distFromWave * 35.0) * (0.026 + u_audio * 0.024) * shockEnvelope;
 
         // Phonetic syllable cadence (bombarding bursts of syllables):
         float syllableCadence = abs(sin(t * 4.6) * cos(t * 2.3) + sin(t * 7.0) * 0.35);
@@ -261,7 +286,7 @@
         float fold = sin(q.y * 2.8 + t * 2.2) * cos(q.x * 2.4 - t * 1.6);
         float billow = cos(q.z * 3.0 + q.x * 2.0 + t * 1.8);
 
-        float disp = (fold * 0.14 + billow * 0.11 + outwardWave + vocalBloom) * (u_turbulence * 1.35);
+        float disp = (fold * 0.14 + billow * 0.11 + subtleShockwave + vocalBloom) * (u_turbulence * 1.35);
         return (length(p) - (baseR + vocalBloom * 0.45)) + disp;
       }
     }
@@ -276,8 +301,10 @@
         q.xz *= rot(t * 0.20);
         q.yz *= rot(0.12 + 0.03 * sin(t * 0.4));
       } else if (u_state < 1.5) {
-        q.xz *= rot(t * 0.70);
-        q.yz *= rot(0.20 + 0.08 * sin(t * 0.9));
+        float rollSpeed = t * 1.6;
+        q.yz *= rot(0.25 + 0.14 * sin(rollSpeed * 0.9));
+        q.xz *= rot(rollSpeed * 0.92);
+        q.xy *= rot(sin(rollSpeed * 0.75) * 0.45);
       } else if (u_state < 2.5) {
         q.xz *= rot(sin(t * 0.6) * 0.35);
         q.yz *= rot(0.16 + 0.06 * sin(t * 0.7));
@@ -317,12 +344,19 @@
         col = mix(col, u_c1, pow(coreGlow, 1.6) * 0.38);
 
       } else if (u_state < 1.5) {
-        // LISTENING: Receptive auroral illumination, expands with incoming mic sound
+        // LISTENING: Smooth receptive candle-flame illumination (360° aura with soft pushback)
+        float rxy = length(p.xy);
         float distCenter = length(p);
         float coreGlow = clamp((0.85 - distCenter) / 0.85, 0.0, 1.0);
-        col = mix(col, u_c1, pow(coreGlow, 1.4) * (0.42 + u_audio * 0.35));
-        float rimReceptive = smoothstep(0.55, 0.88, distCenter);
-        col = mix(col, u_c3, rimReceptive * 0.22 * (1.0 + u_audio));
+        col = mix(col, u_c1, pow(coreGlow, 1.4) * (0.38 + u_audio * 0.35));
+
+        // Soft, smooth auroral rim warmth all around 360°
+        float ringLip = smoothstep(0.40, 0.75, rxy) * (1.0 - smoothstep(0.75, 0.90, rxy));
+        col = mix(col, u_c2, ringLip * (0.35 + u_audio * 0.30));
+
+        // Warm candle ember glow in the concave center where breath pushes back
+        float wellCenter = smoothstep(0.80, 0.10, rxy);
+        col = mix(col, u_c4, wellCenter * (0.24 + u_audio * 0.20));
 
       } else if (u_state < 2.5) {
         // THINKING: Ocean wave surge illumination rolling through the volume
@@ -334,12 +368,23 @@
         col = mix(col, u_c3, waveRim * 0.22 * wavePulse);
 
       } else {
-        // SPEAKING: Outward vocal bloom with phonetic syllable warmth
+        // SPEAKING: Outward vocal bloom with subtle discrete shockwave pulse every ~2.2s
+        float shockPeriod = 2.2;
+        float shockCycle = mod(t, shockPeriod);
+        float shockProgress = shockCycle / shockPeriod;
+        float r0 = 0.72 * u_zoom;
+        float waveRadius = shockProgress * (r0 * 1.32);
+        float distFromWave = abs(length(p) - waveRadius);
+        float shockEnvelope = smoothstep(0.08, 0.35, shockProgress) * (1.0 - smoothstep(0.65, 0.95, shockProgress));
+        float shockLight = exp(-distFromWave * distFromWave * 35.0) * shockEnvelope;
+
         float syllableCadence = abs(sin(t * 4.6) * cos(t * 2.3) + sin(t * 7.0) * 0.35);
         float distCenter = length(p);
         float coreGlow = clamp((0.85 - distCenter) / 0.85, 0.0, 1.0);
         col = mix(col, u_c1, pow(coreGlow, 1.5) * (0.45 + u_audio * 0.35));
         col = mix(col, u_c3, min(1.0, syllableCadence * 0.25 * (1.0 + u_audio * 1.0)));
+        // Subtle, barely noticeable golden illumination on the periodic shockwave front
+        col += u_c2 * shockLight * 0.16;
       }
 
       return col;
@@ -395,45 +440,55 @@
         t += STEP_SIZE;
       }
 
-      if (alphaAcc < 0.002) {
-        gl_FragColor = vec4(1.0, 1.0, 1.0, 0.0);
-        return;
-      }
+      // Base color from accumulated fluid density or soft translucent core
+      vec3 finalCol = alphaAcc > 0.002 ? (colAcc / max(alphaAcc, 0.001)) : u_c2;
 
-      // Normalize color by accumulated density
-      vec3 finalCol = colAcc / max(alphaAcc, 0.001);
-
-      // Smooth circular mask multiplication to guarantee a clean circular silhouette
-      alphaAcc *= outerEdge;
-
-      // Soft Specular Highlight on top-right (tactile frosted glass depth)
+      // 3D Normal for specular sheen
       float z = sqrt(max(0.0, circleR * circleR - r * r));
-      vec3 normal = normalize(vec3(uv.x, uv.y, z));
-      vec3 lightDir = normalize(vec3(0.42, 0.56, 0.72));
+      vec3 normal = normalize(vec3(uv.x, uv.y, z * 1.5));
+      vec3 lightDir = normalize(vec3(0.40, 0.60, 0.70));
       vec3 viewDir = vec3(0.0, 0.0, 1.0);
       vec3 halfVec = normalize(lightDir + viewDir);
-      float spec = pow(max(0.0, dot(normal, halfVec)), 20.0) * 0.24;
+
+      // =========================================================================
+      // ULTRA-FINE HAIRLINE CIRCLE BOUNDARY (Very Thin ~1px Line in Theme Color):
+      // Clean, razor-thin perimeter line that crisply outlines the circle
+      // without any thick or blurry halo bands.
+      // =========================================================================
+      float rimRadius = circleR - 0.004;
+      float distToRim = abs(r - rimRadius);
+      // Extremely sharp Gaussian drop-off for a razor-thin ~1px hairline stroke
+      float thinLine = exp(-distToRim * distToRim * 48000.0);
+
+      // Subtle directional light glint along the top arc
+      float rimGlintDir = max(0.0, dot(normal.xy, normalize(vec2(0.42, 0.68))));
+      float hairlineGlint = pow(rimGlintDir, 3.0) * thinLine;
+
+      // Palette theme color for the very thin boundary line
+      vec3 lineColor = mix(u_c4, u_c3, 0.65);
+      vec3 lineGlowCol = mix(lineColor, u_c1, hairlineGlint * 0.75);
+
+      // Blend the razor-thin line onto the edge
+      finalCol = mix(finalCol, lineGlowCol, thinLine * 0.90);
+      finalCol += u_c1 * hairlineGlint * 0.40;
+
+      // General surface specular highlight
+      float spec = pow(max(0.0, dot(normal, halfVec)), 22.0) * 0.22;
       finalCol += vec3(spec);
 
-      // Soft Fresnel Rim Lighting along the outer glass perimeter
-      float fresnel = pow(1.0 - max(0.0, normal.z), 2.8);
-      finalCol = mix(finalCol, u_c1, fresnel * 0.45);
+      // Ensure the thin line has clean alpha
+      alphaAcc = max(alphaAcc * outerEdge, thinLine * 0.95 * outerEdge);
 
-      // Tactile Editorial Film Grain / Dither Texture (Paper-matte finish)
-      // State-calibrated film grain texture:
-      // - Listening: High tactile grain (alert acoustic texture, granular effect MORE)
-      // - Speaking: Low grain / silky luminous emission (clean radiant clarity, granular effect LESS)
-      // - Thinking: Soft oceanic wave grain
-      // - Idle: Serene gentle resting grain
-      float stateGrainMult = 0.60;
+      // Tactile Editorial Film Grain / Dither Texture (Smooth & balanced across the surface)
+      float stateGrainMult = 0.55;
       if (u_state < 0.5) {
-        stateGrainMult = 0.60;
+        stateGrainMult = 0.55;
       } else if (u_state < 1.5) {
-        stateGrainMult = 1.45; // Tactile high grain for Listening!
+        stateGrainMult = 0.65; // Balanced, smooth, consistent tactile texture (no noisy spots!)
       } else if (u_state < 2.5) {
-        stateGrainMult = 0.80; // Smooth oceanic wave grain for Thinking
+        stateGrainMult = 0.60;
       } else {
-        stateGrainMult = 0.52; // Low grain / luminous radiant clarity for Speaking!
+        stateGrainMult = 0.50;
       }
       float grain = filmGrain(gl_FragCoord.xy, fract(u_time * 13.71)) * 0.075 * u_grain * stateGrainMult;
       finalCol += grain;
@@ -463,6 +518,7 @@
         turbulence: 0.7,         // Fluid fold amplitude (0.7x default for idle)
         zoom: 1.55,              // Default Idle zoom scale (min clamp: 1.30)
         grain: 0.8,              // Film grain intensity (0.8x default for idle)
+        scale: 1.0,              // Base circle scale multiplier
         showShadow: true,        // Ambient underglow
         interactive: true,       // Hover reactions
         onStateChange: null,
@@ -475,14 +531,13 @@
       this.theme = PALETTES[this.themeKey];
       this.audioLevel = 0.0;
       this.targetAudioLevel = 0.0;
+      this.baseScale = typeof this.options.scale === 'number' ? this.options.scale : 1.0;
+      this.currentScale = this.baseScale;
       this.smoothedZoom = this.options.zoom;
       this.time = 0.0;
       this.isRunning = true;
       this.isPaused = false;
       this.isMicActive = false;
-      this._isPhone = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent)
-        || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
-      this._frameSkip = 0;
 
       // Audio Nodes
       this.audioContext = null;
@@ -519,10 +574,6 @@
       this.wrapper.style.justifyContent = 'center';
       this.wrapper.style.userSelect = 'none';
       this.wrapper.style.touchAction = 'none';
-      this.wrapper.style.borderRadius = '50%';
-      this.wrapper.style.overflow = 'hidden';
-      this.wrapper.style.aspectRatio = '1 / 1';
-      this.wrapper.style.flexShrink = '0';
 
       const size = this.options.size;
       const sizePx = typeof size === 'number' ? `${size}px` : size;
@@ -541,7 +592,9 @@
         this.shadowEl.style.filter = 'blur(34px)';
         this.shadowEl.style.opacity = '0.55';
         this.shadowEl.style.pointerEvents = 'none';
-        this.shadowEl.style.transition = 'background 0.5s ease, transform 0.4s ease, opacity 0.4s ease';
+        this.shadowEl.style.transformOrigin = '50% 50%';
+        this.shadowEl.style.willChange = 'transform, opacity';
+        this.shadowEl.style.transition = 'background 0.5s ease';
         this.wrapper.appendChild(this.shadowEl);
       }
 
@@ -552,9 +605,8 @@
       this.canvas.style.height = '100%';
       this.canvas.style.display = 'block';
       this.canvas.style.borderRadius = '50%';
-      this.canvas.style.aspectRatio = '1 / 1';
-      this.canvas.style.overflow = 'hidden';
-      this.canvas.style.flexShrink = '0';
+      this.canvas.style.transformOrigin = '50% 50%';
+      this.canvas.style.willChange = 'transform';
       this.wrapper.appendChild(this.canvas);
 
       this.container.appendChild(this.wrapper);
@@ -667,12 +719,10 @@
     }
 
     _updateCanvasSize() {
-      const dpr = Math.min(window.devicePixelRatio || 1, this._isPhone ? 1.25 : 2.0);
+      const dpr = Math.min(window.devicePixelRatio || 1, 2.0);
       const rect = this.canvas.getBoundingClientRect();
-      const rawDim = Math.min(rect.width || this.options.size || 300, rect.height || this.options.size || 300);
-      const sizePx = Math.max(16, rawDim);
-      const w = Math.round(sizePx * dpr);
-      const h = w;
+      const w = Math.round((rect.width || this.options.size || 300) * dpr);
+      const h = Math.round((rect.height || this.options.size || 300) * dpr);
 
       if (this.canvas.width !== w || this.canvas.height !== h) {
         this.canvas.width = w;
@@ -712,10 +762,6 @@
       const validStates = ['idle', 'listening', 'thinking', 'speaking'];
       if (!validStates.includes(stateName)) return;
       this.state = stateName;
-      if (stateName === 'idle') {
-        this.targetAudioLevel = 0.0;
-        this.audioLevel = 0.0;
-      }
       if (typeof this.options.onStateChange === 'function') {
         this.options.onStateChange(stateName);
       }
@@ -761,7 +807,20 @@
     }
 
     setZoom(z) {
-      this.options.zoom = Math.max(1.30, Math.min(2.5, z));
+      this.options.zoom = Math.max(0.9, Math.min(2.5, z));
+    }
+
+    setScale(s) {
+      this.baseScale = Math.max(0.2, Math.min(3.0, s));
+    }
+
+    getScale() {
+      return this.currentScale;
+    }
+
+    getLiveDiameterPx() {
+      const baseSize = typeof this.options.size === 'number' ? this.options.size : 300;
+      return Math.round(baseSize * this.currentScale);
     }
 
     setSize(size) {
@@ -826,13 +885,6 @@
       this.isRunning = false;
       this.isPaused = true;
       this.stopMic();
-      if (this.gl) {
-        try {
-          const lose = this.gl.getExtension("WEBGL_lose_context");
-          if (lose) lose.loseContext();
-        } catch {}
-        this.gl = null;
-      }
       if (this.wrapper && this.wrapper.parentNode) {
         this.wrapper.parentNode.removeChild(this.wrapper);
       }
@@ -844,13 +896,6 @@
 
     _renderLoop(now) {
       if (!this.isRunning || this.isPaused) return;
-      if (this._isPhone && this.state === "idle") {
-        this._frameSkip = (this._frameSkip + 1) % 2;
-        if (this._frameSkip === 1) {
-          requestAnimationFrame(this._renderLoop);
-          return;
-        }
-      }
 
       const dt = Math.min((now - this._lastFrameTime) / 1000, 0.1);
       this._lastFrameTime = now;
@@ -882,7 +927,7 @@
 
       if (this.state === 'listening') {
         stateCode = 1.0;
-        stateSpeedMod = 1.70; // Fast, alert cloud movement & lively turbulence ("move and move good")
+        stateSpeedMod = 2.40; // Fast, energetic 3D cloud tumbling in all directions
       } else if (this.state === 'thinking') {
         stateCode = 2.0;
         stateSpeedMod = 1.25; // Rhythmic oceanic wave swells
@@ -894,22 +939,68 @@
         stateSpeedMod = 0.55; // Meditative, tranquil rising & sinking cloud
       }
 
-      // Meditative, slow-mo breathing zoom
-      const breathPhase = this.state === 'idle' ? Math.sin(now * 0.0012) * 0.035 : 0.0;
-      const targetZoom = (this.options.zoom + breathPhase + this.audioLevel * 0.16);
-      this.smoothedZoom += (targetZoom - this.smoothedZoom) * 0.12;
+      // =========================================================================
+      // DYNAMIC LIVE CIRCLE SIZE OSCILLATION (User Calibrated Proportions):
+      // Baseline 200px nominal ratio:
+      // - Idle: steady at 1.0x (200px)
+      // - Thinking: steady at 0.90x (180px)
+      // - Listening: fast dynamic back-and-forth movement between 0.75x (150px)
+      //   and 0.80x (160px) ("back and forth, back and forth and very fast")
+      // - Speaking: dynamic speech pulse between 0.90x (180px) and 1.05x (210px),
+      //   expanding up to 1.15x+ on vocal energy ("come back to become bigger and bigger")
+      // =========================================================================
+      const zoomRatio = (this.options.zoom && this.options.zoom > 0) ? (this.options.zoom / 1.55) : 1.0;
+      let stateScaleTarget = 1.0;
+
+      if (this.state === 'listening') {
+        // Fast, lively back-and-forth oscillation between 150px (0.75x) and 160px (0.80x)
+        const listenFlutter = (0.5 + 0.5 * Math.sin(now * 0.0095)) * 0.052;
+        const voiceJitter = this.audioLevel * 0.035 * Math.sin(now * 0.024);
+        stateScaleTarget = 0.75 + listenFlutter + voiceJitter;
+      } else if (this.state === 'speaking') {
+        // Dynamic vocal cadence expanding between 180px (0.90x) and 210px (1.05x),
+        // blooming up to ~230px (1.15x) on audio bursts
+        const speakCycle = (0.5 + 0.5 * Math.sin(now * 0.0055));
+        const vocalBurst = this.audioLevel * 0.12;
+        stateScaleTarget = 0.90 + speakCycle * 0.15 + vocalBurst;
+      } else if (this.state === 'thinking') {
+        // Steady intermediate resting position at 180px (0.90x)
+        stateScaleTarget = 0.90;
+      } else {
+        // Steady idle baseline size at 200px (1.0x)
+        stateScaleTarget = 1.0;
+      }
+
+      const finalTargetScale = this.baseScale * zoomRatio * stateScaleTarget;
+
+      // Dynamic easing: fast tracking in listening mode, graceful swell in speaking
+      const lerpSpeed = this.state === 'listening' ? 14.0 : 5.5;
+      const scaleLerpFactor = 1.0 - Math.exp(-dt * lerpSpeed);
+      this.currentScale += (finalTargetScale - this.currentScale) * scaleLerpFactor;
+
+      // Apply circle size scale to the canvas
+      if (this.canvas) {
+        this.canvas.style.transform = `scale(${this.currentScale.toFixed(4)})`;
+      }
+
+      // Synchronize ambient underglow shadow scale & opacity
+      if (this.shadowEl) {
+        const shadowScale = this.currentScale * (1.0 + this.audioLevel * 0.18);
+        const shadowOpacity = this.state === 'listening' ? 0.44 : (0.55 + this.audioLevel * 0.35);
+        this.shadowEl.style.transform = `scale(${shadowScale.toFixed(4)})`;
+        this.shadowEl.style.opacity = shadowOpacity.toFixed(2);
+      }
+
+      if (typeof this.options.onScaleChange === 'function') {
+        this.options.onScaleChange(this.currentScale, this.getLiveDiameterPx());
+      }
+
+      // Internal shader zoom stays calibrated
+      this.smoothedZoom = this.options.zoom;
 
       // Advance time with dynamic audio acceleration
       const speedMultiplier = this.options.speed * stateSpeedMod * (1.0 + this.audioLevel * 2.2);
       this.time += dt * speedMultiplier;
-
-      // Update ambient shadow pulsation
-      if (this.shadowEl) {
-        const shadowScale = 1.0 + this.audioLevel * 0.22;
-        const shadowOpacity = 0.55 + this.audioLevel * 0.35;
-        this.shadowEl.style.transform = `scale(${shadowScale})`;
-        this.shadowEl.style.opacity = shadowOpacity.toFixed(2);
-      }
 
       // Render
       if (this.gl && !this.use2DFallback) {

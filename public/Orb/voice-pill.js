@@ -319,14 +319,16 @@
         // User instruction: "in listening it should not be looking down, always up!"
         this.targetLookX = 0;
         this.targetLookY = -0.80; // Looking up curiously
+        this.blinkTimer = 1.0; // Blinks after every 1 second in listening mode!
         this.statusMark = null;
         this._hasSpokenInTurn = false;
         this._lastSpokeTime = performance.now();
       } else if (newState === 'thinking') {
         this.alertPerkTimer = 0;
         this.alertSpeakingTimer = 0;
-        this.targetLookX = 0.58;
-        this.targetLookY = -0.78; // Pondering look upwards to the corner
+        this.thinkingWinkTimer = 3.5 + Math.random() * 1.0; // Playful wink during long thinking!
+        this.targetLookX = 0.48;
+        this.targetLookY = -0.72; // Pondering look upwards to the corner
         this.statusMark = null; // No outside circulating dots!
       } else if (newState === 'speaking') {
         this.alertPerkTimer = 0;
@@ -646,7 +648,7 @@
       if (this.blinkTimer <= 0 && !this.isBlinking && !this.isWinking && this.happyFlashTimer <= 0) {
         this.isBlinking = true;
         this.blinkProgress = 0;
-        this.blinkTimer = 2.6 + Math.random() * 3.5;
+        this.blinkTimer = this.state === 'listening' ? 1.0 : (2.5 + Math.random() * 3.0);
       }
 
       if (this.isBlinking || this.isWinking) {
@@ -655,6 +657,9 @@
           this.isBlinking = false;
           this.isWinking = false;
           this.blinkProgress = 0;
+          if (this.state === 'listening') {
+            this.blinkTimer = 1.0; // Blinks after every 1 second in listening mode!
+          }
         }
       }
 
@@ -746,6 +751,16 @@
         this.bodySquashY = 1.04;
         this.targetBodyTilt = 0;
 
+      } else if (this.expression === 'thinking') {
+        this.targetLookX = 0.48;
+        this.targetLookY = -0.72;
+        lScaleY = 1.08;
+        lScaleX = 1.02;
+        rScaleY = 0.86;
+        rScaleX = 1.04;
+        this.targetBodyTilt = 0.08;
+        this.hoverOffsetY = 0;
+
       } else if (this.expression === 'question') {
         lScaleY = 1.35;
         lScaleX = 1.15;
@@ -825,24 +840,32 @@
       } else if (this.state === 'thinking') {
         // =========================================================================
         // PONDER THINKING MODE:
-        // - "ponder when thinking" (zero floating outside dots)
-        // - Deep pondering look upwards into the corner
-        // - Asymmetric ponder brow: one eye thoughtfully squinted, one focused
-        // - Thoughtful head tilt and slow contemplative gaze sway
+        // - "ponder when thinking"
+        // - Contemplative gaze upwards to corner with slow drift
+        // - Both eyes remain clear, well-formed, and open (NEVER shut or thin)
+        // - Subtle inquisitive asymmetry and gentle head tilt
         // =========================================================================
         const t = this.time;
-        // Pondering look upwards to corner, with slow contemplative drift
-        this.targetLookX = 0.58 + Math.sin(t * 1.2) * 0.08;
-        this.targetLookY = -0.78 + Math.cos(t * 0.8) * 0.05;
+        this.targetLookX = 0.48 + Math.sin(t * 1.0) * 0.06;
+        this.targetLookY = -0.72 + Math.cos(t * 0.7) * 0.05;
 
-        // Thoughtful ponder squint: right eye squinted in calculation, left focused
-        lScaleY = 1.15;
-        lScaleX = 0.98;
-        rScaleY = 0.48; // contemplative squint
-        rScaleX = 1.08;
+        // Long thinking wink: if pondering takes more than ~3.5s, trigger a playful wink and return to ponder!
+        if (this.thinkingWinkTimer !== undefined) {
+          this.thinkingWinkTimer -= dt;
+          if (this.thinkingWinkTimer <= 0 && !this.isWinking && !this.isBlinking) {
+            this.triggerWink();
+            this.thinkingWinkTimer = 4.5 + Math.random() * 2.0; // Next wink if still pondering
+          }
+        }
 
-        this.targetBodyTilt = 0.07 + Math.sin(t * 1.4) * 0.02; // contemplative head tilt
-        this.hoverOffsetY = Math.sin(t * 1.6) * 1.4;
+        // Both eyes clearly open and twinkling — no shut or hairline eyes!
+        lScaleY = 1.08;
+        lScaleX = 1.02;
+        rScaleY = 0.86;
+        rScaleX = 1.04;
+
+        this.targetBodyTilt = 0.08 + Math.sin(t * 1.2) * 0.02; // contemplative head tilt
+        this.hoverOffsetY = Math.sin(t * 1.4) * 1.4;
         this.bodySquashX = 1.0;
         this.bodySquashY = 1.0;
 
@@ -958,12 +981,12 @@
             rScaleX = 1.05;
             this.hoverOffsetY = -2.0;
           } else {
-            // Calm, relaxed, resting squint eyes
-            lScaleY = 0.25;
-            rScaleY = 0.25;
-            lScaleX = 1.08;
-            rScaleX = 1.08;
-            this.hoverOffsetY = Math.sin(this.time * 1.5) * 1.5;
+            // Calm, alert, attentive open eyes with gentle breathing float (never asleep!)
+            lScaleY = 1.0;
+            rScaleY = 1.0;
+            lScaleX = 1.0;
+            rScaleX = 1.0;
+            this.hoverOffsetY = Math.sin(this.time * 1.5) * 1.2;
             this.targetBodyTilt = 0;
             this.targetLookX = 0;
             this.targetLookY = 0;
@@ -974,6 +997,18 @@
         }
         this.bodySquashX = 1.0;
         this.bodySquashY = 1.0;
+      }
+
+      // Universal Blinking & Winking Modulation across ALL expressions & states
+      if (this.isBlinking) {
+        const factor = Math.sin(this.blinkProgress);
+        const blinkMult = Math.max(0.08, 1.0 - factor * 0.95);
+        lScaleY *= blinkMult;
+        rScaleY *= blinkMult;
+      } else if (this.isWinking) {
+        const factor = Math.sin(this.blinkProgress);
+        const winkMult = Math.max(0.08, 1.0 - factor * 0.95);
+        rScaleY *= winkMult;
       }
 
       this.leftEyeScaleY = lScaleY;
@@ -1038,10 +1073,10 @@
 
       // -------------------------------------------------------------
       // 1. Draw Pill Body: Pristine Seamless Gradient (ZERO SHADOW!)
-      // Exact pixel alignment with chatbox height
+      // Always an oblong capsule shape
       // -------------------------------------------------------------
       const pillW = w * 0.94;
-      const pillH = h * 0.94;
+      const pillH = h * 0.92;
       const pillR = pillH / 2;
 
       const x0 = -pillW / 2;
@@ -1207,6 +1242,16 @@
           ctx.arc(eyeR * 0.35, -eyeR * 0.35, eyeR * 0.34, 0, Math.PI * 2);
           ctx.fillStyle = '#ffffff';
           ctx.fill();
+        }
+
+        // Pondering eyebrow above the thinking eye for expressive character
+        if ((this.state === 'thinking' || this.expression === 'thinking') && isRight) {
+          ctx.beginPath();
+          ctx.arc(0, -eyeR * 0.9, eyeR * 0.75, Math.PI * 1.15, Math.PI * 1.85, false);
+          ctx.lineWidth = Math.max(1.8, this.height * 0.035);
+          ctx.strokeStyle = eyeColor;
+          ctx.lineCap = 'round';
+          ctx.stroke();
         }
       }
 

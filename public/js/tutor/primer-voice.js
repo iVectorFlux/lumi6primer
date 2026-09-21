@@ -342,11 +342,12 @@
         finished = true;
         if (onEnd) onEnd();
       };
+      const watchdogMs = Math.max(30000, (text ? text.length * 160 : 0) + 15000);
       const watchdog = setTimeout(() => {
         if (generation !== this.generation) return;
         console.warn("[Lumi6 Voice] TTS watchdog — releasing mic");
         endOnce();
-      }, 16000);
+      }, watchdogMs);
       const wrapEnd = () => {
         clearTimeout(watchdog);
         endOnce();
