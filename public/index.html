@@ -443,11 +443,25 @@
         <!-- Sticky Bottom Talk Bar in Talk Mode -->
         <footer class="talk-bottom-bar" id="talkBottomBar">
           <div class="talk-bar-container">
-            <button id="talkModeMicBtn" class="talk-mic-btn" type="button" aria-label="Tap to talk" title="Tap to talk with Lumi">
+            <button id="talkModeMicBtn" class="talk-mic-btn" type="button" aria-label="Tap to talk with Lumi">
+              <span class="talk-mic-tooltip" id="talkMicTooltip" aria-hidden="true">Tap to talk with Lumi</span>
+              <span class="talk-mic-waves waves-left" aria-hidden="true">
+                <span class="wave-line w1"></span>
+                <span class="wave-line w2"></span>
+              </span>
               <span id="talkVoiceOrb" class="talk-voice-orb" aria-hidden="true"></span>
+              <span class="talk-mic-waves waves-right" aria-hidden="true">
+                <span class="wave-line w1"></span>
+                <span class="wave-line w2"></span>
+              </span>
             </button>
             <form id="talkModeForm" class="talk-input-form">
               <textarea id="talkModeTextInput" class="talk-input-field" rows="1" placeholder="Ask a question or share a thought…" autocomplete="off" enterkeyhint="send"></textarea>
+              <button id="talkModeStopBtn" class="talk-stop-recording-btn" type="button" aria-label="Stop listening" title="Stop listening" hidden>
+                <span class="stop-btn-circle">
+                  <span class="stop-btn-square"></span>
+                </span>
+              </button>
               <button id="talkModeSendBtn" class="talk-send-action-btn" type="submit" aria-label="Send">
                 <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.2"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
               </button>

@@ -898,7 +898,7 @@ body.mode-sim-active .topbar-edit-actions { display: none; }
   display: flex !important;
   flex-wrap: nowrap !important;
   align-items: center !important;
-  gap: 10px !important;
+  gap: 12px !important;
   width: 100%;
   max-width: 720px;
   margin: 0 auto;
@@ -915,7 +915,7 @@ body.mode-sim-active .topbar-edit-actions { display: none; }
   max-width: 68px !important;
   max-height: 44px !important;
   aspect-ratio: auto !important;
-  overflow: hidden !important;
+  overflow: visible !important;
   padding: 0 !important;
   border: 0 !important;
   border-radius: 980px !important;
@@ -925,15 +925,15 @@ body.mode-sim-active .topbar-edit-actions { display: none; }
   appearance: none;
   -webkit-appearance: none;
   position: relative !important;
-  margin: 0 !important;
+  margin: 0 4px !important;
   align-self: center !important;
   cursor: pointer;
-  transition: transform 0.18s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.18s ease;
+  transition: transform 0.18s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 .talk-mic-btn:hover {
   background: transparent !important;
-  box-shadow: 0 0 0 3px rgba(109, 92, 255, 0.22) !important;
-  transform: scale(1.05) !important;
+  box-shadow: none !important;
+  transform: scale(1.04) !important;
 }
 .talk-mic-btn.primer-listening,
 .talk-mic-btn.primer-holding,
@@ -942,6 +942,108 @@ body.mode-sim-active .topbar-edit-actions { display: none; }
   background: transparent !important;
   box-shadow: none !important;
   animation: none !important;
+}
+
+/* ── Pill Hover Tooltip (Positioned Above) ── */
+.talk-mic-tooltip {
+  position: absolute;
+  bottom: calc(100% + 11px);
+  left: 50%;
+  transform: translateX(-50%) translateY(4px);
+  padding: 6px 13px;
+  background: rgba(15, 23, 42, 0.94);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  color: #ffffff;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  white-space: nowrap;
+  border-radius: 999px;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.28), 0 0 0 1px rgba(255, 255, 255, 0.12);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.2s cubic-bezier(0.16, 1, 0.3, 1), transform 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  z-index: 1000;
+}
+.talk-mic-tooltip::after {
+  content: "";
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  border: 5px solid transparent;
+  border-top-color: rgba(15, 23, 42, 0.94);
+}
+.talk-mic-btn:hover:not(.primer-listening) .talk-mic-tooltip {
+  opacity: 1;
+  transform: translateX(-50%) translateY(0);
+}
+.talk-mic-btn.primer-listening .talk-mic-tooltip {
+  opacity: 0 !important;
+  display: none !important;
+}
+
+/* ── Pill Listening Sound Waves (Flanking Left & Right: 2 subtle lines) ── */
+.talk-mic-waves {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  display: flex;
+  align-items: center;
+  gap: 2.5px;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.18s ease;
+  z-index: 2;
+}
+.talk-mic-waves.waves-left {
+  right: calc(100% + 2px);
+  flex-direction: row-reverse;
+}
+.talk-mic-waves.waves-right {
+  left: calc(100% + 2px);
+  flex-direction: row;
+}
+.talk-mic-waves .wave-line {
+  display: block;
+  width: 2.5px;
+  border-radius: 999px;
+  background: linear-gradient(180deg, #a78bfa 0%, #6366f1 100%);
+  transform-origin: center;
+  transition: opacity 0.2s ease, transform 0.2s ease;
+}
+.talk-mic-waves .wave-line.w1 { height: 16px; opacity: 0.9; }
+.talk-mic-waves .wave-line.w2 { height: 10px; opacity: 0.6; }
+
+/* Show waves on hover only when idle; remove completely when listening */
+.talk-mic-btn:hover:not(.primer-listening) .talk-mic-waves {
+  opacity: 1;
+}
+.talk-mic-btn.primer-listening .talk-mic-waves {
+  opacity: 0 !important;
+  display: none !important;
+}
+
+@keyframes listeningWavePulse {
+  0% { transform: scaleY(0.7); opacity: 0.55; }
+  50% { transform: scaleY(1.25); opacity: 1; }
+  100% { transform: scaleY(0.8); opacity: 0.7; }
+}
+
+.talk-mic-btn:hover:not(.primer-listening) .wave-line.w1 {
+  animation: listeningWavePulse 0.85s ease-in-out infinite alternate;
+}
+.talk-mic-btn:hover:not(.primer-listening) .wave-line.w2 {
+  animation: listeningWavePulse 0.85s ease-in-out 0.2s infinite alternate;
+}
+
+/* Touch devices (mobile): no sticky hover tooltips or phantom wave bars */
+@media (hover: none) {
+  .talk-mic-tooltip,
+  .talk-mic-waves {
+    display: none !important;
+  }
 }
 
 .talk-input-form {
@@ -993,6 +1095,55 @@ body.mode-sim-active .topbar-edit-actions { display: none; }
   overflow-y: auto;
 }
 .talk-input-field::placeholder { color: var(--tertiary) !important; }
+
+/* ── Stop Recording Button (Circle with Square) ── */
+.talk-stop-recording-btn {
+  display: grid !important;
+  place-items: center !important;
+  flex: 0 0 36px !important;
+  width: 36px !important;
+  height: 36px !important;
+  min-width: 36px !important;
+  min-height: 36px !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  border: 0 !important;
+  border-radius: 50% !important;
+  background: rgba(239, 68, 68, 0.12) !important;
+  cursor: pointer;
+  align-self: center !important;
+  transition: transform 0.16s ease, background 0.16s ease;
+  position: relative;
+}
+.talk-stop-recording-btn[hidden] {
+  display: none !important;
+}
+.talk-stop-recording-btn:hover {
+  background: rgba(239, 68, 68, 0.22) !important;
+  transform: scale(1.06);
+}
+.stop-btn-circle {
+  display: grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: #ef4444;
+  box-shadow: 0 2px 8px rgba(239, 68, 68, 0.4);
+  animation: recordingPulse 1.4s ease-in-out infinite;
+}
+.stop-btn-square {
+  width: 10px;
+  height: 10px;
+  background: #ffffff;
+  border-radius: 2.5px;
+}
+@keyframes recordingPulse {
+  0% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.5); }
+  70% { box-shadow: 0 0 0 6px rgba(239, 68, 68, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); }
+}
+
 .talk-send-action-btn {
   display: grid !important;
   place-items: center !important;

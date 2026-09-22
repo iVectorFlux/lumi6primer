@@ -890,6 +890,16 @@
       if (talkMic) this.bindMicTriggers(talkMic);
       this.bindTalkBox();
 
+      const stopRecordingBtn = document.getElementById("talkModeStopBtn");
+      if (stopRecordingBtn && !stopRecordingBtn._boundStop) {
+        stopRecordingBtn._boundStop = true;
+        stopRecordingBtn.addEventListener("click", (e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          this.stopDictation();
+        });
+      }
+
       if (this.elements.stopBtn) {
         this.elements.stopBtn.onclick = (e) => {
           e.preventDefault();
@@ -1024,15 +1034,26 @@
         btn.classList.remove("primer-listening", "primer-speaking", "primer-processing", "primer-holding");
         if (stateName) btn.classList.add(`primer-${stateName}`);
       });
+      const isListening = stateName === "listening" || stateName === "holding";
       if (mic) {
-        mic.setAttribute("aria-label", stateName === "speaking" ? "Lumi6 is speaking" : stateName === "processing" ? "Lumi6 is thinking" : stateName === "listening" ? "Listening — tap to send" : "Tap to talk");
+        mic.setAttribute("aria-label", stateName === "speaking" ? "Lumi6 is speaking" : stateName === "processing" ? "Lumi6 is thinking" : isListening ? "Listening — tap to stop" : "Tap to talk with Lumi");
+      }
+      const stopRecordingBtn = document.getElementById("talkModeStopBtn");
+      const tooltip = document.getElementById("talkMicTooltip");
+      if (stopRecordingBtn) {
+        stopRecordingBtn.hidden = !isListening;
+        if (isListening) stopRecordingBtn.removeAttribute("hidden");
+        else stopRecordingBtn.setAttribute("hidden", "hidden");
+      }
+      if (tooltip) {
+        tooltip.textContent = isListening ? "Listening — tap to stop" : "Tap to talk with Lumi";
       }
       if (window.Lumi6Orb && typeof window.Lumi6Orb.setTalkState === "function") {
         const orbState = stateName === "speaking"
           ? "speaking"
           : stateName === "processing"
             ? "thinking"
-            : stateName === "listening" || stateName === "holding"
+            : isListening
               ? "listening"
               : "idle";
         window.Lumi6Orb.setTalkState(orbState);

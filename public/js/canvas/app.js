@@ -13852,6 +13852,15 @@ User writes "Show air quality for Tokyo", names a place, and points to an empty 
     window.primerVoice.bindMicTriggers(talkMic);
   }
 
+  const talkStopBtn = document.querySelector("#talkModeStopBtn");
+  talkStopBtn?.addEventListener("click", (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (window.primerVoice && typeof window.primerVoice.stopDictation === "function") {
+      window.primerVoice.stopDictation();
+    }
+  });
+
   document.getElementById("talkPlaygroundClose")?.addEventListener("click", closeTalkPlayground);
   document.getElementById("talkPlayground")?.addEventListener("click", (e) => {
     if (e.target.id === "talkPlayground" || e.target.id === "talkPlaygroundScroll" || e.target.classList.contains("talk-playground-scale")) {
