@@ -4934,7 +4934,6 @@ body.sidebar-collapsed .sidebar-recents { display: none; }
 }
 #modeTalkBtn.active { background: var(--blue-soft); color: #5846e8; }
 #modeDrawBtn.active { background: var(--board-soft); color: #c93400; }
-#modeSimBtn.active { background: var(--blue-soft); color: #5846e8; }
 
 .sidebar-recents {
   display: flex;
@@ -6093,8 +6092,7 @@ iframe.talk-lesson-pill {
 
 @media (max-width: 900px) {
   :root { --sidebar-width: 0px; }
-  body.mode-talk-active .mode-switch,
-  body.mode-sim-active .mode-switch { display: inline-flex !important; }
+  body.mode-talk-active .mode-switch { display: inline-flex !important; }
   body.mode-draw-active .mode-switch { display: none !important; }
   .mode-switch-btn { padding: 4px 8px; font-size: 12px; }
   .sidebar-nav { display: flex; }

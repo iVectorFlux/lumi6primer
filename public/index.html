@@ -53,15 +53,11 @@
       <nav class="sidebar-nav" aria-label="Main navigation">
         <button class="nav-item active" id="modeTalkBtn" type="button" aria-pressed="true" data-mode="talk">
           <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/><line x1="9" y1="9" x2="15" y2="9"/><line x1="9" y1="13" x2="13" y2="13"/></svg>
-          <span>Talk</span>
+          <span>Chat</span>
         </button>
         <button class="nav-item" id="modeDrawBtn" type="button" aria-pressed="false" data-mode="draw">
           <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 3v18"/></svg>
           <span>Board</span>
-        </button>
-        <button class="nav-item" id="modeSimBtn" type="button" aria-pressed="false" data-mode="sim">
-          <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg>
-          <span>Explore</span>
         </button>
       </nav>
 
@@ -98,7 +94,7 @@
             <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/></svg>
           </button>
           <div class="doc-title-area">
-            <h1 class="doc-title" id="docTitleHeading">Talk</h1>
+            <h1 class="doc-title" id="docTitleHeading">Chat</h1>
             <span class="doc-name" id="currentDocName" hidden>New board</span>
           </div>
         </div>
@@ -184,9 +180,8 @@
 
         <div class="topbar-right">
           <div class="mode-switch" role="tablist" aria-label="Mode">
-            <button id="topbarModeTalkBtn" class="mode-switch-btn active" type="button" aria-pressed="true" data-mode="talk">Talk</button>
+            <button id="topbarModeTalkBtn" class="mode-switch-btn active" type="button" aria-pressed="true" data-mode="talk">Chat</button>
             <button id="topbarModeDrawBtn" class="mode-switch-btn" type="button" aria-pressed="false" data-mode="draw">Board</button>
-            <button id="topbarModeSimBtn" class="mode-switch-btn" type="button" aria-pressed="false" data-mode="sim">Explore</button>
           </div>
           <!-- File Actions -->
           <span class="topbar-actions" id="canvasFileActions">
@@ -468,16 +463,6 @@
             </form>
           </div>
         </footer>
-      </div>
-
-      <div id="simModeWorkspace" class="sim-mode-workspace" hidden>
-        <div class="talk-scroll-area sim-scroll-area" id="simScrollArea">
-          <div class="talk-container">
-            <main class="sim-feed" id="simFeed">
-              <p class="sim-feed-status">Loading interactives…</p>
-            </main>
-          </div>
-        </div>
       </div>
 
     </div><!-- /center-area -->

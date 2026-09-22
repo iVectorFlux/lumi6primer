@@ -13169,8 +13169,9 @@ User writes "Show air quality for Tokyo", names a place, and points to an empty 
   }
 
   function normalizeAppMode(mode) {
-    if (mode === "talk" || mode === "sim" || mode === "draw") return mode;
-    return "draw";
+    if (mode === "talk" || mode === "chat") return "talk";
+    if (mode === "draw" || mode === "board") return "draw";
+    return "talk";
   }
 
   function setAppViewMode(mode, updateUrl = true) {
@@ -13179,15 +13180,13 @@ User writes "Show air quality for Tokyo", names a place, and points to an empty 
     currentAppViewMode = next;
     const drawBtns = document.querySelectorAll("#modeDrawBtn, #topbarModeDrawBtn");
     const talkBtns = document.querySelectorAll("#modeTalkBtn, #topbarModeTalkBtn");
-    const simBtns = document.querySelectorAll("#modeSimBtn, #topbarModeSimBtn");
     const canvasWorkspace = document.querySelector(".canvas-workspace");
     const talkWorkspace = document.querySelector("#talkModeWorkspace");
-    const simWorkspace = document.querySelector("#simModeWorkspace");
     const docTitle = document.querySelector("#docTitleHeading");
     const hideBoard = currentAppViewMode !== "draw";
 
     document.body.classList.toggle("mode-talk-active", currentAppViewMode === "talk");
-    document.body.classList.toggle("mode-sim-active", currentAppViewMode === "sim");
+    document.body.classList.remove("mode-sim-active");
     document.body.classList.toggle("mode-draw-active", currentAppViewMode === "draw");
 
     drawBtns.forEach(btn => {
@@ -13198,17 +13197,11 @@ User writes "Show air quality for Tokyo", names a place, and points to an empty 
       btn.classList.toggle("active", currentAppViewMode === "talk");
       btn.setAttribute("aria-pressed", String(currentAppViewMode === "talk"));
     });
-    simBtns.forEach(btn => {
-      btn.classList.toggle("active", currentAppViewMode === "sim");
-      btn.setAttribute("aria-pressed", String(currentAppViewMode === "sim"));
-    });
 
     if (docTitle) {
       docTitle.textContent = currentAppViewMode === "talk"
-        ? "Talk Mode"
-        : currentAppViewMode === "sim"
-          ? "SIM"
-          : "Whiteboard";
+        ? "Chat"
+        : "Whiteboard";
     }
 
     if (canvasWorkspace) {
@@ -13219,16 +13212,12 @@ User writes "Show air quality for Tokyo", names a place, and points to an empty 
       talkWorkspace.hidden = currentAppViewMode !== "talk";
       talkWorkspace.style.display = currentAppViewMode === "talk" ? "flex" : "none";
     }
-    if (simWorkspace) {
-      simWorkspace.hidden = currentAppViewMode !== "sim";
-      simWorkspace.style.display = currentAppViewMode === "sim" ? "flex" : "none";
-    }
 
     if (updateUrl && window.history?.replaceState) {
       try {
         const url = new URL(window.location.href);
-        if (currentAppViewMode === "talk" || currentAppViewMode === "sim") {
-          url.searchParams.set("mode", currentAppViewMode);
+        if (currentAppViewMode === "talk") {
+          url.searchParams.set("mode", "chat");
         } else {
           url.searchParams.delete("mode");
         }
@@ -13258,9 +13247,6 @@ User writes "Show air quality for Tokyo", names a place, and points to an empty 
         window.primerVoice.warmupMic();
       }
       syncTalkModeFeed({ scroll: true });
-    } else if (currentAppViewMode === "sim") {
-      if (typeof window.hideTalkWait === "function") window.hideTalkWait();
-      loadSimCatalog();
     } else {
       closeTalkPlayground();
       render();
@@ -13842,10 +13828,8 @@ User writes "Show air quality for Tokyo", names a place, and points to an empty 
 
   bindModeBtn("#modeDrawBtn", "draw");
   bindModeBtn("#modeTalkBtn", "talk");
-  bindModeBtn("#modeSimBtn", "sim");
   bindModeBtn("#topbarModeDrawBtn", "draw");
   bindModeBtn("#topbarModeTalkBtn", "talk");
-  bindModeBtn("#topbarModeSimBtn", "sim");
 
   const talkMic = document.querySelector("#talkModeMicBtn");
   if (talkMic && window.primerVoice && typeof window.primerVoice.bindMicTriggers === "function") {
@@ -13985,7 +13969,7 @@ User writes "Show air quality for Tokyo", names a place, and points to an empty 
     const urlParams = new URLSearchParams(window.location.search);
     const hash = String(window.location.hash || "").toLowerCase();
     const requested = String(urlParams.get("mode") || hash.replace("#", "") || "").toLowerCase();
-    const initialMode = requested === "draw" || requested === "sim" || requested === "talk" ? requested : "talk";
+    const initialMode = requested === "draw" || requested === "board" ? "draw" : "talk";
     setAppViewMode(initialMode, false);
   } catch {
     setAppViewMode("talk", false);
