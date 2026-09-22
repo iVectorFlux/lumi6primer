@@ -483,6 +483,14 @@ button,
     max-height: 140px;
     padding: 0;
     overflow-y: auto;
+    scrollbar-width: none !important;
+    -ms-overflow-style: none !important;
+  }
+
+  .talk-input-field::-webkit-scrollbar {
+    display: none !important;
+    width: 0 !important;
+    height: 0 !important;
   }
 
   .talk-send-action-btn {

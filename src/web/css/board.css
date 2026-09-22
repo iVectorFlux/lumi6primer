@@ -2537,10 +2537,20 @@ iframe.talk-lesson-pill {
   height: 22px;
   overflow-y: hidden;
   padding: 0;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.talk-input-field::-webkit-scrollbar {
+  display: none;
+  width: 0;
+  height: 0;
 }
 
 .talk-input-field.is-multiline {
   overflow-y: auto;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
 }
 
 .talk-input-field::placeholder {

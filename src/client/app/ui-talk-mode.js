@@ -1029,9 +1029,9 @@
       return;
     }
     input.style.height = "auto";
-    const next = Math.min(Math.max(input.scrollHeight, 24), 160);
+    const next = Math.min(Math.max(input.scrollHeight, 22), 160);
     input.style.height = `${next}px`;
-    const isMulti = next > 32;
+    const isMulti = next > 30;
     input.classList.toggle("is-multiline", isMulti);
     form?.classList.toggle("is-multiline", isMulti);
     if (micBtn) micBtn.style.alignSelf = isMulti ? "flex-end" : "";
