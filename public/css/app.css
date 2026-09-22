@@ -5586,7 +5586,7 @@ body.mode-sim-active .topbar-edit-actions { display: none; }
 .talk-bar-container {
   display: flex !important;
   flex-wrap: nowrap !important;
-  align-items: center !important;
+  align-items: flex-end !important;
   gap: 12px !important;
   width: 100%;
   max-width: 720px;
@@ -5615,7 +5615,7 @@ body.mode-sim-active .topbar-edit-actions { display: none; }
   -webkit-appearance: none;
   position: relative !important;
   margin: 0 4px !important;
-  align-self: center !important;
+  align-self: flex-end !important;
   cursor: pointer;
   transition: transform 0.18s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
@@ -5755,7 +5755,7 @@ body.mode-sim-active .topbar-edit-actions { display: none; }
 .talk-input-form.is-multiline {
   border-radius: 20px !important;
   align-items: flex-end !important;
-  padding: 6px 6px 6px 16px !important;
+  padding: 4px 4px 4px 16px !important;
 }
 .talk-input-field,
 .talk-input-form input,
@@ -5769,7 +5769,7 @@ body.mode-sim-active .topbar-edit-actions { display: none; }
   min-height: 24px !important;
   max-height: 160px;
   margin: 0 !important;
-  padding: 0 !important;
+  padding: 6px 0 !important;
   border: 0 !important;
   border-radius: 0 !important;
   outline: none !important;
@@ -5784,6 +5784,17 @@ body.mode-sim-active .topbar-edit-actions { display: none; }
   overflow-y: auto;
 }
 .talk-input-field::placeholder { color: var(--tertiary) !important; }
+
+/* ── Composer Action Buttons Container ── */
+.talk-composer-actions {
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 8px !important;
+  flex: 0 0 auto !important;
+  align-self: flex-end !important;
+  margin-bottom: 0px !important;
+  height: 36px !important;
+}
 
 /* ── Stop Recording Button (Circle with Square) ── */
 .talk-stop-recording-btn {
@@ -5839,7 +5850,9 @@ body.mode-sim-active .topbar-edit-actions { display: none; }
   flex: 0 0 36px !important;
   width: 36px !important;
   height: 36px !important;
-  margin: 0;
+  min-width: 36px !important;
+  min-height: 36px !important;
+  margin: 0 !important;
   padding: 0 !important;
   border: 0 !important;
   border-radius: 50% !important;
@@ -5847,7 +5860,7 @@ body.mode-sim-active .topbar-edit-actions { display: none; }
   color: #fff !important;
   appearance: none;
   -webkit-appearance: none;
-  align-self: flex-end !important;
+  align-self: center !important;
   margin-bottom: 0px !important;
 }
 .talk-send-action-btn svg {
