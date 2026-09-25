@@ -1,0 +1,230 @@
+{
+  "book": {
+    "id": "grade-5-science-evs",
+    "title": "Our Wondrous World (Class 5 EVS)",
+    "gradeNumber": 5,
+    "gradeLabel": "Grade 5",
+    "subject": "Science EVS",
+    "curriculum": "NCERT",
+    "nationalEducationPolicy": "NEP 2020 Aligned (Preparatory Stage)",
+    "publisher": "National Council of Educational Research and Training, New Delhi, India",
+    "edition": "Reprint 2026-27",
+    "unit": {
+      "id": "unit-sci-5-02",
+      "book_id": "grade-5-science-evs",
+      "unit_number": 2,
+      "title": "Food, Nutrition and School Life",
+      "about_unit": "Investigates balanced diets, human digestive systems, traditional crops/millets, waste segregation, composting, and creating green school ecosystems.",
+      "banner_image_url": "https://kpigixuqpigjremowykx.supabase.co/storage/v1/object/public/curriculum-assets/grade-5/science/ch03/images/balanced_diet_thali_nutrition.jpg",
+      "facilitation_guide": [
+        {
+          "headline": "Nutritional Rainbow",
+          "text": "Analyze daily meal thalis for protein, energy, vitamins, and roughage."
+        },
+        {
+          "headline": "Compost Audits",
+          "text": "Set up practical wet and dry waste segregation bins in school."
+        }
+      ]
+    }
+  },
+  "chapter": {
+    "id": "ch-sci-5-04",
+    "number": 4,
+    "title": "Green School",
+    "tagline": "Building eco-friendly schools through waste segregation, composting, herbal gardens, and resource conservation",
+    "overview": "Walking to school together, Aasha and Mohit dream of making their school a true 'Green School'. With teachers and classmates, they launch waste segregation (green vs. blue bins), dig an organic compost pit, set up bird baths and herbal patches, and conduct simple energy audits.",
+    "sourcePdf": "public/Books/Science EVS/eeev104.pdf",
+    "totalPages": 18,
+    "characters": [
+      {
+        "name": "Aasha",
+        "role": "Eco-Leader",
+        "avatar": "\ud83d\udc67"
+      },
+      {
+        "name": "Mohit",
+        "role": "Junior Gardener",
+        "avatar": "\ud83d\udc66"
+      },
+      {
+        "name": "Principal",
+        "role": "Green Mentor",
+        "avatar": "\ud83d\udc68\u200d\ud83c\udfeb"
+      }
+    ],
+    "sections": [
+      {
+        "id": "sec-sci-5-04-01",
+        "lessonNumber": 1,
+        "title": "Aasha and Mohit's Vision: What Makes a School Green?",
+        "subtitle": "Transforming learning spaces into living environmental laboratories",
+        "storyNarrative": {
+          "characterName": "Aasha",
+          "dialogue": "Mohit, our school shouldn't just be concrete walls! What if every classroom had fresh air, flower pots for butterflies, and zero waste dumped on the ground?"
+        },
+        "concept": {
+          "heading": "Principles of an Eco-School",
+          "keyRule": "An eco-friendly school reduces ecological footprint through conscious waste handling, green cover, and energy conservation."
+        },
+        "image": "https://kpigixuqpigjremowykx.supabase.co/storage/v1/object/public/curriculum-assets/grade-5/science/ch04/images/aasha_mohit_walking_school.jpg",
+        "blocks": [
+          {
+            "type": "story_narrative",
+            "title": "Story Scene: Aasha's Dialogue",
+            "content": {
+              "speaker": "Aasha",
+              "dialogue": "Mohit, our school shouldn't just be concrete walls! What if every classroom had fresh air, flower pots for butterflies, and zero waste dumped on the ground?"
+            }
+          },
+          {
+            "type": "concept",
+            "title": "Principles of an Eco-School",
+            "content": {
+              "heading": "Principles of an Eco-School",
+              "explanation": "An eco-friendly school reduces ecological footprint through conscious waste handling, green cover, and energy conservation.",
+              "keyRule": "An eco-friendly school reduces ecological footprint through conscious waste handling, green cover, and energy conservation."
+            }
+          },
+          {
+            "type": "image_diagram",
+            "title": "Aasha and Mohit's Vision: What Makes a School Green?",
+            "content": {
+              "fileName": "aasha_mohit_walking_school.jpg",
+              "publicUrl": "https://kpigixuqpigjremowykx.supabase.co/storage/v1/object/public/curriculum-assets/grade-5/science/ch04/images/aasha_mohit_walking_school.jpg",
+              "caption": "Aasha and Mohit's Vision: What Makes a School Green?"
+            }
+          }
+        ],
+        "questions": [
+          {
+            "id": "qst-sec-sci-5-04-01-01",
+            "prompt": "Which of the following is a key feature of a Green School?",
+            "options": [
+              "Throwing all trash together",
+              "Planting native trees and segregating waste",
+              "Keeping lights on when empty",
+              "Cutting down garden trees"
+            ],
+            "correctAnswer": "Planting native trees and segregating waste",
+            "hint": "Green schools foster active ecological practices."
+          }
+        ]
+      },
+      {
+        "id": "sec-sci-5-04-02",
+        "lessonNumber": 2,
+        "title": "Waste Segregation & The Compost Pit",
+        "subtitle": "Wet biodegradable waste vs. dry recyclable materials",
+        "storyNarrative": {
+          "characterName": "Mohit",
+          "dialogue": "Fruit peels and fallen leaves go into the Green Bin for our compost pit! Plastic wrappers and paper go into the Blue Bin for recycling!"
+        },
+        "concept": {
+          "heading": "Biodegradation & Aerobic Composting",
+          "keyRule": "Organic wet waste decomposes naturally with soil microbes into dark, nutrient-rich compost fertilizer for garden plants."
+        },
+        "image": "https://kpigixuqpigjremowykx.supabase.co/storage/v1/object/public/curriculum-assets/grade-5/science/ch04/images/waste_segregation_compost_pit.jpg",
+        "blocks": [
+          {
+            "type": "story_narrative",
+            "title": "Story Scene: Mohit's Dialogue",
+            "content": {
+              "speaker": "Mohit",
+              "dialogue": "Fruit peels and fallen leaves go into the Green Bin for our compost pit! Plastic wrappers and paper go into the Blue Bin for recycling!"
+            }
+          },
+          {
+            "type": "concept",
+            "title": "Biodegradation & Aerobic Composting",
+            "content": {
+              "heading": "Biodegradation & Aerobic Composting",
+              "explanation": "Organic wet waste decomposes naturally with soil microbes into dark, nutrient-rich compost fertilizer for garden plants.",
+              "keyRule": "Organic wet waste decomposes naturally with soil microbes into dark, nutrient-rich compost fertilizer for garden plants."
+            }
+          },
+          {
+            "type": "image_diagram",
+            "title": "Waste Segregation & The Compost Pit",
+            "content": {
+              "fileName": "waste_segregation_compost_pit.jpg",
+              "publicUrl": "https://kpigixuqpigjremowykx.supabase.co/storage/v1/object/public/curriculum-assets/grade-5/science/ch04/images/waste_segregation_compost_pit.jpg",
+              "caption": "Waste Segregation & The Compost Pit"
+            }
+          }
+        ],
+        "questions": [
+          {
+            "id": "qst-sec-sci-5-04-02-01",
+            "prompt": "Which of these items belongs in the green compost bin?",
+            "options": [
+              "Banana peels and vegetable scraps",
+              "Plastic chocolate wrapper",
+              "Glass bottle",
+              "Metal safety pin"
+            ],
+            "correctAnswer": "Banana peels and vegetable scraps",
+            "hint": "Organic food matter decomposes into compost."
+          }
+        ]
+      },
+      {
+        "id": "sec-sci-5-04-03",
+        "lessonNumber": 3,
+        "title": "School Herbal Gardens & Habitat for Birds",
+        "subtitle": "Creating biodiversity zones with bird baths and native herbs",
+        "storyNarrative": {
+          "characterName": "Aasha",
+          "dialogue": "We planted Tulsi, Mint, and Aloe Vera in our school garden patch! In the hot afternoon, sparrows and bulbuls bathe happily in our clay water bowl!"
+        },
+        "concept": {
+          "heading": "Microhabitat Creation",
+          "keyRule": "Providing freshwater bird baths and native pollinator-friendly plants restores biodiversity even within compact urban school compounds."
+        },
+        "image": "https://kpigixuqpigjremowykx.supabase.co/storage/v1/object/public/curriculum-assets/grade-5/science/ch04/images/school_herbal_garden_and_birds.jpg",
+        "blocks": [
+          {
+            "type": "story_narrative",
+            "title": "Story Scene: Aasha's Dialogue",
+            "content": {
+              "speaker": "Aasha",
+              "dialogue": "We planted Tulsi, Mint, and Aloe Vera in our school garden patch! In the hot afternoon, sparrows and bulbuls bathe happily in our clay water bowl!"
+            }
+          },
+          {
+            "type": "concept",
+            "title": "Microhabitat Creation",
+            "content": {
+              "heading": "Microhabitat Creation",
+              "explanation": "Providing freshwater bird baths and native pollinator-friendly plants restores biodiversity even within compact urban school compounds.",
+              "keyRule": "Providing freshwater bird baths and native pollinator-friendly plants restores biodiversity even within compact urban school compounds."
+            }
+          },
+          {
+            "type": "image_diagram",
+            "title": "School Herbal Gardens & Habitat for Birds",
+            "content": {
+              "fileName": "school_herbal_garden_and_birds.jpg",
+              "publicUrl": "https://kpigixuqpigjremowykx.supabase.co/storage/v1/object/public/curriculum-assets/grade-5/science/ch04/images/school_herbal_garden_and_birds.jpg",
+              "caption": "School Herbal Gardens & Habitat for Birds"
+            }
+          }
+        ],
+        "questions": [
+          {
+            "id": "qst-sec-sci-5-04-03-01",
+            "prompt": "Why should shallow clay bowls of water be kept in school gardens during summer?",
+            "options": [
+              "To breed mosquitoes",
+              "To provide safe drinking and cooling water for birds",
+              "To make mud puddles",
+              "To evaporate completely"
+            ],
+            "correctAnswer": "To provide safe drinking and cooling water for birds",
+            "hint": "Urban birds suffer severe dehydration in hot summers."
+          }
+        ]
+      }
+    ]
+  }
+}

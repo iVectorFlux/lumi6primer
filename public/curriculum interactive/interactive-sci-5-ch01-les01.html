@@ -1,0 +1,1324 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Water and land ratio — InteractEd</title>
+  
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    body {
+      background-color: #f8fafc;
+      color: #0f172a;
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 16px 20px 48px;
+    }
+
+    /* Top Navigation Mode Switcher */
+    .top-header {
+      width: 100%;
+      max-width: 1280px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 20px;
+    }
+
+    .view-switcher {
+      display: flex;
+      align-items: center;
+      background: #ffffff;
+      border: 1px solid #e2e8f0;
+      padding: 4px;
+      border-radius: 12px;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+      gap: 4px;
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+
+    .switch-btn {
+      background: none;
+      border: none;
+      color: #64748b;
+      padding: 7px 14px;
+      font-size: 12.5px;
+      font-weight: 600;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: all 0.15s ease;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-family: 'Inter', sans-serif;
+    }
+
+    .switch-btn:hover {
+      background: #f1f5f9;
+      color: #0f172a;
+    }
+
+    .switch-btn.active {
+      background: #0f172a;
+      color: #ffffff;
+    }
+
+    /* Showcase Layout */
+    .showcase-container {
+      width: 100%;
+      max-width: 1280px;
+      display: flex;
+      flex-direction: column;
+      gap: 28px;
+      align-items: center;
+    }
+
+    .showcase-grid-top {
+      width: 100%;
+      display: flex;
+      justify-content: center;
+      align-items: flex-start;
+      gap: 32px;
+      flex-wrap: wrap;
+    }
+
+    .view-section {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .section-title {
+      font-size: 13px;
+      font-weight: 600;
+      color: #64748b;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .section-badge {
+      background: #e2e8f0;
+      color: #334155;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 11px;
+      padding: 2px 6px;
+      border-radius: 4px;
+      font-weight: 500;
+    }
+
+    /* 1. Pill Mode — Standard In-Chat Capsule */
+    .chat-pill-card {
+      width: 100%;
+      max-width: 350px;
+      background: #ffffff;
+      border: 1px solid #e2e8f0;
+      border-radius: 18px;
+      padding: 8px 14px 8px 10px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+      cursor: pointer;
+      transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+      user-select: none;
+    }
+
+    .chat-pill-card:hover {
+      border-color: #2563eb;
+      transform: translateY(-2px);
+      box-shadow: 0 8px 24px rgba(37, 99, 235, 0.12);
+    }
+
+    .pill-icon-box {
+      width: 76px;
+      height: 52px;
+      border-radius: 12px;
+      background: #f8fafc;
+      border: 1px solid #f1f5f9;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      overflow: hidden;
+      position: relative;
+    }
+
+    .pill-icon-box canvas {
+      width: 100%;
+      height: 100%;
+      display: block;
+    }
+
+    .pill-content {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+      min-width: 0;
+    }
+
+    .pill-title {
+      font-size: 17px;
+      font-weight: 600;
+      color: #0f172a;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .pill-subtitle {
+      font-size: 11px;
+      color: #64748b;
+      font-family: 'JetBrains Mono', monospace;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .pill-expand-btn {
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      background: #f8fafc;
+      border: 1px solid #e2e8f0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #334155;
+      flex-shrink: 0;
+      transition: all 0.15s ease;
+    }
+
+    .chat-pill-card:hover .pill-expand-btn {
+      background: #2563eb;
+      color: #ffffff;
+      border-color: #2563eb;
+    }
+
+    /* 2. Mobile Phone Frame (375x540) */
+    .mobile-phone-frame {
+      width: 100%;
+      max-width: 375px;
+      height: 540px;
+      background: #ffffff;
+      border: 1px solid #e2e8f0;
+      border-radius: 26px;
+      box-shadow: 0 12px 32px rgba(0, 0, 0, 0.08);
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      position: relative;
+    }
+
+    .phone-stage {
+      height: 285px;
+      min-height: 285px;
+      width: 100%;
+      background: radial-gradient(circle at 50% 48%, #ffffff 0%, #f8fafc 55%, #edf2f7 100%);
+      position: relative;
+      border-bottom: 1px solid #f1f5f9;
+      touch-action: none;
+    }
+
+    .phone-stage canvas {
+      width: 100%;
+      height: 100%;
+      display: block;
+    }
+
+    .phone-controls {
+      height: 255px;
+      width: 100%;
+      background: #ffffff;
+      padding: 12px 16px 14px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      overflow: hidden;
+    }
+
+    /* 3. Desktop Split Card (880x490) */
+    #sectionDesktop {
+      width: 100%;
+      max-width: 880px;
+    }
+
+    .desktop-card {
+      width: 100%;
+      max-width: 880px;
+      height: 490px;
+      background: #ffffff;
+      border: 1px solid #e2e8f0;
+      border-radius: 24px;
+      box-shadow: 0 8px 24px -4px rgba(0, 0, 0, 0.06);
+      display: grid;
+      grid-template-columns: 370px 1fr;
+      overflow: hidden;
+    }
+
+    .math-panel {
+      width: 370px;
+      padding: 22px 24px;
+      background: #ffffff;
+      border-right: 1px solid #f1f5f9;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      overflow: hidden;
+    }
+
+    .stage-panel {
+      width: 100%;
+      height: 100%;
+      background: radial-gradient(circle at 50% 48%, #ffffff 0%, #f8fafc 55%, #edf2f7 100%);
+      position: relative;
+      overflow: hidden;
+      touch-action: none;
+    }
+
+    .stage-panel canvas {
+      width: 100%;
+      height: 100%;
+      display: block;
+    }
+
+    /* Floating Canvas Pill Badge */
+    .canvas-overlay-pill {
+      position: absolute;
+      top: 12px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: rgba(255, 255, 255, 0.94);
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+      border: 1px solid rgba(226, 232, 240, 0.9);
+      border-radius: 999px;
+      padding: 4px 12px;
+      font-size: 11px;
+      font-weight: 600;
+      color: #0f172a;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.04);
+      pointer-events: none;
+      white-space: nowrap;
+      z-index: 10;
+    }
+
+    .status-dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: #2563eb;
+      box-shadow: 0 0 6px rgba(37, 99, 235, 0.6);
+    }
+
+    /* Audience Switch */
+    .audience-switch {
+      display: inline-flex;
+      background: #f1f5f9;
+      padding: 2.5px;
+      border-radius: 8px;
+      gap: 2px;
+      margin-bottom: 6px;
+      align-self: flex-start;
+    }
+
+    .aud-btn {
+      background: none;
+      border: none;
+      font-size: 10.5px;
+      font-weight: 600;
+      color: #64748b;
+      padding: 3px 9px;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: all 0.15s ease;
+      font-family: 'Inter', sans-serif;
+    }
+
+    .aud-btn.active {
+      background: #ffffff;
+      color: #0f172a;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+    }
+
+    /* Hero Concept */
+    .hero-concept {
+      margin-bottom: 4px;
+    }
+
+    .hero-title {
+      font-size: 17px;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+      color: #0f172a;
+      margin-bottom: 1px;
+    }
+
+    .hero-sub {
+      font-size: 11.5px;
+      color: #64748b;
+      line-height: 1.35;
+    }
+
+    /* 10-Part Block Ratio Strip (Tactile for Junior Mode) */
+    .ratio-block-strip {
+      display: flex;
+      gap: 3px;
+      height: 14px;
+      margin: 6px 0 3px;
+    }
+
+    .ratio-block {
+      flex: 1;
+      border-radius: 3px;
+      transition: background 0.15s ease;
+    }
+
+    .ratio-block.water {
+      background: #0284c7;
+    }
+
+    .ratio-block.land {
+      background: #10b981;
+    }
+
+    .ratio-block-caption {
+      display: flex;
+      justify-content: space-between;
+      font-size: 10.5px;
+      font-weight: 600;
+      margin-bottom: 6px;
+    }
+
+    .ratio-caption-water {
+      color: #0284c7;
+    }
+
+    .ratio-caption-land {
+      color: #059669;
+    }
+
+    .formula-display {
+      margin: 4px 0 6px;
+      font-size: 13.5px;
+      color: #0f172a;
+      display: none;
+    }
+
+    .formula-display.active {
+      display: block;
+    }
+
+    /* Dynamic Takeaway Card */
+    .takeaway-card {
+      background: #f8fafc;
+      border: 1px solid #e2e8f0;
+      border-left: 3.5px solid #2563eb;
+      border-radius: 12px;
+      padding: 8px 12px;
+      margin-bottom: 8px;
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+
+    .takeaway-badge {
+      font-size: 10.5px;
+      font-weight: 600;
+      color: #2563eb;
+      display: flex;
+      align-items: center;
+      gap: 5px;
+    }
+
+    .takeaway-text {
+      font-size: 11.5px;
+      line-height: 1.4;
+      color: #334155;
+    }
+
+    /* Controls Block */
+    .controls-block {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .control-label-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 11.5px;
+      font-weight: 600;
+      color: #334155;
+    }
+
+    .control-value {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 11.5px;
+      color: #2563eb;
+    }
+
+    .slider-track-wrap {
+      height: 34px;
+      display: flex;
+      align-items: center;
+      position: relative;
+    }
+
+    input[type="range"] {
+      -webkit-appearance: none;
+      appearance: none;
+      width: 100%;
+      height: 6px;
+      border-radius: 999px;
+      background: #e2e8f0;
+      outline: none;
+      touch-action: none;
+      cursor: pointer;
+    }
+
+    input[type="range"]::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      width: 22px;
+      height: 22px;
+      border-radius: 50%;
+      background: #2563eb;
+      border: 2.5px solid #ffffff;
+      box-shadow: 0 2px 6px rgba(37, 99, 235, 0.4);
+      transition: transform 0.1s ease;
+      cursor: grab;
+    }
+
+    input[type="range"]::-webkit-slider-thumb:active {
+      transform: scale(1.15);
+      cursor: grabbing;
+    }
+
+    input[type="range"]::-moz-range-thumb {
+      width: 22px;
+      height: 22px;
+      border-radius: 50%;
+      background: #2563eb;
+      border: 2.5px solid #ffffff;
+      box-shadow: 0 2px 6px rgba(37, 99, 235, 0.4);
+      cursor: grab;
+    }
+
+    .preset-pills {
+      display: flex;
+      gap: 5px;
+    }
+
+    .preset-pill {
+      flex: 1;
+      height: 30px;
+      background: #ffffff;
+      border: 1px solid #e2e8f0;
+      border-radius: 8px;
+      font-size: 10.5px;
+      font-weight: 600;
+      color: #475569;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.15s ease;
+      font-family: 'Inter', sans-serif;
+    }
+
+    .preset-pill:hover {
+      background: #f1f5f9;
+      color: #0f172a;
+    }
+
+    .preset-pill.active {
+      background: #0f172a;
+      color: #ffffff;
+      border-color: #0f172a;
+    }
+
+    /* 4. Slide-Over Drawer */
+    .drawer-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(15, 23, 42, 0.4);
+      backdrop-filter: blur(4px);
+      -webkit-backdrop-filter: blur(4px);
+      z-index: 999;
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-end;
+      align-items: center;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.25s ease;
+    }
+
+    .drawer-overlay.active {
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    .drawer-content {
+      width: 100%;
+      max-width: 420px;
+      max-height: 90vh;
+      background: #ffffff;
+      border-radius: 26px 26px 0 0;
+      box-shadow: 0 -8px 32px rgba(0, 0, 0, 0.15);
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      transform: translateY(100%);
+      transition: transform 0.28s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    .drawer-overlay.active .drawer-content {
+      transform: translateY(0);
+    }
+
+    .drawer-handle-bar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 10px 18px 8px;
+      border-bottom: 1px solid #f1f5f9;
+    }
+
+    .drawer-notch {
+      width: 36px;
+      height: 4px;
+      border-radius: 999px;
+      background: #cbd5e1;
+    }
+
+    .drawer-close-btn {
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      background: #f1f5f9;
+      border: none;
+      color: #475569;
+      font-size: 13px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: all 0.15s ease;
+    }
+
+    .drawer-close-btn:hover {
+      background: #e2e8f0;
+      color: #0f172a;
+    }
+
+    .drawer-stage {
+      height: 285px;
+      width: 100%;
+      background: radial-gradient(circle at 50% 48%, #ffffff 0%, #f8fafc 55%, #edf2f7 100%);
+      position: relative;
+      border-bottom: 1px solid #f1f5f9;
+      touch-action: none;
+    }
+
+    .drawer-stage canvas {
+      width: 100%;
+      height: 100%;
+      display: block;
+    }
+
+    .drawer-controls {
+      padding: 12px 18px 18px;
+      background: #ffffff;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    /* MANDATORY Responsive Mobile Guard */
+    @media (max-width: 960px) {
+      body {
+        padding: 12px 14px 32px;
+      }
+      .desktop-card {
+        grid-template-columns: 1fr;
+        height: auto;
+        max-width: 100%;
+      }
+      .desktop-card .stage-panel {
+        height: 285px;
+        order: 1;
+      }
+      .desktop-card .math-panel {
+        order: 2;
+        border-right: none;
+        border-top: 1px solid #f1f5f9;
+        width: 100%;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Top Navigation & View Mode Switcher -->
+  <header class="top-header">
+    <nav class="view-switcher" aria-label="Simulation view switcher">
+      <button class="switch-btn active" id="btnViewAll" onclick="setViewMode('all')">
+        <span>All views</span>
+      </button>
+      <button class="switch-btn" id="btnViewPill" onclick="setViewMode('pill')">
+        <span>Pill mode</span>
+      </button>
+      <button class="switch-btn" id="btnViewPhone" onclick="setViewMode('phone')">
+        <span>Mobile screen</span>
+      </button>
+      <button class="switch-btn" id="btnViewDesktop" onclick="setViewMode('desktop')">
+        <span>Desktop card</span>
+      </button>
+    </nav>
+  </header>
+
+  <!-- Showcase Container -->
+  <main class="showcase-container">
+
+    <!-- Top Grid: Pill Mode + Mobile Frame -->
+    <div class="showcase-grid-top" id="topGrid">
+      
+      <!-- 1. Pill Mode -->
+      <section class="view-section" id="sectionPill">
+        <h2 class="section-title">
+          <span>In-chat capsule</span>
+          <span class="section-badge">Pill</span>
+        </h2>
+        
+        <div class="chat-pill-card" id="chatPill" onclick="openDrawer()" role="button" tabindex="0" aria-label="Open Water and land ratio simulation drawer">
+          <div class="pill-icon-box">
+            <canvas id="pillCanvas" width="152" height="104"></canvas>
+          </div>
+          <div class="pill-content">
+            <div class="pill-title" id="pillTitle">71% water coverage</div>
+            <div class="pill-subtitle" id="pillSubtitle">Earth surface • 29% land</div>
+          </div>
+          <button class="pill-expand-btn" aria-label="Expand simulation">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+              <polyline points="15 3 21 3 21 9"></polyline>
+              <polyline points="9 21 3 21 3 15"></polyline>
+              <line x1="21" y1="3" x2="14" y2="10"></line>
+              <line x1="3" y1="21" x2="10" y2="14"></line>
+            </svg>
+          </button>
+        </div>
+      </section>
+
+      <!-- 2. Mobile Phone Frame (375x540) -->
+      <section class="view-section" id="sectionPhone">
+        <h2 class="section-title">
+          <span>Mobile view</span>
+          <span class="section-badge">375 × 540</span>
+        </h2>
+
+        <div class="mobile-phone-frame">
+          <div class="phone-stage" id="phoneStage">
+            <div class="canvas-overlay-pill">
+              <span class="status-dot"></span>
+              <span id="phonePillText">71% water • 29% land</span>
+            </div>
+            <canvas id="phoneCanvas"></canvas>
+          </div>
+
+          <div class="phone-controls">
+            <div>
+              <div class="audience-switch">
+                <button class="aud-btn active" id="phoneAudJunior" onclick="setAudience('junior')">Junior</button>
+                <button class="aud-btn" id="phoneAudStem" onclick="setAudience('stem')">STEM</button>
+              </div>
+              <div class="hero-concept">
+                <h1 class="hero-title">Water and land ratio</h1>
+                <p class="hero-sub" id="phoneHeroSub">Our blue planet</p>
+              </div>
+              
+              <!-- 10-Part Block Ratio Grid (Tactile for Junior) -->
+              <div class="ratio-block-strip" id="phoneBlockStrip"></div>
+              <div class="ratio-block-caption" id="phoneBlockCaption">
+                <span class="ratio-caption-water" id="phoneCaptionWater">🌊 7 parts water</span>
+                <span class="ratio-caption-land" id="phoneCaptionLand">🏔️ 3 parts land</span>
+              </div>
+              
+              <div class="formula-display" id="phoneFormula"></div>
+            </div>
+
+            <div class="takeaway-card">
+              <div class="takeaway-badge">
+                <span class="status-dot"></span>
+                <span>Live insight</span>
+              </div>
+              <p class="takeaway-text" id="phoneTakeawayText">Over 7 out of 10 parts of Earth are covered by blue oceans.</p>
+            </div>
+
+            <div class="controls-block">
+              <div class="control-label-row">
+                <span>Ocean water level</span>
+                <span class="control-value" id="phoneSliderVal">71%</span>
+              </div>
+              <div class="slider-track-wrap">
+                <input type="range" id="phoneSlider" min="20" max="95" value="71" oninput="onSliderInput(this.value)">
+              </div>
+              <div class="preset-pills">
+                <button class="preset-pill" onclick="setWaterLevel(50)">50% equal</button>
+                <button class="preset-pill active" id="phonePresetEarth" onclick="setWaterLevel(71)">71% Earth</button>
+                <button class="preset-pill" onclick="setWaterLevel(85)">85% ocean</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+    </div>
+
+    <!-- 3. Desktop Mode (880x490 Split Card) -->
+    <section class="view-section" id="sectionDesktop">
+      <h2 class="section-title">
+        <span>Desktop split card</span>
+        <span class="section-badge">880 × 490</span>
+      </h2>
+
+      <div class="desktop-card">
+        <div class="math-panel">
+          <div>
+            <div class="audience-switch">
+              <button class="aud-btn active" id="deskAudJunior" onclick="setAudience('junior')">Junior</button>
+              <button class="aud-btn" id="deskAudStem" onclick="setAudience('stem')">STEM</button>
+            </div>
+            <div class="hero-concept">
+              <h1 class="hero-title">Water and land ratio</h1>
+              <p class="hero-sub" id="deskHeroSub">Global blue planet surface coverage</p>
+            </div>
+
+            <!-- 10-Part Block Ratio Grid (Tactile for Junior) -->
+            <div class="ratio-block-strip" id="deskBlockStrip"></div>
+            <div class="ratio-block-caption" id="deskBlockCaption">
+              <span class="ratio-caption-water" id="deskCaptionWater">🌊 7 parts water</span>
+              <span class="ratio-caption-land" id="deskCaptionLand">🏔️ 3 parts land</span>
+            </div>
+
+            <div class="formula-display" id="deskFormula"></div>
+          </div>
+
+          <div class="takeaway-card">
+            <div class="takeaway-badge">
+              <span class="status-dot"></span>
+              <span>Live insight</span>
+            </div>
+            <p class="takeaway-text" id="deskTakeawayText">Over 7 out of 10 parts of Earth are covered by blue oceans. Land covers just 29%.</p>
+          </div>
+
+          <div class="controls-block">
+            <div class="control-label-row">
+              <span>Ocean water level</span>
+              <span class="control-value" id="deskSliderVal">71%</span>
+            </div>
+            <div class="slider-track-wrap">
+              <input type="range" id="deskSlider" min="20" max="95" value="71" oninput="onSliderInput(this.value)">
+            </div>
+            <div class="preset-pills">
+              <button class="preset-pill" onclick="setWaterLevel(50)">50% equal</button>
+              <button class="preset-pill active" id="deskPresetEarth" onclick="setWaterLevel(71)">71% Earth</button>
+              <button class="preset-pill" onclick="setWaterLevel(85)">85% ocean</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="stage-panel" id="deskStage">
+          <div class="canvas-overlay-pill">
+            <span class="status-dot"></span>
+            <span id="deskPillText">71% water • 29% land</span>
+          </div>
+          <canvas id="deskCanvas"></canvas>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- 4. Slide-Over Bottom Drawer -->
+  <div class="drawer-overlay" id="drawerOverlay" onclick="closeDrawer(event)">
+    <div class="drawer-content" onclick="event.stopPropagation()">
+      <div class="drawer-handle-bar">
+        <div style="width: 28px;"></div>
+        <div class="drawer-notch"></div>
+        <button class="drawer-close-btn" onclick="closeDrawer()" aria-label="Close drawer">✕</button>
+      </div>
+
+      <div class="drawer-stage" id="drawerStage">
+        <div class="canvas-overlay-pill">
+          <span class="status-dot"></span>
+          <span id="drawerPillText">71% water • 29% land</span>
+        </div>
+        <canvas id="drawerCanvas"></canvas>
+      </div>
+
+      <div class="drawer-controls">
+        <div class="audience-switch">
+          <button class="aud-btn active" id="drawerAudJunior" onclick="setAudience('junior')">Junior</button>
+          <button class="aud-btn" id="drawerAudStem" onclick="setAudience('stem')">STEM</button>
+        </div>
+        <div class="takeaway-card">
+          <div class="takeaway-badge">
+            <span class="status-dot"></span>
+            <span>Live insight</span>
+          </div>
+          <p class="takeaway-text" id="drawerTakeawayText">Over 7 out of 10 parts of Earth are covered by blue oceans.</p>
+        </div>
+        <div class="controls-block">
+          <div class="control-label-row">
+            <span>Ocean water level</span>
+            <span class="control-value" id="drawerSliderVal">71%</span>
+          </div>
+          <div class="slider-track-wrap">
+            <input type="range" id="drawerSlider" min="20" max="95" value="71" oninput="onSliderInput(this.value)">
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // --- State ---
+    let state = {
+      waterPercent: 71,
+      rotationAngle: 0.8,
+      rotationSpeed: 0.005,
+      isDragging: false,
+      dragStartX: 0,
+      dragStartAngle: 0,
+      dragVel: 0,
+      audience: 'junior'
+    };
+
+    // Detailed polygon landmasses: longitude, latitude in radians
+    const continents = [
+      // North America
+      [[-2.2, 0.9], [-1.8, 1.1], [-1.4, 1.0], [-1.1, 0.85], [-1.3, 0.45], [-1.6, 0.3], [-1.9, 0.25], [-2.3, 0.55], [-2.5, 0.9]],
+      // South America
+      [[-1.4, 0.2], [-1.0, 0.1], [-0.8, -0.2], [-0.8, -0.5], [-1.0, -0.85], [-1.2, -0.92], [-1.35, -0.45], [-1.45, 0.1]],
+      // Eurasia & India
+      [[-0.2, 0.9], [0.4, 1.15], [1.2, 1.15], [2.2, 1.1], [2.5, 0.8], [2.1, 0.5], [1.8, 0.35], [1.4, 0.15], [1.3, 0.45], [1.0, 0.4], [0.5, 0.6], [0.0, 0.7]],
+      // Africa
+      [[-0.3, 0.6], [0.5, 0.65], [0.9, 0.2], [0.8, -0.3], [0.5, -0.6], [0.3, -0.45], [-0.2, -0.1], [-0.3, 0.2]],
+      // Australia
+      [[2.0, -0.35], [2.5, -0.35], [2.7, -0.55], [2.5, -0.72], [2.1, -0.65]],
+      // Antarctica
+      [[-3.14, -1.2], [-1.5, -1.25], [0, -1.22], [1.5, -1.25], [3.14, -1.2], [3.14, -1.55], [-3.14, -1.55]]
+    ];
+
+    // --- DOM Elements ---
+    const pillCanvas = document.getElementById('pillCanvas');
+    const phoneCanvas = document.getElementById('phoneCanvas');
+    const deskCanvas = document.getElementById('deskCanvas');
+    const drawerCanvas = document.getElementById('drawerCanvas');
+
+    // --- Build 10-Part Block Strips ---
+    function initBlockStrips() {
+      ['phone', 'desk'].forEach(p => {
+        const strip = document.getElementById(`${p}BlockStrip`);
+        if (!strip) return;
+        strip.innerHTML = '';
+        for (let i = 0; i < 10; i++) {
+          const b = document.createElement('div');
+          b.className = 'ratio-block';
+          b.id = `${p}Block_${i}`;
+          strip.appendChild(b);
+        }
+      });
+    }
+
+    // --- Audience Switch ---
+    function setAudience(mode) {
+      state.audience = mode;
+      document.querySelectorAll('.aud-btn').forEach(btn => {
+        btn.classList.toggle('active', btn.id.toLowerCase().includes(mode));
+      });
+      updateUI();
+    }
+
+    // --- Water Level Control ---
+    function onSliderInput(val) {
+      state.waterPercent = parseInt(val, 10);
+      updateUI();
+    }
+
+    function setWaterLevel(val) {
+      state.waterPercent = val;
+      updateUI();
+    }
+
+    // --- Update Text & UI ---
+    function updateUI() {
+      const wp = state.waterPercent;
+      const lp = 100 - wp;
+      const waterBlocks = Math.round(wp / 10);
+      const landBlocks = 10 - waterBlocks;
+
+      // Update 10-block visual ratio strip
+      ['phone', 'desk'].forEach(p => {
+        for (let i = 0; i < 10; i++) {
+          const el = document.getElementById(`${p}Block_${i}`);
+          if (el) {
+            el.className = 'ratio-block ' + (i < waterBlocks ? 'water' : 'land');
+          }
+        }
+        const capW = document.getElementById(`${p}CaptionWater`);
+        const capL = document.getElementById(`${p}CaptionLand`);
+        if (capW) capW.textContent = `🌊 ${waterBlocks} in 10 parts water`;
+        if (capL) capL.textContent = `🏔️ ${landBlocks} parts land`;
+      });
+
+      // Sliders & Values
+      ['phone', 'desk', 'drawer'].forEach(p => {
+        const slider = document.getElementById(`${p}Slider`);
+        const valSpan = document.getElementById(`${p}SliderVal`);
+        if (slider) slider.value = wp;
+        if (valSpan) valSpan.textContent = `${wp}%`;
+      });
+
+      // Preset pills active state
+      ['phone', 'desk'].forEach(p => {
+        const earthPill = document.getElementById(`${p}PresetEarth`);
+        if (earthPill) {
+          earthPill.classList.toggle('active', wp === 71);
+        }
+      });
+
+      // Floating stage pill badges
+      const statusText = `${wp}% water • ${lp}% land`;
+      ['phone', 'desk', 'drawer'].forEach(p => {
+        const el = document.getElementById(`${p}PillText`);
+        if (el) el.textContent = statusText;
+      });
+
+      // Pill Capsule
+      document.getElementById('pillTitle').textContent = `${wp}% water coverage`;
+      document.getElementById('pillSubtitle').textContent = `Earth surface • ${lp}% land`;
+
+      // Live Takeaway (100% Inter font)
+      let takeaway = '';
+      if (state.audience === 'junior') {
+        if (wp === 71) {
+          takeaway = 'Our Earth is a blue planet! Over 7 out of 10 parts are covered by ocean water, while land is just 3 parts.';
+        } else if (wp < 50) {
+          takeaway = `If ocean level falls to ${wp}%, vast basins dry up and continents connect into a giant land world!`;
+        } else {
+          takeaway = `At ${wp}% ocean coverage, rising waters submerge coastlines, leaving only mountain peaks as islands!`;
+        }
+      } else {
+        if (wp === 71) {
+          takeaway = 'Equilibrium ratio: 361 million km² ocean basin against 149 million km² continental crust stabilizes Earth climate.';
+        } else {
+          takeaway = `Shifting water ratio to ${wp}% alters global albedo and ocean thermal capacity, radically reshaping hydrological balance.`;
+        }
+      }
+      
+      ['phone', 'desk', 'drawer'].forEach(p => {
+        const el = document.getElementById(`${p}TakeawayText`);
+        if (el) el.textContent = takeaway;
+      });
+
+      // STEM Formula Display (Only active in STEM mode)
+      const isStem = state.audience === 'stem';
+      const deskF = document.getElementById('deskFormula');
+      const phoneF = document.getElementById('phoneFormula');
+      const deskStrip = document.getElementById('deskBlockStrip');
+      const deskCap = document.getElementById('deskBlockCaption');
+      const phoneStrip = document.getElementById('phoneBlockStrip');
+      const phoneCap = document.getElementById('phoneBlockCaption');
+
+      [deskStrip, deskCap, phoneStrip, phoneCap].forEach(el => {
+        if (el) el.style.display = isStem ? 'none' : 'flex';
+      });
+
+      [deskF, phoneF].forEach(f => {
+        if (!f) return;
+        f.classList.toggle('active', isStem);
+        if (isStem && window.katex) {
+          const formulaStr = `R_{\\text{water}} = \\frac{A_{\\text{ocean}}}{A_{\\text{total}}} = \\frac{${(wp * 5.1 / 100).toFixed(2)} \\times 10^8}{5.10 \\times 10^8} \\approx ${wp}\\%`;
+          katex.render(formulaStr, f, { throwOnError: false });
+        } else {
+          f.innerHTML = '';
+        }
+      });
+    }
+
+    // --- View Switcher ---
+    function setViewMode(mode) {
+      document.querySelectorAll('.switch-btn').forEach(btn => btn.classList.remove('active'));
+      const activeBtn = document.getElementById('btnView' + mode.charAt(0).toUpperCase() + mode.slice(1));
+      if (activeBtn) activeBtn.classList.add('active');
+
+      const topGrid = document.getElementById('topGrid');
+      const pillSec = document.getElementById('sectionPill');
+      const phoneSec = document.getElementById('sectionPhone');
+      const deskSec = document.getElementById('sectionDesktop');
+
+      if (mode === 'all') {
+        topGrid.style.display = 'flex';
+        pillSec.style.display = 'flex';
+        phoneSec.style.display = 'flex';
+        deskSec.style.display = 'block';
+      } else if (mode === 'pill') {
+        topGrid.style.display = 'flex';
+        pillSec.style.display = 'flex';
+        phoneSec.style.display = 'none';
+        deskSec.style.display = 'none';
+      } else if (mode === 'phone') {
+        topGrid.style.display = 'flex';
+        pillSec.style.display = 'none';
+        phoneSec.style.display = 'flex';
+        deskSec.style.display = 'none';
+      } else if (mode === 'desktop') {
+        topGrid.style.display = 'none';
+        deskSec.style.display = 'block';
+      }
+      setTimeout(resizeCanvases, 50);
+    }
+
+    // --- Drawer Controls ---
+    function openDrawer() {
+      document.getElementById('drawerOverlay').classList.add('active');
+      document.body.style.overflow = 'hidden';
+      setTimeout(resizeCanvases, 60);
+    }
+
+    function closeDrawer(e) {
+      if (e && e.target !== e.currentTarget && !e.target.classList.contains('drawer-close-btn')) return;
+      document.getElementById('drawerOverlay').classList.remove('active');
+      document.body.style.overflow = '';
+    }
+
+    // --- Globe Touch / Mouse Drag Inertia ---
+    function attachGlobeControls(canvas) {
+      let isLocalDown = false;
+      let startX = 0;
+      let lastX = 0;
+
+      function onDown(x) {
+        isLocalDown = true;
+        startX = x;
+        lastX = x;
+        state.isDragging = true;
+        state.dragVel = 0;
+      }
+
+      function onMove(x) {
+        if (!isLocalDown) return;
+        const dx = x - lastX;
+        state.rotationAngle += dx * 0.008;
+        state.dragVel = dx * 0.004;
+        lastX = x;
+      }
+
+      function onUp() {
+        isLocalDown = false;
+        state.isDragging = false;
+      }
+
+      canvas.addEventListener('mousedown', e => onDown(e.clientX));
+      window.addEventListener('mousemove', e => onMove(e.clientX));
+      window.addEventListener('mouseup', onUp);
+
+      canvas.addEventListener('touchstart', e => {
+        if (e.touches.length > 0) onDown(e.touches[0].clientX);
+      }, { passive: true });
+      window.addEventListener('touchmove', e => {
+        if (e.touches.length > 0) onMove(e.touches[0].clientX);
+      }, { passive: true });
+      window.addEventListener('touchend', onUp);
+    }
+
+    attachGlobeControls(phoneCanvas);
+    attachGlobeControls(deskCanvas);
+    attachGlobeControls(drawerCanvas);
+
+    // --- Canvas Resizing ---
+    function resizeCanvases() {
+      const list = [
+        { cv: pillCanvas, w: 76, h: 52 },
+        { cv: phoneCanvas, w: phoneCanvas.parentElement.clientWidth, h: phoneCanvas.parentElement.clientHeight },
+        { cv: deskCanvas, w: deskCanvas.parentElement.clientWidth, h: deskCanvas.parentElement.clientHeight },
+        { cv: drawerCanvas, w: drawerCanvas.parentElement.clientWidth, h: drawerCanvas.parentElement.clientHeight }
+      ];
+
+      const dpr = window.devicePixelRatio || 1;
+      list.forEach(({ cv, w, h }) => {
+        if (!cv || !w || !h) return;
+        if (cv.width !== Math.round(w * dpr) || cv.height !== Math.round(h * dpr)) {
+          cv.width = Math.round(w * dpr);
+          cv.height = Math.round(h * dpr);
+        }
+      });
+    }
+
+    window.addEventListener('resize', resizeCanvases);
+
+    // --- Render Globe ---
+    function renderGlobe(canvas, isMini = false) {
+      if (!canvas) return;
+      const ctx = canvas.getContext('2d');
+      const dpr = window.devicePixelRatio || 1;
+      const w = canvas.width / dpr;
+      const h = canvas.height / dpr;
+
+      ctx.save();
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      ctx.clearRect(0, 0, w, h);
+
+      const cx = w / 2;
+      const cy = h / 2;
+      const r = isMini ? 21 : Math.min(w, h) * 0.38;
+
+      // 1. Atmosphere halo glow
+      const halo = ctx.createRadialGradient(cx, cy, r * 0.85, cx, cy, r * 1.25);
+      halo.addColorStop(0, 'rgba(56, 189, 248, 0.35)');
+      halo.addColorStop(0.7, 'rgba(56, 189, 248, 0.08)');
+      halo.addColorStop(1, 'rgba(56, 189, 248, 0)');
+      ctx.fillStyle = halo;
+      ctx.beginPath();
+      ctx.arc(cx, cy, r * 1.25, 0, Math.PI * 2);
+      ctx.fill();
+
+      // 2. Ocean sphere (clipped)
+      ctx.save();
+      ctx.beginPath();
+      ctx.arc(cx, cy, r, 0, Math.PI * 2);
+      ctx.clip();
+
+      // Ocean base gradient (lit from top-left)
+      const oceanGrad = ctx.createRadialGradient(cx - r * 0.35, cy - r * 0.35, r * 0.1, cx, cy, r);
+      oceanGrad.addColorStop(0, '#38bdf8');
+      oceanGrad.addColorStop(0.4, '#0284c7');
+      oceanGrad.addColorStop(0.85, '#0369a1');
+      oceanGrad.addColorStop(1, '#075985');
+      ctx.fillStyle = oceanGrad;
+      ctx.fill();
+
+      // Graticule lines (latitude & longitude)
+      ctx.strokeStyle = 'rgba(255, 255, 255, 0.15)';
+      ctx.lineWidth = 1;
+      for (let lat = -60; lat <= 60; lat += 30) {
+        const phi = (lat * Math.PI) / 180;
+        const latY = cy - r * Math.sin(phi);
+        const latR = r * Math.cos(phi);
+        ctx.beginPath();
+        ctx.ellipse(cx, latY, latR, latR * 0.25, 0, 0, Math.PI * 2);
+        ctx.stroke();
+      }
+
+      // Land scale modifier based on waterPercent
+      const landScaleMod = 1 + (71 - state.waterPercent) * 0.007;
+
+      // 3. Render Continents
+      const rot = state.rotationAngle;
+      ctx.fillStyle = '#10b981';
+      ctx.strokeStyle = '#059669';
+      ctx.lineWidth = isMini ? 0.7 : 1.2;
+
+      continents.forEach(poly => {
+        let first = true;
+        ctx.beginPath();
+
+        poly.forEach(([lon, lat]) => {
+          const lons = lon + rot;
+          const x3d = Math.cos(lat) * Math.sin(lons);
+          const y3d = -Math.sin(lat);
+          const z3d = Math.cos(lat) * Math.cos(lons);
+
+          if (z3d > -0.15) {
+            const px = cx + x3d * r * landScaleMod;
+            const py = cy + y3d * r * landScaleMod;
+            if (first) {
+              ctx.moveTo(px, py);
+              first = false;
+            } else {
+              ctx.lineTo(px, py);
+            }
+          }
+        });
+
+        if (!first) {
+          ctx.closePath();
+          ctx.fill();
+          if (!isMini) ctx.stroke();
+        }
+      });
+
+      // 4. Specular sphere highlight & rim shadow
+      const rim = ctx.createRadialGradient(cx - r * 0.4, cy - r * 0.4, 0, cx, cy, r);
+      rim.addColorStop(0, 'rgba(255, 255, 255, 0.45)');
+      rim.addColorStop(0.5, 'rgba(255, 255, 255, 0)');
+      rim.addColorStop(0.8, 'rgba(0, 0, 0, 0)');
+      rim.addColorStop(1, 'rgba(3, 105, 161, 0.6)');
+      ctx.fillStyle = rim;
+      ctx.beginPath();
+      ctx.arc(cx, cy, r, 0, Math.PI * 2);
+      ctx.fill();
+
+      ctx.restore(); // end clip
+
+      // Globe boundary ring
+      ctx.strokeStyle = 'rgba(255, 255, 255, 0.6)';
+      ctx.lineWidth = 1.5;
+      ctx.beginPath();
+      ctx.arc(cx, cy, r, 0, Math.PI * 2);
+      ctx.stroke();
+
+      ctx.restore();
+    }
+
+    // --- Animation Loop ---
+    function animate() {
+      if (!state.isDragging) {
+        state.rotationAngle += state.rotationSpeed + state.dragVel;
+        state.dragVel *= 0.95;
+      }
+
+      renderGlobe(pillCanvas, true);
+      renderGlobe(phoneCanvas);
+      renderGlobe(deskCanvas);
+      renderGlobe(drawerCanvas);
+
+      requestAnimationFrame(animate);
+    }
+
+    // --- Initialization ---
+    window.addEventListener('DOMContentLoaded', () => {
+      initBlockStrips();
+      resizeCanvases();
+      updateUI();
+      animate();
+    });
+  </script>
+</body>
+</html>

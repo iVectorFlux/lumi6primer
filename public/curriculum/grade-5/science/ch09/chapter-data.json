@@ -1,0 +1,230 @@
+{
+  "book": {
+    "id": "grade-5-science-evs",
+    "title": "Our Wondrous World (Class 5 EVS)",
+    "gradeNumber": 5,
+    "gradeLabel": "Grade 5",
+    "subject": "Science EVS",
+    "curriculum": "NCERT",
+    "nationalEducationPolicy": "NEP 2020 Aligned (Preparatory Stage)",
+    "publisher": "National Council of Educational Research and Training, New Delhi, India",
+    "edition": "Reprint 2026-27",
+    "unit": {
+      "id": "unit-sci-5-05",
+      "book_id": "grade-5-science-evs",
+      "unit_number": 5,
+      "title": "Landforms, Earth and Space Exploration",
+      "about_unit": "Examines human adaptations to diverse landforms (mountains, deserts, coasts) and expands student horizons to orbital spaceflight and viewing the Earth from space.",
+      "banner_image_url": "https://kpigixuqpigjremowykx.supabase.co/storage/v1/object/public/curriculum-assets/grade-5/science/ch10/images/earth_from_space_iss_view.jpg",
+      "facilitation_guide": [
+        {
+          "headline": "One Humanity Perspective",
+          "text": "Discuss astronaut Shubhanshu Shukla's reflection that national borders vanish from orbit."
+        },
+        {
+          "headline": "Ecological Stewardship",
+          "text": "Frame planet Earth as a fragile spaceship requiring shared care."
+        }
+      ]
+    }
+  },
+  "chapter": {
+    "id": "ch-sci-5-09",
+    "number": 9,
+    "title": "Landforms and Life",
+    "tagline": "Living across mountains, desert sands, fertile plains, and mangrove coasts",
+    "overview": "India's topography varies from rugged Himalayan ridges and arid Thar sands to lush Gangetic plains and coastal deltas. Students investigate how local terrain dictates architectural styles (slanted slate roofs, thick mud insulation, stilt dwellings), terrace farming, and daily human livelihoods.",
+    "sourcePdf": "public/Books/Science EVS/eeev109.pdf",
+    "totalPages": 16,
+    "characters": [
+      {
+        "name": "Sonam",
+        "role": "Himalayan Hill Guide",
+        "avatar": "\ud83d\udc66"
+      },
+      {
+        "name": "Kamla",
+        "role": "Desert Dweller",
+        "avatar": "\ud83d\udc67"
+      },
+      {
+        "name": "Ramu",
+        "role": "Coastal Fisherman",
+        "avatar": "\ud83d\udc68\u200d\ud83e\uddb1"
+      }
+    ],
+    "sections": [
+      {
+        "id": "sec-sci-5-09-01",
+        "lessonNumber": 1,
+        "title": "India's Geographic Panoramas: Diverse Terrains",
+        "subtitle": "Comparing mountains, plateaus, plains, deserts, and coasts",
+        "storyNarrative": {
+          "characterName": "Sonam",
+          "dialogue": "Our country has high snow mountains in the north, broad river plains in the center, a rocky triangular plateau, a golden desert in the west, and two long ocean coastlines!"
+        },
+        "concept": {
+          "heading": "Major Physiographic Divisions",
+          "keyRule": "Himalayan Mountains, Northern Plains, Peninsular Plateau, Indian Desert, Coastal Plains, and Islands."
+        },
+        "image": "https://kpigixuqpigjremowykx.supabase.co/storage/v1/object/public/curriculum-assets/grade-5/science/ch09/images/different_landforms_panorama.jpg",
+        "blocks": [
+          {
+            "type": "story_narrative",
+            "title": "Story Scene: Sonam's Dialogue",
+            "content": {
+              "speaker": "Sonam",
+              "dialogue": "Our country has high snow mountains in the north, broad river plains in the center, a rocky triangular plateau, a golden desert in the west, and two long ocean coastlines!"
+            }
+          },
+          {
+            "type": "concept",
+            "title": "Major Physiographic Divisions",
+            "content": {
+              "heading": "Major Physiographic Divisions",
+              "explanation": "Himalayan Mountains, Northern Plains, Peninsular Plateau, Indian Desert, Coastal Plains, and Islands.",
+              "keyRule": "Himalayan Mountains, Northern Plains, Peninsular Plateau, Indian Desert, Coastal Plains, and Islands."
+            }
+          },
+          {
+            "type": "image_diagram",
+            "title": "India's Geographic Panoramas: Diverse Terrains",
+            "content": {
+              "fileName": "different_landforms_panorama.jpg",
+              "publicUrl": "https://kpigixuqpigjremowykx.supabase.co/storage/v1/object/public/curriculum-assets/grade-5/science/ch09/images/different_landforms_panorama.jpg",
+              "caption": "India's Geographic Panoramas: Diverse Terrains"
+            }
+          }
+        ],
+        "questions": [
+          {
+            "id": "qst-sec-sci-5-09-01-01",
+            "prompt": "Which major landform of India is famous for having extremely fertile soil ideal for farming wheat and rice?",
+            "options": [
+              "Himalayan snow peaks",
+              "The Northern River Plains",
+              "Thar Desert dunes",
+              "Coral Islands"
+            ],
+            "correctAnswer": "The Northern River Plains",
+            "hint": "Silt deposited by Ganga and Brahmaputra creates rich agricultural plains."
+          }
+        ]
+      },
+      {
+        "id": "sec-sci-5-09-02",
+        "lessonNumber": 2,
+        "title": "Mountain Living & Terrace Agriculture",
+        "subtitle": "Carving steps on steep mountain slopes to prevent soil erosion",
+        "storyNarrative": {
+          "characterName": "Sonam",
+          "dialogue": "On our steep Himalayan slopes, rain would wash all soil away! So we carve flat step terraces. Water stays in each step, letting our apples, barley, and potatoes flourish!"
+        },
+        "concept": {
+          "heading": "Terrace Cultivation (Step Farming)",
+          "keyRule": "Carving horizontal terraces slows rainwater runoff, conserves precious topsoil, and creates arable plots on mountain slopes."
+        },
+        "image": "https://kpigixuqpigjremowykx.supabase.co/storage/v1/object/public/curriculum-assets/grade-5/science/ch09/images/mountain_terrace_farming.jpg",
+        "blocks": [
+          {
+            "type": "story_narrative",
+            "title": "Story Scene: Sonam's Dialogue",
+            "content": {
+              "speaker": "Sonam",
+              "dialogue": "On our steep Himalayan slopes, rain would wash all soil away! So we carve flat step terraces. Water stays in each step, letting our apples, barley, and potatoes flourish!"
+            }
+          },
+          {
+            "type": "concept",
+            "title": "Terrace Cultivation (Step Farming)",
+            "content": {
+              "heading": "Terrace Cultivation (Step Farming)",
+              "explanation": "Carving horizontal terraces slows rainwater runoff, conserves precious topsoil, and creates arable plots on mountain slopes.",
+              "keyRule": "Carving horizontal terraces slows rainwater runoff, conserves precious topsoil, and creates arable plots on mountain slopes."
+            }
+          },
+          {
+            "type": "image_diagram",
+            "title": "Mountain Living & Terrace Agriculture",
+            "content": {
+              "fileName": "mountain_terrace_farming.jpg",
+              "publicUrl": "https://kpigixuqpigjremowykx.supabase.co/storage/v1/object/public/curriculum-assets/grade-5/science/ch09/images/mountain_terrace_farming.jpg",
+              "caption": "Mountain Living & Terrace Agriculture"
+            }
+          }
+        ],
+        "questions": [
+          {
+            "id": "qst-sec-sci-5-09-02-01",
+            "prompt": "Why do farmers in mountainous regions practice step (terrace) farming?",
+            "options": [
+              "To make the hill look pretty",
+              "To prevent soil erosion and retain moisture on steep slopes",
+              "To plant under the soil",
+              "To slide down the mountain"
+            ],
+            "correctAnswer": "To prevent soil erosion and retain moisture on steep slopes",
+            "hint": "Step contours stop rapid rainwater runoff."
+          }
+        ]
+      },
+      {
+        "id": "sec-sci-5-09-03",
+        "lessonNumber": 3,
+        "title": "Desert & Coastal Adaptations: Mud Walls & Mangroves",
+        "subtitle": "Thick mud thermal buffers and mangrove tsunami shields",
+        "storyNarrative": {
+          "characterName": "Kamla",
+          "dialogue": "In Rajasthan our mud walls are two feet thick with thatched roofs of thorny bushes\u2014they keep our rooms cool during scorching 48\u00b0C afternoons!"
+        },
+        "concept": {
+          "heading": "Thermal Inertia & Coastal Bio-Shields",
+          "keyRule": "Thick earthen walls delay solar heat transfer. Along coastlines, dense mangrove roots bind tidal soil and buffer storms."
+        },
+        "image": "https://kpigixuqpigjremowykx.supabase.co/storage/v1/object/public/curriculum-assets/grade-5/science/ch09/images/desert_oasis_and_mud_houses.jpg",
+        "blocks": [
+          {
+            "type": "story_narrative",
+            "title": "Story Scene: Kamla's Dialogue",
+            "content": {
+              "speaker": "Kamla",
+              "dialogue": "In Rajasthan our mud walls are two feet thick with thatched roofs of thorny bushes\u2014they keep our rooms cool during scorching 48\u00b0C afternoons!"
+            }
+          },
+          {
+            "type": "concept",
+            "title": "Thermal Inertia & Coastal Bio-Shields",
+            "content": {
+              "heading": "Thermal Inertia & Coastal Bio-Shields",
+              "explanation": "Thick earthen walls delay solar heat transfer. Along coastlines, dense mangrove roots bind tidal soil and buffer storms.",
+              "keyRule": "Thick earthen walls delay solar heat transfer. Along coastlines, dense mangrove roots bind tidal soil and buffer storms."
+            }
+          },
+          {
+            "type": "image_diagram",
+            "title": "Desert & Coastal Adaptations: Mud Walls & Mangroves",
+            "content": {
+              "fileName": "desert_oasis_and_mud_houses.jpg",
+              "publicUrl": "https://kpigixuqpigjremowykx.supabase.co/storage/v1/object/public/curriculum-assets/grade-5/science/ch09/images/desert_oasis_and_mud_houses.jpg",
+              "caption": "Desert & Coastal Adaptations: Mud Walls & Mangroves"
+            }
+          }
+        ],
+        "questions": [
+          {
+            "id": "qst-sec-sci-5-09-03-01",
+            "prompt": "Why are traditional houses in hot deserts built with very thick mud walls?",
+            "options": [
+              "Mud attracts rain clouds",
+              "Thick mud acts as natural thermal insulation, keeping interiors cool",
+              "Mud is heavier than stone",
+              "To paint flowers on them"
+            ],
+            "correctAnswer": "Thick mud acts as natural thermal insulation, keeping interiors cool",
+            "hint": "Earth walls have high thermal mass."
+          }
+        ]
+      }
+    ]
+  }
+}

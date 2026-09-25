@@ -1,0 +1,225 @@
+{
+  "book": {
+    "id": "grade-5-mathematics",
+    "title": "Mathematics (Class 5)",
+    "gradeNumber": 5,
+    "gradeLabel": "Grade 5",
+    "subject": "Mathematics",
+    "curriculum": "NCERT",
+    "nationalEducationPolicy": "NEP 2020 Aligned (Preparatory Stage)",
+    "publisher": "National Council of Educational Research and Training, New Delhi, India",
+    "edition": "Reprint 2026-27",
+    "unit": {
+      "id": "unit-math-5-04",
+      "book_id": "grade-5-mathematics",
+      "unit_number": 4,
+      "title": "Measurement, Scales and Time",
+      "about_unit": "Covers distance measurement (mm to km), weight (grams to kg), capacity (ml to L), perimeter, grid area, and timing with stopwatches.",
+      "banner_image_url": "https://kpigixuqpigjremowykx.supabase.co/storage/v1/object/public/curriculum-assets/grade-5/maths/ch05/images/measuring_units_comparison.png",
+      "facilitation_guide": [
+        {
+          "headline": "Estimation First",
+          "text": "Always prompt learners to estimate before measuring with rulers or balances."
+        },
+        {
+          "headline": "Spatial Grid Area",
+          "text": "Count whole and half square centimetres before introducing formulas."
+        }
+      ]
+    }
+  },
+  "chapter": {
+    "id": "ch-math-5-05",
+    "number": 5,
+    "title": "Far and Near",
+    "tagline": "Mastering measurement units: millimetres, centimetres, metres, and kilometres",
+    "overview": "Cheenu and Deepu learn to choose appropriate metric units for everyday items\u2014from tiny ant legs (mm) to pencil lengths (cm), classroom walls (m), and city distances (km). They read scaled rulers and translate map scales into real distances.",
+    "sourcePdf": "public/Books/Maths/eemm105.pdf",
+    "totalPages": 13,
+    "characters": [
+      {
+        "name": "Cheenu",
+        "role": "Measurement Enthusiast",
+        "avatar": "\ud83d\udc66"
+      },
+      {
+        "name": "Deepu",
+        "role": "Scale Navigator",
+        "avatar": "\ud83d\udc66"
+      }
+    ],
+    "sections": [
+      {
+        "id": "sec-math-5-05-01",
+        "lessonNumber": 1,
+        "title": "Choosing the Appropriate Unit: mm, cm, m, and km",
+        "subtitle": "Selecting the right tool and scale for the object",
+        "storyNarrative": {
+          "characterName": "Cheenu",
+          "dialogue": "Measuring a grain of rice in metres would be so clumsy! We use millimetres for tiny objects and kilometres for highway trips!"
+        },
+        "concept": {
+          "heading": "The Metric Hierarchy of Length",
+          "keyRule": "10 mm = 1 cm; 100 cm = 1 m; 1,000 m = 1 km."
+        },
+        "image": "https://kpigixuqpigjremowykx.supabase.co/storage/v1/object/public/curriculum-assets/grade-5/maths/ch05/images/measuring_units_comparison.png",
+        "blocks": [
+          {
+            "type": "story_narrative",
+            "title": "Story Scene: Cheenu's Dialogue",
+            "content": {
+              "speaker": "Cheenu",
+              "dialogue": "Measuring a grain of rice in metres would be so clumsy! We use millimetres for tiny objects and kilometres for highway trips!"
+            }
+          },
+          {
+            "type": "concept",
+            "title": "The Metric Hierarchy of Length",
+            "content": {
+              "heading": "The Metric Hierarchy of Length",
+              "explanation": "10 mm = 1 cm; 100 cm = 1 m; 1,000 m = 1 km.",
+              "keyRule": "10 mm = 1 cm; 100 cm = 1 m; 1,000 m = 1 km."
+            }
+          },
+          {
+            "type": "image_diagram",
+            "title": "Choosing the Appropriate Unit: mm, cm, m, and km",
+            "content": {
+              "fileName": "measuring_units_comparison.png",
+              "publicUrl": "https://kpigixuqpigjremowykx.supabase.co/storage/v1/object/public/curriculum-assets/grade-5/maths/ch05/images/measuring_units_comparison.png",
+              "caption": "Choosing the Appropriate Unit: mm, cm, m, and km"
+            }
+          }
+        ],
+        "questions": [
+          {
+            "id": "qst-sec-math-5-05-01-01",
+            "prompt": "Which unit is best suited to measure the distance between Mumbai and Pune?",
+            "options": [
+              "Millimetre (mm)",
+              "Centimetre (cm)",
+              "Metre (m)",
+              "Kilometre (km)"
+            ],
+            "correctAnswer": "Kilometre (km)",
+            "hint": "Long geographical distances between cities are measured in km."
+          }
+        ]
+      },
+      {
+        "id": "sec-math-5-05-02",
+        "lessonNumber": 2,
+        "title": "Precision Ruler Readings & Decimals",
+        "subtitle": "Reading fractions of centimetres as millimetres (e.g. 4.7 cm)",
+        "storyNarrative": {
+          "characterName": "Deepu",
+          "dialogue": "My crayon is past 6 cm and reaches 4 small tick marks. That means it is 6 cm and 4 mm, or 6.4 cm!"
+        },
+        "concept": {
+          "heading": "Decimal Subdivisions of Centimetres",
+          "keyRule": "Each millimetre mark is one-tenth (0.1) of a centimetre."
+        },
+        "image": "https://kpigixuqpigjremowykx.supabase.co/storage/v1/object/public/curriculum-assets/grade-5/maths/ch05/images/ruler_and_scale_readings.png",
+        "blocks": [
+          {
+            "type": "story_narrative",
+            "title": "Story Scene: Deepu's Dialogue",
+            "content": {
+              "speaker": "Deepu",
+              "dialogue": "My crayon is past 6 cm and reaches 4 small tick marks. That means it is 6 cm and 4 mm, or 6.4 cm!"
+            }
+          },
+          {
+            "type": "concept",
+            "title": "Decimal Subdivisions of Centimetres",
+            "content": {
+              "heading": "Decimal Subdivisions of Centimetres",
+              "explanation": "Each millimetre mark is one-tenth (0.1) of a centimetre.",
+              "keyRule": "Each millimetre mark is one-tenth (0.1) of a centimetre."
+            }
+          },
+          {
+            "type": "image_diagram",
+            "title": "Precision Ruler Readings & Decimals",
+            "content": {
+              "fileName": "ruler_and_scale_readings.png",
+              "publicUrl": "https://kpigixuqpigjremowykx.supabase.co/storage/v1/object/public/curriculum-assets/grade-5/maths/ch05/images/ruler_and_scale_readings.png",
+              "caption": "Precision Ruler Readings & Decimals"
+            }
+          }
+        ],
+        "questions": [
+          {
+            "id": "qst-sec-math-5-05-02-01",
+            "prompt": "How many centimetres is 35 millimetres?",
+            "options": [
+              "0.35 cm",
+              "3.5 cm",
+              "35 cm",
+              "350 cm"
+            ],
+            "correctAnswer": "3.5 cm",
+            "hint": "Divide by 10 (10 mm = 1 cm)."
+          }
+        ]
+      },
+      {
+        "id": "sec-math-5-05-03",
+        "lessonNumber": 3,
+        "title": "Map Scales: Centimetres on Paper to Kilometres on Ground",
+        "subtitle": "Translating ratio scales (e.g. 1 cm = 100 km)",
+        "storyNarrative": {
+          "characterName": "Cheenu",
+          "dialogue": "On this map, the scale says 1 cm represents 100 km. If the distance between two towns is 3.5 cm on the paper, how far is it in real life?"
+        },
+        "concept": {
+          "heading": "Proportional Scaling",
+          "keyRule": "Real Distance = Map Measurement \u00d7 Scale Factor (3.5 cm \u00d7 100 km/cm = 350 km)."
+        },
+        "image": "https://kpigixuqpigjremowykx.supabase.co/storage/v1/object/public/curriculum-assets/grade-5/maths/ch05/images/map_scale_distances.png",
+        "blocks": [
+          {
+            "type": "story_narrative",
+            "title": "Story Scene: Cheenu's Dialogue",
+            "content": {
+              "speaker": "Cheenu",
+              "dialogue": "On this map, the scale says 1 cm represents 100 km. If the distance between two towns is 3.5 cm on the paper, how far is it in real life?"
+            }
+          },
+          {
+            "type": "concept",
+            "title": "Proportional Scaling",
+            "content": {
+              "heading": "Proportional Scaling",
+              "explanation": "Real Distance = Map Measurement \u00d7 Scale Factor (3.5 cm \u00d7 100 km/cm = 350 km).",
+              "keyRule": "Real Distance = Map Measurement \u00d7 Scale Factor (3.5 cm \u00d7 100 km/cm = 350 km)."
+            }
+          },
+          {
+            "type": "image_diagram",
+            "title": "Map Scales: Centimetres on Paper to Kilometres on Ground",
+            "content": {
+              "fileName": "map_scale_distances.png",
+              "publicUrl": "https://kpigixuqpigjremowykx.supabase.co/storage/v1/object/public/curriculum-assets/grade-5/maths/ch05/images/map_scale_distances.png",
+              "caption": "Map Scales: Centimetres on Paper to Kilometres on Ground"
+            }
+          }
+        ],
+        "questions": [
+          {
+            "id": "qst-sec-math-5-05-03-01",
+            "prompt": "If a map scale is 1 cm = 50 km, how far is a real distance if the map measures 4 cm?",
+            "options": [
+              "100 km",
+              "150 km",
+              "200 km",
+              "250 km"
+            ],
+            "correctAnswer": "200 km",
+            "hint": "4 \u00d7 50 = 200 km."
+          }
+        ]
+      }
+    ]
+  }
+}

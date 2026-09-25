@@ -1,0 +1,225 @@
+{
+  "book": {
+    "id": "grade-5-science-evs",
+    "title": "Our Wondrous World (Class 5 EVS)",
+    "gradeNumber": 5,
+    "gradeLabel": "Grade 5",
+    "subject": "Science EVS",
+    "curriculum": "NCERT",
+    "nationalEducationPolicy": "NEP 2020 Aligned (Preparatory Stage)",
+    "publisher": "National Council of Educational Research and Training, New Delhi, India",
+    "edition": "Reprint 2026-27",
+    "unit": {
+      "id": "unit-sci-5-04",
+      "book_id": "grade-5-science-evs",
+      "unit_number": 4,
+      "title": "Things Around Us & Traditional Crafts",
+      "about_unit": "Engages students in physical science investigations (buoyancy, density, evaporation) and traditional technologies (weaving, charkha, natural dyes).",
+      "banner_image_url": "https://kpigixuqpigjremowykx.supabase.co/storage/v1/object/public/curriculum-assets/grade-5/science/ch07/images/float_or_sink_water_experiment.jpg",
+      "facilitation_guide": [
+        {
+          "headline": "Density Experiments",
+          "text": "Use fresh vs. salt water to float lemons and eggs to observe buoyancy."
+        },
+        {
+          "headline": "Fibre to Fabric",
+          "text": "Unravel raw cotton pods and study how spinning creates continuous yarn."
+        }
+      ]
+    }
+  },
+  "chapter": {
+    "id": "ch-sci-5-07",
+    "number": 7,
+    "title": "Things Around Us",
+    "tagline": "Investigating buoyancy, float-or-sink experiments, density of salt water, and solar salt evaporation",
+    "overview": "Why does a heavy iron ship float while a tiny steel sewing needle sinks immediately? Through kitchen and classroom science experiments, students explore buoyancy, dissolve spoons of salt in water to discover density changes, and learn how the famous Dead Sea lets humans float effortlessly.",
+    "sourcePdf": "public/Books/Science EVS/eeev107.pdf",
+    "totalPages": 19,
+    "characters": [
+      {
+        "name": "Ayesha",
+        "role": "Junior Scientist",
+        "avatar": "\ud83d\udc67"
+      },
+      {
+        "name": "Hamid",
+        "role": "Experiment Partner",
+        "avatar": "\ud83d\udc66"
+      }
+    ],
+    "sections": [
+      {
+        "id": "sec-sci-5-07-01",
+        "lessonNumber": 1,
+        "title": "What Floats, What Sinks? Exploring Buoyancy",
+        "subtitle": "Understanding buoyant force, shape, and surface displacement",
+        "storyNarrative": {
+          "characterName": "Ayesha",
+          "dialogue": "A crumpled ball of aluminum foil sinks, but when we flatten that exact same foil into a wide shallow boat, it floats carrying small pebbles! Shape matters!"
+        },
+        "concept": {
+          "heading": "Archimedes' Buoyancy Principle",
+          "keyRule": "An object floats if its shape displaces an amount of water equal to its own weight before becoming submerged."
+        },
+        "image": "https://kpigixuqpigjremowykx.supabase.co/storage/v1/object/public/curriculum-assets/grade-5/science/ch07/images/float_or_sink_water_experiment.jpg",
+        "blocks": [
+          {
+            "type": "story_narrative",
+            "title": "Story Scene: Ayesha's Dialogue",
+            "content": {
+              "speaker": "Ayesha",
+              "dialogue": "A crumpled ball of aluminum foil sinks, but when we flatten that exact same foil into a wide shallow boat, it floats carrying small pebbles! Shape matters!"
+            }
+          },
+          {
+            "type": "concept",
+            "title": "Archimedes' Buoyancy Principle",
+            "content": {
+              "heading": "Archimedes' Buoyancy Principle",
+              "explanation": "An object floats if its shape displaces an amount of water equal to its own weight before becoming submerged.",
+              "keyRule": "An object floats if its shape displaces an amount of water equal to its own weight before becoming submerged."
+            }
+          },
+          {
+            "type": "image_diagram",
+            "title": "What Floats, What Sinks? Exploring Buoyancy",
+            "content": {
+              "fileName": "float_or_sink_water_experiment.jpg",
+              "publicUrl": "https://kpigixuqpigjremowykx.supabase.co/storage/v1/object/public/curriculum-assets/grade-5/science/ch07/images/float_or_sink_water_experiment.jpg",
+              "caption": "What Floats, What Sinks? Exploring Buoyancy"
+            }
+          }
+        ],
+        "questions": [
+          {
+            "id": "qst-sec-sci-5-07-01-01",
+            "prompt": "Why can a massive iron ship float on the ocean while a small iron nail sinks?",
+            "options": [
+              "The ship is hollow and displaces a huge weight of water",
+              "The ocean is magnetic",
+              "Iron nails are heavier than ships",
+              "Ships are made of wood inside"
+            ],
+            "correctAnswer": "The ship is hollow and displaces a huge weight of water",
+            "hint": "The hollow shape gives the ship a huge buoyant displacement."
+          }
+        ]
+      },
+      {
+        "id": "sec-sci-5-07-02",
+        "lessonNumber": 2,
+        "title": "The Salt Water Mystery: Floating an Egg",
+        "subtitle": "How dissolving solute alters liquid density and buoyant lift",
+        "storyNarrative": {
+          "characterName": "Hamid",
+          "dialogue": "Our fresh egg sank straight to the bottom of the plain water glass. But when Ayesha stirred 4 big spoons of salt into the water, the egg bobbed right up to the top!"
+        },
+        "concept": {
+          "heading": "Liquid Density Enhancement",
+          "keyRule": "Dissolving salt adds mass without significantly increasing volume, increasing the water's density and its upward buoyant force."
+        },
+        "image": "https://kpigixuqpigjremowykx.supabase.co/storage/v1/object/public/curriculum-assets/grade-5/science/ch07/images/salt_water_density_egg_experiment.jpg",
+        "blocks": [
+          {
+            "type": "story_narrative",
+            "title": "Story Scene: Hamid's Dialogue",
+            "content": {
+              "speaker": "Hamid",
+              "dialogue": "Our fresh egg sank straight to the bottom of the plain water glass. But when Ayesha stirred 4 big spoons of salt into the water, the egg bobbed right up to the top!"
+            }
+          },
+          {
+            "type": "concept",
+            "title": "Liquid Density Enhancement",
+            "content": {
+              "heading": "Liquid Density Enhancement",
+              "explanation": "Dissolving salt adds mass without significantly increasing volume, increasing the water's density and its upward buoyant force.",
+              "keyRule": "Dissolving salt adds mass without significantly increasing volume, increasing the water's density and its upward buoyant force."
+            }
+          },
+          {
+            "type": "image_diagram",
+            "title": "The Salt Water Mystery: Floating an Egg",
+            "content": {
+              "fileName": "salt_water_density_egg_experiment.jpg",
+              "publicUrl": "https://kpigixuqpigjremowykx.supabase.co/storage/v1/object/public/curriculum-assets/grade-5/science/ch07/images/salt_water_density_egg_experiment.jpg",
+              "caption": "The Salt Water Mystery: Floating an Egg"
+            }
+          }
+        ],
+        "questions": [
+          {
+            "id": "qst-sec-sci-5-07-02-01",
+            "prompt": "What happens to an egg placed in highly concentrated salt water?",
+            "options": [
+              "It dissolves completely",
+              "It sinks to the bottom",
+              "It floats on the surface",
+              "It cracks open"
+            ],
+            "correctAnswer": "It floats on the surface",
+            "hint": "Dense salt water exerts greater upward buoyant force."
+          }
+        ]
+      },
+      {
+        "id": "sec-sci-5-07-03",
+        "lessonNumber": 3,
+        "title": "The Dead Sea & Solar Salt Pans",
+        "subtitle": "Natural hyper-saline lakes and coastal salt harvesting",
+        "storyNarrative": {
+          "characterName": "Ayesha",
+          "dialogue": "In the Dead Sea, water has about 300 grams of salt in every single litre! A person can lie on their back reading a book without swimming and never sink!"
+        },
+        "concept": {
+          "heading": "Hyper-Salinity & Solar Crystallization",
+          "keyRule": "In coastal salt pans, seawater is trapped in shallow basins; intense sunlight evaporates water, leaving behind crystallized edible salt."
+        },
+        "image": "https://kpigixuqpigjremowykx.supabase.co/storage/v1/object/public/curriculum-assets/grade-5/science/ch07/images/dead_sea_floating_person.jpg",
+        "blocks": [
+          {
+            "type": "story_narrative",
+            "title": "Story Scene: Ayesha's Dialogue",
+            "content": {
+              "speaker": "Ayesha",
+              "dialogue": "In the Dead Sea, water has about 300 grams of salt in every single litre! A person can lie on their back reading a book without swimming and never sink!"
+            }
+          },
+          {
+            "type": "concept",
+            "title": "Hyper-Salinity & Solar Crystallization",
+            "content": {
+              "heading": "Hyper-Salinity & Solar Crystallization",
+              "explanation": "In coastal salt pans, seawater is trapped in shallow basins; intense sunlight evaporates water, leaving behind crystallized edible salt.",
+              "keyRule": "In coastal salt pans, seawater is trapped in shallow basins; intense sunlight evaporates water, leaving behind crystallized edible salt."
+            }
+          },
+          {
+            "type": "image_diagram",
+            "title": "The Dead Sea & Solar Salt Pans",
+            "content": {
+              "fileName": "dead_sea_floating_person.jpg",
+              "publicUrl": "https://kpigixuqpigjremowykx.supabase.co/storage/v1/object/public/curriculum-assets/grade-5/science/ch07/images/dead_sea_floating_person.jpg",
+              "caption": "The Dead Sea & Solar Salt Pans"
+            }
+          }
+        ],
+        "questions": [
+          {
+            "id": "qst-sec-sci-5-07-03-01",
+            "prompt": "How is common table salt harvested from seawater along coasts?",
+            "options": [
+              "By freezing sea water",
+              "By solar evaporation in shallow salt pans",
+              "By filtering through paper",
+              "By digging deep underground caves"
+            ],
+            "correctAnswer": "By solar evaporation in shallow salt pans",
+            "hint": "Sun and wind evaporate the water, leaving salt crystals."
+          }
+        ]
+      }
+    ]
+  }
+}

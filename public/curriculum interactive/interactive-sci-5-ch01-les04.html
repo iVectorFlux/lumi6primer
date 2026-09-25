@@ -1,0 +1,1398 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Soil infiltration tank — InteractEd</title>
+  
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    body {
+      background-color: #f8fafc;
+      color: #0f172a;
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 16px 20px 48px;
+    }
+
+    /* Top Navigation Mode Switcher */
+    .top-header {
+      width: 100%;
+      max-width: 1280px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 20px;
+    }
+
+    .view-switcher {
+      display: flex;
+      align-items: center;
+      background: #ffffff;
+      border: 1px solid #e2e8f0;
+      padding: 4px;
+      border-radius: 12px;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+      gap: 4px;
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+
+    .switch-btn {
+      background: none;
+      border: none;
+      color: #64748b;
+      padding: 7px 14px;
+      font-size: 12.5px;
+      font-weight: 600;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: all 0.15s ease;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-family: 'Inter', sans-serif;
+    }
+
+    .switch-btn:hover {
+      background: #f1f5f9;
+      color: #0f172a;
+    }
+
+    .switch-btn.active {
+      background: #0f172a;
+      color: #ffffff;
+    }
+
+    /* Showcase Layout */
+    .showcase-container {
+      width: 100%;
+      max-width: 1280px;
+      display: flex;
+      flex-direction: column;
+      gap: 28px;
+      align-items: center;
+    }
+
+    .showcase-grid-top {
+      width: 100%;
+      display: flex;
+      justify-content: center;
+      align-items: flex-start;
+      gap: 32px;
+      flex-wrap: wrap;
+    }
+
+    .view-section {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .section-title {
+      font-size: 13px;
+      font-weight: 600;
+      color: #64748b;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .section-badge {
+      background: #e2e8f0;
+      color: #334155;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 11px;
+      padding: 2px 6px;
+      border-radius: 4px;
+      font-weight: 500;
+    }
+
+    /* 1. Pill Mode — Standard In-Chat Capsule */
+    .chat-pill-card {
+      width: 100%;
+      max-width: 350px;
+      background: #ffffff;
+      border: 1px solid #e2e8f0;
+      border-radius: 18px;
+      padding: 8px 14px 8px 10px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+      cursor: pointer;
+      transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+      user-select: none;
+    }
+
+    .chat-pill-card:hover {
+      border-color: #2563eb;
+      transform: translateY(-2px);
+      box-shadow: 0 8px 24px rgba(37, 99, 235, 0.12);
+    }
+
+    .pill-icon-box {
+      width: 76px;
+      height: 52px;
+      border-radius: 12px;
+      background: #f8fafc;
+      border: 1px solid #f1f5f9;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      overflow: hidden;
+      position: relative;
+    }
+
+    .pill-icon-box canvas {
+      width: 100%;
+      height: 100%;
+      display: block;
+    }
+
+    .pill-content {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+      min-width: 0;
+    }
+
+    .pill-title {
+      font-size: 17px;
+      font-weight: 600;
+      color: #0f172a;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .pill-subtitle {
+      font-size: 11px;
+      color: #64748b;
+      font-family: 'JetBrains Mono', monospace;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .pill-expand-btn {
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      background: #f8fafc;
+      border: 1px solid #e2e8f0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #334155;
+      flex-shrink: 0;
+      transition: all 0.15s ease;
+    }
+
+    .chat-pill-card:hover .pill-expand-btn {
+      background: #2563eb;
+      color: #ffffff;
+      border-color: #2563eb;
+    }
+
+    /* 2. Mobile Phone Frame (375x540) */
+    .mobile-phone-frame {
+      width: 100%;
+      max-width: 375px;
+      height: 540px;
+      background: #ffffff;
+      border: 1px solid #e2e8f0;
+      border-radius: 26px;
+      box-shadow: 0 12px 32px rgba(0, 0, 0, 0.08);
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      position: relative;
+    }
+
+    .phone-stage {
+      height: 285px;
+      min-height: 285px;
+      width: 100%;
+      background: radial-gradient(circle at 50% 48%, #ffffff 0%, #f8fafc 55%, #edf2f7 100%);
+      position: relative;
+      border-bottom: 1px solid #f1f5f9;
+      touch-action: none;
+    }
+
+    .phone-stage canvas {
+      width: 100%;
+      height: 100%;
+      display: block;
+    }
+
+    .phone-controls {
+      height: 255px;
+      width: 100%;
+      background: #ffffff;
+      padding: 12px 16px 14px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      overflow: hidden;
+    }
+
+    /* 3. Desktop Split Card (880x490) */
+    #sectionDesktop {
+      width: 100%;
+      max-width: 880px;
+    }
+
+    .desktop-card {
+      width: 100%;
+      max-width: 880px;
+      height: 490px;
+      background: #ffffff;
+      border: 1px solid #e2e8f0;
+      border-radius: 24px;
+      box-shadow: 0 8px 24px -4px rgba(0, 0, 0, 0.06);
+      display: grid;
+      grid-template-columns: 370px 1fr;
+      overflow: hidden;
+    }
+
+    .math-panel {
+      width: 370px;
+      padding: 22px 24px;
+      background: #ffffff;
+      border-right: 1px solid #f1f5f9;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      overflow: hidden;
+    }
+
+    .stage-panel {
+      width: 100%;
+      height: 100%;
+      background: radial-gradient(circle at 50% 48%, #ffffff 0%, #f8fafc 55%, #edf2f7 100%);
+      position: relative;
+      overflow: hidden;
+      touch-action: none;
+    }
+
+    .stage-panel canvas {
+      width: 100%;
+      height: 100%;
+      display: block;
+    }
+
+    /* Floating Canvas Pill Badge */
+    .canvas-overlay-pill {
+      position: absolute;
+      top: 12px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: rgba(255, 255, 255, 0.94);
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+      border: 1px solid rgba(226, 232, 240, 0.9);
+      border-radius: 999px;
+      padding: 4px 12px;
+      font-size: 11px;
+      font-weight: 600;
+      color: #0f172a;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.04);
+      pointer-events: none;
+      white-space: nowrap;
+      z-index: 10;
+    }
+
+    .status-dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: #10b981;
+      box-shadow: 0 0 6px rgba(16, 185, 129, 0.6);
+    }
+
+    .status-dot.danger {
+      background: #ef4444;
+      box-shadow: 0 0 6px rgba(239, 68, 68, 0.6);
+    }
+
+    /* Audience Switch */
+    .audience-switch {
+      display: inline-flex;
+      background: #f1f5f9;
+      padding: 2.5px;
+      border-radius: 8px;
+      gap: 2px;
+      margin-bottom: 6px;
+      align-self: flex-start;
+    }
+
+    .aud-btn {
+      background: none;
+      border: none;
+      font-size: 10.5px;
+      font-weight: 600;
+      color: #64748b;
+      padding: 2.5px 8px;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: all 0.15s ease;
+      font-family: 'Inter', sans-serif;
+    }
+
+    .aud-btn.active {
+      background: #ffffff;
+      color: #0f172a;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+    }
+
+    /* Hero Concept */
+    .hero-concept {
+      margin-bottom: 6px;
+    }
+
+    .hero-title {
+      font-size: 17.5px;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+      color: #0f172a;
+    }
+
+    .formula-display {
+      margin: 2px 0 6px;
+      font-size: 12px;
+      color: #0f172a;
+      display: none;
+    }
+
+    .formula-display.active {
+      display: block;
+    }
+
+    /* Dynamic Takeaway Card (Clean, Fixed Height, No Vertical Shift) */
+    .takeaway-card {
+      background: #f8fafc;
+      border: 1px solid #e2e8f0;
+      border-left: 3.5px solid #10b981;
+      border-radius: 12px;
+      padding: 8px 12px;
+      margin-bottom: 6px;
+      min-height: 46px;
+      display: flex;
+      align-items: center;
+    }
+
+    .takeaway-card.danger {
+      border-left-color: #ef4444;
+    }
+
+    .takeaway-text {
+      font-size: 11.5px;
+      line-height: 1.4;
+      color: #334155;
+    }
+
+    /* Controls Block */
+    .controls-block {
+      display: flex;
+      flex-direction: column;
+      gap: 7px;
+    }
+
+    .control-label-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 11px;
+      font-weight: 600;
+      color: #475569;
+    }
+
+    .control-value {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 11px;
+      color: #0284c7;
+    }
+
+    .slider-track-wrap {
+      width: 100%;
+      height: 32px;
+      display: flex;
+      align-items: center;
+    }
+
+    /* Mobile Touch Ergonomics: Generous Hit Box & Enlarged Thumb */
+    input[type="range"] {
+      -webkit-appearance: none;
+      appearance: none;
+      width: 100%;
+      height: 8px;
+      background: #e2e8f0;
+      border-radius: 999px;
+      outline: none;
+      cursor: pointer;
+      touch-action: none;
+    }
+
+    input[type="range"]::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      appearance: none;
+      width: 24px;
+      height: 24px;
+      border-radius: 50%;
+      background: #0284c7;
+      border: 2.5px solid #ffffff;
+      box-shadow: 0 2px 8px rgba(2, 132, 199, 0.4);
+      cursor: pointer;
+      transition: transform 0.15s ease, box-shadow 0.15s ease;
+    }
+
+    input[type="range"]:active::-webkit-slider-thumb {
+      transform: scale(1.15);
+      box-shadow: 0 0 0 6px rgba(2, 132, 199, 0.2);
+    }
+
+    /* Ground Type Selector - Clean 3-Column Grid That Never Pushes Down */
+    .ground-pills {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 6px;
+      width: 100%;
+    }
+
+    .ground-pill {
+      height: 34px;
+      background: #ffffff;
+      border: 1px solid #e2e8f0;
+      border-radius: 9px;
+      font-size: 11.5px;
+      font-weight: 600;
+      color: #475569;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 4px;
+      white-space: nowrap;
+      transition: all 0.15s ease;
+      font-family: 'Inter', sans-serif;
+      box-shadow: 0 1px 2px rgba(0, 0, 0, 0.03);
+    }
+
+    .ground-pill:hover {
+      background: #f8fafc;
+      color: #0f172a;
+      border-color: #cbd5e1;
+    }
+
+    .ground-pill.active {
+      background: #0f172a;
+      color: #ffffff;
+      border-color: #0f172a;
+      box-shadow: 0 2px 6px rgba(15, 23, 42, 0.2);
+    }
+
+    /* 4. Slide-Over Drawer */
+    .drawer-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(15, 23, 42, 0.4);
+      backdrop-filter: blur(4px);
+      -webkit-backdrop-filter: blur(4px);
+      z-index: 999;
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-end;
+      align-items: center;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.25s ease;
+    }
+
+    .drawer-overlay.active {
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    .drawer-content {
+      width: 100%;
+      max-width: 420px;
+      max-height: 90vh;
+      background: #ffffff;
+      border-radius: 26px 26px 0 0;
+      box-shadow: 0 -8px 32px rgba(0, 0, 0, 0.15);
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      transform: translateY(100%);
+      transition: transform 0.28s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    .drawer-overlay.active .drawer-content {
+      transform: translateY(0);
+    }
+
+    .drawer-handle-bar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 10px 18px 8px;
+      border-bottom: 1px solid #f1f5f9;
+    }
+
+    .drawer-notch {
+      width: 36px;
+      height: 4px;
+      border-radius: 999px;
+      background: #cbd5e1;
+    }
+
+    .drawer-close-btn {
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      background: #f1f5f9;
+      border: none;
+      color: #475569;
+      font-size: 13px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: all 0.15s ease;
+    }
+
+    .drawer-close-btn:hover {
+      background: #e2e8f0;
+      color: #0f172a;
+    }
+
+    .drawer-stage {
+      height: 285px;
+      width: 100%;
+      background: radial-gradient(circle at 50% 48%, #ffffff 0%, #f8fafc 55%, #edf2f7 100%);
+      position: relative;
+      border-bottom: 1px solid #f1f5f9;
+      touch-action: none;
+      overflow: hidden;
+    }
+
+    .drawer-stage canvas {
+      width: 100%;
+      height: 100%;
+      display: block;
+    }
+
+    .drawer-controls {
+      padding: 12px 18px 18px;
+      background: #ffffff;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    /* MANDATORY Responsive Mobile Guard */
+    @media (max-width: 960px) {
+      body {
+        padding: 12px 14px 32px;
+      }
+      .desktop-card {
+        grid-template-columns: 1fr;
+        height: auto;
+        max-width: 100%;
+      }
+      .desktop-card .stage-panel {
+        height: 285px;
+        order: 1;
+      }
+      .desktop-card .math-panel {
+        order: 2;
+        border-right: none;
+        border-top: 1px solid #f1f5f9;
+        width: 100%;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Top Navigation & View Mode Switcher -->
+  <header class="top-header">
+    <nav class="view-switcher" aria-label="Simulation view switcher">
+      <button class="switch-btn active" id="btnViewAll" onclick="setViewMode('all')">
+        <span>All views</span>
+      </button>
+      <button class="switch-btn" id="btnViewPill" onclick="setViewMode('pill')">
+        <span>Pill mode</span>
+      </button>
+      <button class="switch-btn" id="btnViewPhone" onclick="setViewMode('phone')">
+        <span>Mobile screen</span>
+      </button>
+      <button class="switch-btn" id="btnViewDesktop" onclick="setViewMode('desktop')">
+        <span>Desktop card</span>
+      </button>
+    </nav>
+  </header>
+
+  <!-- Showcase Container -->
+  <main class="showcase-container">
+
+    <!-- Top Grid: Pill Mode + Mobile Frame -->
+    <div class="showcase-grid-top" id="topGrid">
+      
+      <!-- 1. Pill Mode -->
+      <section class="view-section" id="sectionPill">
+        <h2 class="section-title">
+          <span>In-chat capsule</span>
+          <span class="section-badge">Pill</span>
+        </h2>
+        
+        <div class="chat-pill-card" id="chatPill" onclick="openDrawer()" role="button" tabindex="0" aria-label="Open Soil infiltration simulation drawer">
+          <div class="pill-icon-box">
+            <canvas id="pillCanvas" width="152" height="104"></canvas>
+          </div>
+          <div class="pill-content">
+            <div class="pill-title" id="pillTitle">Garden loam • Recharging</div>
+            <div class="pill-subtitle" id="pillSubtitle">Aquifer recharge • 35% table</div>
+          </div>
+          <button class="pill-expand-btn" aria-label="Expand simulation">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+              <polyline points="15 3 21 3 21 9"></polyline>
+              <polyline points="9 21 3 21 3 15"></polyline>
+              <line x1="21" y1="3" x2="14" y2="10"></line>
+              <line x1="3" y1="21" x2="10" y2="14"></line>
+            </svg>
+          </button>
+        </div>
+      </section>
+
+      <!-- 2. Mobile Phone Frame (375x540) -->
+      <section class="view-section" id="sectionPhone">
+        <h2 class="section-title">
+          <span>Mobile view</span>
+          <span class="section-badge">375 × 540</span>
+        </h2>
+
+        <div class="mobile-phone-frame">
+          <div class="phone-stage" id="phoneStage">
+            <div class="canvas-overlay-pill">
+              <span class="status-dot" id="phoneStatusDot"></span>
+              <span id="phonePillText">Garden loam • Rapid percolation</span>
+            </div>
+            <canvas id="phoneCanvas"></canvas>
+          </div>
+
+          <div class="phone-controls">
+            <div>
+              <div class="audience-switch">
+                <button class="aud-btn active" id="phoneAudJunior" onclick="setAudience('junior')">Junior</button>
+                <button class="aud-btn" id="phoneAudStem" onclick="setAudience('stem')">STEM</button>
+              </div>
+              <div class="hero-concept">
+                <h1 class="hero-title">Soil infiltration tank</h1>
+              </div>
+              <div class="formula-display" id="phoneFormula"></div>
+            </div>
+
+            <div class="takeaway-card" id="phoneTakeawayCard">
+              <p class="takeaway-text" id="phoneTakeawayText">Garden soil acts like a sponge, drinking in rainwater to recharge the village well.</p>
+            </div>
+
+            <div class="controls-block">
+              <div class="control-label-row">
+                <span>Rainfall intensity</span>
+                <span class="control-value" id="phoneSliderVal">45 mm/h (Heavy rain)</span>
+              </div>
+              <div class="slider-track-wrap">
+                <input type="range" id="phoneSlider" min="0" max="80" value="45" oninput="onRainChange(this.value)">
+              </div>
+              <div class="ground-pills">
+                <button class="ground-pill active" id="phoneGroundLoam" onclick="setGroundType('loam')">🌱 Loam</button>
+                <button class="ground-pill" id="phoneGroundSand" onclick="setGroundType('sand')">🏖️ Sand</button>
+                <button class="ground-pill" id="phoneGroundConcrete" onclick="setGroundType('concrete')">🏢 Concrete</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+    </div>
+
+    <!-- 3. Desktop Mode (880x490 Split Card) -->
+    <section class="view-section" id="sectionDesktop">
+      <h2 class="section-title">
+        <span>Desktop split card</span>
+        <span class="section-badge">880 × 490</span>
+      </h2>
+
+      <div class="desktop-card">
+        <div class="math-panel">
+          <div>
+            <div class="audience-switch">
+              <button class="aud-btn active" id="deskAudJunior" onclick="setAudience('junior')">Junior</button>
+              <button class="aud-btn" id="deskAudStem" onclick="setAudience('stem')">STEM</button>
+            </div>
+            <div class="hero-concept">
+              <h1 class="hero-title">Soil infiltration tank</h1>
+            </div>
+            <div class="formula-display" id="deskFormula"></div>
+          </div>
+
+          <div class="takeaway-card" id="deskTakeawayCard">
+            <p class="takeaway-text" id="deskTakeawayText">Garden soil acts like a sponge, drinking in rainwater to recharge the village well.</p>
+          </div>
+
+          <div class="controls-block">
+            <div class="control-label-row">
+              <span>Rainfall intensity</span>
+              <span class="control-value" id="deskSliderVal">45 mm/h (Heavy rain)</span>
+            </div>
+            <div class="slider-track-wrap">
+              <input type="range" id="deskSlider" min="0" max="80" value="45" oninput="onRainChange(this.value)">
+            </div>
+            <div class="ground-pills">
+              <button class="ground-pill active" id="deskGroundLoam" onclick="setGroundType('loam')">🌱 Garden loam</button>
+              <button class="ground-pill" id="deskGroundSand" onclick="setGroundType('sand')">🏖️ Coarse sand</button>
+              <button class="ground-pill" id="deskGroundConcrete" onclick="setGroundType('concrete')">🏢 Concrete</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="stage-panel" id="deskStage">
+          <div class="canvas-overlay-pill">
+            <span class="status-dot" id="deskStatusDot"></span>
+            <span id="deskPillText">Garden loam • Rapid percolation</span>
+          </div>
+          <canvas id="deskCanvas"></canvas>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- 4. Slide-Over Bottom Drawer -->
+  <div class="drawer-overlay" id="drawerOverlay" onclick="closeDrawer(event)">
+    <div class="drawer-content" onclick="event.stopPropagation()">
+      <div class="drawer-handle-bar">
+        <div style="width: 28px;"></div>
+        <div class="drawer-notch"></div>
+        <button class="drawer-close-btn" onclick="closeDrawer()" aria-label="Close drawer">✕</button>
+      </div>
+
+      <div class="drawer-stage" id="drawerStage">
+        <div class="canvas-overlay-pill">
+          <span class="status-dot" id="drawerStatusDot"></span>
+          <span id="drawerPillText">Garden loam • Rapid percolation</span>
+        </div>
+        <canvas id="drawerCanvas"></canvas>
+      </div>
+
+      <div class="drawer-controls">
+        <div class="audience-switch">
+          <button class="aud-btn active" id="drawerAudJunior" onclick="setAudience('junior')">Junior</button>
+          <button class="aud-btn" id="drawerAudStem" onclick="setAudience('stem')">STEM</button>
+        </div>
+        <div class="takeaway-card" id="drawerTakeawayCard">
+          <p class="takeaway-text" id="drawerTakeawayText">Garden soil acts like a sponge, drinking in rainwater to recharge the village well.</p>
+        </div>
+        <div class="controls-block">
+          <div class="control-label-row">
+            <span>Rainfall intensity</span>
+            <span class="control-value" id="drawerSliderVal">45 mm/h (Heavy rain)</span>
+          </div>
+          <div class="slider-track-wrap">
+            <input type="range" id="drawerSlider" min="0" max="80" value="45" oninput="onRainChange(this.value)">
+          </div>
+          <div class="ground-pills">
+            <button class="ground-pill active" id="drawerGroundLoam" onclick="setGroundType('loam')">🌱 Loam</button>
+            <button class="ground-pill" id="drawerGroundSand" onclick="setGroundType('sand')">🏖️ Sand</button>
+            <button class="ground-pill" id="drawerGroundConcrete" onclick="setGroundType('concrete')">🏢 Concrete</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // --- State ---
+    let state = {
+      ground: 'loam',       // 'loam', 'sand', 'concrete'
+      rainRate: 45,         // 0 to 80 mm/h
+      aquiferLevel: 0.35,   // 0.1 to 0.85 (fraction of aquifer depth)
+      surfaceWater: 0,      // puddle depth for concrete (0 to 1)
+      audience: 'junior'
+    };
+
+    // Rain particles falling from sky
+    let rainDrops = [];
+    // Fast downward seepage particles in soil
+    let seepageParticles = [];
+    // Splash particles on surface
+    let splashParticles = [];
+
+    function initParticles() {
+      rainDrops = [];
+      for (let i = 0; i < 90; i++) {
+        rainDrops.push({
+          x: Math.random(),
+          y: Math.random(),
+          speed: 0.035 + Math.random() * 0.03, // Natural falling speed
+          len: 10 + Math.random() * 12
+        });
+      }
+
+      seepageParticles = [];
+      for (let i = 0; i < 45; i++) {
+        seepageParticles.push({
+          x: 0.05 + Math.random() * 0.9,
+          y: Math.random(),
+          speed: 0.008 + Math.random() * 0.012, // Visible downward percolation
+          radius: 2.0 + Math.random() * 1.5
+        });
+      }
+
+      splashParticles = [];
+    }
+
+    function setGroundType(type) {
+      state.ground = type;
+      ['phone', 'desk', 'drawer'].forEach(p => {
+        ['Loam', 'Sand', 'Concrete'].forEach(g => {
+          const btn = document.getElementById(`${p}Ground${g}`);
+          if (btn) btn.classList.toggle('active', g.toLowerCase() === type);
+        });
+      });
+      updateUI();
+    }
+
+    function onRainChange(val) {
+      state.rainRate = parseInt(val, 10);
+      updateUI();
+    }
+
+    // --- DOM Elements ---
+    const pillCanvas = document.getElementById('pillCanvas');
+    const phoneCanvas = document.getElementById('phoneCanvas');
+    const deskCanvas = document.getElementById('deskCanvas');
+    const drawerCanvas = document.getElementById('drawerCanvas');
+
+    // --- Audience Switch ---
+    function setAudience(mode) {
+      state.audience = mode;
+      document.querySelectorAll('.aud-btn').forEach(btn => {
+        btn.classList.toggle('active', btn.id.toLowerCase().includes(mode));
+      });
+      updateUI();
+    }
+
+    // --- Update Text & UI ---
+    function updateUI() {
+      const g = state.ground;
+      const r = state.rainRate;
+
+      const rainLabel = r === 0 ? '0 mm/h (Dry sky)' : r < 25 ? `${r} mm/h (Light drizzle)` : r < 55 ? `${r} mm/h (Heavy rain)` : `${r} mm/h (Torrential downpour)`;
+
+      ['phone', 'desk', 'drawer'].forEach(p => {
+        const slider = document.getElementById(`${p}Slider`);
+        const valSpan = document.getElementById(`${p}SliderVal`);
+        if (slider) slider.value = r;
+        if (valSpan) valSpan.textContent = rainLabel;
+      });
+
+      // Badges and status
+      const isConcrete = g === 'concrete';
+      const statusText = isConcrete 
+        ? (r > 15 ? 'Concrete • Zero seepage • Surface flood' : 'Concrete • Impermeable pavement')
+        : (g === 'loam' ? (r > 0 ? 'Garden loam • Rapid aquifer recharge' : 'Garden loam • Moist soil') : (r > 0 ? 'Coarse sand • High drainage' : 'Coarse sand • Dry'));
+
+      ['phone', 'desk', 'drawer'].forEach(p => {
+        const el = document.getElementById(`${p}PillText`);
+        if (el) el.textContent = statusText;
+
+        const dot = document.getElementById(`${p}StatusDot`);
+        if (dot) dot.classList.toggle('danger', isConcrete);
+
+        const card = document.getElementById(`${p}TakeawayCard`);
+        if (card) card.classList.toggle('danger', isConcrete);
+      });
+
+      // Pill Mode
+      document.getElementById('pillTitle').textContent = isConcrete ? 'Concrete • Flood puddle' : (g === 'loam' ? 'Garden loam • Recharging' : 'Coarse sand • Rapid drainage');
+      document.getElementById('pillSubtitle').textContent = isConcrete ? '100% surface runoff • Dry well' : `Aquifer recharge • ${Math.round(state.aquiferLevel * 100)}% water table`;
+
+      // Live Takeaway (Concise 2-line uniform length to prevent shifting buttons)
+      let takeaway = '';
+      if (state.audience === 'junior') {
+        if (isConcrete) {
+          takeaway = 'Hard concrete blocks all water! Rain cannot soak in, causing street floods while wells dry up.';
+        } else if (g === 'loam') {
+          takeaway = 'Garden soil acts like a sponge, drinking in rainwater to recharge the village well.';
+        } else {
+          takeaway = 'Coarse sand has open pores, letting rain drain rapidly into deep aquifer reserves.';
+        }
+      } else {
+        if (isConcrete) {
+          takeaway = 'Conductivity K ≈ 0 cm/s. Impermeable surface produces 95% runoff, starving the aquifer.';
+        } else if (g === 'loam') {
+          takeaway = 'Porosity φ ≈ 0.45, K_sat ≈ 2.5 cm/h. Darcy filtration q = -K(dh/dl) sustains aquifer recharge.';
+        } else {
+          takeaway = 'Porosity φ ≈ 0.38, K_sat ≈ 12 cm/h. High permeability permits rapid gravitational drainage.';
+        }
+      }
+
+      ['phone', 'desk', 'drawer'].forEach(p => {
+        const el = document.getElementById(`${p}TakeawayText`);
+        if (el) el.textContent = takeaway;
+      });
+
+      // STEM Formula Display (Only active in STEM mode)
+      const isStem = state.audience === 'stem';
+      const deskF = document.getElementById('deskFormula');
+      const phoneF = document.getElementById('phoneFormula');
+
+      [deskF, phoneF].forEach(f => {
+        if (!f) return;
+        f.classList.toggle('active', isStem);
+        if (isStem && window.katex) {
+          const kVal = isConcrete ? '0.00' : (g === 'loam' ? '2.50' : '12.00');
+          const formulaStr = `q = -K \\cdot \\frac{\\Delta h}{L} \\quad (K_{\\text{sat}} = ${kVal} \\text{ cm/h})`;
+          katex.render(formulaStr, f, { throwOnError: false });
+        } else {
+          f.innerHTML = '';
+        }
+      });
+    }
+
+    // --- View Switcher ---
+    function setViewMode(mode) {
+      document.querySelectorAll('.switch-btn').forEach(btn => btn.classList.remove('active'));
+      const activeBtn = document.getElementById('btnView' + mode.charAt(0).toUpperCase() + mode.slice(1));
+      if (activeBtn) activeBtn.classList.add('active');
+
+      const topGrid = document.getElementById('topGrid');
+      const pillSec = document.getElementById('sectionPill');
+      const phoneSec = document.getElementById('sectionPhone');
+      const deskSec = document.getElementById('sectionDesktop');
+
+      if (mode === 'all') {
+        topGrid.style.display = 'flex';
+        pillSec.style.display = 'flex';
+        phoneSec.style.display = 'flex';
+        deskSec.style.display = 'block';
+      } else if (mode === 'pill') {
+        topGrid.style.display = 'flex';
+        pillSec.style.display = 'flex';
+        phoneSec.style.display = 'none';
+        deskSec.style.display = 'none';
+      } else if (mode === 'phone') {
+        topGrid.style.display = 'flex';
+        pillSec.style.display = 'none';
+        phoneSec.style.display = 'flex';
+        deskSec.style.display = 'none';
+      } else if (mode === 'desktop') {
+        topGrid.style.display = 'none';
+        deskSec.style.display = 'block';
+      }
+      setTimeout(resizeCanvases, 50);
+    }
+
+    // --- Drawer Controls ---
+    function openDrawer() {
+      document.getElementById('drawerOverlay').classList.add('active');
+      document.body.style.overflow = 'hidden';
+      setTimeout(resizeCanvases, 60);
+    }
+
+    function closeDrawer(e) {
+      if (e && e.target !== e.currentTarget && !e.target.classList.contains('drawer-close-btn')) return;
+      document.getElementById('drawerOverlay').classList.remove('active');
+      document.body.style.overflow = '';
+    }
+
+    // --- Canvas Resizing ---
+    function resizeCanvases() {
+      const list = [
+        { cv: pillCanvas, w: 76, h: 52 },
+        { cv: phoneCanvas, w: phoneCanvas.parentElement.clientWidth, h: phoneCanvas.parentElement.clientHeight },
+        { cv: deskCanvas, w: deskCanvas.parentElement.clientWidth, h: deskCanvas.parentElement.clientHeight },
+        { cv: drawerCanvas, w: drawerCanvas.parentElement.clientWidth, h: drawerCanvas.parentElement.clientHeight }
+      ];
+
+      const dpr = window.devicePixelRatio || 1;
+      list.forEach(({ cv, w, h }) => {
+        if (!cv || !w || !h) return;
+        if (cv.width !== Math.round(w * dpr) || cv.height !== Math.round(h * dpr)) {
+          cv.width = Math.round(w * dpr);
+          cv.height = Math.round(h * dpr);
+        }
+      });
+    }
+
+    window.addEventListener('resize', resizeCanvases);
+
+    // --- Render Cross-Section Tank ---
+    function renderTank(canvas, isMini = false) {
+      if (!canvas) return;
+      const ctx = canvas.getContext('2d');
+      const dpr = window.devicePixelRatio || 1;
+      const w = canvas.width / dpr;
+      const h = canvas.height / dpr;
+
+      ctx.save();
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      ctx.clearRect(0, 0, w, h);
+
+      const surfaceY = h * 0.36;
+      const bedrockY = h * 0.72;
+      const aquiferY = bedrockY - (bedrockY - surfaceY) * state.aquiferLevel;
+
+      // 1. Sky & Atmospheric Clouds (Luminous, Puffy, Clean!)
+      const skyGrad = ctx.createLinearGradient(0, 0, 0, surfaceY);
+      if (state.rainRate > 0) {
+        skyGrad.addColorStop(0, '#e0f2fe');
+        skyGrad.addColorStop(0.6, '#f0f9ff');
+        skyGrad.addColorStop(1, '#ffffff');
+      } else {
+        skyGrad.addColorStop(0, '#bae6fd');
+        skyGrad.addColorStop(1, '#f8fafc');
+      }
+      ctx.fillStyle = skyGrad;
+      ctx.fillRect(0, 0, w, surfaceY);
+
+      // Puffy White/Silver-Blue Rain Clouds at top (Vibrant, Not Dull!)
+      if (state.rainRate > 0) {
+        // Soft cloud shadow underbelly
+        ctx.fillStyle = 'rgba(186, 230, 253, 0.45)';
+        for (let c = 0; c < 7; c++) {
+          const cx = c * (w / 6);
+          ctx.beginPath();
+          ctx.arc(cx, isMini ? 6 : 14, isMini ? 15 : 28, 0, Math.PI * 2);
+          ctx.fill();
+        }
+        // Bright puffy white cloud crests
+        ctx.fillStyle = 'rgba(255, 255, 255, 0.92)';
+        for (let c = 0; c < 7; c++) {
+          const cx = c * (w / 6) + (w / 12);
+          ctx.beginPath();
+          ctx.arc(cx, isMini ? 3 : 8, isMini ? 13 : 24, 0, Math.PI * 2);
+          ctx.fill();
+        }
+      }
+
+      // 2. Delicate, Realistic Rain Streaks (NOT THICK RODS!)
+      if (state.rainRate > 0) {
+        ctx.strokeStyle = 'rgba(56, 189, 248, 0.85)';
+        ctx.lineWidth = isMini ? 0.9 : 1.1; // Slender, realistic rain
+        ctx.lineCap = 'round';
+
+        const maxVisibleRain = isMini ? 16 : Math.round((state.rainRate / 80) * 80);
+        for (let i = 0; i < maxVisibleRain; i++) {
+          const p = rainDrops[i % rainDrops.length];
+          const px = p.x * w;
+          const py = p.y * surfaceY;
+          ctx.beginPath();
+          ctx.moveTo(px, py);
+          ctx.lineTo(px - 1.2, py + (isMini ? 5 : p.len));
+          ctx.stroke();
+        }
+
+        // Splashes on surface
+        splashParticles.forEach(sp => {
+          ctx.strokeStyle = '#38bdf8';
+          ctx.lineWidth = 0.9;
+          ctx.beginPath();
+          ctx.arc(sp.x * w, surfaceY - sp.h, sp.r, 0, Math.PI * 2);
+          ctx.stroke();
+        });
+      }
+
+      // 3. Ground / Surface Layer
+      if (state.ground === 'concrete') {
+        // Paved road / concrete slab
+        ctx.fillStyle = '#64748b';
+        ctx.fillRect(0, surfaceY, w, h * 0.08);
+
+        // Curb divider
+        ctx.fillStyle = '#475569';
+        ctx.fillRect(0, surfaceY + h * 0.08 - 2, w, 2);
+
+        // Dry subsoil beneath concrete
+        ctx.fillStyle = '#78350f';
+        ctx.fillRect(0, surfaceY + h * 0.08, w, bedrockY - (surfaceY + h * 0.08));
+
+        // Surface flood puddle on concrete
+        if (state.surfaceWater > 0.05) {
+          const puddleH = Math.min(18, state.surfaceWater * 16);
+          const puddleGrad = ctx.createLinearGradient(0, surfaceY - puddleH, 0, surfaceY);
+          puddleGrad.addColorStop(0, 'rgba(56, 189, 248, 0.7)');
+          puddleGrad.addColorStop(1, '#0284c7');
+
+          ctx.fillStyle = puddleGrad;
+          ctx.fillRect(0, surfaceY - puddleH, w, puddleH);
+
+          // Puddle ripples
+          ctx.strokeStyle = 'rgba(255, 255, 255, 0.6)';
+          ctx.lineWidth = 1;
+          for (let r = 0; r < 3; r++) {
+            const rx = (w * 0.2) + r * (w * 0.28);
+            ctx.beginPath();
+            ctx.ellipse(rx, surfaceY - puddleH / 2, 14, 3, 0, 0, Math.PI * 2);
+            ctx.stroke();
+          }
+        }
+      } else if (state.ground === 'loam') {
+        // Rich organic loam (dark brown with grass tufts)
+        const loamGrad = ctx.createLinearGradient(0, surfaceY, 0, bedrockY);
+        loamGrad.addColorStop(0, '#15803d'); // Lush grass top
+        loamGrad.addColorStop(0.08, '#451a03'); // Dark humus
+        loamGrad.addColorStop(0.5, '#78350f'); // Silt loam
+        loamGrad.addColorStop(1, '#92400e');
+        ctx.fillStyle = loamGrad;
+        ctx.fillRect(0, surfaceY, w, bedrockY - surfaceY);
+
+        // Grass blades on surface
+        if (!isMini) {
+          ctx.strokeStyle = '#22c55e';
+          ctx.lineWidth = 1.2;
+          for (let gx = 4; gx < w; gx += 8) {
+            ctx.beginPath();
+            ctx.moveTo(gx, surfaceY);
+            ctx.lineTo(gx - 2, surfaceY - 5);
+            ctx.stroke();
+          }
+        }
+      } else {
+        // Coarse sand / gravel (golden grain texture)
+        const sandGrad = ctx.createLinearGradient(0, surfaceY, 0, bedrockY);
+        sandGrad.addColorStop(0, '#fef08a'); // Pale surface sand
+        sandGrad.addColorStop(0.3, '#fde047');
+        sandGrad.addColorStop(1, '#ca8a04');
+        ctx.fillStyle = sandGrad;
+        ctx.fillRect(0, surfaceY, w, bedrockY - surfaceY);
+
+        // Coarse pebble grains
+        if (!isMini) {
+          ctx.fillStyle = '#a16207';
+          for (let i = 0; i < 30; i++) {
+            const gx = (i * 29) % w;
+            const gy = surfaceY + ((i * 37) % (bedrockY - surfaceY));
+            ctx.fillRect(gx, gy, 2, 2);
+          }
+        }
+      }
+
+      // 4. Seepage Water Droplets (Only in Permeable Soils)
+      if (state.ground !== 'concrete' && state.rainRate > 0) {
+        ctx.fillStyle = 'rgba(2, 132, 199, 0.85)';
+        seepageParticles.forEach(p => {
+          const px = p.x * w;
+          const py = surfaceY + p.y * (bedrockY - surfaceY);
+          if (py < aquiferY) {
+            ctx.beginPath();
+            ctx.arc(px, py, isMini ? 1.4 : p.radius, 0, Math.PI * 2);
+            ctx.fill();
+          }
+        });
+      }
+
+      // 5. Water Table & Saturated Aquifer Zone
+      const aquiferGrad = ctx.createLinearGradient(0, aquiferY, 0, bedrockY);
+      aquiferGrad.addColorStop(0, 'rgba(56, 189, 248, 0.85)'); // Water table surface
+      aquiferGrad.addColorStop(0.3, 'rgba(2, 132, 199, 0.88)');
+      aquiferGrad.addColorStop(1, '#0369a1'); // Deep saturated zone
+      ctx.fillStyle = aquiferGrad;
+      ctx.fillRect(0, aquiferY, w, bedrockY - aquiferY);
+
+      // Water table glistening line
+      ctx.strokeStyle = '#ffffff';
+      ctx.lineWidth = isMini ? 1 : 1.8;
+      ctx.beginPath();
+      ctx.moveTo(0, aquiferY);
+      ctx.lineTo(w, aquiferY);
+      ctx.stroke();
+
+      // 6. Solid Impermeable Bedrock Layer (Bottom)
+      const rockGrad = ctx.createLinearGradient(0, bedrockY, 0, h);
+      rockGrad.addColorStop(0, '#334155');
+      rockGrad.addColorStop(0.4, '#1e293b');
+      rockGrad.addColorStop(1, '#0f172a');
+      ctx.fillStyle = rockGrad;
+      ctx.fillRect(0, bedrockY, w, h - bedrockY);
+
+      // Bedrock fissures/cracks texture
+      if (!isMini) {
+        ctx.strokeStyle = 'rgba(255, 255, 255, 0.12)';
+        ctx.lineWidth = 1;
+        ctx.beginPath();
+        ctx.moveTo(w * 0.15, bedrockY + 12);
+        ctx.lineTo(w * 0.35, bedrockY + 28);
+        ctx.lineTo(w * 0.55, bedrockY + 18);
+        ctx.lineTo(w * 0.85, bedrockY + 36);
+        ctx.stroke();
+      }
+
+      // 7. Village Water Well (Cylinder Tube & Water Column)
+      const wellX = w * 0.82;
+      const wellW = isMini ? 14 : 22;
+      const wellTop = surfaceY - (isMini ? 12 : 20);
+      const wellBottom = bedrockY - 6;
+
+      // Well tube shaft
+      ctx.fillStyle = 'rgba(255, 255, 255, 0.9)';
+      ctx.fillRect(wellX - wellW / 2, wellTop, wellW, wellBottom - wellTop);
+      ctx.strokeStyle = '#64748b';
+      ctx.lineWidth = 1.5;
+      ctx.strokeRect(wellX - wellW / 2, wellTop, wellW, wellBottom - wellTop);
+
+      // Water level inside well
+      const wellWaterY = aquiferY;
+      if (wellWaterY < wellBottom) {
+        const wellWaterGrad = ctx.createLinearGradient(0, wellWaterY, 0, wellBottom);
+        wellWaterGrad.addColorStop(0, '#38bdf8');
+        wellWaterGrad.addColorStop(1, '#0284c7');
+        ctx.fillStyle = wellWaterGrad;
+        ctx.fillRect(wellX - wellW / 2 + 1.5, wellWaterY, wellW - 3, wellBottom - wellWaterY);
+      }
+
+      // Well pulley & rope
+      if (!isMini) {
+        ctx.strokeStyle = '#0f172a';
+        ctx.lineWidth = 1.5;
+        ctx.beginPath();
+        ctx.moveTo(wellX - wellW / 2 - 3, wellTop);
+        ctx.lineTo(wellX, wellTop - 12);
+        ctx.lineTo(wellX + wellW / 2 + 3, wellTop);
+        ctx.stroke();
+
+        ctx.fillStyle = '#0284c7';
+        ctx.beginPath();
+        ctx.arc(wellX, wellTop - 6, 2.5, 0, Math.PI * 2);
+        ctx.fill();
+      }
+
+      // 8. Labels on Stage (Clear, High Contrast)
+      if (!isMini && w > 300) {
+        ctx.fillStyle = '#ffffff';
+        ctx.font = '600 10px Inter, sans-serif';
+        ctx.fillText('Impermeable bedrock', 14, h - 14);
+
+        // Water Table Indicator Tag
+        ctx.fillStyle = '#0f172a';
+        ctx.font = '600 10.5px Inter, sans-serif';
+        const pct = Math.round(state.aquiferLevel * 100);
+        ctx.fillText(`Water table (${pct}% full)`, 14, aquiferY - 6);
+
+        // Well Label
+        ctx.fillStyle = '#0f172a';
+        ctx.font = '600 9.5px Inter, sans-serif';
+        ctx.fillText('Village well', wellX - 26, wellTop - 16);
+      }
+
+      ctx.restore();
+    }
+
+    // --- Dynamic Simulation Loop (Physics & Aquifer Recharge) ---
+    function updatePhysics() {
+      // 1. Animate Rain
+      if (state.rainRate > 0) {
+        rainDrops.forEach(p => {
+          p.y += p.speed * (state.rainRate / 45);
+          if (p.y > 1) {
+            p.y = 0;
+            p.x = Math.random();
+            // Trigger splash on surface
+            if (splashParticles.length < 15) {
+              splashParticles.push({
+                x: p.x,
+                h: 2 + Math.random() * 4,
+                r: 1 + Math.random() * 2,
+                life: 1
+              });
+            }
+          }
+        });
+
+        // Decay splashes
+        splashParticles.forEach(sp => sp.life -= 0.15);
+        splashParticles = splashParticles.filter(sp => sp.life > 0);
+      }
+
+      // 2. Animate Downward Seepage in Soil
+      if (state.ground !== 'concrete' && state.rainRate > 0) {
+        const speedMult = state.ground === 'sand' ? 1.8 : 1.0;
+        seepageParticles.forEach(p => {
+          p.y += p.speed * speedMult * (state.rainRate / 45);
+          if (p.y > 1) {
+            p.y = 0;
+            p.x = 0.05 + Math.random() * 0.9;
+          }
+        });
+      }
+
+      // 3. Dynamic Water Table Level Rise / Runoff
+      if (state.ground === 'concrete') {
+        // Pavement blocks percolation! Surface puddles form, aquifer slowly drops
+        if (state.rainRate > 10) {
+          state.surfaceWater = Math.min(1.0, state.surfaceWater + 0.015);
+        } else {
+          state.surfaceWater = Math.max(0.0, state.surfaceWater - 0.005);
+        }
+        // Groundwater drains without replenishment
+        state.aquiferLevel = Math.max(0.12, state.aquiferLevel - 0.0004);
+      } else {
+        // Permeable soils drink rainwater!
+        state.surfaceWater = 0;
+        const rechargeRate = state.ground === 'sand' ? 0.0028 : 0.0020;
+        if (state.rainRate > 0) {
+          state.aquiferLevel = Math.min(0.85, state.aquiferLevel + (state.rainRate / 80) * rechargeRate);
+        } else {
+          // Slow natural aquifer baseflow discharge
+          state.aquiferLevel = Math.max(0.20, state.aquiferLevel - 0.0003);
+        }
+      }
+    }
+
+    function animate() {
+      updatePhysics();
+
+      renderTank(pillCanvas, true);
+      renderTank(phoneCanvas);
+      renderTank(deskCanvas);
+      renderTank(drawerCanvas);
+
+      requestAnimationFrame(animate);
+    }
+
+    // --- Init ---
+    window.addEventListener('DOMContentLoaded', () => {
+      initParticles();
+      resizeCanvases();
+      updateUI();
+      animate();
+    });
+  </script>
+</body>
+</html>

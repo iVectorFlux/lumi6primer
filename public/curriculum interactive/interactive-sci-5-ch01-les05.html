@@ -1,0 +1,1422 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>River basins map — InteractEd</title>
+  
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;600;700&display=swap" rel="stylesheet">
+
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    body {
+      background-color: #f8fafc;
+      color: #0f172a;
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 16px 20px 48px;
+    }
+
+    /* Top Navigation Mode Switcher */
+    .top-header {
+      width: 100%;
+      max-width: 1280px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 20px;
+    }
+
+    .view-switcher {
+      display: flex;
+      align-items: center;
+      background: #ffffff;
+      border: 1px solid #e2e8f0;
+      padding: 4px;
+      border-radius: 12px;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+      gap: 4px;
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+
+    .switch-btn {
+      background: none;
+      border: none;
+      color: #64748b;
+      padding: 7px 14px;
+      font-size: 12.5px;
+      font-weight: 600;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: all 0.15s ease;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-family: 'Inter', sans-serif;
+    }
+
+    .switch-btn:hover {
+      background: #f1f5f9;
+      color: #0f172a;
+    }
+
+    .switch-btn.active {
+      background: #0f172a;
+      color: #ffffff;
+    }
+
+    /* Showcase Layout */
+    .showcase-container {
+      width: 100%;
+      max-width: 1280px;
+      display: flex;
+      flex-direction: column;
+      gap: 28px;
+      align-items: center;
+    }
+
+    .showcase-grid-top {
+      width: 100%;
+      display: flex;
+      justify-content: center;
+      align-items: flex-start;
+      gap: 32px;
+      flex-wrap: wrap;
+    }
+
+    .view-section {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .section-title {
+      font-size: 13px;
+      font-weight: 600;
+      color: #64748b;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .section-badge {
+      background: #e2e8f0;
+      color: #334155;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 11px;
+      padding: 2px 6px;
+      border-radius: 4px;
+      font-weight: 500;
+    }
+
+    /* 1. Pill Mode — Standard In-Chat Capsule */
+    .chat-pill-card {
+      width: 100%;
+      max-width: 350px;
+      background: #ffffff;
+      border: 1px solid #e2e8f0;
+      border-radius: 18px;
+      padding: 8px 14px 8px 10px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+      cursor: pointer;
+      transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+      user-select: none;
+    }
+
+    .chat-pill-card:hover {
+      border-color: #2563eb;
+      transform: translateY(-2px);
+      box-shadow: 0 8px 24px rgba(37, 99, 235, 0.12);
+    }
+
+    .pill-icon-box {
+      width: 76px;
+      height: 52px;
+      border-radius: 12px;
+      background: #f8fafc;
+      border: 1px solid #f1f5f9;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      overflow: hidden;
+      position: relative;
+    }
+
+    .pill-icon-box canvas {
+      width: 100%;
+      height: 100%;
+      display: block;
+    }
+
+    .pill-content {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+      min-width: 0;
+    }
+
+    .pill-title {
+      font-size: 17px;
+      font-weight: 600;
+      color: #0f172a;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .pill-subtitle {
+      font-size: 11px;
+      color: #64748b;
+      font-family: 'JetBrains Mono', monospace;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .pill-expand-btn {
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      background: #f8fafc;
+      border: 1px solid #e2e8f0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #334155;
+      flex-shrink: 0;
+      transition: all 0.15s ease;
+    }
+
+    .chat-pill-card:hover .pill-expand-btn {
+      background: #2563eb;
+      color: #ffffff;
+      border-color: #2563eb;
+    }
+
+    /* 2. Mobile Phone Frame (375x540) */
+    .mobile-phone-frame {
+      width: 100%;
+      max-width: 375px;
+      height: 540px;
+      background: #ffffff;
+      border: 1px solid #e2e8f0;
+      border-radius: 26px;
+      box-shadow: 0 12px 32px rgba(0, 0, 0, 0.08);
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      position: relative;
+    }
+
+    .phone-stage {
+      height: 285px;
+      min-height: 285px;
+      width: 100%;
+      background: #f0f9ff;
+      position: relative;
+      border-bottom: 1px solid #f1f5f9;
+      touch-action: none;
+      overflow: hidden;
+    }
+
+    .phone-stage canvas {
+      width: 100%;
+      height: 100%;
+      display: block;
+    }
+
+    .phone-controls {
+      height: 255px;
+      width: 100%;
+      background: #ffffff;
+      padding: 12px 16px 14px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      overflow: hidden;
+    }
+
+    /* 3. Desktop Split Card (880x490) */
+    #sectionDesktop {
+      width: 100%;
+      max-width: 880px;
+    }
+
+    .desktop-card {
+      width: 100%;
+      max-width: 880px;
+      height: 490px;
+      background: #ffffff;
+      border: 1px solid #e2e8f0;
+      border-radius: 24px;
+      box-shadow: 0 8px 24px -4px rgba(0, 0, 0, 0.06);
+      display: grid;
+      grid-template-columns: 370px 1fr;
+      overflow: hidden;
+    }
+
+    .math-panel {
+      width: 370px;
+      padding: 22px 24px;
+      background: #ffffff;
+      border-right: 1px solid #f1f5f9;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      overflow: hidden;
+    }
+
+    .stage-panel {
+      width: 100%;
+      height: 100%;
+      background: #f0f9ff;
+      position: relative;
+      overflow: hidden;
+      touch-action: none;
+    }
+
+    .stage-panel canvas {
+      width: 100%;
+      height: 100%;
+      display: block;
+    }
+
+    /* Floating Stage Footer Info Card (Route & Biodiversity - Clean, No Collision) */
+    .stage-footer-card {
+      position: absolute;
+      bottom: 8px;
+      left: 10px;
+      right: 10px;
+      background: rgba(255, 255, 255, 0.94);
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
+      border: 1px solid rgba(226, 232, 240, 0.95);
+      border-radius: 12px;
+      padding: 6px 12px 7px;
+      display: flex;
+      flex-direction: column;
+      gap: 3px;
+      box-shadow: 0 4px 14px rgba(0, 0, 0, 0.06);
+      pointer-events: none;
+      z-index: 10;
+    }
+
+    .footer-route-row {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 11px;
+      font-weight: 700;
+      color: #0f172a;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .route-arrow {
+      color: #94a3b8;
+      font-size: 10px;
+      font-weight: 400;
+    }
+
+    .route-sea {
+      color: #0284c7;
+    }
+
+    .footer-wildlife-row {
+      font-size: 10.5px;
+      font-weight: 500;
+      color: #475569;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    /* Audience Switch */
+    .audience-switch {
+      display: inline-flex;
+      background: #f1f5f9;
+      padding: 2.5px;
+      border-radius: 8px;
+      gap: 2px;
+      margin-bottom: 6px;
+      align-self: flex-start;
+    }
+
+    .aud-btn {
+      background: none;
+      border: none;
+      font-size: 10.5px;
+      font-weight: 600;
+      color: #64748b;
+      padding: 2.5px 8px;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: all 0.15s ease;
+      font-family: 'Inter', sans-serif;
+    }
+
+    .aud-btn.active {
+      background: #ffffff;
+      color: #0f172a;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+    }
+
+    /* Hero Concept */
+    .hero-concept {
+      margin-bottom: 6px;
+    }
+
+    .hero-title {
+      font-size: 17.5px;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+      color: #0f172a;
+    }
+
+    /* Dynamic Takeaway Card (Clean, Uncluttered, No "River journey" tag) */
+    .takeaway-card {
+      background: #f8fafc;
+      border: 1px solid #e2e8f0;
+      border-left: 3.5px solid #0284c7;
+      border-radius: 12px;
+      padding: 10px 12px;
+      margin-bottom: 8px;
+    }
+
+    .takeaway-text {
+      font-size: 11.5px;
+      line-height: 1.45;
+      color: #334155;
+    }
+
+    /* Controls Block */
+    .controls-block {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .control-label-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 11px;
+      font-weight: 600;
+      color: #475569;
+    }
+
+    .control-value {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 11px;
+      color: #0284c7;
+    }
+
+    /* 2x2 Grid of River Buttons for Perfect Touch Ergonomics */
+    .basin-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 7px;
+      width: 100%;
+    }
+
+    .basin-btn {
+      height: 35px;
+      background: #ffffff;
+      border: 1px solid #e2e8f0;
+      border-radius: 10px;
+      font-size: 11.5px;
+      font-weight: 600;
+      color: #334155;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 5px;
+      transition: all 0.15s ease;
+      font-family: 'Inter', sans-serif;
+      box-shadow: 0 1px 2px rgba(0, 0, 0, 0.03);
+    }
+
+    .basin-btn:hover {
+      background: #f8fafc;
+      color: #0f172a;
+      border-color: #cbd5e1;
+    }
+
+    .basin-btn.active {
+      background: #0f172a;
+      color: #ffffff;
+      border-color: #0f172a;
+      box-shadow: 0 2px 6px rgba(15, 23, 42, 0.2);
+    }
+
+    /* 4. Slide-Over Drawer */
+    .drawer-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(15, 23, 42, 0.4);
+      backdrop-filter: blur(4px);
+      -webkit-backdrop-filter: blur(4px);
+      z-index: 999;
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-end;
+      align-items: center;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.25s ease;
+    }
+
+    .drawer-overlay.active {
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    .drawer-content {
+      width: 100%;
+      max-width: 420px;
+      max-height: 90vh;
+      background: #ffffff;
+      border-radius: 26px 26px 0 0;
+      box-shadow: 0 -8px 32px rgba(0, 0, 0, 0.15);
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      transform: translateY(100%);
+      transition: transform 0.28s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    .drawer-overlay.active .drawer-content {
+      transform: translateY(0);
+    }
+
+    .drawer-handle-bar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 10px 18px 8px;
+      border-bottom: 1px solid #f1f5f9;
+    }
+
+    .drawer-notch {
+      width: 36px;
+      height: 4px;
+      border-radius: 999px;
+      background: #cbd5e1;
+    }
+
+    .drawer-close-btn {
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      background: #f1f5f9;
+      border: none;
+      color: #475569;
+      font-size: 13px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: all 0.15s ease;
+    }
+
+    .drawer-close-btn:hover {
+      background: #e2e8f0;
+      color: #0f172a;
+    }
+
+    .drawer-stage {
+      height: 285px;
+      width: 100%;
+      background: #f0f9ff;
+      position: relative;
+      border-bottom: 1px solid #f1f5f9;
+      touch-action: none;
+      overflow: hidden;
+    }
+
+    .drawer-stage canvas {
+      width: 100%;
+      height: 100%;
+      display: block;
+    }
+
+    .drawer-controls {
+      padding: 12px 18px 18px;
+      background: #ffffff;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    /* MANDATORY Responsive Mobile Guard */
+    @media (max-width: 960px) {
+      body {
+        padding: 12px 14px 32px;
+      }
+      .desktop-card {
+        grid-template-columns: 1fr;
+        height: auto;
+        max-width: 100%;
+      }
+      .desktop-card .stage-panel {
+        height: 285px;
+        order: 1;
+      }
+      .desktop-card .math-panel {
+        order: 2;
+        border-right: none;
+        border-top: 1px solid #f1f5f9;
+        width: 100%;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Top Navigation & View Mode Switcher -->
+  <header class="top-header">
+    <nav class="view-switcher" aria-label="Simulation view switcher">
+      <button class="switch-btn active" id="btnViewAll" onclick="setViewMode('all')">
+        <span>All views</span>
+      </button>
+      <button class="switch-btn" id="btnViewPill" onclick="setViewMode('pill')">
+        <span>Pill mode</span>
+      </button>
+      <button class="switch-btn" id="btnViewPhone" onclick="setViewMode('phone')">
+        <span>Mobile screen</span>
+      </button>
+      <button class="switch-btn" id="btnViewDesktop" onclick="setViewMode('desktop')">
+        <span>Desktop card</span>
+      </button>
+    </nav>
+  </header>
+
+  <!-- Showcase Container -->
+  <main class="showcase-container">
+
+    <!-- Top Grid: Pill Mode + Mobile Frame -->
+    <div class="showcase-grid-top" id="topGrid">
+      
+      <!-- 1. Pill Mode -->
+      <section class="view-section" id="sectionPill">
+        <h2 class="section-title">
+          <span>In-chat capsule</span>
+          <span class="section-badge">Pill</span>
+        </h2>
+        
+        <div class="chat-pill-card" id="chatPill" onclick="openDrawer()" role="button" tabindex="0" aria-label="Open River basins simulation drawer">
+          <div class="pill-icon-box">
+            <canvas id="pillCanvas" width="152" height="104"></canvas>
+          </div>
+          <div class="pill-content">
+            <div class="pill-title" id="pillTitle">Ganga river basin</div>
+            <div class="pill-subtitle" id="pillSubtitle">Northern plains • 2,525 km</div>
+          </div>
+          <button class="pill-expand-btn" aria-label="Expand simulation">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+              <polyline points="15 3 21 3 21 9"></polyline>
+              <polyline points="9 21 3 21 3 15"></polyline>
+              <line x1="21" y1="3" x2="14" y2="10"></line>
+              <line x1="3" y1="21" x2="10" y2="14"></line>
+            </svg>
+          </button>
+        </div>
+      </section>
+
+      <!-- 2. Mobile Phone Frame (375x540) -->
+      <section class="view-section" id="sectionPhone">
+        <h2 class="section-title">
+          <span>Mobile view</span>
+          <span class="section-badge">375 × 540</span>
+        </h2>
+
+        <div class="mobile-phone-frame">
+          <div class="phone-stage" id="phoneStage">
+            <canvas id="phoneCanvas"></canvas>
+            <!-- Structured Stage Footer Card: Clean Route & Wildlife, No Overlap -->
+            <div class="stage-footer-card">
+              <div class="footer-route-row">
+                <span class="route-origin" id="phoneRouteOrigin">Gangotri Glacier 🏔️</span>
+                <span class="route-arrow">➔</span>
+                <span class="route-sea" id="phoneRouteSea">Bay of Bengal 🌊</span>
+              </div>
+              <div class="footer-wildlife-row" id="phoneWildlife">
+                🐬 Ganges dolphin • 🪷 Sacred lotus • 🐅 Sunderbans tiger
+              </div>
+            </div>
+          </div>
+
+          <div class="phone-controls">
+            <div>
+              <div class="audience-switch">
+                <button class="aud-btn active" id="phoneAudJunior" onclick="setAudience('junior')">Junior</button>
+                <button class="aud-btn" id="phoneAudStem" onclick="setAudience('stem')">STEM</button>
+              </div>
+              <div class="hero-concept">
+                <h1 class="hero-title">River basins map</h1>
+              </div>
+            </div>
+
+            <div class="takeaway-card">
+              <p class="takeaway-text" id="phoneTakeawayText">Ganga begins in the snowy Himalayas and flows across northern India into the Sunderbans delta.</p>
+            </div>
+
+            <div class="controls-block">
+              <div class="control-label-row">
+                <span>Select river basin</span>
+                <span class="control-value" id="phoneSliderVal">Northern plains</span>
+              </div>
+              <div class="basin-grid">
+                <button class="basin-btn active" id="phoneBasinGanga" onclick="setBasin('ganga')">
+                  <span>🏔️ Ganga</span>
+                </button>
+                <button class="basin-btn" id="phoneBasinBrahmaputra" onclick="setBasin('brahmaputra')">
+                  <span>🌊 Brahmaputra</span>
+                </button>
+                <button class="basin-btn" id="phoneBasinGodavari" onclick="setBasin('godavari')">
+                  <span>🌲 Godavari</span>
+                </button>
+                <button class="basin-btn" id="phoneBasinNarmada" onclick="setBasin('narmada')">
+                  <span>🏞️ Narmada</span>
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+    </div>
+
+    <!-- 3. Desktop Mode (880x490 Split Card) -->
+    <section class="view-section" id="sectionDesktop">
+      <h2 class="section-title">
+        <span>Desktop split card</span>
+        <span class="section-badge">880 × 490</span>
+      </h2>
+
+      <div class="desktop-card">
+        <div class="math-panel">
+          <div>
+            <div class="audience-switch">
+              <button class="aud-btn active" id="deskAudJunior" onclick="setAudience('junior')">Junior</button>
+              <button class="aud-btn" id="deskAudStem" onclick="setAudience('stem')">STEM</button>
+            </div>
+            <div class="hero-concept">
+              <h1 class="hero-title">River basins map</h1>
+            </div>
+          </div>
+
+          <div class="takeaway-card">
+            <p class="takeaway-text" id="deskTakeawayText">Ganga begins in the snowy Himalayas and flows across northern India into the Sunderbans delta.</p>
+          </div>
+
+          <div class="controls-block">
+            <div class="control-label-row">
+              <span>Select river basin</span>
+              <span class="control-value" id="deskSliderVal">Northern plains</span>
+            </div>
+            <div class="basin-grid">
+              <button class="basin-btn active" id="deskBasinGanga" onclick="setBasin('ganga')">
+                <span>🏔️ Ganga</span>
+              </button>
+              <button class="basin-btn" id="deskBasinBrahmaputra" onclick="setBasin('brahmaputra')">
+                <span>🌊 Brahmaputra</span>
+              </button>
+              <button class="basin-btn" id="deskBasinGodavari" onclick="setBasin('godavari')">
+                <span>🌲 Godavari</span>
+              </button>
+              <button class="basin-btn" id="deskBasinNarmada" onclick="setBasin('narmada')">
+                <span>🏞️ Narmada</span>
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <div class="stage-panel" id="deskStage">
+          <canvas id="deskCanvas"></canvas>
+          <div class="stage-footer-card">
+            <div class="footer-route-row">
+              <span class="route-origin" id="deskRouteOrigin">Gangotri Glacier 🏔️</span>
+              <span class="route-arrow">➔</span>
+              <span class="route-sea" id="deskRouteSea">Bay of Bengal 🌊</span>
+            </div>
+            <div class="footer-wildlife-row" id="deskWildlife">
+              🐬 Ganges dolphin • 🪷 Sacred lotus • 🐅 Sunderbans tiger
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- 4. Slide-Over Bottom Drawer -->
+  <div class="drawer-overlay" id="drawerOverlay" onclick="closeDrawer(event)">
+    <div class="drawer-content" onclick="event.stopPropagation()">
+      <div class="drawer-handle-bar">
+        <div style="width: 28px;"></div>
+        <div class="drawer-notch"></div>
+        <button class="drawer-close-btn" onclick="closeDrawer()" aria-label="Close drawer">✕</button>
+      </div>
+
+      <div class="drawer-stage" id="drawerStage">
+        <canvas id="drawerCanvas"></canvas>
+        <div class="stage-footer-card">
+          <div class="footer-route-row">
+            <span class="route-origin" id="drawerRouteOrigin">Gangotri Glacier 🏔️</span>
+            <span class="route-arrow">➔</span>
+            <span class="route-sea" id="drawerRouteSea">Bay of Bengal 🌊</span>
+          </div>
+          <div class="footer-wildlife-row" id="drawerWildlife">
+            🐬 Ganges dolphin • 🪷 Sacred lotus • 🐅 Sunderbans tiger
+          </div>
+        </div>
+      </div>
+
+      <div class="drawer-controls">
+        <div class="audience-switch">
+          <button class="aud-btn active" id="drawerAudJunior" onclick="setAudience('junior')">Junior</button>
+          <button class="aud-btn" id="drawerAudStem" onclick="setAudience('stem')">STEM</button>
+        </div>
+        <div class="takeaway-card">
+          <p class="takeaway-text" id="drawerTakeawayText">Ganga begins in the snowy Himalayas and flows across northern India into the Sunderbans delta.</p>
+        </div>
+        <div class="controls-block">
+          <div class="basin-grid">
+            <button class="basin-btn active" id="drawerBasinGanga" onclick="setBasin('ganga')">
+              <span>🏔️ Ganga</span>
+            </button>
+            <button class="basin-btn" id="drawerBasinBrahmaputra" onclick="setBasin('brahmaputra')">
+              <span>🌊 Brahmaputra</span>
+            </button>
+            <button class="basin-btn" id="drawerBasinGodavari" onclick="setBasin('godavari')">
+              <span>🌲 Godavari</span>
+            </button>
+            <button class="basin-btn" id="drawerBasinNarmada" onclick="setBasin('narmada')">
+              <span>🏞️ Narmada</span>
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // --- Geographically Accurate India River Basins & Ecological Features ---
+    const riverData = {
+      ganga: {
+        name: 'Ganga river basin',
+        region: 'Northern plains',
+        length: '2,525 km',
+        originLabel: 'Gangotri Glacier 🏔️',
+        seaLabel: 'Bay of Bengal (Sunderbans) 🌊',
+        juniorText: 'Ganga melts from high snowy glaciers in the Himalayas and journeys east across northern fertile plains, feeding village wells and sacred lotus wetlands before reaching the Sunderbans delta.',
+        stemText: 'Catchment Area: 861,404 km² (26.2% of India). Originates from Bhagirathi / Alaknanda at Devprayag, draining the Indo-Gangetic plain into the world\'s largest mangrove delta (Q ≈ 16,650 m³/s).',
+        wildlifeText: '🐬 Ganges river dolphin • 🪷 Sacred lotus wetlands • 🐅 Sunderbans tiger',
+        themeColor: '#0284c7', // Sky Blue
+        catchmentFill: 'rgba(2, 132, 199, 0.12)',
+        catchmentBorder: 'rgba(2, 132, 199, 0.40)',
+        // Watershed boundary covering Uttarakhand, UP, Bihar, WB, and MP
+        catchmentPolygon: [
+          [0.34, 0.17], [0.46, 0.18], [0.58, 0.22], [0.70, 0.32], [0.74, 0.45],
+          [0.72, 0.51], [0.64, 0.48], [0.52, 0.44], [0.38, 0.40], [0.32, 0.28]
+        ],
+        // Main river stem with natural meandering path
+        mainStem: [
+          { x: 0.40, y: 0.20 }, // Gangotri Glacier (Snowy Himalayas)
+          { x: 0.43, y: 0.24 }, // Haridwar
+          { x: 0.48, y: 0.29 }, // Kannauj
+          { x: 0.54, y: 0.34 }, // Prayagraj (Yamuna confluence)
+          { x: 0.60, y: 0.36 }, // Varanasi
+          { x: 0.66, y: 0.38 }, // Patna
+          { x: 0.71, y: 0.43 }, // Farakka
+          { x: 0.72, y: 0.49 }  // Sunderbans Delta / Sea
+        ],
+        tributaries: [
+          // Yamuna
+          [{ x: 0.37, y: 0.22 }, { x: 0.42, y: 0.27 }, { x: 0.48, y: 0.32 }, { x: 0.54, y: 0.34 }],
+          // Ghaghara
+          [{ x: 0.54, y: 0.22 }, { x: 0.58, y: 0.28 }, { x: 0.63, y: 0.36 }],
+          // Gandak
+          [{ x: 0.63, y: 0.24 }, { x: 0.65, y: 0.30 }, { x: 0.66, y: 0.38 }]
+        ],
+        milestones: [
+          { name: 'Gangotri 🏔️', x: 0.40, y: 0.19, align: 'left', dx: 7, dy: -3 },
+          { name: 'Prayagraj', x: 0.54, y: 0.34, align: 'left', dx: 7, dy: -3 },
+          { name: 'Sunderbans 🪷', x: 0.72, y: 0.49, align: 'left', dx: 7, dy: 3 }
+        ]
+      },
+      brahmaputra: {
+        name: 'Brahmaputra basin',
+        region: 'Northeast valley',
+        length: '2,900 km',
+        originLabel: 'Angsi Glacier (Tibet) 🏔️',
+        seaLabel: 'Bay of Bengal (Meghna) 🌊',
+        juniorText: 'Brahmaputra loops around giant snow mountains into the lush green Assam valley, creating wide floodplain wetlands where wild one-horned rhinos swim.',
+        stemText: 'Catchment Area: 580,000 km². High sediment discharge (735 million tons/yr) powers braided alluvial floodplains and vital Kaziranga freshwater marshes (Q ≈ 19,800 m³/s).',
+        wildlifeText: '🦏 Indian one-horned rhino • 🦆 Migratory teals • 🌾 Floodplain marshes',
+        themeColor: '#0d9488', // Teal
+        catchmentFill: 'rgba(13, 148, 136, 0.12)',
+        catchmentBorder: 'rgba(13, 148, 136, 0.40)',
+        catchmentPolygon: [
+          [0.62, 0.16], [0.82, 0.18], [0.92, 0.24], [0.88, 0.34], [0.76, 0.36],
+          [0.72, 0.46], [0.68, 0.36], [0.62, 0.26]
+        ],
+        mainStem: [
+          { x: 0.62, y: 0.18 }, // Tibet Tsangpo
+          { x: 0.82, y: 0.20 }, // Eastern Loop (Namcha Barwa)
+          { x: 0.89, y: 0.26 }, // Enters Arunachal Pradesh (Siang)
+          { x: 0.84, y: 0.30 }, // Dibrugarh (Assam Valley)
+          { x: 0.77, y: 0.32 }, // Guwahati
+          { x: 0.73, y: 0.43 }, // Turns south
+          { x: 0.74, y: 0.50 }  // Bay of Bengal
+        ],
+        tributaries: [
+          [{ x: 0.84, y: 0.24 }, { x: 0.84, y: 0.30 }], // Subansiri
+          [{ x: 0.77, y: 0.26 }, { x: 0.77, y: 0.32 }]  // Manas
+        ],
+        milestones: [
+          { name: 'Tibet Snow 🏔️', x: 0.62, y: 0.18, align: 'left', dx: 7, dy: -3 },
+          { name: 'Guwahati', x: 0.77, y: 0.32, align: 'right', dx: -7, dy: -4 },
+          { name: 'Kaziranga 🦏', x: 0.84, y: 0.30, align: 'left', dx: 7, dy: 4 }
+        ]
+      },
+      godavari: {
+        name: 'Godavari basin',
+        region: 'Peninsular Deccan',
+        length: '1,465 km',
+        originLabel: 'Trimbakeshwar (Western Ghats) 🌲',
+        seaLabel: 'Bay of Bengal (Coringa Delta) 🌊',
+        juniorText: 'Known as Dakshin Ganga, Godavari begins in the misty green hills of the Western Ghats (not snow!) and winds across the rocky Deccan plateau into coastal mangrove wetlands.',
+        stemText: 'Catchment Area: 312,812 km² (9.5% of India). Peninsular India\'s largest river, originating in Western Ghats basalt trap and discharging east into the Coringa mangrove estuary.',
+        wildlifeText: '🦦 Smooth-coated otter • 🐟 River mahseer fish • 🌳 Coringa mangroves',
+        themeColor: '#d97706', // Warm Amber
+        catchmentFill: 'rgba(217, 119, 6, 0.12)',
+        catchmentBorder: 'rgba(217, 119, 6, 0.40)',
+        catchmentPolygon: [
+          [0.26, 0.50], [0.38, 0.46], [0.52, 0.48], [0.65, 0.54], [0.68, 0.64],
+          [0.64, 0.68], [0.48, 0.64], [0.34, 0.60], [0.26, 0.56]
+        ],
+        mainStem: [
+          { x: 0.28, y: 0.52 }, // Trimbakeshwar / Nashik (Lush Green Western Ghats)
+          { x: 0.36, y: 0.53 }, // Kopargaon
+          { x: 0.44, y: 0.55 }, // Nanded
+          { x: 0.53, y: 0.58 }, // Telangana
+          { x: 0.61, y: 0.62 }, // Bhadrachalam Gorge
+          { x: 0.67, y: 0.64 }  // Coringa Delta / Sea
+        ],
+        tributaries: [
+          [{ x: 0.46, y: 0.47 }, { x: 0.49, y: 0.53 }, { x: 0.53, y: 0.58 }], // Pranhita
+          [{ x: 0.59, y: 0.52 }, { x: 0.58, y: 0.57 }, { x: 0.61, y: 0.62 }]  // Indravati
+        ],
+        milestones: [
+          { name: 'Nashik Hills 🌲', x: 0.28, y: 0.52, align: 'right', dx: -7, dy: -4 },
+          { name: 'Nanded', x: 0.44, y: 0.55, align: 'left', dx: 7, dy: -3 },
+          { name: 'Coringa Delta 🦀', x: 0.67, y: 0.64, align: 'left', dx: 7, dy: 3 }
+        ]
+      },
+      narmada: {
+        name: 'Narmada basin',
+        region: 'Central rift valley',
+        length: '1,312 km',
+        originLabel: 'Amarkantak (Maikal Hills) 🏞️',
+        seaLabel: 'Arabian Sea (Khambhat) 🌊',
+        juniorText: 'Unlike eastern rivers, Narmada rushes WEST through white marble rock canyons between two mountain ranges, emptying straight into the salty Arabian Sea!',
+        stemText: 'Westward flowing rift valley drainage: 98,796 km² between Vindhya (North) and Satpura (South) mountain horsts, discharging directly into the Gulf of Khambhat without delta fan.',
+        wildlifeText: '🐟 Golden mahseer • 🪨 Marble rock canyon • 🦅 River osprey',
+        themeColor: '#7c3aed', // Purple
+        catchmentFill: 'rgba(124, 58, 237, 0.12)',
+        catchmentBorder: 'rgba(124, 58, 237, 0.40)',
+        catchmentPolygon: [
+          [0.55, 0.44], [0.45, 0.45], [0.35, 0.47], [0.22, 0.49],
+          [0.21, 0.54], [0.32, 0.53], [0.44, 0.51], [0.56, 0.49]
+        ],
+        mainStem: [
+          { x: 0.54, y: 0.46 }, // Amarkantak Kund (Central Plateau)
+          { x: 0.48, y: 0.47 }, // Mandla
+          { x: 0.42, y: 0.48 }, // Jabalpur Marble Rocks
+          { x: 0.34, y: 0.49 }, // Hoshangabad
+          { x: 0.26, y: 0.50 }, // Sardar Sarovar
+          { x: 0.21, y: 0.51 }  // Gulf of Khambhat / Arabian Sea
+        ],
+        tributaries: [
+          [{ x: 0.36, y: 0.53 }, { x: 0.34, y: 0.49 }] // Tawa River from Satpura
+        ],
+        milestones: [
+          { name: 'Amarkantak 🏞️', x: 0.54, y: 0.46, align: 'left', dx: 7, dy: -3 },
+          { name: 'Marble Rocks', x: 0.42, y: 0.48, align: 'left', dx: 7, dy: 4 },
+          { name: 'Arabian Sea 🌊', x: 0.21, y: 0.51, align: 'right', dx: -7, dy: 3 }
+        ]
+      }
+    };
+
+    // --- State ---
+    let state = {
+      activeBasin: 'ganga',
+      particles: [],
+      audience: 'junior'
+    };
+
+    function initParticles() {
+      state.particles = [];
+      for (let i = 0; i < 22; i++) {
+        state.particles.push({
+          progress: Math.random(),
+          speed: 0.0035 + Math.random() * 0.0025
+        });
+      }
+    }
+
+    // --- DOM Elements ---
+    const pillCanvas = document.getElementById('pillCanvas');
+    const phoneCanvas = document.getElementById('phoneCanvas');
+    const deskCanvas = document.getElementById('deskCanvas');
+    const drawerCanvas = document.getElementById('drawerCanvas');
+
+    // --- Basin Selector ---
+    function setBasin(key) {
+      state.activeBasin = key;
+      ['phone', 'desk', 'drawer'].forEach(p => {
+        ['Ganga', 'Brahmaputra', 'Godavari', 'Narmada'].forEach(b => {
+          const btn = document.getElementById(`${p}Basin${b}`);
+          if (btn) btn.classList.toggle('active', b.toLowerCase() === key);
+        });
+      });
+      updateUI();
+    }
+
+    // --- Audience Switch ---
+    function setAudience(mode) {
+      state.audience = mode;
+      document.querySelectorAll('.aud-btn').forEach(btn => {
+        btn.classList.toggle('active', btn.id.toLowerCase().includes(mode));
+      });
+      updateUI();
+    }
+
+    // --- Update Text & UI ---
+    function updateUI() {
+      const b = riverData[state.activeBasin];
+
+      // Update Controls & Takeaway text
+      ['phone', 'desk', 'drawer'].forEach(p => {
+        const valSpan = document.getElementById(`${p}SliderVal`);
+        if (valSpan) valSpan.textContent = b.region;
+
+        const takeawayEl = document.getElementById(`${p}TakeawayText`);
+        if (takeawayEl) takeawayEl.textContent = state.audience === 'junior' ? b.juniorText : b.stemText;
+
+        // Stage Footer Info Card (Route + Wildlife)
+        const originEl = document.getElementById(`${p}RouteOrigin`);
+        if (originEl) originEl.textContent = b.originLabel;
+
+        const seaEl = document.getElementById(`${p}RouteSea`);
+        if (seaEl) seaEl.textContent = b.seaLabel;
+
+        const wildEl = document.getElementById(`${p}Wildlife`);
+        if (wildEl) wildEl.textContent = b.wildlifeText;
+      });
+
+      // Pill Mode
+      document.getElementById('pillTitle').textContent = b.name;
+      document.getElementById('pillSubtitle').textContent = `${b.length} • ${b.region}`;
+    }
+
+    // --- View Switcher ---
+    function setViewMode(mode) {
+      document.querySelectorAll('.switch-btn').forEach(btn => btn.classList.remove('active'));
+      const activeBtn = document.getElementById('btnView' + mode.charAt(0).toUpperCase() + mode.slice(1));
+      if (activeBtn) activeBtn.classList.add('active');
+
+      const topGrid = document.getElementById('topGrid');
+      const pillSec = document.getElementById('sectionPill');
+      const phoneSec = document.getElementById('sectionPhone');
+      const deskSec = document.getElementById('sectionDesktop');
+
+      if (mode === 'all') {
+        topGrid.style.display = 'flex';
+        pillSec.style.display = 'flex';
+        phoneSec.style.display = 'flex';
+        deskSec.style.display = 'block';
+      } else if (mode === 'pill') {
+        topGrid.style.display = 'flex';
+        pillSec.style.display = 'flex';
+        phoneSec.style.display = 'none';
+        deskSec.style.display = 'none';
+      } else if (mode === 'phone') {
+        topGrid.style.display = 'flex';
+        pillSec.style.display = 'none';
+        phoneSec.style.display = 'flex';
+        deskSec.style.display = 'none';
+      } else if (mode === 'desktop') {
+        topGrid.style.display = 'none';
+        deskSec.style.display = 'block';
+      }
+      setTimeout(resizeCanvases, 50);
+    }
+
+    // --- Drawer Controls ---
+    function openDrawer() {
+      document.getElementById('drawerOverlay').classList.add('active');
+      document.body.style.overflow = 'hidden';
+      setTimeout(resizeCanvases, 60);
+    }
+
+    function closeDrawer(e) {
+      if (e && e.target !== e.currentTarget && !e.target.classList.contains('drawer-close-btn')) return;
+      document.getElementById('drawerOverlay').classList.remove('active');
+      document.body.style.overflow = '';
+    }
+
+    // --- Canvas Resizing ---
+    function resizeCanvases() {
+      const list = [
+        { cv: pillCanvas, w: 76, h: 52 },
+        { cv: phoneCanvas, w: phoneCanvas.parentElement.clientWidth, h: phoneCanvas.parentElement.clientHeight },
+        { cv: deskCanvas, w: deskCanvas.parentElement.clientWidth, h: deskCanvas.parentElement.clientHeight },
+        { cv: drawerCanvas, w: drawerCanvas.parentElement.clientWidth, h: drawerCanvas.parentElement.clientHeight }
+      ];
+
+      const dpr = window.devicePixelRatio || 1;
+      list.forEach(({ cv, w, h }) => {
+        if (!cv || !w || !h) return;
+        if (cv.width !== Math.round(w * dpr) || cv.height !== Math.round(h * dpr)) {
+          cv.width = Math.round(w * dpr);
+          cv.height = Math.round(h * dpr);
+        }
+      });
+    }
+
+    window.addEventListener('resize', resizeCanvases);
+
+    // --- India Silhouette (Normalized to 0..1 bounding box) ---
+    const indiaSilhouette = [
+      [0.38, 0.08], [0.42, 0.06], [0.45, 0.09], [0.43, 0.14], [0.48, 0.17],
+      [0.55, 0.18], [0.62, 0.19], [0.72, 0.20], [0.78, 0.22], [0.86, 0.23],
+      [0.92, 0.26], [0.90, 0.32], [0.84, 0.35], [0.78, 0.36], [0.73, 0.42],
+      [0.72, 0.49], [0.68, 0.58], [0.64, 0.68], [0.58, 0.78], [0.52, 0.88],
+      [0.48, 0.94], [0.45, 0.90], [0.41, 0.82], [0.35, 0.74], [0.30, 0.64],
+      [0.25, 0.54], [0.19, 0.50], [0.17, 0.46], [0.24, 0.46], [0.25, 0.42],
+      [0.18, 0.41], [0.23, 0.35], [0.26, 0.30], [0.29, 0.22], [0.33, 0.14]
+    ];
+
+    // Helper: interpolate along multi-segment river
+    function getPointOnRiver(pts, t) {
+      if (t <= 0) return pts[0];
+      if (t >= 1) return pts[pts.length - 1];
+
+      const totalSegments = pts.length - 1;
+      const fIndex = t * totalSegments;
+      const segIndex = Math.min(Math.floor(fIndex), totalSegments - 1);
+      const frac = fIndex - segIndex;
+
+      const p0 = pts[segIndex];
+      const p1 = pts[segIndex + 1];
+      return {
+        x: p0.x + (p1.x - p0.x) * frac,
+        y: p0.y + (p1.y - p0.y) * frac
+      };
+    }
+
+    // --- Render Authentic Physical Relief & River Basin Map ---
+    function renderMap(canvas, isMini = false) {
+      if (!canvas) return;
+      const ctx = canvas.getContext('2d');
+      const dpr = window.devicePixelRatio || 1;
+      const w = canvas.width / dpr;
+      const h = canvas.height / dpr;
+
+      ctx.save();
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      ctx.clearRect(0, 0, w, h);
+
+      // Fit India comfortably without clipping, reserving room for bottom card
+      const mapScale = Math.min(w, h - (isMini ? 4 : 44)) * (isMini ? 0.96 : 0.88);
+      const offX = w / 2 - mapScale * 0.5;
+      const offY = (h - (isMini ? 0 : 38)) / 2 - mapScale * 0.5 + (isMini ? 2 : 6);
+
+      function toX(rx) { return offX + rx * mapScale; }
+      function toY(ry) { return offY + ry * mapScale; }
+
+      // 1. Subtle Ocean Backdrop with Non-Colliding Labels
+      if (!isMini) {
+        ctx.fillStyle = '#f0f9ff';
+        ctx.fillRect(0, 0, w, h);
+
+        // Water Labels (Placed safely far into the sea to prevent collisions)
+        ctx.fillStyle = '#94a3b8';
+        ctx.font = '500 10.5px Inter, sans-serif';
+        ctx.fillText('Arabian Sea', toX(0.04), toY(0.70));
+        ctx.fillText('Bay of Bengal', toX(0.74), toY(0.70));
+        ctx.fillText('Indian Ocean', toX(0.39), toY(0.97));
+      }
+
+      // 2. India Subcontinent Landmass Polygon
+      ctx.beginPath();
+      indiaSilhouette.forEach(([rx, ry], idx) => {
+        const mx = toX(rx);
+        const my = toY(ry);
+        if (idx === 0) ctx.moveTo(mx, my);
+        else ctx.lineTo(mx, my);
+      });
+      ctx.closePath();
+
+      // Clean base terrain fill
+      ctx.fillStyle = '#fefdfa';
+      ctx.fill();
+      ctx.strokeStyle = '#cbd5e1';
+      ctx.lineWidth = isMini ? 1 : 1.4;
+      ctx.stroke();
+
+      // Clip inside India landmass for natural terrain painting
+      ctx.save();
+      ctx.clip();
+
+      // --- PHYSICAL GEOGRAPHY TERRAIN FEATURES (USER REQUESTED!) ---
+      if (!isMini) {
+        // A. Gangotri / Himalayan Glacial Snow Zone (Whitish / Ice-Blue, requested by user!)
+        const snowGrad = ctx.createLinearGradient(toX(0.35), toY(0.08), toX(0.85), toY(0.24));
+        snowGrad.addColorStop(0, '#f8fafc');
+        snowGrad.addColorStop(0.3, '#ffffff');
+        snowGrad.addColorStop(0.7, '#f1f5f9');
+        snowGrad.addColorStop(1, '#e2e8f0');
+
+        ctx.fillStyle = snowGrad;
+        ctx.beginPath();
+        ctx.moveTo(toX(0.30), toY(0.10));
+        ctx.lineTo(toX(0.50), toY(0.05));
+        ctx.lineTo(toX(0.92), toY(0.23));
+        ctx.lineTo(toX(0.85), toY(0.30));
+        ctx.lineTo(toX(0.68), toY(0.24));
+        ctx.lineTo(toX(0.42), toY(0.24));
+        ctx.lineTo(toX(0.32), toY(0.18));
+        ctx.closePath();
+        ctx.fill();
+
+        // Shaded Himalayan Mountain Ridgelines
+        ctx.strokeStyle = '#cbd5e1';
+        ctx.lineWidth = 1.2;
+        ctx.beginPath();
+        ctx.moveTo(toX(0.38), toY(0.16));
+        ctx.quadraticCurveTo(toX(0.58), toY(0.19), toX(0.85), toY(0.22));
+        ctx.stroke();
+
+        // B. Western Ghats Lush Rainforest Belt (Rich Greenery along West Coast, requested by user!)
+        const ghatsGrad = ctx.createLinearGradient(toX(0.24), toY(0.48), toX(0.45), toY(0.92));
+        ghatsGrad.addColorStop(0, '#16a34a'); // Emerald green
+        ghatsGrad.addColorStop(0.5, '#15803d'); // Deep rainforest green
+        ghatsGrad.addColorStop(1, '#22c55e');
+
+        ctx.fillStyle = ghatsGrad;
+        ctx.globalAlpha = 0.28;
+        ctx.beginPath();
+        // Ribbon of green along Western Ghats mountain spine
+        ctx.moveTo(toX(0.24), toY(0.48));
+        ctx.quadraticCurveTo(toX(0.28), toY(0.56), toX(0.33), toY(0.72));
+        ctx.quadraticCurveTo(toX(0.38), toY(0.82), toX(0.46), toY(0.92));
+        ctx.lineTo(toX(0.42), toY(0.92));
+        ctx.quadraticCurveTo(toX(0.33), toY(0.80), toX(0.28), toY(0.70));
+        ctx.quadraticCurveTo(toX(0.23), toY(0.58), toX(0.21), toY(0.49));
+        ctx.closePath();
+        ctx.fill();
+        ctx.globalAlpha = 1.0;
+
+        // Western Ghats spine line
+        ctx.strokeStyle = '#15803d';
+        ctx.lineWidth = 1.2;
+        ctx.setLineDash([2, 3]);
+        ctx.beginPath();
+        ctx.moveTo(toX(0.25), toY(0.50));
+        ctx.quadraticCurveTo(toX(0.30), toY(0.66), toX(0.44), toY(0.90));
+        ctx.stroke();
+        ctx.setLineDash([]);
+
+        // C. Central India Plateau / Rift Valley (Vindhya-Satpura ridge for Narmada)
+        ctx.strokeStyle = '#d97706';
+        ctx.lineWidth = 1;
+        ctx.setLineDash([3, 3]);
+        ctx.beginPath();
+        ctx.moveTo(toX(0.24), toY(0.47));
+        ctx.lineTo(toX(0.56), toY(0.44));
+        ctx.stroke();
+        ctx.setLineDash([]);
+
+        // D. Assam Green Floodplain Valley
+        ctx.fillStyle = 'rgba(34, 197, 94, 0.16)';
+        ctx.beginPath();
+        ctx.ellipse(toX(0.82), toY(0.31), mapScale * 0.08, mapScale * 0.03, -0.15, 0, Math.PI * 2);
+        ctx.fill();
+      }
+
+      ctx.restore(); // Restore clipping
+
+      // 3. Geographic Feature Labels (Carefully placed so they NEVER collide with rivers or cities)
+      if (!isMini) {
+        // Whitish Himalayas in North
+        ctx.fillStyle = '#64748b';
+        ctx.font = '600 9.5px Inter, sans-serif';
+        ctx.fillText('Himalayas 🏔️', toX(0.50), toY(0.15));
+
+        // Green Western Ghats in West Coast
+        ctx.fillStyle = '#15803d';
+        ctx.font = '600 9.5px Inter, sans-serif';
+        ctx.fillText('Western Ghats 🌲', toX(0.12), toY(0.62));
+      }
+
+      // 4. Render Active Catchment Basin Area
+      const activeObj = riverData[state.activeBasin];
+      if (!isMini && activeObj.catchmentPolygon) {
+        ctx.beginPath();
+        activeObj.catchmentPolygon.forEach(([rx, ry], idx) => {
+          const cx = toX(rx);
+          const cy = toY(ry);
+          if (idx === 0) ctx.moveTo(cx, cy);
+          else ctx.lineTo(cx, cy);
+        });
+        ctx.closePath();
+        ctx.fillStyle = activeObj.catchmentFill;
+        ctx.fill();
+        ctx.strokeStyle = activeObj.catchmentBorder;
+        ctx.lineWidth = 1.2;
+        ctx.setLineDash([3, 3]);
+        ctx.stroke();
+        ctx.setLineDash([]);
+      }
+
+      // 5. Draw Rivers with Organic Cartographic Flow (NO PIPES!)
+      Object.entries(riverData).forEach(([key, basin]) => {
+        const isActive = key === state.activeBasin;
+
+        // Draw Tributaries first
+        if (basin.tributaries) {
+          basin.tributaries.forEach(tPts => {
+            ctx.beginPath();
+            tPts.forEach((pt, i) => {
+              const tx = toX(pt.x);
+              const ty = toY(pt.y);
+              if (i === 0) ctx.moveTo(tx, ty);
+              else ctx.lineTo(tx, ty);
+            });
+            ctx.strokeStyle = isActive ? basin.themeColor : '#cbd5e1';
+            ctx.lineWidth = isActive ? 1.2 : 0.8;
+            ctx.lineCap = 'round';
+            ctx.stroke();
+          });
+        }
+
+        // Draw Main Stem with realistic river meander
+        ctx.beginPath();
+        basin.mainStem.forEach((pt, i) => {
+          const px = toX(pt.x);
+          const py = toY(pt.y);
+          if (i === 0) ctx.moveTo(px, py);
+          else ctx.lineTo(px, py);
+        });
+
+        if (isActive) {
+          // Soft luminous river glow (delicate, not a thick pipe!)
+          ctx.strokeStyle = 'rgba(56, 189, 248, 0.35)';
+          ctx.lineWidth = isMini ? 3 : 4.5;
+          ctx.stroke();
+
+          // River watercourse (natural 1.8px to 2.4px line)
+          ctx.strokeStyle = basin.themeColor;
+          ctx.lineWidth = isMini ? 1.6 : 2.4;
+          ctx.lineCap = 'round';
+          ctx.lineJoin = 'round';
+          ctx.stroke();
+
+          // River origin point
+          const pStart = basin.mainStem[0];
+          ctx.fillStyle = '#ffffff';
+          ctx.strokeStyle = '#0f172a';
+          ctx.lineWidth = 1.5;
+          ctx.beginPath();
+          ctx.arc(toX(pStart.x), toY(pStart.y), isMini ? 2 : 3.5, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.stroke();
+
+          // River mouth / delta endpoint
+          const pEnd = basin.mainStem[basin.mainStem.length - 1];
+          ctx.fillStyle = basin.themeColor;
+          ctx.beginPath();
+          ctx.arc(toX(pEnd.x), toY(pEnd.y), isMini ? 2.5 : 4, 0, Math.PI * 2);
+          ctx.fill();
+        } else {
+          // Inactive faint river course
+          ctx.strokeStyle = '#cbd5e1';
+          ctx.lineWidth = 0.9;
+          ctx.stroke();
+        }
+      });
+
+      // 6. Natural Water Current Shimmer (Tiny streamlined particles)
+      ctx.fillStyle = '#ffffff';
+      state.particles.forEach(p => {
+        const pt = getPointOnRiver(activeObj.mainStem, p.progress);
+        ctx.beginPath();
+        ctx.arc(toX(pt.x), toY(pt.y), isMini ? 1.2 : 1.8, 0, Math.PI * 2);
+        ctx.fill();
+      });
+
+      // 7. Non-Colliding River Milestone Labels on Active River
+      if (!isMini && w > 300 && activeObj.milestones) {
+        ctx.fillStyle = '#0f172a';
+        ctx.font = '600 10px Inter, sans-serif';
+        activeObj.milestones.forEach(m => {
+          ctx.textAlign = m.align || 'left';
+          ctx.fillText(m.name, toX(m.x) + (m.dx || 5), toY(m.y) + (m.dy || 0));
+        });
+        ctx.textAlign = 'left';
+      }
+
+      ctx.restore();
+    }
+
+    // --- Animation Loop ---
+    function animate() {
+      state.particles.forEach(p => {
+        p.progress += p.speed;
+        if (p.progress > 1) p.progress = 0;
+      });
+
+      renderMap(pillCanvas, true);
+      renderMap(phoneCanvas);
+      renderMap(deskCanvas);
+      renderMap(drawerCanvas);
+
+      requestAnimationFrame(animate);
+    }
+
+    // --- Init ---
+    window.addEventListener('DOMContentLoaded', () => {
+      initParticles();
+      resizeCanvases();
+      updateUI();
+      animate();
+    });
+  </script>
+</body>
+</html>

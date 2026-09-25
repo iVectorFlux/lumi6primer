@@ -1,0 +1,580 @@
+{
+  "book": {
+    "id": "grade-5-mathematics",
+    "title": "Mathematics (Class 5)",
+    "gradeNumber": 5,
+    "gradeLabel": "Grade 5",
+    "subject": "Mathematics",
+    "curriculum": "NCERT",
+    "nationalEducationPolicy": "NEP 2020 Aligned (Preparatory Stage)",
+    "publisher": "National Council of Educational Research and Training, New Delhi, India",
+    "edition": "Reprint 2026-27",
+    "unit": {
+      "id": "unit-math-5-01",
+      "book_id": "grade-5-mathematics",
+      "unit_number": 1,
+      "title": "Numbers and Operations Around Us",
+      "about_unit": "Explores how human travel, trade, measurement, and recording large quantities led to five-digit numbers (ten thousands), multi-digit multiplication, division arrays, and multiplicative reasoning.",
+      "banner_image_url": "https://kpigixuqpigjremowykx.supabase.co/storage/v1/object/public/curriculum-assets/grade-5/maths/ch01/images/sanju_mira_train_banner.png",
+      "facilitation_guide": [
+        {
+          "headline": "Real-World Contexts",
+          "text": "Connect numbers with train tickets, odometer readings, and village populations."
+        },
+        {
+          "headline": "Base-10 Manipulatives",
+          "text": "Emphasize grouping 10 of any unit into 1 of the next higher unit using visual tokens."
+        }
+      ]
+    }
+  },
+  "chapter": {
+    "id": "ch-math-5-01",
+    "number": 1,
+    "title": "We the Travellers — I",
+    "tagline": "Embark on an Indian railway expedition exploring 5-digit numbers, place value, and distance estimation",
+    "overview": "Join Sanju and Mira on their vibrant Indian Railways journey across states. As the train accelerates, children encounter 5-digit numbers, place value architecture (Ten Thousands), token manipulative models, rounding on number lines, and strategic math games.",
+    "sourcePdf": "public/Books/Maths/eemm101.pdf",
+    "totalPages": 16,
+    "characters": [
+      {
+        "name": "Sanju",
+        "role": "Curious Explorer",
+        "avatar": "👦"
+      },
+      {
+        "name": "Mira",
+        "role": "Analytical Guide",
+        "avatar": "👧"
+      },
+      {
+        "name": "Travelling Rabbit",
+        "role": "Spatial Estimator",
+        "avatar": "🐇"
+      }
+    ],
+    "sections": [
+      {
+        "id": "sec-math-5-01-01",
+        "lessonNumber": 1,
+        "title": "The Train Journey Begins: 5-Digit Numbers",
+        "subtitle": "Discovering quantities beyond 9,999 on railway platforms",
+        "storyNarrative": {
+          "characterName": "Sanju",
+          "dialogue": "Mira! Look at the train engine number and the town population sign! It has five digits—how do we read numbers greater than 9,999?"
+        },
+        "concept": {
+          "heading": "Entering the Ten Thousands (10,000)",
+          "keyRule": "Adding 1 to the largest 4-digit number (9,999 + 1) creates 10,000 (Ten Thousand), requiring a 5th place value column: TTh."
+        },
+        "image": "https://kpigixuqpigjremowykx.supabase.co/storage/v1/object/public/curriculum-assets/grade-5/maths/ch01/images/sanju_mira_train_banner.png",
+        "blocks": [
+          {
+            "type": "story_narrative",
+            "title": "Story Scene: Sanju's Dialogue",
+            "content": {
+              "speaker": "Sanju",
+              "dialogue": "Mira! Look at the train engine number and the town population sign! It has five digits—how do we read numbers greater than 9,999?"
+            }
+          },
+          {
+            "type": "concept",
+            "title": "Entering the Ten Thousands (10,000)",
+            "content": {
+              "heading": "Entering the Ten Thousands (10,000)",
+              "explanation": "Adding 1 to the largest 4-digit number (9,999 + 1) creates 10,000 (Ten Thousand), requiring a 5th place value column: TTh.",
+              "keyRule": "Adding 1 to the largest 4-digit number (9,999 + 1) creates 10,000 (Ten Thousand), requiring a 5th place value column: TTh."
+            }
+          },
+          {
+            "type": "image_diagram",
+            "title": "The Train Journey Begins: 5-Digit Numbers",
+            "content": {
+              "fileName": "sanju_mira_train_banner.png",
+              "publicUrl": "https://kpigixuqpigjremowykx.supabase.co/storage/v1/object/public/curriculum-assets/grade-5/maths/ch01/images/sanju_mira_train_banner.png",
+              "caption": "The Train Journey Begins: 5-Digit Numbers"
+            }
+          },
+          {
+            "type": "interactive_simulation",
+            "title": "Interactive Lab: Railway Odometer & Station Population Counter",
+            "content": {
+              "interactiveId": "interactive-math-5-ch01-les01",
+              "interactiveTitle": "Railway Odometer & Station Population Counter",
+              "interactiveType": "digit_odometer_manipulative",
+              "cdnUrl": "https://kpigixuqpigjremowykx.supabase.co/storage/v1/object/public/curriculum-assets/grade-5/interactives/interactive-math-5-ch01-les01.html",
+              "localUrl": "/curriculum interactive/interactive-math-5-ch01-les01.html",
+              "pedagogicalObjective": "Understand how adding 1 to 9,999 creates 10,000, requiring the Ten Thousands (TTh) place value column.",
+              "explanation": "Sanju and Mira look at the five-digit engine number and the town population signboard on the railway platform. In this interactive, students roll the unit wheels past 9,999 to watch all four digits reset to 0 and trigger the brand new \"Ten Thousands\" dial to flip to 1, creating 10,000.",
+              "simpleExplanation": "Roll the dials past 9,999 to see the brand new Ten Thousands column flip to 1 and create 10,000!",
+              "stemExplanation": "Positional base-10 decade boundary transition (10^3 to 10^4) and modular carry mechanics.",
+              "modes": [
+                "pill",
+                "drawer",
+                "mobile",
+                "desktop"
+              ],
+              "legoBlocks": [
+                "canvas-renderer",
+                "digit-roller",
+                "audio-feedback",
+                "number-card"
+              ]
+            }
+          }
+        ],
+        "questions": [
+          {
+            "id": "qst-sec-math-5-01-01-01",
+            "prompt": "What is the smallest 5-digit number?",
+            "options": [
+              "9,999",
+              "10,000",
+              "10,001",
+              "99,999"
+            ],
+            "correctAnswer": "10,000",
+            "hint": "Think of what comes right after 9,999."
+          }
+        ],
+        "interactive": {
+          "id": "interactive-math-5-ch01-les01",
+          "title": "Railway Odometer & Station Population Counter",
+          "type": "digit_odometer_manipulative",
+          "pedagogicalObjective": "Understand how adding 1 to 9,999 creates 10,000, requiring the Ten Thousands (TTh) place value column.",
+          "localUrl": "/curriculum interactive/interactive-math-5-ch01-les01.html",
+          "cdnUrl": "https://kpigixuqpigjremowykx.supabase.co/storage/v1/object/public/curriculum-assets/grade-5/interactives/interactive-math-5-ch01-les01.html",
+          "iframeCode": "<iframe src=\"https://kpigixuqpigjremowykx.supabase.co/storage/v1/object/public/curriculum-assets/grade-5/interactives/interactive-math-5-ch01-les01.html\" width=\"100%\" height=\"600\" frameborder=\"0\" allowfullscreen title=\"Railway Odometer & Station Population Counter\"></iframe>",
+          "modes": [
+            "pill",
+            "drawer",
+            "mobile",
+            "desktop"
+          ],
+          "legoBlocks": [
+            "canvas-renderer",
+            "digit-roller",
+            "audio-feedback",
+            "number-card"
+          ]
+        }
+      },
+      {
+        "id": "sec-math-5-01-02",
+        "lessonNumber": 2,
+        "title": "Place Value Architecture: The Ten Thousands",
+        "subtitle": "Decomposing numbers into TTh, Th, H, T, and O",
+        "storyNarrative": {
+          "characterName": "Mira",
+          "dialogue": "Every digit's value depends on its home! 48,276 means 4 Ten Thousands, 8 Thousands, 2 Hundreds, 7 Tens, and 6 Ones."
+        },
+        "concept": {
+          "heading": "Standard Expanded Notation",
+          "keyRule": "48,276 = (4 × 10,000) + (8 × 1,000) + (2 × 100) + (7 × 10) + (6 × 1)."
+        },
+        "image": "https://kpigixuqpigjremowykx.supabase.co/storage/v1/object/public/curriculum-assets/grade-5/maths/ch01/images/place_value_chart_tth.png",
+        "blocks": [
+          {
+            "type": "story_narrative",
+            "title": "Story Scene: Mira's Dialogue",
+            "content": {
+              "speaker": "Mira",
+              "dialogue": "Every digit's value depends on its home! 48,276 means 4 Ten Thousands, 8 Thousands, 2 Hundreds, 7 Tens, and 6 Ones."
+            }
+          },
+          {
+            "type": "concept",
+            "title": "Standard Expanded Notation",
+            "content": {
+              "heading": "Standard Expanded Notation",
+              "explanation": "48,276 = (4 × 10,000) + (8 × 1,000) + (2 × 100) + (7 × 10) + (6 × 1).",
+              "keyRule": "48,276 = (4 × 10,000) + (8 × 1,000) + (2 × 100) + (7 × 10) + (6 × 1)."
+            }
+          },
+          {
+            "type": "image_diagram",
+            "title": "Place Value Architecture: The Ten Thousands",
+            "content": {
+              "fileName": "place_value_chart_tth.png",
+              "publicUrl": "https://kpigixuqpigjremowykx.supabase.co/storage/v1/object/public/curriculum-assets/grade-5/maths/ch01/images/place_value_chart_tth.png",
+              "caption": "Place Value Architecture: The Ten Thousands"
+            }
+          },
+          {
+            "type": "interactive_simulation",
+            "title": "Interactive Lab: Base-10 Multi-Column Place Value Organizer",
+            "content": {
+              "interactiveId": "interactive-math-5-ch01-les02",
+              "interactiveTitle": "Base-10 Multi-Column Place Value Organizer",
+              "interactiveType": "place_value_sorter",
+              "cdnUrl": "https://kpigixuqpigjremowykx.supabase.co/storage/v1/object/public/curriculum-assets/grade-5/interactives/interactive-math-5-ch01-les02.html",
+              "localUrl": "/curriculum interactive/interactive-math-5-ch01-les02.html",
+              "pedagogicalObjective": "Decompose multi-digit numbers into standard and expanded notation across TTh, Th, H, T, and O.",
+              "explanation": "Mira explains that every digit's value depends on its column home. Students drag digit cards into a 5-column architectural chart to see how the digit 4 in 48,276 represents 40,000, while the digit 7 represents 70.",
+              "simpleExplanation": "Drag digit tiles into the colored columns to see how place value transforms digits into tens, hundreds, thousands, and ten-thousands!",
+              "stemExplanation": "Polynomial decomposition of integers in base-10: N = Σ d_i · 10^i across discrete positional columns.",
+              "modes": [
+                "pill",
+                "drawer",
+                "mobile",
+                "desktop"
+              ],
+              "legoBlocks": [
+                "drag-and-drop",
+                "place-value-chart",
+                "expansion-slider"
+              ]
+            }
+          }
+        ],
+        "questions": [
+          {
+            "id": "qst-sec-math-5-01-02-01",
+            "prompt": "In the number 65,432, what is the place value of the digit 6?",
+            "options": [
+              "600",
+              "6,000",
+              "60,000",
+              "600,000"
+            ],
+            "correctAnswer": "60,000",
+            "hint": "The digit 6 is in the Ten Thousands column."
+          }
+        ],
+        "interactive": {
+          "id": "interactive-math-5-ch01-les02",
+          "title": "Base-10 Multi-Column Place Value Organizer",
+          "type": "place_value_sorter",
+          "pedagogicalObjective": "Decompose multi-digit numbers into standard and expanded notation across TTh, Th, H, T, and O.",
+          "localUrl": "/curriculum interactive/interactive-math-5-ch01-les02.html",
+          "cdnUrl": "https://kpigixuqpigjremowykx.supabase.co/storage/v1/object/public/curriculum-assets/grade-5/interactives/interactive-math-5-ch01-les02.html",
+          "iframeCode": "<iframe src=\"https://kpigixuqpigjremowykx.supabase.co/storage/v1/object/public/curriculum-assets/grade-5/interactives/interactive-math-5-ch01-les02.html\" width=\"100%\" height=\"600\" frameborder=\"0\" allowfullscreen title=\"Base-10 Multi-Column Place Value Organizer\"></iframe>",
+          "modes": [
+            "pill",
+            "drawer",
+            "mobile",
+            "desktop"
+          ],
+          "legoBlocks": [
+            "drag-and-drop",
+            "place-value-chart",
+            "expansion-slider"
+          ]
+        }
+      },
+      {
+        "id": "sec-math-5-01-03",
+        "lessonNumber": 3,
+        "title": "The Token Model: Base-10 Manipulatives",
+        "subtitle": "Physical grouping and regrouping of multi-digit numbers",
+        "storyNarrative": {
+          "characterName": "Sanju",
+          "dialogue": "Ten yellow hundred tokens make one blue thousand token, and ten thousand tokens make one golden ten-thousand token!"
+        },
+        "concept": {
+          "heading": "Base-10 Regrouping Principle",
+          "keyRule": "10 units of any place value bundle together to create exactly 1 unit of the next higher place value."
+        },
+        "image": "https://kpigixuqpigjremowykx.supabase.co/storage/v1/object/public/curriculum-assets/grade-5/maths/ch01/images/ten_thousand_tokens_model.png",
+        "blocks": [
+          {
+            "type": "story_narrative",
+            "title": "Story Scene: Sanju's Dialogue",
+            "content": {
+              "speaker": "Sanju",
+              "dialogue": "Ten yellow hundred tokens make one blue thousand token, and ten thousand tokens make one golden ten-thousand token!"
+            }
+          },
+          {
+            "type": "concept",
+            "title": "Base-10 Regrouping Principle",
+            "content": {
+              "heading": "Base-10 Regrouping Principle",
+              "explanation": "10 units of any place value bundle together to create exactly 1 unit of the next higher place value.",
+              "keyRule": "10 units of any place value bundle together to create exactly 1 unit of the next higher place value."
+            }
+          },
+          {
+            "type": "image_diagram",
+            "title": "The Token Model: Base-10 Manipulatives",
+            "content": {
+              "fileName": "ten_thousand_tokens_model.png",
+              "publicUrl": "https://kpigixuqpigjremowykx.supabase.co/storage/v1/object/public/curriculum-assets/grade-5/maths/ch01/images/ten_thousand_tokens_model.png",
+              "caption": "The Token Model: Base-10 Manipulatives"
+            }
+          },
+          {
+            "type": "interactive_simulation",
+            "title": "Interactive Lab: Virtual Base-10 Token Exchange Bank",
+            "content": {
+              "interactiveId": "interactive-math-5-ch01-les03",
+              "interactiveTitle": "Virtual Base-10 Token Exchange Bank",
+              "interactiveType": "token_grouping_bank",
+              "cdnUrl": "https://kpigixuqpigjremowykx.supabase.co/storage/v1/object/public/curriculum-assets/grade-5/interactives/interactive-math-5-ch01-les03.html",
+              "localUrl": "/curriculum interactive/interactive-math-5-ch01-les03.html",
+              "pedagogicalObjective": "Physically experience the base-10 grouping rule: 10 of any unit bundle into 1 of the next higher unit.",
+              "explanation": "Sanju uses yellow hundred-tokens, blue thousand-tokens, and golden ten-thousand tokens on the train table. Students bundle 10 loose hundred-tokens together and watch them fuse into a single blue thousand-token.",
+              "simpleExplanation": "Collect 10 tokens of any color into the bundling ring, and watch them magically combine into 1 shiny higher-value token!",
+              "stemExplanation": "Equivalence classes under modular carry arithmetic in base-10 positional systems.",
+              "modes": [
+                "pill",
+                "drawer",
+                "mobile",
+                "desktop"
+              ],
+              "legoBlocks": [
+                "canvas-particles",
+                "draggable-tokens",
+                "exchange-engine"
+              ]
+            }
+          }
+        ],
+        "questions": [
+          {
+            "id": "qst-sec-math-5-01-03-01",
+            "prompt": "How many 100-tokens are needed to exchange for one 10,000-token?",
+            "options": [
+              "10",
+              "50",
+              "100",
+              "1,000"
+            ],
+            "correctAnswer": "100",
+            "hint": "100 × 100 = 10,000."
+          }
+        ],
+        "interactive": {
+          "id": "interactive-math-5-ch01-les03",
+          "title": "Virtual Base-10 Token Exchange Bank",
+          "type": "token_grouping_bank",
+          "pedagogicalObjective": "Physically experience the base-10 grouping rule: 10 of any unit bundle into 1 of the next higher unit.",
+          "localUrl": "/curriculum interactive/interactive-math-5-ch01-les03.html",
+          "cdnUrl": "https://kpigixuqpigjremowykx.supabase.co/storage/v1/object/public/curriculum-assets/grade-5/interactives/interactive-math-5-ch01-les03.html",
+          "iframeCode": "<iframe src=\"https://kpigixuqpigjremowykx.supabase.co/storage/v1/object/public/curriculum-assets/grade-5/interactives/interactive-math-5-ch01-les03.html\" width=\"100%\" height=\"600\" frameborder=\"0\" allowfullscreen title=\"Virtual Base-10 Token Exchange Bank\"></iframe>",
+          "modes": [
+            "pill",
+            "drawer",
+            "mobile",
+            "desktop"
+          ],
+          "legoBlocks": [
+            "canvas-particles",
+            "draggable-tokens",
+            "exchange-engine"
+          ]
+        }
+      },
+      {
+        "id": "sec-math-5-01-04",
+        "lessonNumber": 4,
+        "title": "Number Line Estimations & The Jumping Rabbit",
+        "subtitle": "Visualizing proximity and rounding to nearest 10, 100, and 1,000",
+        "storyNarrative": {
+          "characterName": "Travelling Rabbit",
+          "dialogue": "Hop! When I am at 48, 50 is closer than 40. But at 45, I make the big leap forward to 50!"
+        },
+        "concept": {
+          "heading": "Rounding by Spatial Proximity",
+          "keyRule": "Round to nearest benchmark: If the right-hand digit is 5 or more, round up; if 4 or less, stay at current benchmark."
+        },
+        "image": "https://kpigixuqpigjremowykx.supabase.co/storage/v1/object/public/curriculum-assets/grade-5/maths/ch01/images/rabbit_nearest_tens.png",
+        "blocks": [
+          {
+            "type": "story_narrative",
+            "title": "Story Scene: Travelling Rabbit's Dialogue",
+            "content": {
+              "speaker": "Travelling Rabbit",
+              "dialogue": "Hop! When I am at 48, 50 is closer than 40. But at 45, I make the big leap forward to 50!"
+            }
+          },
+          {
+            "type": "concept",
+            "title": "Rounding by Spatial Proximity",
+            "content": {
+              "heading": "Rounding by Spatial Proximity",
+              "explanation": "Round to nearest benchmark: If the right-hand digit is 5 or more, round up; if 4 or less, stay at current benchmark.",
+              "keyRule": "Round to nearest benchmark: If the right-hand digit is 5 or more, round up; if 4 or less, stay at current benchmark."
+            }
+          },
+          {
+            "type": "image_diagram",
+            "title": "Number Line Estimations & The Jumping Rabbit",
+            "content": {
+              "fileName": "rabbit_nearest_tens.png",
+              "publicUrl": "https://kpigixuqpigjremowykx.supabase.co/storage/v1/object/public/curriculum-assets/grade-5/maths/ch01/images/rabbit_nearest_tens.png",
+              "caption": "Number Line Estimations & The Jumping Rabbit"
+            }
+          },
+          {
+            "type": "interactive_simulation",
+            "title": "Interactive Lab: Hungry Rabbit Number Line Rounding Lab",
+            "content": {
+              "interactiveId": "interactive-math-5-ch01-les04",
+              "interactiveTitle": "Hungry Rabbit Number Line Rounding Lab",
+              "interactiveType": "magnetic_number_line_jumper",
+              "cdnUrl": "https://kpigixuqpigjremowykx.supabase.co/storage/v1/object/public/curriculum-assets/grade-5/interactives/interactive-math-5-ch01-les04.html",
+              "localUrl": "/curriculum interactive/interactive-math-5-ch01-les04.html",
+              "pedagogicalObjective": "Develop spatial proximity intuition for rounding numbers to the nearest 10, 100, and 1,000.",
+              "explanation": "The hungry rabbit hops along the number line seeking the nearest carrot patch at multiples of 10, 100, or 1,000. At 48, the patch at 50 is visibly closer than 40. At 45 (the midpoint), the rabbit gathers energy and leaps forward to 50.",
+              "simpleExplanation": "Help the hungry rabbit hop to the closest carrot patch by seeing which benchmark number is nearest on the number line!",
+              "stemExplanation": "Distance metric minimization on the 1D real number line with half-open rounding boundaries [n - 0.5, n + 0.5).",
+              "modes": [
+                "pill",
+                "drawer",
+                "mobile",
+                "desktop"
+              ],
+              "legoBlocks": [
+                "number-line-canvas",
+                "magnetic-snapping",
+                "zoom-slider",
+                "sprite-animation"
+              ]
+            }
+          }
+        ],
+        "questions": [
+          {
+            "id": "qst-sec-math-5-01-04-01",
+            "prompt": "Round 3,468 to the nearest 100.",
+            "options": [
+              "3,400",
+              "3,450",
+              "3,500",
+              "4,000"
+            ],
+            "correctAnswer": "3,500",
+            "hint": "Look at the tens digit (6). Since 6 >= 5, 468 is closer to 500."
+          }
+        ],
+        "interactive": {
+          "id": "interactive-math-5-ch01-les04",
+          "title": "Hungry Rabbit Number Line Rounding Lab",
+          "type": "magnetic_number_line_jumper",
+          "pedagogicalObjective": "Develop spatial proximity intuition for rounding numbers to the nearest 10, 100, and 1,000.",
+          "localUrl": "/curriculum interactive/interactive-math-5-ch01-les04.html",
+          "cdnUrl": "https://kpigixuqpigjremowykx.supabase.co/storage/v1/object/public/curriculum-assets/grade-5/interactives/interactive-math-5-ch01-les04.html",
+          "iframeCode": "<iframe src=\"https://kpigixuqpigjremowykx.supabase.co/storage/v1/object/public/curriculum-assets/grade-5/interactives/interactive-math-5-ch01-les04.html\" width=\"100%\" height=\"600\" frameborder=\"0\" allowfullscreen title=\"Hungry Rabbit Number Line Rounding Lab\"></iframe>",
+          "modes": [
+            "pill",
+            "drawer",
+            "mobile",
+            "desktop"
+          ],
+          "legoBlocks": [
+            "number-line-canvas",
+            "magnetic-snapping",
+            "zoom-slider",
+            "sprite-animation"
+          ]
+        }
+      },
+      {
+        "id": "sec-math-5-01-05",
+        "lessonNumber": 5,
+        "title": "Mental Math, Puzzles & The Nim Game",
+        "subtitle": "Mathematical strategy and logical deduction",
+        "storyNarrative": {
+          "characterName": "Sanju",
+          "dialogue": "Look at the two piles of pebbles on our carriage table! Whoever takes the last pebble wins—can math help us find the winning strategy?"
+        },
+        "concept": {
+          "heading": "Strategic Combinatorial Thinking",
+          "keyRule": "Symmetry and complement-pairing allow the second player to match the first player's moves to guarantee a win."
+        },
+        "image": "https://kpigixuqpigjremowykx.supabase.co/storage/v1/object/public/curriculum-assets/grade-5/maths/ch01/images/two_piles_of_pebbles.png",
+        "blocks": [
+          {
+            "type": "story_narrative",
+            "title": "Story Scene: Sanju's Dialogue",
+            "content": {
+              "speaker": "Sanju",
+              "dialogue": "Look at the two piles of pebbles on our carriage table! Whoever takes the last pebble wins—can math help us find the winning strategy?"
+            }
+          },
+          {
+            "type": "concept",
+            "title": "Strategic Combinatorial Thinking",
+            "content": {
+              "heading": "Strategic Combinatorial Thinking",
+              "explanation": "Symmetry and complement-pairing allow the second player to match the first player's moves to guarantee a win.",
+              "keyRule": "Symmetry and complement-pairing allow the second player to match the first player's moves to guarantee a win."
+            }
+          },
+          {
+            "type": "image_diagram",
+            "title": "Mental Math, Puzzles & The Nim Game",
+            "content": {
+              "fileName": "two_piles_of_pebbles.png",
+              "publicUrl": "https://kpigixuqpigjremowykx.supabase.co/storage/v1/object/public/curriculum-assets/grade-5/maths/ch01/images/two_piles_of_pebbles.png",
+              "caption": "Mental Math, Puzzles & The Nim Game"
+            }
+          },
+          {
+            "type": "interactive_simulation",
+            "title": "Interactive Lab: Two-Pile Pebble Nim Game Simulator",
+            "content": {
+              "interactiveId": "interactive-math-5-ch01-les05",
+              "interactiveTitle": "Two-Pile Pebble Nim Game Simulator",
+              "interactiveType": "combinatorial_puzzle_game",
+              "cdnUrl": "https://kpigixuqpigjremowykx.supabase.co/storage/v1/object/public/curriculum-assets/grade-5/interactives/interactive-math-5-ch01-les05.html",
+              "localUrl": "/curriculum interactive/interactive-math-5-ch01-les05.html",
+              "pedagogicalObjective": "Apply symmetry and complement-pairing strategies in logical reasoning and problem solving.",
+              "explanation": "To pass the time on the long railway journey, Sanju and Mira play a traditional pebble game with two equal piles. Whoever takes the last pebble wins. Students discover that mirroring the first player's move guarantees victory.",
+              "simpleExplanation": "Play the ancient pebble strategy game against Mira! Notice what happens when you mirror your opponent's moves on the opposite pile!",
+              "stemExplanation": "Impartial game theory, Sprague-Grundy theorem, and symmetric involution strategies in finite combinatorial games.",
+              "modes": [
+                "pill",
+                "drawer",
+                "mobile",
+                "desktop"
+              ],
+              "legoBlocks": [
+                "game-engine",
+                "ai-logic",
+                "pebble-sprites",
+                "dialogue-bubble"
+              ]
+            }
+          }
+        ],
+        "questions": [
+          {
+            "id": "qst-sec-math-5-01-05-01",
+            "prompt": "In the Nim game with two equal piles of 5 pebbles, what should Player 2 do when Player 1 takes 2 pebbles from Pile A?",
+            "options": [
+              "Take 1 pebble from Pile B",
+              "Take 2 pebbles from Pile B",
+              "Take all pebbles from Pile A",
+              "Pass turn"
+            ],
+            "correctAnswer": "Take 2 pebbles from Pile B",
+            "hint": "Keep the piles symmetrical to win."
+          }
+        ],
+        "interactive": {
+          "id": "interactive-math-5-ch01-les05",
+          "title": "Two-Pile Pebble Nim Game Simulator",
+          "type": "combinatorial_puzzle_game",
+          "pedagogicalObjective": "Apply symmetry and complement-pairing strategies in logical reasoning and problem solving.",
+          "localUrl": "/curriculum interactive/interactive-math-5-ch01-les05.html",
+          "cdnUrl": "https://kpigixuqpigjremowykx.supabase.co/storage/v1/object/public/curriculum-assets/grade-5/interactives/interactive-math-5-ch01-les05.html",
+          "iframeCode": "<iframe src=\"https://kpigixuqpigjremowykx.supabase.co/storage/v1/object/public/curriculum-assets/grade-5/interactives/interactive-math-5-ch01-les05.html\" width=\"100%\" height=\"600\" frameborder=\"0\" allowfullscreen title=\"Two-Pile Pebble Nim Game Simulator\"></iframe>",
+          "modes": [
+            "pill",
+            "drawer",
+            "mobile",
+            "desktop"
+          ],
+          "legoBlocks": [
+            "game-engine",
+            "ai-logic",
+            "pebble-sprites",
+            "dialogue-bubble"
+          ]
+        }
+      }
+    ]
+  }
+}

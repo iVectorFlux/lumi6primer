@@ -1,0 +1,230 @@
+{
+  "book": {
+    "id": "grade-5-mathematics",
+    "title": "Mathematics (Class 5)",
+    "gradeNumber": 5,
+    "gradeLabel": "Grade 5",
+    "subject": "Mathematics",
+    "curriculum": "NCERT",
+    "nationalEducationPolicy": "NEP 2020 Aligned (Preparatory Stage)",
+    "publisher": "National Council of Educational Research and Training, New Delhi, India",
+    "edition": "Reprint 2026-27",
+    "unit": {
+      "id": "unit-math-5-03",
+      "book_id": "grade-5-mathematics",
+      "unit_number": 3,
+      "title": "Shapes, Patterns and Space",
+      "about_unit": "Explores angles, turns, right angles, acute and obtuse angles, symmetrical patterns, tessellations, and directional navigation.",
+      "banner_image_url": "https://kpigixuqpigjremowykx.supabase.co/storage/v1/object/public/curriculum-assets/grade-5/maths/ch03/images/clock_hands_angles.png",
+      "facilitation_guide": [
+        {
+          "headline": "Embodied Geometry",
+          "text": "Use the statue game and yoga postures to feel angles as amount of turning."
+        },
+        {
+          "headline": "Angle Tester",
+          "text": "Construct cardboard angle testers to check right angles in the classroom environment."
+        }
+      ]
+    }
+  },
+  "chapter": {
+    "id": "ch-math-5-10",
+    "number": 10,
+    "title": "Reflection and Symmetry",
+    "tagline": "Crafting birthday cutouts, folding paper along lines of symmetry, and mirror reflections",
+    "overview": "Prem and Manu prepare 'Happy Birthday' cutouts for Lali's birthday. They recall lines of symmetry from Grade 4 to fold paper and cut symmetrical letters like 'A', 'M', and 'T' in a single snip. They explore mirror reflection symmetries and mask making.",
+    "sourcePdf": "public/Books/Maths/eemm110.pdf",
+    "totalPages": 6,
+    "characters": [
+      {
+        "name": "Prem",
+        "role": "Craft Master",
+        "avatar": "\ud83d\udc66"
+      },
+      {
+        "name": "Manu",
+        "role": "Symmetry Explorer",
+        "avatar": "\ud83d\udc66"
+      },
+      {
+        "name": "Lali",
+        "role": "Birthday Celebrant",
+        "avatar": "\ud83d\udc67"
+      }
+    ],
+    "sections": [
+      {
+        "id": "sec-math-5-10-01",
+        "lessonNumber": 1,
+        "title": "Birthday Cutouts: Lines of Symmetry",
+        "subtitle": "Cutting symmetrical letters by folding paper in half",
+        "storyNarrative": {
+          "characterName": "Prem",
+          "dialogue": "Manu, don't cut the whole letter 'A' freehand! Fold the paper down the middle\u2014the letter 'A' is symmetrical, so we only need to draw and cut half of it!"
+        },
+        "concept": {
+          "heading": "Line (Reflectional) Symmetry",
+          "keyRule": "A figure has reflectional symmetry if a line can divide it into two identical halves that coincide exactly when folded."
+        },
+        "image": "https://kpigixuqpigjremowykx.supabase.co/storage/v1/object/public/curriculum-assets/grade-5/maths/ch10/images/birthday_cutouts_symmetry.png",
+        "blocks": [
+          {
+            "type": "story_narrative",
+            "title": "Story Scene: Prem's Dialogue",
+            "content": {
+              "speaker": "Prem",
+              "dialogue": "Manu, don't cut the whole letter 'A' freehand! Fold the paper down the middle\u2014the letter 'A' is symmetrical, so we only need to draw and cut half of it!"
+            }
+          },
+          {
+            "type": "concept",
+            "title": "Line (Reflectional) Symmetry",
+            "content": {
+              "heading": "Line (Reflectional) Symmetry",
+              "explanation": "A figure has reflectional symmetry if a line can divide it into two identical halves that coincide exactly when folded.",
+              "keyRule": "A figure has reflectional symmetry if a line can divide it into two identical halves that coincide exactly when folded."
+            }
+          },
+          {
+            "type": "image_diagram",
+            "title": "Birthday Cutouts: Lines of Symmetry",
+            "content": {
+              "fileName": "birthday_cutouts_symmetry.png",
+              "publicUrl": "https://kpigixuqpigjremowykx.supabase.co/storage/v1/object/public/curriculum-assets/grade-5/maths/ch10/images/birthday_cutouts_symmetry.png",
+              "caption": "Birthday Cutouts: Lines of Symmetry"
+            }
+          }
+        ],
+        "questions": [
+          {
+            "id": "qst-sec-math-5-10-01-01",
+            "prompt": "Which of these capital letters has a vertical line of symmetry?",
+            "options": [
+              "B",
+              "M",
+              "E",
+              "P"
+            ],
+            "correctAnswer": "M",
+            "hint": "Folding 'M' along a vertical crease matches left and right halves perfectly."
+          }
+        ]
+      },
+      {
+        "id": "sec-math-5-10-02",
+        "lessonNumber": 2,
+        "title": "Horizontal vs. Vertical Lines of Symmetry",
+        "subtitle": "Discovering letters with one, two, or no lines of symmetry",
+        "storyNarrative": {
+          "characterName": "Manu",
+          "dialogue": "Look at the letter 'H'! It has BOTH a vertical line of symmetry and a horizontal line of symmetry!"
+        },
+        "concept": {
+          "heading": "Multiple Lines of Symmetry",
+          "keyRule": "Letters like 'H', 'I', 'O', and 'X' possess both horizontal and vertical axes of symmetry."
+        },
+        "image": "https://kpigixuqpigjremowykx.supabase.co/storage/v1/object/public/curriculum-assets/grade-5/maths/ch10/images/letter_folding_symmetry.png",
+        "blocks": [
+          {
+            "type": "story_narrative",
+            "title": "Story Scene: Manu's Dialogue",
+            "content": {
+              "speaker": "Manu",
+              "dialogue": "Look at the letter 'H'! It has BOTH a vertical line of symmetry and a horizontal line of symmetry!"
+            }
+          },
+          {
+            "type": "concept",
+            "title": "Multiple Lines of Symmetry",
+            "content": {
+              "heading": "Multiple Lines of Symmetry",
+              "explanation": "Letters like 'H', 'I', 'O', and 'X' possess both horizontal and vertical axes of symmetry.",
+              "keyRule": "Letters like 'H', 'I', 'O', and 'X' possess both horizontal and vertical axes of symmetry."
+            }
+          },
+          {
+            "type": "image_diagram",
+            "title": "Horizontal vs. Vertical Lines of Symmetry",
+            "content": {
+              "fileName": "letter_folding_symmetry.png",
+              "publicUrl": "https://kpigixuqpigjremowykx.supabase.co/storage/v1/object/public/curriculum-assets/grade-5/maths/ch10/images/letter_folding_symmetry.png",
+              "caption": "Horizontal vs. Vertical Lines of Symmetry"
+            }
+          }
+        ],
+        "questions": [
+          {
+            "id": "qst-sec-math-5-10-02-01",
+            "prompt": "Which letter has both vertical and horizontal lines of symmetry?",
+            "options": [
+              "A",
+              "C",
+              "H",
+              "F"
+            ],
+            "correctAnswer": "H",
+            "hint": "You can fold 'H' top-to-bottom or left-to-right."
+          }
+        ]
+      },
+      {
+        "id": "sec-math-5-10-03",
+        "lessonNumber": 3,
+        "title": "Mirror Reflections & Symmetrical Patterns",
+        "subtitle": "Checking symmetry with a pocket mirror along the mirror line",
+        "storyNarrative": {
+          "characterName": "Prem",
+          "dialogue": "Place your pocket mirror on the dashed line. The reflection completes the other half as if by magic!"
+        },
+        "concept": {
+          "heading": "Mirror Reflection Invariance",
+          "keyRule": "An object and its reflection across a mirror line are congruent and equidistant from the mirror axis."
+        },
+        "image": "https://kpigixuqpigjremowykx.supabase.co/storage/v1/object/public/curriculum-assets/grade-5/maths/ch10/images/mirror_reflection_patterns.png",
+        "blocks": [
+          {
+            "type": "story_narrative",
+            "title": "Story Scene: Prem's Dialogue",
+            "content": {
+              "speaker": "Prem",
+              "dialogue": "Place your pocket mirror on the dashed line. The reflection completes the other half as if by magic!"
+            }
+          },
+          {
+            "type": "concept",
+            "title": "Mirror Reflection Invariance",
+            "content": {
+              "heading": "Mirror Reflection Invariance",
+              "explanation": "An object and its reflection across a mirror line are congruent and equidistant from the mirror axis.",
+              "keyRule": "An object and its reflection across a mirror line are congruent and equidistant from the mirror axis."
+            }
+          },
+          {
+            "type": "image_diagram",
+            "title": "Mirror Reflections & Symmetrical Patterns",
+            "content": {
+              "fileName": "mirror_reflection_patterns.png",
+              "publicUrl": "https://kpigixuqpigjremowykx.supabase.co/storage/v1/object/public/curriculum-assets/grade-5/maths/ch10/images/mirror_reflection_patterns.png",
+              "caption": "Mirror Reflections & Symmetrical Patterns"
+            }
+          }
+        ],
+        "questions": [
+          {
+            "id": "qst-sec-math-5-10-03-01",
+            "prompt": "What happens when you place a mirror exactly on the line of symmetry of a heart shape?",
+            "options": [
+              "The image disappears",
+              "The mirror reflection recreates the complete heart",
+              "The heart turns upside down",
+              "It becomes a triangle"
+            ],
+            "correctAnswer": "The mirror reflection recreates the complete heart",
+            "hint": "Half plus its reflection equals the full shape."
+          }
+        ]
+      }
+    ]
+  }
+}

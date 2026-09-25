@@ -1,0 +1,225 @@
+{
+  "book": {
+    "id": "grade-5-mathematics",
+    "title": "Mathematics (Class 5)",
+    "gradeNumber": 5,
+    "gradeLabel": "Grade 5",
+    "subject": "Mathematics",
+    "curriculum": "NCERT",
+    "nationalEducationPolicy": "NEP 2020 Aligned (Preparatory Stage)",
+    "publisher": "National Council of Educational Research and Training, New Delhi, India",
+    "edition": "Reprint 2026-27",
+    "unit": {
+      "id": "unit-math-5-05",
+      "book_id": "grade-5-mathematics",
+      "unit_number": 5,
+      "title": "Data Handling & Visual Representations",
+      "about_unit": "Guides learners in collecting real-world survey data, organizing with tally marks, and communicating findings through pictographs and bar charts.",
+      "banner_image_url": "https://kpigixuqpigjremowykx.supabase.co/storage/v1/object/public/curriculum-assets/grade-5/maths/ch15/images/favourite_program_bar_chart.png",
+      "facilitation_guide": [
+        {
+          "headline": "Peer Surveys",
+          "text": "Empower students as child TV reporters to collect authentic classroom data."
+        },
+        {
+          "headline": "Tally Mark Grouping",
+          "text": "Demonstrate the five-bar gate tally system for efficient counting."
+        }
+      ]
+    }
+  },
+  "chapter": {
+    "id": "ch-math-5-15",
+    "number": 15,
+    "title": "Data Through Pictures",
+    "tagline": "Collecting survey responses, organizing with tally marks, and visualizing data in pictographs and bar graphs",
+    "overview": "Samaira and Kabir act as roving child TV reporters, asking classmates how many hours they spend watching TV, playing sports, or reading books. Students record frequencies using five-bar tally marks, design pictographs with clear scale keys, and construct vertical bar charts.",
+    "sourcePdf": "public/Books/Maths/eemm115.pdf",
+    "totalPages": 22,
+    "characters": [
+      {
+        "name": "Samaira",
+        "role": "Child TV Reporter",
+        "avatar": "\ud83c\udfa4"
+      },
+      {
+        "name": "Kabir",
+        "role": "Data Analyst",
+        "avatar": "\ud83d\udc66"
+      }
+    ],
+    "sections": [
+      {
+        "id": "sec-math-5-15-01",
+        "lessonNumber": 1,
+        "title": "Child TV Reporters: Collecting Survey Data",
+        "subtitle": "Designing survey questions and recording authentic peer responses",
+        "storyNarrative": {
+          "characterName": "Samaira",
+          "dialogue": "Good morning school! We are surveying Grade 5 students on their favorite after-school activity: Cartoons, Sports, or Reading?"
+        },
+        "concept": {
+          "heading": "Data Collection Integrity",
+          "keyRule": "Data is information collected through systematic observation or questioning to answer a specific inquiry."
+        },
+        "image": "https://kpigixuqpigjremowykx.supabase.co/storage/v1/object/public/curriculum-assets/grade-5/maths/ch15/images/child_reporters_tv_survey.png",
+        "blocks": [
+          {
+            "type": "story_narrative",
+            "title": "Story Scene: Samaira's Dialogue",
+            "content": {
+              "speaker": "Samaira",
+              "dialogue": "Good morning school! We are surveying Grade 5 students on their favorite after-school activity: Cartoons, Sports, or Reading?"
+            }
+          },
+          {
+            "type": "concept",
+            "title": "Data Collection Integrity",
+            "content": {
+              "heading": "Data Collection Integrity",
+              "explanation": "Data is information collected through systematic observation or questioning to answer a specific inquiry.",
+              "keyRule": "Data is information collected through systematic observation or questioning to answer a specific inquiry."
+            }
+          },
+          {
+            "type": "image_diagram",
+            "title": "Child TV Reporters: Collecting Survey Data",
+            "content": {
+              "fileName": "child_reporters_tv_survey.png",
+              "publicUrl": "https://kpigixuqpigjremowykx.supabase.co/storage/v1/object/public/curriculum-assets/grade-5/maths/ch15/images/child_reporters_tv_survey.png",
+              "caption": "Child TV Reporters: Collecting Survey Data"
+            }
+          }
+        ],
+        "questions": [
+          {
+            "id": "qst-sec-math-5-15-01-01",
+            "prompt": "What is the first step in conducting a statistical survey?",
+            "options": [
+              "Drawing the final bar chart",
+              "Formulating a clear question and collecting data",
+              "Guessing the answer",
+              "Writing an editorial"
+            ],
+            "correctAnswer": "Formulating a clear question and collecting data",
+            "hint": "You need clear data before you can visualize it."
+          }
+        ]
+      },
+      {
+        "id": "sec-math-5-15-02",
+        "lessonNumber": 2,
+        "title": "Tally Marks & Frequency Tables",
+        "subtitle": "Grouping counts into bunches of 5 for rapid calculation",
+        "storyNarrative": {
+          "characterName": "Kabir",
+          "dialogue": "Four vertical strokes and a diagonal slash makes a bundle of 5 (\u534c)! Three bundles plus two single strokes equals 17!"
+        },
+        "concept": {
+          "heading": "The 5-Gate Tally Convention",
+          "keyRule": "Tally marks group data in sets of 5 (IIII with cross-bar = 5) to prevent miscounting large totals."
+        },
+        "image": "https://kpigixuqpigjremowykx.supabase.co/storage/v1/object/public/curriculum-assets/grade-5/maths/ch15/images/tally_marks_frequency_chart.png",
+        "blocks": [
+          {
+            "type": "story_narrative",
+            "title": "Story Scene: Kabir's Dialogue",
+            "content": {
+              "speaker": "Kabir",
+              "dialogue": "Four vertical strokes and a diagonal slash makes a bundle of 5 (\u534c)! Three bundles plus two single strokes equals 17!"
+            }
+          },
+          {
+            "type": "concept",
+            "title": "The 5-Gate Tally Convention",
+            "content": {
+              "heading": "The 5-Gate Tally Convention",
+              "explanation": "Tally marks group data in sets of 5 (IIII with cross-bar = 5) to prevent miscounting large totals.",
+              "keyRule": "Tally marks group data in sets of 5 (IIII with cross-bar = 5) to prevent miscounting large totals."
+            }
+          },
+          {
+            "type": "image_diagram",
+            "title": "Tally Marks & Frequency Tables",
+            "content": {
+              "fileName": "tally_marks_frequency_chart.png",
+              "publicUrl": "https://kpigixuqpigjremowykx.supabase.co/storage/v1/object/public/curriculum-assets/grade-5/maths/ch15/images/tally_marks_frequency_chart.png",
+              "caption": "Tally Marks & Frequency Tables"
+            }
+          }
+        ],
+        "questions": [
+          {
+            "id": "qst-sec-math-5-15-02-01",
+            "prompt": "How many items are represented by 3 complete tally bundles of 5 and 4 single tally marks?",
+            "options": [
+              "15",
+              "17",
+              "19",
+              "23"
+            ],
+            "correctAnswer": "19",
+            "hint": "(3 \u00d7 5) + 4 = 15 + 4 = 19."
+          }
+        ]
+      },
+      {
+        "id": "sec-math-5-15-03",
+        "lessonNumber": 3,
+        "title": "Pictographs and Bar Charts",
+        "subtitle": "Communicating insights visually with scales and bars",
+        "storyNarrative": {
+          "characterName": "Samaira",
+          "dialogue": "In our bar chart, the height of each colored bar instantly shows that 28 students love sports while only 12 watch cartoons!"
+        },
+        "concept": {
+          "heading": "Interpreting Bar Graph Heights",
+          "keyRule": "Bar heights are proportional to frequency. A labeled vertical axis with an explicit scale allows direct quantitative comparison."
+        },
+        "image": "https://kpigixuqpigjremowykx.supabase.co/storage/v1/object/public/curriculum-assets/grade-5/maths/ch15/images/favourite_program_bar_chart.png",
+        "blocks": [
+          {
+            "type": "story_narrative",
+            "title": "Story Scene: Samaira's Dialogue",
+            "content": {
+              "speaker": "Samaira",
+              "dialogue": "In our bar chart, the height of each colored bar instantly shows that 28 students love sports while only 12 watch cartoons!"
+            }
+          },
+          {
+            "type": "concept",
+            "title": "Interpreting Bar Graph Heights",
+            "content": {
+              "heading": "Interpreting Bar Graph Heights",
+              "explanation": "Bar heights are proportional to frequency. A labeled vertical axis with an explicit scale allows direct quantitative comparison.",
+              "keyRule": "Bar heights are proportional to frequency. A labeled vertical axis with an explicit scale allows direct quantitative comparison."
+            }
+          },
+          {
+            "type": "image_diagram",
+            "title": "Pictographs and Bar Charts",
+            "content": {
+              "fileName": "favourite_program_bar_chart.png",
+              "publicUrl": "https://kpigixuqpigjremowykx.supabase.co/storage/v1/object/public/curriculum-assets/grade-5/maths/ch15/images/favourite_program_bar_chart.png",
+              "caption": "Pictographs and Bar Charts"
+            }
+          }
+        ],
+        "questions": [
+          {
+            "id": "qst-sec-math-5-15-03-01",
+            "prompt": "In a pictograph where 1 smiley icon represents 5 children, how many children do 6 smileys represent?",
+            "options": [
+              "11",
+              "25",
+              "30",
+              "36"
+            ],
+            "correctAnswer": "30",
+            "hint": "6 \u00d7 5 = 30 children."
+          }
+        ]
+      }
+    ]
+  }
+}

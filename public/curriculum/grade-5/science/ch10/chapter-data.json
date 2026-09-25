@@ -1,0 +1,225 @@
+{
+  "book": {
+    "id": "grade-5-science-evs",
+    "title": "Our Wondrous World (Class 5 EVS)",
+    "gradeNumber": 5,
+    "gradeLabel": "Grade 5",
+    "subject": "Science EVS",
+    "curriculum": "NCERT",
+    "nationalEducationPolicy": "NEP 2020 Aligned (Preparatory Stage)",
+    "publisher": "National Council of Educational Research and Training, New Delhi, India",
+    "edition": "Reprint 2026-27",
+    "unit": {
+      "id": "unit-sci-5-05",
+      "book_id": "grade-5-science-evs",
+      "unit_number": 5,
+      "title": "Landforms, Earth and Space Exploration",
+      "about_unit": "Examines human adaptations to diverse landforms (mountains, deserts, coasts) and expands student horizons to orbital spaceflight and viewing the Earth from space.",
+      "banner_image_url": "https://kpigixuqpigjremowykx.supabase.co/storage/v1/object/public/curriculum-assets/grade-5/science/ch10/images/earth_from_space_iss_view.jpg",
+      "facilitation_guide": [
+        {
+          "headline": "One Humanity Perspective",
+          "text": "Discuss astronaut Shubhanshu Shukla's reflection that national borders vanish from orbit."
+        },
+        {
+          "headline": "Ecological Stewardship",
+          "text": "Frame planet Earth as a fragile spaceship requiring shared care."
+        }
+      ]
+    }
+  },
+  "chapter": {
+    "id": "ch-sci-5-10",
+    "number": 10,
+    "title": "The Blue Planet",
+    "tagline": "Reflections from space orbit: Shubhanshu Shukla, the International Space Station, and protecting our one shared home",
+    "overview": "Inspired by Group Captain Shubhanshu Shukla's historic mission to the International Space Station, students view Earth from orbital altitude. They witness that borders, states, and fences do not exist from orbit\u2014our planet is a radiant blue marble cushioned by a thin blue atmosphere, requiring collective human care.",
+    "sourcePdf": "public/Books/Science EVS/eeev110.pdf",
+    "totalPages": 24,
+    "characters": [
+      {
+        "name": "Group Captain Shubhanshu Shukla",
+        "role": "Astronaut & ISS Flight Pilot",
+        "avatar": "\ud83d\udc68\u200d\ud83d\ude80"
+      },
+      {
+        "name": "Deepa",
+        "role": "Aspiring Space Scientist",
+        "avatar": "\ud83d\udc67"
+      }
+    ],
+    "sections": [
+      {
+        "id": "sec-sci-5-10-01",
+        "lessonNumber": 1,
+        "title": "Looking Down from Space: An Astronaut's Perspective",
+        "subtitle": "Shubhanshu Shukla's historic message to the nation from orbit",
+        "storyNarrative": {
+          "characterName": "Group Captain Shubhanshu Shukla",
+          "dialogue": "When you look at Earth from the cupola of the Space Station, the first thought that hits you is that the Earth is completely ONE! No borders, no state lines, no divides exist. We are all passengers on one ship!"
+        },
+        "concept": {
+          "heading": "The Overview Effect",
+          "keyRule": "The cognitive shift experienced by astronauts seeing Earth from space as a fragile, borderless sphere suspended in the cosmic void."
+        },
+        "image": "https://kpigixuqpigjremowykx.supabase.co/storage/v1/object/public/curriculum-assets/grade-5/science/ch10/images/earth_from_space_iss_view.jpg",
+        "blocks": [
+          {
+            "type": "story_narrative",
+            "title": "Story Scene: Group Captain Shubhanshu Shukla's Dialogue",
+            "content": {
+              "speaker": "Group Captain Shubhanshu Shukla",
+              "dialogue": "When you look at Earth from the cupola of the Space Station, the first thought that hits you is that the Earth is completely ONE! No borders, no state lines, no divides exist. We are all passengers on one ship!"
+            }
+          },
+          {
+            "type": "concept",
+            "title": "The Overview Effect",
+            "content": {
+              "heading": "The Overview Effect",
+              "explanation": "The cognitive shift experienced by astronauts seeing Earth from space as a fragile, borderless sphere suspended in the cosmic void.",
+              "keyRule": "The cognitive shift experienced by astronauts seeing Earth from space as a fragile, borderless sphere suspended in the cosmic void."
+            }
+          },
+          {
+            "type": "image_diagram",
+            "title": "Looking Down from Space: An Astronaut's Perspective",
+            "content": {
+              "fileName": "earth_from_space_iss_view.jpg",
+              "publicUrl": "https://kpigixuqpigjremowykx.supabase.co/storage/v1/object/public/curriculum-assets/grade-5/science/ch10/images/earth_from_space_iss_view.jpg",
+              "caption": "Looking Down from Space: An Astronaut's Perspective"
+            }
+          }
+        ],
+        "questions": [
+          {
+            "id": "qst-sec-sci-5-10-01-01",
+            "prompt": "What striking feature does an astronaut notice about national borders when viewing Earth from space?",
+            "options": [
+              "Borders glow bright red",
+              "No borders or boundaries are visible from space",
+              "Borders look like high stone walls",
+              "Borders are marked by deep rivers"
+            ],
+            "correctAnswer": "No borders or boundaries are visible from space",
+            "hint": "Borders are human concepts, not natural features."
+          }
+        ]
+      },
+      {
+        "id": "sec-sci-5-10-02",
+        "lessonNumber": 2,
+        "title": "The Fragile Blue Atmosphere & Microgravity",
+        "subtitle": "How a paper-thin blanket of air shields life on Earth",
+        "storyNarrative": {
+          "characterName": "Deepa",
+          "dialogue": "Captain Shukla, why does the atmosphere look so thin like a glowing blue ribbon on the edge of the planet? Does it protect us from the vacuum of space?"
+        },
+        "concept": {
+          "heading": "Atmospheric Shielding & Life Support",
+          "keyRule": "Earth's atmosphere shields surface organisms from solar cosmic radiation, burns incoming meteors, and maintains temperatures suitable for liquid water."
+        },
+        "image": "https://kpigixuqpigjremowykx.supabase.co/storage/v1/object/public/curriculum-assets/grade-5/science/ch10/images/shubhanshu_shukla_in_iss.jpg",
+        "blocks": [
+          {
+            "type": "story_narrative",
+            "title": "Story Scene: Deepa's Dialogue",
+            "content": {
+              "speaker": "Deepa",
+              "dialogue": "Captain Shukla, why does the atmosphere look so thin like a glowing blue ribbon on the edge of the planet? Does it protect us from the vacuum of space?"
+            }
+          },
+          {
+            "type": "concept",
+            "title": "Atmospheric Shielding & Life Support",
+            "content": {
+              "heading": "Atmospheric Shielding & Life Support",
+              "explanation": "Earth's atmosphere shields surface organisms from solar cosmic radiation, burns incoming meteors, and maintains temperatures suitable for liquid water.",
+              "keyRule": "Earth's atmosphere shields surface organisms from solar cosmic radiation, burns incoming meteors, and maintains temperatures suitable for liquid water."
+            }
+          },
+          {
+            "type": "image_diagram",
+            "title": "The Fragile Blue Atmosphere & Microgravity",
+            "content": {
+              "fileName": "shubhanshu_shukla_in_iss.jpg",
+              "publicUrl": "https://kpigixuqpigjremowykx.supabase.co/storage/v1/object/public/curriculum-assets/grade-5/science/ch10/images/shubhanshu_shukla_in_iss.jpg",
+              "caption": "The Fragile Blue Atmosphere & Microgravity"
+            }
+          }
+        ],
+        "questions": [
+          {
+            "id": "qst-sec-sci-5-10-02-01",
+            "prompt": "What essential role does Earth's atmosphere play in supporting life?",
+            "options": [
+              "It holds Earth down",
+              "It blocks harmful cosmic radiation and traps breathable oxygen",
+              "It turns space blue",
+              "It creates gravity"
+            ],
+            "correctAnswer": "It blocks harmful cosmic radiation and traps breathable oxygen",
+            "hint": "The atmosphere is our planet's life-support shield."
+          }
+        ]
+      },
+      {
+        "id": "sec-sci-5-10-03",
+        "lessonNumber": 3,
+        "title": "Stewards of Spaceship Earth: Our Shared Future",
+        "subtitle": "Ecological responsibility and global citizenship",
+        "storyNarrative": {
+          "characterName": "Group Captain Shubhanshu Shukla",
+          "dialogue": "In space, if your oxygen recycler breaks or your water leaks, everyone must work together to fix it. Earth is our grand spaceship\u2014we cannot fly away to another planet; we must protect this one!"
+        },
+        "concept": {
+          "heading": "Planetary Environmental Stewardship",
+          "keyRule": "Conservation of oceans, soil, forests, and atmosphere is the shared, non-negotiable responsibility of every nation and human being."
+        },
+        "image": "https://kpigixuqpigjremowykx.supabase.co/storage/v1/object/public/curriculum-assets/grade-5/science/ch10/images/continents_and_oceans_globe.jpg",
+        "blocks": [
+          {
+            "type": "story_narrative",
+            "title": "Story Scene: Group Captain Shubhanshu Shukla's Dialogue",
+            "content": {
+              "speaker": "Group Captain Shubhanshu Shukla",
+              "dialogue": "In space, if your oxygen recycler breaks or your water leaks, everyone must work together to fix it. Earth is our grand spaceship\u2014we cannot fly away to another planet; we must protect this one!"
+            }
+          },
+          {
+            "type": "concept",
+            "title": "Planetary Environmental Stewardship",
+            "content": {
+              "heading": "Planetary Environmental Stewardship",
+              "explanation": "Conservation of oceans, soil, forests, and atmosphere is the shared, non-negotiable responsibility of every nation and human being.",
+              "keyRule": "Conservation of oceans, soil, forests, and atmosphere is the shared, non-negotiable responsibility of every nation and human being."
+            }
+          },
+          {
+            "type": "image_diagram",
+            "title": "Stewards of Spaceship Earth: Our Shared Future",
+            "content": {
+              "fileName": "continents_and_oceans_globe.jpg",
+              "publicUrl": "https://kpigixuqpigjremowykx.supabase.co/storage/v1/object/public/curriculum-assets/grade-5/science/ch10/images/continents_and_oceans_globe.jpg",
+              "caption": "Stewards of Spaceship Earth: Our Shared Future"
+            }
+          }
+        ],
+        "questions": [
+          {
+            "id": "qst-sec-sci-5-10-03-01",
+            "prompt": "Why is planet Earth compared to a spaceship?",
+            "options": [
+              "It has jet engines on the bottom",
+              "It travels through space with finite resources that all crew members must protect",
+              "It is made of metal and glass",
+              "It can travel at the speed of light"
+            ],
+            "correctAnswer": "It travels through space with finite resources that all crew members must protect",
+            "hint": "Earth has limited water, air, and resources with no outside supply."
+          }
+        ]
+      }
+    ]
+  }
+}

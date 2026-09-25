@@ -1,0 +1,230 @@
+{
+  "book": {
+    "id": "grade-5-science-evs",
+    "title": "Our Wondrous World (Class 5 EVS)",
+    "gradeNumber": 5,
+    "gradeLabel": "Grade 5",
+    "subject": "Science EVS",
+    "curriculum": "NCERT",
+    "nationalEducationPolicy": "NEP 2020 Aligned (Preparatory Stage)",
+    "publisher": "National Council of Educational Research and Training, New Delhi, India",
+    "edition": "Reprint 2026-27",
+    "unit": {
+      "id": "unit-sci-5-03",
+      "book_id": "grade-5-science-evs",
+      "unit_number": 3,
+      "title": "Incredible India & Travel",
+      "about_unit": "Celebrates cultural, linguistic, and geographic diversity across India\u2014from the coastal tip of Kanyakumari to the high-altitude cold deserts of Ladakh.",
+      "banner_image_url": "https://kpigixuqpigjremowykx.supabase.co/storage/v1/object/public/curriculum-assets/grade-5/science/ch05/images/incredible_india_cultural_map.jpg",
+      "facilitation_guide": [
+        {
+          "headline": "Cultural Appreciation",
+          "text": "Explore harvest festivals and indigenous clothing styles across states."
+        },
+        {
+          "headline": "Extreme Shelters",
+          "text": "Examine how homes (Rebo tents, houseboats, mud dwellings) adapt to geography."
+        }
+      ]
+    }
+  },
+  "chapter": {
+    "id": "ch-sci-5-05",
+    "number": 5,
+    "title": "Incredible India",
+    "tagline": "Exploring the cultural, geographic, linguistic, and festive tapestry of a unified India",
+    "overview": "From the snow-clad peaks of the Himalayas to the coastal shores of the south, children explore how India's remarkable physical diversity fosters unique languages, traditional attire, harvest festivals (Bihu, Pongal, Baisakhi, Onam), and harmonious community living.",
+    "sourcePdf": "public/Books/Science EVS/eeev105.pdf",
+    "totalPages": 21,
+    "characters": [
+      {
+        "name": "Meera",
+        "role": "Cultural Ambassador",
+        "avatar": "\ud83d\udc67"
+      },
+      {
+        "name": "Tenzing",
+        "role": "Himalayan Friend",
+        "avatar": "\ud83d\udc66"
+      },
+      {
+        "name": "Farhan",
+        "role": "Heritage Explorer",
+        "avatar": "\ud83d\udc66"
+      }
+    ],
+    "sections": [
+      {
+        "id": "sec-sci-5-05-01",
+        "lessonNumber": 1,
+        "title": "Unity in Diversity: Languages, Attire, and Terrains",
+        "subtitle": "How geographic variety shapes regional lifestyles",
+        "storyNarrative": {
+          "characterName": "Meera",
+          "dialogue": "Look at our map of India: we speak dozens of languages, wear phiran, mundu, or saree, yet we all sing the same national anthem with pride!"
+        },
+        "concept": {
+          "heading": "Plurality and Constitutional Unity",
+          "keyRule": "India's unity in diversity is rooted in mutual respect, shared history, and cooperative federalism across diverse regional traditions."
+        },
+        "image": "https://kpigixuqpigjremowykx.supabase.co/storage/v1/object/public/curriculum-assets/grade-5/science/ch05/images/incredible_india_cultural_map.jpg",
+        "blocks": [
+          {
+            "type": "story_narrative",
+            "title": "Story Scene: Meera's Dialogue",
+            "content": {
+              "speaker": "Meera",
+              "dialogue": "Look at our map of India: we speak dozens of languages, wear phiran, mundu, or saree, yet we all sing the same national anthem with pride!"
+            }
+          },
+          {
+            "type": "concept",
+            "title": "Plurality and Constitutional Unity",
+            "content": {
+              "heading": "Plurality and Constitutional Unity",
+              "explanation": "India's unity in diversity is rooted in mutual respect, shared history, and cooperative federalism across diverse regional traditions.",
+              "keyRule": "India's unity in diversity is rooted in mutual respect, shared history, and cooperative federalism across diverse regional traditions."
+            }
+          },
+          {
+            "type": "image_diagram",
+            "title": "Unity in Diversity: Languages, Attire, and Terrains",
+            "content": {
+              "fileName": "incredible_india_cultural_map.jpg",
+              "publicUrl": "https://kpigixuqpigjremowykx.supabase.co/storage/v1/object/public/curriculum-assets/grade-5/science/ch05/images/incredible_india_cultural_map.jpg",
+              "caption": "Unity in Diversity: Languages, Attire, and Terrains"
+            }
+          }
+        ],
+        "questions": [
+          {
+            "id": "qst-sec-sci-5-05-01-01",
+            "prompt": "What phrase best describes India's rich coexistence of varied cultures and languages?",
+            "options": [
+              "Monoculture",
+              "Unity in Diversity",
+              "Isolated Regions",
+              "Uniform Society"
+            ],
+            "correctAnswer": "Unity in Diversity",
+            "hint": "Many unique traditions bonded together as one nation."
+          }
+        ]
+      },
+      {
+        "id": "sec-sci-5-05-02",
+        "lessonNumber": 2,
+        "title": "Harvest Festivals: Celebrating Nature's Bounty",
+        "subtitle": "Baisakhi, Pongal, Makar Sankranti, Bihu, and Onam",
+        "storyNarrative": {
+          "characterName": "Farhan",
+          "dialogue": "In January and spring, when the crops are reaped, people across every state thank nature\u2014Bihu in Assam, Pongal in Tamil Nadu, and Baisakhi in Punjab!"
+        },
+        "concept": {
+          "heading": "Agrarian Foundations of Indian Festivals",
+          "keyRule": "Most major Indian seasonal festivals align with solar transitions and agricultural harvest milestones."
+        },
+        "image": "https://kpigixuqpigjremowykx.supabase.co/storage/v1/object/public/curriculum-assets/grade-5/science/ch05/images/community_harvest_celebrations.jpg",
+        "blocks": [
+          {
+            "type": "story_narrative",
+            "title": "Story Scene: Farhan's Dialogue",
+            "content": {
+              "speaker": "Farhan",
+              "dialogue": "In January and spring, when the crops are reaped, people across every state thank nature\u2014Bihu in Assam, Pongal in Tamil Nadu, and Baisakhi in Punjab!"
+            }
+          },
+          {
+            "type": "concept",
+            "title": "Agrarian Foundations of Indian Festivals",
+            "content": {
+              "heading": "Agrarian Foundations of Indian Festivals",
+              "explanation": "Most major Indian seasonal festivals align with solar transitions and agricultural harvest milestones.",
+              "keyRule": "Most major Indian seasonal festivals align with solar transitions and agricultural harvest milestones."
+            }
+          },
+          {
+            "type": "image_diagram",
+            "title": "Harvest Festivals: Celebrating Nature's Bounty",
+            "content": {
+              "fileName": "community_harvest_celebrations.jpg",
+              "publicUrl": "https://kpigixuqpigjremowykx.supabase.co/storage/v1/object/public/curriculum-assets/grade-5/science/ch05/images/community_harvest_celebrations.jpg",
+              "caption": "Harvest Festivals: Celebrating Nature's Bounty"
+            }
+          }
+        ],
+        "questions": [
+          {
+            "id": "qst-sec-sci-5-05-02-01",
+            "prompt": "Which festival is celebrated in Assam to mark the agricultural harvest?",
+            "options": [
+              "Bihu",
+              "Pongal",
+              "Lohri",
+              "Onam"
+            ],
+            "correctAnswer": "Bihu",
+            "hint": "Bohag and Magh Bihu are celebrated in Assam."
+          }
+        ]
+      },
+      {
+        "id": "sec-sci-5-05-03",
+        "lessonNumber": 3,
+        "title": "Traditional Handicrafts, Folk Art, and Architecture",
+        "subtitle": "Pottery, Warli art, Madhubani painting, and local stone architecture",
+        "storyNarrative": {
+          "characterName": "Tenzing",
+          "dialogue": "In Ladakh, our houses use stone and mud bricks that stay warm in -20\u00b0C winter, while in Kerala, houses feature slanted tile roofs for torrential rain!"
+        },
+        "concept": {
+          "heading": "Vernacular Architecture",
+          "keyRule": "Traditional shelters use local materials optimized over generations to withstand regional microclimates with zero carbon footprint."
+        },
+        "image": "https://kpigixuqpigjremowykx.supabase.co/storage/v1/object/public/curriculum-assets/grade-5/science/ch05/images/folk_art_and_crafts.jpg",
+        "blocks": [
+          {
+            "type": "story_narrative",
+            "title": "Story Scene: Tenzing's Dialogue",
+            "content": {
+              "speaker": "Tenzing",
+              "dialogue": "In Ladakh, our houses use stone and mud bricks that stay warm in -20\u00b0C winter, while in Kerala, houses feature slanted tile roofs for torrential rain!"
+            }
+          },
+          {
+            "type": "concept",
+            "title": "Vernacular Architecture",
+            "content": {
+              "heading": "Vernacular Architecture",
+              "explanation": "Traditional shelters use local materials optimized over generations to withstand regional microclimates with zero carbon footprint.",
+              "keyRule": "Traditional shelters use local materials optimized over generations to withstand regional microclimates with zero carbon footprint."
+            }
+          },
+          {
+            "type": "image_diagram",
+            "title": "Traditional Handicrafts, Folk Art, and Architecture",
+            "content": {
+              "fileName": "folk_art_and_crafts.jpg",
+              "publicUrl": "https://kpigixuqpigjremowykx.supabase.co/storage/v1/object/public/curriculum-assets/grade-5/science/ch05/images/folk_art_and_crafts.jpg",
+              "caption": "Traditional Handicrafts, Folk Art, and Architecture"
+            }
+          }
+        ],
+        "questions": [
+          {
+            "id": "qst-sec-sci-5-05-03-01",
+            "prompt": "Why do traditional homes in coastal regions have steeply sloping roofs?",
+            "options": [
+              "To collect heavy snow",
+              "To allow heavy monsoon rainwater to drain off quickly",
+              "To hold more furniture",
+              "To look like mountains"
+            ],
+            "correctAnswer": "To allow heavy monsoon rainwater to drain off quickly",
+            "hint": "Heavy rains flow off steep slopes quickly."
+          }
+        ]
+      }
+    ]
+  }
+}

@@ -1,0 +1,1524 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Symmetry game — InteractEd</title>
+  
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;600&display=swap" rel="stylesheet">
+
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    body {
+      background-color: #f8fafc;
+      color: #0f172a;
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 16px 20px 48px;
+    }
+
+    /* Top Navigation Mode Switcher */
+    .top-header {
+      width: 100%;
+      max-width: 1280px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 20px;
+    }
+
+    .view-switcher {
+      display: flex;
+      align-items: center;
+      background: #ffffff;
+      border: 1px solid #e2e8f0;
+      padding: 4px;
+      border-radius: 12px;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+      gap: 4px;
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+
+    .switch-btn {
+      background: none;
+      border: none;
+      color: #64748b;
+      padding: 7px 14px;
+      font-size: 12.5px;
+      font-weight: 600;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: all 0.15s ease;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .switch-btn:hover {
+      background: #f1f5f9;
+      color: #0f172a;
+    }
+
+    .switch-btn.active {
+      background: #0f172a;
+      color: #ffffff;
+    }
+
+    /* Showcase Layout */
+    .showcase-container {
+      width: 100%;
+      max-width: 1280px;
+      display: flex;
+      flex-direction: column;
+      gap: 28px;
+      align-items: center;
+    }
+
+    .showcase-grid-top {
+      width: 100%;
+      display: flex;
+      justify-content: center;
+      align-items: flex-start;
+      gap: 32px;
+      flex-wrap: wrap;
+    }
+
+    .view-section {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .section-title {
+      font-size: 13px;
+      font-weight: 600;
+      color: #64748b;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .section-badge {
+      background: #e2e8f0;
+      color: #334155;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 11px;
+      padding: 2px 6px;
+      border-radius: 4px;
+      font-weight: 500;
+    }
+
+    /* 1. Pill Mode — Standard In-Chat Capsule */
+    .chat-pill-card {
+      width: 100%;
+      max-width: 350px;
+      background: #ffffff;
+      border: 1px solid #e2e8f0;
+      border-radius: 18px;
+      padding: 8px 14px 8px 10px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 14px;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+      cursor: pointer;
+      transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+      user-select: none;
+    }
+
+    .chat-pill-card:hover {
+      border-color: #0071e3;
+      transform: translateY(-2px);
+      box-shadow: 0 8px 24px rgba(0, 113, 227, 0.12);
+    }
+
+    .pill-icon-box {
+      width: 76px;
+      height: 52px;
+      border-radius: 12px;
+      background: #f8fafc;
+      border: 1px solid #f1f5f9;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      overflow: hidden;
+      position: relative;
+    }
+
+    .pill-icon-box canvas {
+      width: 100%;
+      height: 100%;
+      display: block;
+    }
+
+    .pill-content {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+      min-width: 0;
+    }
+
+    .pill-title {
+      font-size: 16px;
+      font-weight: 600;
+      color: #0f172a;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .pill-subtitle {
+      font-size: 11px;
+      color: #64748b;
+      font-family: 'JetBrains Mono', monospace;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .pill-expand-btn {
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      background: #f8fafc;
+      border: 1px solid #e2e8f0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #334155;
+      flex-shrink: 0;
+      transition: all 0.15s ease;
+    }
+
+    .chat-pill-card:hover .pill-expand-btn {
+      background: #0071e3;
+      color: #ffffff;
+      border-color: #0071e3;
+    }
+
+    /* 2. Mobile Phone Frame (375x540) */
+    .mobile-phone-frame {
+      width: 100%;
+      max-width: 375px;
+      height: 540px;
+      background: #ffffff;
+      border: 1px solid #e2e8f0;
+      border-radius: 26px;
+      box-shadow: 0 12px 32px rgba(0, 0, 0, 0.08);
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      position: relative;
+    }
+
+    .phone-stage {
+      height: 285px;
+      min-height: 285px;
+      width: 100%;
+      background: radial-gradient(circle at 50% 50%, #ffffff 0%, #f8fafc 60%, #edf2f7 100%);
+      position: relative;
+      border-bottom: 1px solid #f1f5f9;
+      touch-action: none;
+    }
+
+    .phone-stage canvas {
+      width: 100%;
+      height: 100%;
+      display: block;
+    }
+
+    .phone-controls {
+      height: 255px;
+      width: 100%;
+      background: #ffffff;
+      padding: 12px 16px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      overflow-y: hidden;
+    }
+
+    /* 3. Desktop Split Card (880x490) */
+    #sectionDesktop {
+      width: 100%;
+      max-width: 880px;
+    }
+
+    .desktop-card {
+      width: 100%;
+      max-width: 880px;
+      height: 490px;
+      background: #ffffff;
+      border: 1px solid #e2e8f0;
+      border-radius: 24px;
+      box-shadow: 0 8px 24px -4px rgba(0, 0, 0, 0.06);
+      display: grid;
+      grid-template-columns: 370px 1fr;
+      overflow: hidden;
+    }
+
+    .math-panel {
+      width: 370px;
+      padding: 22px 24px;
+      background: #ffffff;
+      border-right: 1px solid #f1f5f9;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      overflow: hidden;
+    }
+
+    .stage-panel {
+      width: 100%;
+      height: 100%;
+      background: radial-gradient(circle at 50% 48%, #ffffff 0%, #f8fafc 55%, #edf2f7 100%);
+      position: relative;
+      overflow: hidden;
+      touch-action: none;
+    }
+
+    .stage-panel canvas {
+      width: 100%;
+      height: 100%;
+      display: block;
+    }
+
+    /* Floating Canvas Pill Badge */
+    .canvas-overlay-pill {
+      position: absolute;
+      top: 14px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: rgba(255, 255, 255, 0.88);
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+      border: 1px solid rgba(0, 0, 0, 0.08);
+      border-radius: 999px;
+      padding: 5px 14px;
+      font-size: 11.5px;
+      font-weight: 600;
+      color: #0f172a;
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      box-shadow: 0 4px 14px rgba(0, 0, 0, 0.05);
+      pointer-events: none;
+      white-space: nowrap;
+      transition: all 0.25s ease;
+      z-index: 10;
+    }
+
+    .status-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: #34c759;
+      box-shadow: 0 0 6px rgba(52, 199, 89, 0.6);
+      transition: background 0.25s ease, box-shadow 0.25s ease;
+    }
+
+    .status-dot.imbalanced {
+      background: #ff9f0a;
+      box-shadow: 0 0 6px rgba(255, 159, 10, 0.6);
+    }
+
+    /* Common Interactive UI Controls */
+    .hero-concept {
+      margin-bottom: 8px;
+    }
+
+    .hero-title {
+      font-size: 18px;
+      font-weight: 700;
+      letter-spacing: -0.025em;
+      color: #0f172a;
+      margin-bottom: 2px;
+    }
+
+    .hero-sub {
+      font-size: 12px;
+      color: #64748b;
+      line-height: 1.4;
+    }
+
+    /* Segmented Control */
+    .segmented-control {
+      display: flex;
+      background: #f1f5f9;
+      border-radius: 10px;
+      padding: 3px;
+      gap: 3px;
+      margin-bottom: 10px;
+    }
+
+    .segment-btn {
+      flex: 1;
+      padding: 6px 10px;
+      font-size: 12px;
+      font-weight: 600;
+      color: #64748b;
+      background: none;
+      border: none;
+      border-radius: 7px;
+      cursor: pointer;
+      transition: all 0.18s cubic-bezier(0.16, 1, 0.3, 1);
+      text-align: center;
+    }
+
+    .segment-btn.active {
+      background: #ffffff;
+      color: #0f172a;
+      box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08);
+    }
+
+    /* Dynamic Takeaway Card */
+    .takeaway-card {
+      background: #f8fafc;
+      border: 1px solid #e2e8f0;
+      border-left: 3.5px solid #0071e3;
+      border-radius: 12px;
+      padding: 10px 13px;
+      margin-bottom: 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 3px;
+    }
+
+    .takeaway-badge {
+      font-size: 10.5px;
+      font-weight: 600;
+      color: #0071e3;
+      display: flex;
+      align-items: center;
+      gap: 5px;
+    }
+
+    .takeaway-text {
+      font-size: 12px;
+      line-height: 1.45;
+      color: #334155;
+    }
+
+    /* Controls Block */
+    .controls-block {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .dish-selector-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 6px 10px;
+      background: #f8fafc;
+      border: 1px solid #e2e8f0;
+      border-radius: 10px;
+      font-size: 12px;
+      font-weight: 500;
+      color: #475569;
+    }
+
+    .dish-tag {
+      font-weight: 700;
+      font-size: 12px;
+      color: #0071e3;
+      background: rgba(0, 113, 227, 0.08);
+      padding: 2px 8px;
+      border-radius: 6px;
+    }
+
+    /* Action Buttons Row */
+    .action-row {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 8px;
+    }
+
+    .take-btn {
+      height: 38px;
+      background: #ffffff;
+      border: 1px solid #e2e8f0;
+      color: #0f172a;
+      font-size: 12.5px;
+      font-weight: 600;
+      border-radius: 10px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 5px;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.03);
+      transition: all 0.15s cubic-bezier(0.16, 1, 0.3, 1);
+      touch-action: manipulation;
+    }
+
+    .take-btn:hover:not(:disabled) {
+      background: #0071e3;
+      color: #ffffff;
+      border-color: #0071e3;
+      transform: translateY(-1px);
+      box-shadow: 0 4px 12px rgba(0, 113, 227, 0.2);
+    }
+
+    .take-btn:disabled {
+      opacity: 0.38;
+      cursor: not-allowed;
+      background: #f1f5f9;
+      color: #94a3b8;
+      border-color: #e2e8f0;
+      transform: none;
+      box-shadow: none;
+    }
+
+    /* Secondary Controls */
+    .sub-controls-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+    }
+
+    .toggle-pill {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 12px;
+      font-weight: 500;
+      color: #475569;
+      cursor: pointer;
+      user-select: none;
+    }
+
+    /* Apple Switch */
+    .switch-ui {
+      position: relative;
+      display: inline-block;
+      width: 40px;
+      height: 22px;
+      flex-shrink: 0;
+    }
+
+    .switch-ui input {
+      opacity: 0;
+      width: 0;
+      height: 0;
+    }
+
+    .slider-switch {
+      position: absolute;
+      cursor: pointer;
+      inset: 0;
+      background-color: #cbd5e1;
+      transition: .25s ease;
+      border-radius: 999px;
+    }
+
+    .slider-switch:before {
+      position: absolute;
+      content: "";
+      height: 18px;
+      width: 18px;
+      left: 2px;
+      bottom: 2px;
+      background-color: #ffffff;
+      transition: .25s ease;
+      border-radius: 50%;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+    }
+
+    input:checked + .slider-switch {
+      background-color: #0071e3;
+    }
+
+    input:checked + .slider-switch:before {
+      transform: translateX(18px);
+    }
+
+    .btn-reset {
+      height: 32px;
+      padding: 0 14px;
+      background: #f1f5f9;
+      border: 1px solid #e2e8f0;
+      border-radius: 8px;
+      color: #475569;
+      font-size: 11.5px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.15s ease;
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+    }
+
+    .btn-reset:hover {
+      background: #e2e8f0;
+      color: #0f172a;
+    }
+
+    /* 4. Slide-Over Drawer */
+    .drawer-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(15, 23, 42, 0.4);
+      backdrop-filter: blur(4px);
+      -webkit-backdrop-filter: blur(4px);
+      z-index: 999;
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-end;
+      align-items: center;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.25s ease;
+    }
+
+    .drawer-overlay.active {
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    .drawer-content {
+      width: 100%;
+      max-width: 420px;
+      max-height: 90vh;
+      background: #ffffff;
+      border-radius: 26px 26px 0 0;
+      box-shadow: 0 -8px 32px rgba(0, 0, 0, 0.15);
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      transform: translateY(100%);
+      transition: transform 0.28s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    .drawer-overlay.active .drawer-content {
+      transform: translateY(0);
+    }
+
+    .drawer-handle-bar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 10px 18px 8px;
+      border-bottom: 1px solid #f1f5f9;
+    }
+
+    .drawer-notch {
+      width: 36px;
+      height: 4px;
+      border-radius: 999px;
+      background: #cbd5e1;
+    }
+
+    .drawer-close-btn {
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      background: #f1f5f9;
+      border: none;
+      color: #475569;
+      font-size: 13px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: all 0.15s ease;
+    }
+
+    .drawer-close-btn:hover {
+      background: #e2e8f0;
+      color: #0f172a;
+    }
+
+    .drawer-stage {
+      height: 285px;
+      width: 100%;
+      background: radial-gradient(circle at 50% 50%, #ffffff 0%, #f8fafc 60%, #edf2f7 100%);
+      position: relative;
+      border-bottom: 1px solid #f1f5f9;
+      touch-action: none;
+    }
+
+    .drawer-stage canvas {
+      width: 100%;
+      height: 100%;
+      display: block;
+    }
+
+    .drawer-controls {
+      padding: 14px 18px 20px;
+      background: #ffffff;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    /* MANDATORY Responsive Mobile Guard */
+    @media (max-width: 960px) {
+      body {
+        padding: 12px 14px 32px;
+      }
+      .desktop-card {
+        grid-template-columns: 1fr;
+        height: auto;
+        max-width: 100%;
+      }
+      .desktop-card .stage-panel {
+        height: 285px;
+        order: 1;
+      }
+      .desktop-card .math-panel {
+        order: 2;
+        border-right: none;
+        border-top: 1px solid #f1f5f9;
+        width: 100%;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Top Navigation Mode Switcher -->
+  <div class="top-header">
+    <div class="view-switcher">
+      <button class="switch-btn active" id="btnShowAll" onclick="setMode('all')">
+        👁️ View all modes
+      </button>
+      <button class="switch-btn" id="btnPillView" onclick="setMode('pill')">
+        💊 1. Pill mode
+      </button>
+      <button class="switch-btn" id="btnDrawerView" onclick="setMode('drawer')">
+        📱 2. Mobile card drawer
+      </button>
+      <button class="switch-btn" id="btnMobileView" onclick="setMode('mobile')">
+        📲 3. Mobile screen (375×540)
+      </button>
+      <button class="switch-btn" id="btnDesktopView" onclick="setMode('desktop')">
+        🖥️ 4. Desktop mode (880×490)
+      </button>
+    </div>
+  </div>
+
+  <!-- Showcase Container -->
+  <div class="showcase-container">
+
+    <!-- Top Row: Pill Mode + Mobile Phone Screen -->
+    <div class="showcase-grid-top" id="gridTop">
+
+      <!-- SECTION 1: PILL MODE -->
+      <div class="view-section" id="sectionPill">
+        <div class="section-title">
+          <span>💊 1. Pill mode</span>
+          <span class="section-badge">Compact capsule (350px)</span>
+        </div>
+
+        <div class="chat-pill-card" id="chatPillTrigger" onclick="openDrawer()">
+          <div class="pill-icon-box">
+            <canvas id="pillCanvas" width="152" height="104"></canvas>
+          </div>
+          <div class="pill-content">
+            <div class="pill-title">Symmetry game</div>
+            <div class="pill-subtitle" id="pillSubText">5 Left • 5 Right (Symmetric)</div>
+          </div>
+          <div class="pill-expand-btn" title="Expand to card drawer">
+            <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24">
+              <polyline points="15 3 21 3 21 9"/>
+              <polyline points="9 21 3 21 3 15"/>
+              <line x1="21" y1="3" x2="14" y2="10"/>
+              <line x1="3" y1="21" x2="10" y2="14"/>
+            </svg>
+          </div>
+        </div>
+      </div>
+
+      <!-- SECTION 2: MOBILE SCREEN MODE (375x540) -->
+      <div class="view-section" id="sectionMobile">
+        <div class="section-title">
+          <span>📲 2. Mobile screen mode (Top stage, bottom controls)</span>
+          <span class="section-badge">375 × 540 px</span>
+        </div>
+
+        <div class="mobile-phone-frame">
+          <div class="phone-stage">
+            <canvas id="mobileCanvas"></canvas>
+            <div class="canvas-overlay-pill">
+              <div class="status-dot" id="mobileStatusDot"></div>
+              <span id="mobileStatusLabel">Symmetric balance</span>
+            </div>
+          </div>
+
+          <div class="phone-controls">
+            <div>
+              <div class="hero-concept">
+                <div class="hero-title" style="font-size: 16px;">Symmetry game</div>
+                <div class="hero-sub" style="font-size: 11.5px;">Bilateral reflection & pairing strategy</div>
+              </div>
+
+              <div class="segmented-control">
+                <button class="segment-btn active" data-mode="mirror" onclick="setPlayMode('mirror')">Live mirror</button>
+                <button class="segment-btn" data-mode="bot" onclick="setPlayMode('bot')">Play vs bot</button>
+              </div>
+
+              <div class="takeaway-card" style="padding: 7px 10px; margin-bottom: 8px;">
+                <div class="takeaway-badge">
+                  <span>●</span> <span id="mobileTakeawayBadge">Mirror symmetry</span>
+                </div>
+                <div class="takeaway-text" id="mobileTakeawayText" style="font-size: 11.5px;">
+                  Tap stones or use buttons. Left and right mirror across the center axis.
+                </div>
+              </div>
+            </div>
+
+            <div class="controls-block">
+              <div class="dish-selector-row" style="padding: 4px 8px;">
+                <span>Active dish</span>
+                <span class="dish-tag" id="mobileActiveDishTag">Left dish</span>
+              </div>
+
+              <div class="action-row">
+                <button class="take-btn" data-take="1" onclick="handleTake(1)">Take 1</button>
+                <button class="take-btn" data-take="2" onclick="handleTake(2)">Take 2</button>
+                <button class="take-btn" data-take="3" onclick="handleTake(3)">Take 3</button>
+              </div>
+
+              <div class="sub-controls-row">
+                <label class="toggle-pill">
+                  <span class="switch-ui">
+                    <input type="checkbox" id="mobileGuideSwitch" checked onchange="toggleGuide(this.checked)">
+                    <span class="slider-switch"></span>
+                  </span>
+                  <span>Guide</span>
+                </label>
+                <button class="btn-reset" onclick="resetGame()">Reset</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- SECTION 3: DESKTOP SPLIT VIEW (880x490) -->
+    <div class="view-section" id="sectionDesktop" style="width: 100%; max-width: 880px;">
+      <div class="section-title">
+        <span>🖥️ 3. Desktop split view (Side-by-side)</span>
+        <span class="section-badge">880 × 490 px</span>
+      </div>
+
+      <div class="desktop-card">
+        <!-- Left: Controls Panel (370px) -->
+        <div class="math-panel">
+          <div>
+            <div class="hero-concept">
+              <h2 class="hero-title">Symmetry game</h2>
+              <p class="hero-sub">Explore bilateral reflection or master the winning mirror strategy.</p>
+            </div>
+
+            <div class="segmented-control">
+              <button class="segment-btn active" data-mode="mirror" onclick="setPlayMode('mirror')">Live mirror reflection</button>
+              <button class="segment-btn" data-mode="bot" onclick="setPlayMode('bot')">Play vs mirror bot</button>
+            </div>
+
+            <div class="takeaway-card">
+              <div class="takeaway-badge">
+                <span>●</span> <span id="desktopTakeawayBadge">Bilateral reflection</span>
+              </div>
+              <div class="takeaway-text" id="desktopTakeawayText">
+                Both dishes have 5 sapphire gems. Any change to one side mirrors directly across the vertical axis.
+              </div>
+            </div>
+          </div>
+
+          <div class="controls-block">
+            <div class="dish-selector-row">
+              <span>Active dish for action</span>
+              <span class="dish-tag" id="desktopActiveDishTag">Left dish</span>
+            </div>
+
+            <div class="action-row">
+              <button class="take-btn" data-take="1" onclick="handleTake(1)">Take 1</button>
+              <button class="take-btn" data-take="2" onclick="handleTake(2)">Take 2</button>
+              <button class="take-btn" data-take="3" onclick="handleTake(3)">Take 3</button>
+            </div>
+
+            <div class="sub-controls-row">
+              <label class="toggle-pill">
+                <span class="switch-ui">
+                  <input type="checkbox" id="desktopGuideSwitch" checked onchange="toggleGuide(this.checked)">
+                  <span class="slider-switch"></span>
+                </span>
+                <span>Symmetry guide rays</span>
+              </label>
+
+              <button class="btn-reset" onclick="resetGame()">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                  <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/>
+                  <path d="M3 3v5h5"/>
+                </svg>
+                Reset
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Right: Stage Panel -->
+        <div class="stage-panel">
+          <canvas id="desktopCanvas"></canvas>
+          <div class="canvas-overlay-pill">
+            <div class="status-dot" id="desktopStatusDot"></div>
+            <span id="desktopStatusLabel">Symmetric balance</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- SECTION 4: SLIDE-OVER DRAWER -->
+  <div class="drawer-overlay" id="drawerOverlay" onclick="handleDrawerBackdrop(event)">
+    <div class="drawer-content" onclick="event.stopPropagation()">
+      <div class="drawer-handle-bar">
+        <div class="drawer-notch"></div>
+        <button class="drawer-close-btn" onclick="closeDrawer()">✕</button>
+      </div>
+
+      <div class="drawer-stage">
+        <canvas id="drawerCanvas"></canvas>
+        <div class="canvas-overlay-pill">
+          <div class="status-dot" id="drawerStatusDot"></div>
+          <span id="drawerStatusLabel">Symmetric balance</span>
+        </div>
+      </div>
+
+      <div class="drawer-controls">
+        <div class="hero-concept">
+          <div class="hero-title" style="font-size: 17px;">Symmetry game</div>
+          <div class="hero-sub">Two-dish pairing strategy</div>
+        </div>
+
+        <div class="segmented-control">
+          <button class="segment-btn active" data-mode="mirror" onclick="setPlayMode('mirror')">Live mirror</button>
+          <button class="segment-btn" data-mode="bot" onclick="setPlayMode('bot')">Play vs bot</button>
+        </div>
+
+        <div class="takeaway-card" style="padding: 8px 11px;">
+          <div class="takeaway-badge">
+            <span>●</span> <span id="drawerTakeawayBadge">Mirror symmetry</span>
+          </div>
+          <div class="takeaway-text" id="drawerTakeawayText">
+            Tap gems directly or use the buttons below.
+          </div>
+        </div>
+
+        <div class="action-row">
+          <button class="take-btn" data-take="1" onclick="handleTake(1)">Take 1</button>
+          <button class="take-btn" data-take="2" onclick="handleTake(2)">Take 2</button>
+          <button class="take-btn" data-take="3" onclick="handleTake(3)">Take 3</button>
+        </div>
+
+        <div class="sub-controls-row">
+          <label class="toggle-pill">
+            <span class="switch-ui">
+              <input type="checkbox" id="drawerGuideSwitch" checked onchange="toggleGuide(this.checked)">
+              <span class="slider-switch"></span>
+            </span>
+            <span>Guide</span>
+          </label>
+          <button class="btn-reset" onclick="resetGame()">Reset</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // --- State Management ---
+    const state = {
+      playMode: 'mirror', // 'mirror' (direct live bilateral reflection) | 'bot' (Nim strategy vs AI)
+      leftCount: 5,
+      rightCount: 5,
+      activeDish: 'left', // 'left' | 'right'
+      showGuide: true,
+      turn: 'player', // 'player' | 'bot'
+      winner: null,
+      isBotThinking: false,
+      pulseAnim: 0,
+      animTime: 0
+    };
+
+    // Pre-calculated geometric rosette positions for up to 6 gems inside a dish (radius normalized)
+    // Symmetrical polar offsets (angle, distance ratio)
+    const GEM_LAYOUTS = {
+      1: [{ r: 0, a: 0 }],
+      2: [{ r: 0.42, a: Math.PI / 2 }, { r: 0.42, a: -Math.PI / 2 }],
+      3: [{ r: 0.45, a: -Math.PI / 2 }, { r: 0.45, a: Math.PI / 6 }, { r: 0.45, a: 5 * Math.PI / 6 }],
+      4: [{ r: 0.46, a: -Math.PI / 4 }, { r: 0.46, a: Math.PI / 4 }, { r: 0.46, a: 3 * Math.PI / 4 }, { r: 0.46, a: -3 * Math.PI / 4 }],
+      5: [
+        { r: 0, a: 0 },
+        { r: 0.52, a: -Math.PI / 2 },
+        { r: 0.52, a: 0 },
+        { r: 0.52, a: Math.PI / 2 },
+        { r: 0.52, a: Math.PI }
+      ],
+      6: [
+        { r: 0.50, a: 0 },
+        { r: 0.50, a: Math.PI / 3 },
+        { r: 0.50, a: 2 * Math.PI / 3 },
+        { r: 0.50, a: Math.PI },
+        { r: 0.50, a: 4 * Math.PI / 3 },
+        { r: 0.50, a: 5 * Math.PI / 3 }
+      ]
+    };
+
+    // UI View Switcher
+    function setMode(view) {
+      document.querySelectorAll('.switch-btn').forEach(b => b.classList.remove('active'));
+      const secPill = document.getElementById('sectionPill');
+      const secMobile = document.getElementById('sectionMobile');
+      const secDesktop = document.getElementById('sectionDesktop');
+      const gridTop = document.getElementById('gridTop');
+      const drawer = document.getElementById('drawerOverlay');
+
+      if (view === 'all') {
+        document.getElementById('btnShowAll').classList.add('active');
+        secPill.style.display = 'flex';
+        secMobile.style.display = 'flex';
+        secDesktop.style.display = 'flex';
+        gridTop.style.display = 'flex';
+        drawer.classList.remove('active');
+      } else if (view === 'pill') {
+        document.getElementById('btnPillView').classList.add('active');
+        secPill.style.display = 'flex';
+        secMobile.style.display = 'none';
+        secDesktop.style.display = 'none';
+        gridTop.style.display = 'flex';
+        drawer.classList.remove('active');
+      } else if (view === 'drawer') {
+        document.getElementById('btnDrawerView').classList.add('active');
+        secPill.style.display = 'none';
+        secMobile.style.display = 'none';
+        secDesktop.style.display = 'none';
+        drawer.classList.add('active');
+      } else if (view === 'mobile') {
+        document.getElementById('btnMobileView').classList.add('active');
+        secPill.style.display = 'none';
+        secMobile.style.display = 'flex';
+        secDesktop.style.display = 'none';
+        gridTop.style.display = 'flex';
+        drawer.classList.remove('active');
+      } else if (view === 'desktop') {
+        document.getElementById('btnDesktopView').classList.add('active');
+        secPill.style.display = 'none';
+        secMobile.style.display = 'none';
+        secDesktop.style.display = 'flex';
+        gridTop.style.display = 'none';
+        drawer.classList.remove('active');
+      }
+    }
+
+    function openDrawer() {
+      document.getElementById('drawerOverlay').classList.add('active');
+    }
+
+    function closeDrawer() {
+      document.getElementById('drawerOverlay').classList.remove('active');
+      if (document.getElementById('btnDrawerView').classList.contains('active')) {
+        setMode('all');
+      }
+    }
+
+    function handleDrawerBackdrop(e) {
+      if (e.target === document.getElementById('drawerOverlay')) {
+        closeDrawer();
+      }
+    }
+
+    function setPlayMode(mode) {
+      state.playMode = mode;
+      document.querySelectorAll('.segment-btn[data-mode]').forEach(b => {
+        b.classList.toggle('active', b.getAttribute('data-mode') === mode);
+      });
+      resetGame();
+    }
+
+    function toggleGuide(val) {
+      state.showGuide = val;
+      ['mobileGuideSwitch', 'desktopGuideSwitch', 'drawerGuideSwitch'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.checked = val;
+      });
+    }
+
+    function resetGame() {
+      state.leftCount = 5;
+      state.rightCount = 5;
+      state.activeDish = 'left';
+      state.turn = 'player';
+      state.winner = null;
+      state.isBotThinking = false;
+      state.pulseAnim = 1.0;
+      updateUI();
+    }
+
+    function handleTake(count) {
+      if (state.winner || state.isBotThinking) return;
+      const k = parseInt(count, 10);
+
+      if (state.playMode === 'mirror') {
+        // Live Mirror Mode: Removing from one side automatically removes from the other side!
+        // This guarantees perfect bilateral symmetry discovery!
+        const maxAvailable = Math.min(state.leftCount, state.rightCount);
+        if (k > maxAvailable) return;
+        state.leftCount -= k;
+        state.rightCount -= k;
+        state.pulseAnim = 1.0;
+
+        if (state.leftCount === 0 && state.rightCount === 0) {
+          state.winner = 'player';
+        }
+      } else {
+        // Play vs Bot (Nim Game Strategy)
+        const curCount = state.activeDish === 'left' ? state.leftCount : state.rightCount;
+        if (k > curCount) return;
+
+        if (state.activeDish === 'left') {
+          state.leftCount -= k;
+        } else {
+          state.rightCount -= k;
+        }
+
+        // Check if player took the last stone
+        if (state.leftCount === 0 && state.rightCount === 0) {
+          state.winner = 'player';
+          updateUI();
+          return;
+        }
+
+        // AI's Turn: AI uses the winning Symmetry Strategy!
+        // Whatever the player did, the AI mirrors on the OPPOSITE dish to restore symmetry!
+        state.turn = 'bot';
+        state.isBotThinking = true;
+        updateUI();
+
+        setTimeout(() => {
+          if (state.winner) return;
+
+          // AI plays on the other dish to equalize counts if possible
+          const diff = Math.abs(state.leftCount - state.rightCount);
+          if (state.leftCount > state.rightCount) {
+            // Left has more, take up to 3 from Left
+            const take = Math.min(3, Math.min(diff, state.leftCount));
+            state.leftCount -= take;
+          } else if (state.rightCount > state.leftCount) {
+            // Right has more, take up to 3 from Right
+            const take = Math.min(3, Math.min(diff, state.rightCount));
+            state.rightCount -= take;
+          } else {
+            // Already equal, take 1 from whichever has gems
+            if (state.leftCount > 0) state.leftCount -= 1;
+            else if (state.rightCount > 0) state.rightCount -= 1;
+          }
+
+          state.pulseAnim = 1.0;
+          state.isBotThinking = false;
+
+          if (state.leftCount === 0 && state.rightCount === 0) {
+            state.winner = 'bot';
+          } else {
+            state.turn = 'player';
+          }
+          updateUI();
+        }, 550);
+      }
+
+      updateUI();
+    }
+
+    function updateUI() {
+      const isSymmetric = state.leftCount === state.rightCount;
+      const total = state.leftCount + state.rightCount;
+
+      // Update Pill
+      const pillSub = document.getElementById('pillSubText');
+      if (pillSub) {
+        pillSub.textContent = `${state.leftCount} Left • ${state.rightCount} Right (${isSymmetric ? 'Symmetric' : 'Imbalanced'})`;
+      }
+
+      // Status Badges & Dots
+      ['mobile', 'desktop', 'drawer'].forEach(p => {
+        const dot = document.getElementById(`${p}StatusDot`);
+        const label = document.getElementById(`${p}StatusLabel`);
+        if (dot) dot.classList.toggle('imbalanced', !isSymmetric);
+        if (label) {
+          label.textContent = isSymmetric ? 'Symmetric balance' : 'Imbalanced state';
+        }
+
+        const tag = document.getElementById(`${p}ActiveDishTag`);
+        if (tag) {
+          tag.textContent = state.activeDish === 'left' ? 'Left dish' : 'Right dish';
+        }
+      });
+
+      // Takeaway Messaging
+      let badgeTitle = '';
+      let text = '';
+
+      if (state.winner === 'player') {
+        badgeTitle = 'Game complete';
+        text = state.playMode === 'mirror' 
+          ? 'All paired gems cleared symmetrically! Perfect reflection maintained.'
+          : 'Bravo! You cleared the last gems and conquered the symmetry puzzle!';
+      } else if (state.winner === 'bot') {
+        badgeTitle = 'Bot victory';
+        text = 'The Mirror Bot mirrored every move and took the final gem! Mirroring guarantees victory.';
+      } else if (state.isBotThinking) {
+        badgeTitle = 'Mirror bot thinking';
+        text = 'Calculating reflection move to maintain symmetry...';
+      } else if (state.playMode === 'mirror') {
+        badgeTitle = 'Bilateral reflection';
+        text = isSymmetric
+          ? `Both dishes hold ${state.leftCount} sapphire gems. Taking gems mirrors instantly across the center axis.`
+          : `Dishes differ: Left (${state.leftCount}) vs Right (${state.rightCount}). Balance broken.`;
+      } else {
+        // Bot mode
+        badgeTitle = isSymmetric ? 'Symmetry preserved' : 'Your turn to mirror';
+        text = isSymmetric
+          ? `Symmetrical (${state.leftCount} and ${state.rightCount}). Your move: choose a dish and take 1 to 3 gems.`
+          : `Dishes imbalanced (${state.leftCount} vs ${state.rightCount}). Mirror the bot's count to regain the advantage!`;
+      }
+
+      ['mobile', 'desktop', 'drawer'].forEach(p => {
+        const b = document.getElementById(`${p}TakeawayBadge`);
+        const t = document.getElementById(`${p}TakeawayText`);
+        if (b) b.textContent = badgeTitle;
+        if (t) t.textContent = text;
+      });
+
+      // Update button disabled states
+      const activeCount = state.playMode === 'mirror' 
+        ? Math.min(state.leftCount, state.rightCount) 
+        : (state.activeDish === 'left' ? state.leftCount : state.rightCount);
+
+      document.querySelectorAll('.take-btn[data-take]').forEach(btn => {
+        const k = parseInt(btn.getAttribute('data-take'), 10);
+        btn.disabled = k > activeCount || state.winner !== null || state.isBotThinking;
+      });
+    }
+
+    // --- High-Fidelity Apple Retina Canvas Rendering ---
+    const canvases = [
+      { id: 'desktopCanvas', isMini: false },
+      { id: 'mobileCanvas', isMini: false },
+      { id: 'drawerCanvas', isMini: false },
+      { id: 'pillCanvas', isMini: true }
+    ];
+
+    function renderStage(cv, isMini) {
+      const rect = cv.getBoundingClientRect();
+      const w = isMini ? 152 : rect.width || 370;
+      const h = isMini ? 104 : rect.height || 285;
+      const dpr = window.devicePixelRatio || 1;
+
+      if (cv.width !== Math.round(w * dpr) || cv.height !== Math.round(h * dpr)) {
+        cv.width = Math.round(w * dpr);
+        cv.height = Math.round(h * dpr);
+      }
+
+      const ctx = cv.getContext('2d');
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      ctx.clearRect(0, 0, w, h);
+
+      const cx = w / 2;
+      const cy = h / 2 + (isMini ? 0 : 6);
+
+      if (isMini) {
+        renderMini(ctx, w, h);
+        return;
+      }
+
+      const dishR = Math.min(68, w * 0.19);
+      const spanX = Math.min(108, w * 0.28);
+      const leftCx = cx - spanX;
+      const rightCx = cx + spanX;
+
+      // 1. Central Luminous Mirror Axis
+      const isSymmetric = state.leftCount === state.rightCount;
+      const axisColor = isSymmetric ? '#0071e3' : '#94a3b8';
+      
+      ctx.save();
+      ctx.strokeStyle = isSymmetric ? 'rgba(0, 113, 227, 0.4)' : 'rgba(148, 163, 184, 0.35)';
+      ctx.lineWidth = 1.5;
+      ctx.setLineDash([5, 5]);
+      ctx.beginPath();
+      ctx.moveTo(cx, 32);
+      ctx.lineTo(cx, h - 28);
+      ctx.stroke();
+      ctx.setLineDash([]);
+
+      // Mirror Axis Pulsing Glow
+      if (isSymmetric && state.pulseAnim > 0.05) {
+        ctx.strokeStyle = `rgba(0, 113, 227, ${state.pulseAnim * 0.45})`;
+        ctx.lineWidth = 4;
+        ctx.beginPath();
+        ctx.moveTo(cx, 32);
+        ctx.lineTo(cx, h - 28);
+        ctx.stroke();
+      }
+
+      // Top Mirror Axis Label
+      ctx.font = '600 10.5px -apple-system, sans-serif';
+      ctx.fillStyle = axisColor;
+      ctx.textAlign = 'center';
+      ctx.fillText('Mirror Axis', cx, 24);
+      ctx.restore();
+
+      // 2. Draw Symmetry Guide Rays
+      if (state.showGuide && isSymmetric && state.leftCount > 0) {
+        drawGuideRays(ctx, leftCx, rightCx, cy, dishR, state.leftCount);
+      }
+
+      // 3. Draw Left Dish and Right Dish
+      const isLeftActive = state.activeDish === 'left' && state.playMode !== 'mirror';
+      const isRightActive = state.activeDish === 'right' && state.playMode !== 'mirror';
+
+      drawPorcelainDish(ctx, leftCx, cy, dishR, 'Left dish', isLeftActive, state.leftCount);
+      drawPorcelainDish(ctx, rightCx, cy, dishR, 'Right dish', isRightActive, state.rightCount);
+
+      // 4. Draw Gemstones inside each dish
+      drawGemstones(ctx, leftCx, cy, dishR, state.leftCount, false);
+      drawGemstones(ctx, rightCx, cy, dishR, state.rightCount, true);
+    }
+
+    function renderMini(ctx, w, h) {
+      const cx = w / 2;
+      const cy = h / 2;
+      const r = 23;
+      const dist = 36;
+
+      // Center mirror line
+      ctx.strokeStyle = '#0071e3';
+      ctx.lineWidth = 1.2;
+      ctx.setLineDash([3, 3]);
+      ctx.beginPath();
+      ctx.moveTo(cx, 8);
+      ctx.lineTo(cx, h - 8);
+      ctx.stroke();
+      ctx.setLineDash([]);
+
+      // Dishes
+      drawMiniDish(ctx, cx - dist, cy, r, state.leftCount);
+      drawMiniDish(ctx, cx + dist, cy, r, state.rightCount);
+    }
+
+    function drawMiniDish(ctx, x, y, r, count) {
+      ctx.fillStyle = '#f1f5f9';
+      ctx.strokeStyle = '#cbd5e1';
+      ctx.lineWidth = 1;
+      ctx.beginPath();
+      ctx.arc(x, y, r, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.stroke();
+
+      const layout = GEM_LAYOUTS[count] || [];
+      layout.forEach(pt => {
+        const gx = x + Math.cos(pt.a) * pt.r * (r * 1.5);
+        const gy = y + Math.sin(pt.a) * pt.r * (r * 1.5);
+
+        ctx.fillStyle = '#0071e3';
+        ctx.beginPath();
+        ctx.arc(gx, gy, 3.2, 0, Math.PI * 2);
+        ctx.fill();
+      });
+    }
+
+    function drawPorcelainDish(ctx, x, y, r, label, isActive, count) {
+      ctx.save();
+
+      // Soft ambient ground shadow
+      ctx.shadowColor = isActive ? 'rgba(0, 113, 227, 0.22)' : 'rgba(0, 0, 0, 0.06)';
+      ctx.shadowBlur = isActive ? 18 : 10;
+      ctx.shadowOffsetY = 6;
+
+      // Outer dish body (frosted white porcelain)
+      const grad = ctx.createRadialGradient(x - r * 0.3, y - r * 0.3, r * 0.1, x, y, r);
+      grad.addColorStop(0, '#ffffff');
+      grad.addColorStop(0.7, '#f8fafc');
+      grad.addColorStop(1, '#edf2f7');
+
+      ctx.fillStyle = grad;
+      ctx.beginPath();
+      ctx.arc(x, y, r, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.shadowColor = 'transparent';
+
+      // Inner concave lip
+      ctx.strokeStyle = isActive ? '#0071e3' : '#e2e8f0';
+      ctx.lineWidth = isActive ? 2.5 : 1.5;
+      ctx.stroke();
+
+      // Soft inner bevel rim
+      ctx.strokeStyle = 'rgba(255, 255, 255, 0.9)';
+      ctx.lineWidth = 1.2;
+      ctx.beginPath();
+      ctx.arc(x, y, r - 3, 0, Math.PI * 2);
+      ctx.stroke();
+
+      // Label above dish
+      ctx.font = '600 12px -apple-system, sans-serif';
+      ctx.fillStyle = isActive ? '#0071e3' : '#475569';
+      ctx.textAlign = 'center';
+      ctx.fillText(label, x, y - r - 12);
+
+      // Gem count pill below dish
+      ctx.fillStyle = isActive ? '#0071e3' : '#0f172a';
+      ctx.font = '700 15px "JetBrains Mono", monospace';
+      ctx.fillText(`${count} gems`, x, y + r + 22);
+
+      ctx.restore();
+    }
+
+    function drawGemstones(ctx, cx, cy, dishR, count, isRightSide) {
+      if (count <= 0) return;
+      const layout = GEM_LAYOUTS[count] || [];
+      const gemR = Math.min(13, dishR * 0.22);
+
+      layout.forEach((pt, idx) => {
+        // Mirrored angles: if right side, mirror x coordinate (cos(pi - a))
+        const angle = isRightSide ? Math.PI - pt.a : pt.a;
+        const dist = pt.r * (dishR * 1.5);
+        const gx = cx + Math.cos(angle) * dist;
+        const gy = cy + Math.sin(angle) * dist;
+
+        ctx.save();
+
+        // Ambient contact shadow
+        ctx.shadowColor = 'rgba(0, 71, 227, 0.28)';
+        ctx.shadowBlur = 8;
+        ctx.shadowOffsetY = 3;
+
+        // Rich 3D Sapphire Gemstone gradient
+        const gemGrad = ctx.createRadialGradient(
+          gx - gemR * 0.35, gy - gemR * 0.35, gemR * 0.1,
+          gx, gy, gemR
+        );
+        gemGrad.addColorStop(0, '#60a5fa');
+        gemGrad.addColorStop(0.35, '#0071e3');
+        gemGrad.addColorStop(0.85, '#1d4ed8');
+        gemGrad.addColorStop(1, '#1e3a8a');
+
+        ctx.fillStyle = gemGrad;
+        ctx.beginPath();
+        ctx.arc(gx, gy, gemR, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.shadowColor = 'transparent';
+
+        // Outer crisp rim
+        ctx.strokeStyle = 'rgba(255, 255, 255, 0.35)';
+        ctx.lineWidth = 1;
+        ctx.stroke();
+
+        // Curved top specular highlight
+        ctx.fillStyle = 'rgba(255, 255, 255, 0.85)';
+        ctx.beginPath();
+        ctx.ellipse(gx - gemR * 0.3, gy - gemR * 0.32, gemR * 0.36, gemR * 0.22, -Math.PI / 4, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Subtle bottom internal glow reflection
+        ctx.fillStyle = 'rgba(96, 165, 250, 0.45)';
+        ctx.beginPath();
+        ctx.ellipse(gx + gemR * 0.2, gy + gemR * 0.25, gemR * 0.4, gemR * 0.2, -Math.PI / 4, 0, Math.PI * 2);
+        ctx.fill();
+
+        ctx.restore();
+      });
+    }
+
+    function drawGuideRays(ctx, lx, rx, cy, dishR, count) {
+      const layout = GEM_LAYOUTS[count] || [];
+      ctx.save();
+      ctx.lineWidth = 1;
+      ctx.strokeStyle = 'rgba(0, 113, 227, 0.22)';
+      ctx.setLineDash([3, 4]);
+
+      layout.forEach(pt => {
+        const leftAngle = pt.a;
+        const rightAngle = Math.PI - pt.a;
+        const dist = pt.r * (dishR * 1.5);
+
+        const leftGx = lx + Math.cos(leftAngle) * dist;
+        const leftGy = cy + Math.sin(leftAngle) * dist;
+
+        const rightGx = rx + Math.cos(rightAngle) * dist;
+        const rightGy = cy + Math.sin(rightAngle) * dist;
+
+        ctx.beginPath();
+        ctx.moveTo(leftGx, leftGy);
+        ctx.lineTo(rightGx, rightGy);
+        ctx.stroke();
+      });
+
+      ctx.restore();
+    }
+
+    // Animation Render Loop
+    function animationLoop() {
+      state.animTime += 0.02;
+      if (state.pulseAnim > 0) {
+        state.pulseAnim = Math.max(0, state.pulseAnim - 0.025);
+      }
+
+      canvases.forEach(item => {
+        const cv = document.getElementById(item.id);
+        if (cv && cv.offsetParent !== null) {
+          renderStage(cv, item.isMini);
+        }
+      });
+
+      requestAnimationFrame(animationLoop);
+    }
+    requestAnimationFrame(animationLoop);
+
+    // Direct Canvas Interaction: Tap dish to select active or remove gem
+    ['desktopCanvas', 'mobileCanvas', 'drawerCanvas'].forEach(id => {
+      const cv = document.getElementById(id);
+      if (!cv) return;
+
+      cv.addEventListener('pointerdown', e => {
+        const rect = cv.getBoundingClientRect();
+        const clickX = e.clientX - rect.left;
+        const cx = rect.width / 2;
+
+        if (state.playMode === 'bot') {
+          // Select dish
+          state.activeDish = clickX < cx ? 'left' : 'right';
+          updateUI();
+        } else {
+          // Live mirror mode: tap either dish to remove 1 paired gem!
+          if (state.leftCount > 0 && state.rightCount > 0) {
+            handleTake(1);
+          }
+        }
+      });
+    });
+
+    // Initialize UI on load
+    updateUI();
+  </script>
+</body>
+</html>

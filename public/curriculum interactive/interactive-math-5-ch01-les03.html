@@ -1,0 +1,1240 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Token exchange bank — InteractEd</title>
+  
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    body {
+      background-color: #f8fafc;
+      color: #0f172a;
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 16px 20px 48px;
+    }
+
+    /* Top Navigation Mode Switcher */
+    .top-header {
+      width: 100%;
+      max-width: 1280px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 20px;
+    }
+
+    .view-switcher {
+      display: flex;
+      align-items: center;
+      background: #ffffff;
+      border: 1px solid #e2e8f0;
+      padding: 4px;
+      border-radius: 12px;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+      gap: 4px;
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+
+    .switch-btn {
+      background: none;
+      border: none;
+      color: #64748b;
+      padding: 7px 14px;
+      font-size: 12.5px;
+      font-weight: 600;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: all 0.15s ease;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-family: 'Inter', sans-serif;
+    }
+
+    .switch-btn:hover {
+      background: #f1f5f9;
+      color: #0f172a;
+    }
+
+    .switch-btn.active {
+      background: #0f172a;
+      color: #ffffff;
+    }
+
+    /* Showcase Layout */
+    .showcase-container {
+      width: 100%;
+      max-width: 1280px;
+      display: flex;
+      flex-direction: column;
+      gap: 28px;
+      align-items: center;
+    }
+
+    .showcase-grid-top {
+      width: 100%;
+      display: flex;
+      justify-content: center;
+      align-items: flex-start;
+      gap: 32px;
+      flex-wrap: wrap;
+    }
+
+    .view-section {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .section-title {
+      font-size: 13px;
+      font-weight: 600;
+      color: #64748b;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .section-badge {
+      background: #e2e8f0;
+      color: #334155;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 11px;
+      padding: 2px 6px;
+      border-radius: 4px;
+      font-weight: 500;
+    }
+
+    /* 1. Pill Mode — Standard In-Chat Capsule */
+    .chat-pill-card {
+      width: 100%;
+      max-width: 350px;
+      background: #ffffff;
+      border: 1px solid #e2e8f0;
+      border-radius: 18px;
+      padding: 8px 14px 8px 10px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+      cursor: pointer;
+      transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+      user-select: none;
+    }
+
+    .chat-pill-card:hover {
+      border-color: #2563eb;
+      transform: translateY(-2px);
+      box-shadow: 0 8px 24px rgba(37, 99, 235, 0.12);
+    }
+
+    .pill-icon-box {
+      width: 76px;
+      height: 52px;
+      border-radius: 12px;
+      background: #f8fafc;
+      border: 1px solid #f1f5f9;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      overflow: hidden;
+      position: relative;
+    }
+
+    .pill-icon-box canvas {
+      width: 100%;
+      height: 100%;
+      display: block;
+    }
+
+    .pill-content {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+      min-width: 0;
+    }
+
+    .pill-title {
+      font-size: 17px;
+      font-weight: 600;
+      color: #0f172a;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .pill-subtitle {
+      font-size: 11px;
+      color: #64748b;
+      font-family: 'JetBrains Mono', monospace;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .pill-expand-btn {
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      background: #f8fafc;
+      border: 1px solid #e2e8f0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #334155;
+      flex-shrink: 0;
+      transition: all 0.15s ease;
+    }
+
+    .chat-pill-card:hover .pill-expand-btn {
+      background: #2563eb;
+      color: #ffffff;
+      border-color: #2563eb;
+    }
+
+    /* 2. Mobile Phone Frame (375x540) */
+    .mobile-phone-frame {
+      width: 100%;
+      max-width: 375px;
+      height: 540px;
+      background: #ffffff;
+      border: 1px solid #e2e8f0;
+      border-radius: 26px;
+      box-shadow: 0 12px 32px rgba(0, 0, 0, 0.08);
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      position: relative;
+    }
+
+    .phone-stage {
+      height: 285px;
+      min-height: 285px;
+      width: 100%;
+      background: radial-gradient(circle at 50% 45%, #ffffff 0%, #f8fafc 65%, #edf2f7 100%);
+      position: relative;
+      border-bottom: 1px solid #f1f5f9;
+      touch-action: none;
+      overflow: hidden;
+    }
+
+    .phone-stage canvas {
+      width: 100%;
+      height: 100%;
+      display: block;
+    }
+
+    .phone-controls {
+      height: 255px;
+      width: 100%;
+      background: #ffffff;
+      padding: 12px 16px 14px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      overflow: hidden;
+    }
+
+    /* 3. Desktop Split Card (880x490) */
+    #sectionDesktop {
+      width: 100%;
+      max-width: 880px;
+    }
+
+    .desktop-card {
+      width: 100%;
+      max-width: 880px;
+      height: 490px;
+      background: #ffffff;
+      border: 1px solid #e2e8f0;
+      border-radius: 24px;
+      box-shadow: 0 8px 24px -4px rgba(0, 0, 0, 0.06);
+      display: grid;
+      grid-template-columns: 370px 1fr;
+      overflow: hidden;
+    }
+
+    .math-panel {
+      width: 370px;
+      padding: 22px 24px;
+      background: #ffffff;
+      border-right: 1px solid #f1f5f9;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      overflow: hidden;
+    }
+
+    .stage-panel {
+      width: 100%;
+      height: 100%;
+      background: radial-gradient(circle at 50% 45%, #ffffff 0%, #f8fafc 65%, #edf2f7 100%);
+      position: relative;
+      overflow: hidden;
+      touch-action: none;
+    }
+
+    .stage-panel canvas {
+      width: 100%;
+      height: 100%;
+      display: block;
+    }
+
+    /* Stage Floating Status Info Card */
+    .stage-footer-card {
+      position: absolute;
+      bottom: 8px;
+      left: 10px;
+      right: 10px;
+      background: rgba(255, 255, 255, 0.95);
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
+      border: 1px solid rgba(226, 232, 240, 0.95);
+      border-radius: 12px;
+      padding: 6px 12px 7px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      box-shadow: 0 4px 14px rgba(0, 0, 0, 0.05);
+      pointer-events: none;
+      z-index: 10;
+    }
+
+    .stage-counter-val {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 13px;
+      font-weight: 700;
+      color: #0f172a;
+    }
+
+    .stage-rule-tag {
+      font-size: 11px;
+      font-weight: 600;
+      color: #0284c7;
+    }
+
+    /* Audience Switch */
+    .audience-switch {
+      display: inline-flex;
+      background: #f1f5f9;
+      padding: 2.5px;
+      border-radius: 8px;
+      gap: 2px;
+      margin-bottom: 6px;
+      align-self: flex-start;
+    }
+
+    .aud-btn {
+      background: none;
+      border: none;
+      font-size: 10.5px;
+      font-weight: 600;
+      color: #64748b;
+      padding: 2.5px 8px;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: all 0.15s ease;
+      font-family: 'Inter', sans-serif;
+    }
+
+    .aud-btn.active {
+      background: #ffffff;
+      color: #0f172a;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+    }
+
+    /* Hero Concept */
+    .hero-concept {
+      margin-bottom: 6px;
+    }
+
+    .hero-title {
+      font-size: 17.5px;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+      color: #0f172a;
+    }
+
+    .formula-display {
+      margin: 2px 0 6px;
+      font-size: 13px;
+      color: #0f172a;
+      display: none;
+    }
+
+    .formula-display.active {
+      display: block;
+    }
+
+    /* Dynamic Takeaway Card (Clean, Fixed Height, No Vertical Shift) */
+    .takeaway-card {
+      background: #f8fafc;
+      border: 1px solid #e2e8f0;
+      border-left: 3.5px solid #0284c7;
+      border-radius: 12px;
+      padding: 8px 12px;
+      margin-bottom: 6px;
+      min-height: 46px;
+      display: flex;
+      align-items: center;
+    }
+
+    .takeaway-text {
+      font-size: 11.5px;
+      line-height: 1.4;
+      color: #334155;
+    }
+
+    /* Controls Block */
+    .controls-block {
+      display: flex;
+      flex-direction: column;
+      gap: 7px;
+    }
+
+    .control-label-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 11px;
+      font-weight: 600;
+      color: #475569;
+    }
+
+    .control-value {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 11px;
+      color: #0284c7;
+    }
+
+    /* Clean Segmented Controls (No weird emoji icons!) */
+    .tier-switch {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 6px;
+      width: 100%;
+    }
+
+    .tier-btn {
+      height: 34px;
+      background: #ffffff;
+      border: 1px solid #e2e8f0;
+      border-radius: 9px;
+      font-size: 11.5px;
+      font-weight: 600;
+      color: #475569;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.15s ease;
+      font-family: 'Inter', sans-serif;
+    }
+
+    .tier-btn:hover {
+      background: #f8fafc;
+      color: #0f172a;
+    }
+
+    .tier-btn.active {
+      background: #0f172a;
+      color: #ffffff;
+      border-color: #0f172a;
+      box-shadow: 0 2px 6px rgba(15, 23, 42, 0.18);
+    }
+
+    /* Action Buttons (Clean text, no AI-style emoji icons!) */
+    .action-grid {
+      display: grid;
+      grid-template-columns: 1.2fr 1fr;
+      gap: 6px;
+      width: 100%;
+    }
+
+    .action-btn {
+      height: 35px;
+      border-radius: 9px;
+      font-size: 11.5px;
+      font-weight: 600;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.15s ease;
+      font-family: 'Inter', sans-serif;
+      border: none;
+    }
+
+    .btn-add {
+      background: #0284c7;
+      color: #ffffff;
+      box-shadow: 0 2px 6px rgba(2, 132, 199, 0.25);
+    }
+
+    .btn-add:hover {
+      background: #0369a1;
+    }
+
+    .btn-bundle {
+      background: #0f172a;
+      color: #ffffff;
+      box-shadow: 0 2px 6px rgba(15, 23, 42, 0.2);
+    }
+
+    .btn-bundle:hover {
+      background: #1e293b;
+    }
+
+    .btn-bundle:disabled {
+      background: #e2e8f0;
+      color: #94a3b8;
+      box-shadow: none;
+      cursor: not-allowed;
+    }
+
+    /* 4. Slide-Over Drawer */
+    .drawer-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(15, 23, 42, 0.4);
+      backdrop-filter: blur(4px);
+      -webkit-backdrop-filter: blur(4px);
+      z-index: 999;
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-end;
+      align-items: center;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.25s ease;
+    }
+
+    .drawer-overlay.active {
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    .drawer-content {
+      width: 100%;
+      max-width: 420px;
+      max-height: 90vh;
+      background: #ffffff;
+      border-radius: 26px 26px 0 0;
+      box-shadow: 0 -8px 32px rgba(0, 0, 0, 0.15);
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      transform: translateY(100%);
+      transition: transform 0.28s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    .drawer-overlay.active .drawer-content {
+      transform: translateY(0);
+    }
+
+    .drawer-handle-bar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 10px 18px 8px;
+      border-bottom: 1px solid #f1f5f9;
+    }
+
+    .drawer-notch {
+      width: 36px;
+      height: 4px;
+      border-radius: 999px;
+      background: #cbd5e1;
+    }
+
+    .drawer-close-btn {
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      background: #f1f5f9;
+      border: none;
+      color: #475569;
+      font-size: 13px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: all 0.15s ease;
+    }
+
+    .drawer-close-btn:hover {
+      background: #e2e8f0;
+      color: #0f172a;
+    }
+
+    .drawer-stage {
+      height: 285px;
+      width: 100%;
+      background: radial-gradient(circle at 50% 45%, #ffffff 0%, #f8fafc 65%, #edf2f7 100%);
+      position: relative;
+      border-bottom: 1px solid #f1f5f9;
+      touch-action: none;
+      overflow: hidden;
+    }
+
+    .drawer-stage canvas {
+      width: 100%;
+      height: 100%;
+      display: block;
+    }
+
+    .drawer-controls {
+      padding: 12px 18px 18px;
+      background: #ffffff;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    /* MANDATORY Responsive Mobile Guard */
+    @media (max-width: 960px) {
+      body {
+        padding: 12px 14px 32px;
+      }
+      .desktop-card {
+        grid-template-columns: 1fr;
+        height: auto;
+        max-width: 100%;
+      }
+      .desktop-card .stage-panel {
+        height: 285px;
+        order: 1;
+      }
+      .desktop-card .math-panel {
+        order: 2;
+        border-right: none;
+        border-top: 1px solid #f1f5f9;
+        width: 100%;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Top Navigation & View Mode Switcher -->
+  <header class="top-header">
+    <nav class="view-switcher" aria-label="Simulation view switcher">
+      <button class="switch-btn active" id="btnViewAll" onclick="setViewMode('all')">
+        <span>All views</span>
+      </button>
+      <button class="switch-btn" id="btnViewPill" onclick="setViewMode('pill')">
+        <span>Pill mode</span>
+      </button>
+      <button class="switch-btn" id="btnViewPhone" onclick="setViewMode('phone')">
+        <span>Mobile screen</span>
+      </button>
+      <button class="switch-btn" id="btnViewDesktop" onclick="setViewMode('desktop')">
+        <span>Desktop card</span>
+      </button>
+    </nav>
+  </header>
+
+  <!-- Showcase Container -->
+  <main class="showcase-container">
+
+    <!-- Top Grid: Pill Mode + Mobile Frame -->
+    <div class="showcase-grid-top" id="topGrid">
+      
+      <!-- 1. Pill Mode -->
+      <section class="view-section" id="sectionPill">
+        <h2 class="section-title">
+          <span>In-chat capsule</span>
+          <span class="section-badge">Pill</span>
+        </h2>
+        
+        <div class="chat-pill-card" id="chatPill" onclick="openDrawer()" role="button" tabindex="0" aria-label="Open Token exchange bank drawer">
+          <div class="pill-icon-box">
+            <canvas id="pillCanvas" width="152" height="104"></canvas>
+          </div>
+          <div class="pill-content">
+            <div class="pill-title" id="pillTitle">Token exchange bank</div>
+            <div class="pill-subtitle" id="pillSubtitle">10 units = 1 higher unit</div>
+          </div>
+          <button class="pill-expand-btn" aria-label="Expand simulation">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+              <polyline points="15 3 21 3 21 9"></polyline>
+              <polyline points="9 21 3 21 3 15"></polyline>
+              <line x1="21" y1="3" x2="14" y2="10"></line>
+              <line x1="3" y1="21" x2="10" y2="14"></line>
+            </svg>
+          </button>
+        </div>
+      </section>
+
+      <!-- 2. Mobile Phone Frame (375x540) -->
+      <section class="view-section" id="sectionPhone">
+        <h2 class="section-title">
+          <span>Mobile view</span>
+          <span class="section-badge">375 × 540</span>
+        </h2>
+
+        <div class="mobile-phone-frame">
+          <div class="phone-stage" id="phoneStage">
+            <canvas id="phoneCanvas"></canvas>
+            <div class="stage-footer-card">
+              <span class="stage-counter-val" id="phoneStageCounter">Total: 1,000</span>
+              <span class="stage-rule-tag" id="phoneStageRule">10 × 100 = 1,000</span>
+            </div>
+          </div>
+
+          <div class="phone-controls">
+            <div>
+              <div class="audience-switch">
+                <button class="aud-btn active" id="phoneAudJunior" onclick="setAudience('junior')">Junior</button>
+                <button class="aud-btn" id="phoneAudStem" onclick="setAudience('stem')">STEM</button>
+              </div>
+              <div class="hero-concept">
+                <h1 class="hero-title">Token exchange bank</h1>
+              </div>
+              <div class="formula-display" id="phoneFormula"></div>
+            </div>
+
+            <div class="takeaway-card" id="phoneTakeawayCard">
+              <p class="takeaway-text" id="phoneTakeawayText">10 Hundreds fuse into 1 Thousand. The total value remains identical while tokens bundle together.</p>
+            </div>
+
+            <div class="controls-block">
+              <div class="control-label-row">
+                <span>Exchange tier</span>
+                <span class="control-value" id="phoneSliderVal">100 to 1,000</span>
+              </div>
+              <div class="tier-switch">
+                <button class="tier-btn active" id="phoneTier100" onclick="setTier('hundreds')">100 to 1,000</button>
+                <button class="tier-btn" id="phoneTier1000" onclick="setTier('thousands')">1,000 to 10,000</button>
+              </div>
+              <div class="action-grid">
+                <button class="action-btn btn-add" id="phoneBtnAdd" onclick="addToken()">
+                  <span>Add token</span>
+                </button>
+                <button class="action-btn btn-bundle" id="phoneBtnBundle" onclick="bundleTokens()">
+                  <span>Bundle 10</span>
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+    </div>
+
+    <!-- 3. Desktop Mode (880x490 Split Card) -->
+    <section class="view-section" id="sectionDesktop">
+      <h2 class="section-title">
+        <span>Desktop split card</span>
+        <span class="section-badge">880 × 490</span>
+      </h2>
+
+      <div class="desktop-card">
+        <div class="math-panel">
+          <div>
+            <div class="audience-switch">
+              <button class="aud-btn active" id="deskAudJunior" onclick="setAudience('junior')">Junior</button>
+              <button class="aud-btn" id="deskAudStem" onclick="setAudience('stem')">STEM</button>
+            </div>
+            <div class="hero-concept">
+              <h1 class="hero-title">Token exchange bank</h1>
+            </div>
+            <div class="formula-display" id="deskFormula"></div>
+          </div>
+
+          <div class="takeaway-card" id="deskTakeawayCard">
+            <p class="takeaway-text" id="deskTakeawayText">10 Hundreds fuse into 1 Thousand. The total value remains identical while tokens bundle together.</p>
+          </div>
+
+          <div class="controls-block">
+            <div class="control-label-row">
+              <span>Exchange tier</span>
+              <span class="control-value" id="deskSliderVal">100 to 1,000</span>
+            </div>
+            <div class="tier-switch">
+              <button class="tier-btn active" id="deskTier100" onclick="setTier('hundreds')">100 to 1,000</button>
+              <button class="tier-btn" id="deskTier1000" onclick="setTier('thousands')">1,000 to 10,000</button>
+            </div>
+            <div class="action-grid">
+              <button class="action-btn btn-add" id="deskBtnAdd" onclick="addToken()">
+                <span>Add token</span>
+              </button>
+              <button class="action-btn btn-bundle" id="deskBtnBundle" onclick="bundleTokens()">
+                <span>Bundle 10</span>
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <div class="stage-panel" id="deskStage">
+          <canvas id="deskCanvas"></canvas>
+          <div class="stage-footer-card">
+            <span class="stage-counter-val" id="deskStageCounter">Total: 1,000</span>
+            <span class="stage-rule-tag" id="deskStageRule">10 × 100 = 1,000</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- 4. Slide-Over Bottom Drawer -->
+  <div class="drawer-overlay" id="drawerOverlay" onclick="closeDrawer(event)">
+    <div class="drawer-content" onclick="event.stopPropagation()">
+      <div class="drawer-handle-bar">
+        <div style="width: 28px;"></div>
+        <div class="drawer-notch"></div>
+        <button class="drawer-close-btn" onclick="closeDrawer()" aria-label="Close drawer">✕</button>
+      </div>
+
+      <div class="drawer-stage" id="drawerStage">
+        <canvas id="drawerCanvas"></canvas>
+        <div class="stage-footer-card">
+          <span class="stage-counter-val" id="drawerStageCounter">Total: 1,000</span>
+          <span class="stage-rule-tag" id="drawerStageRule">10 × 100 = 1,000</span>
+        </div>
+      </div>
+
+      <div class="drawer-controls">
+        <div class="audience-switch">
+          <button class="aud-btn active" id="drawerAudJunior" onclick="setAudience('junior')">Junior</button>
+          <button class="aud-btn" id="drawerAudStem" onclick="setAudience('stem')">STEM</button>
+        </div>
+        <div class="takeaway-card" id="drawerTakeawayCard">
+          <p class="takeaway-text" id="drawerTakeawayText">10 Hundreds fuse into 1 Thousand. The total value remains identical while tokens bundle together.</p>
+        </div>
+        <div class="controls-block">
+          <div class="tier-switch">
+            <button class="tier-btn active" id="drawerTier100" onclick="setTier('hundreds')">100 to 1,000</button>
+            <button class="tier-btn" id="drawerTier1000" onclick="setTier('thousands')">1,000 to 10,000</button>
+          </div>
+          <div class="action-grid">
+            <button class="action-btn btn-add" id="drawerBtnAdd" onclick="addToken()">
+              <span>Add token</span>
+            </button>
+            <button class="action-btn btn-bundle" id="drawerBtnBundle" onclick="bundleTokens()">
+              <span>Bundle 10</span>
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // --- State ---
+    let state = {
+      tier: 'hundreds',     // 'hundreds' (100 -> 1000) or 'thousands' (1000 -> 10000)
+      tokenCount: 10,       // 0 to 10 tokens in current active tray
+      bundledCount: 0,      // count of higher-order tokens made
+      isBundling: false,    // animation flag
+      bundleProgress: 0,
+      audience: 'junior'
+    };
+
+    // Particles for fusion burst
+    let burstParticles = [];
+
+    // --- DOM Elements ---
+    const pillCanvas = document.getElementById('pillCanvas');
+    const phoneCanvas = document.getElementById('phoneCanvas');
+    const deskCanvas = document.getElementById('deskCanvas');
+    const drawerCanvas = document.getElementById('drawerCanvas');
+
+    // --- Tier Selector ---
+    function setTier(tier) {
+      state.tier = tier;
+      state.tokenCount = 7;
+      state.bundledCount = 0;
+      state.isBundling = false;
+      ['phone', 'desk', 'drawer'].forEach(p => {
+        const b100 = document.getElementById(`${p}Tier100`);
+        const b1000 = document.getElementById(`${p}Tier1000`);
+        if (b100) b100.classList.toggle('active', tier === 'hundreds');
+        if (b1000) b1000.classList.toggle('active', tier === 'thousands');
+      });
+      updateUI();
+    }
+
+    // --- Add Token ---
+    function addToken() {
+      if (state.tokenCount < 10) {
+        state.tokenCount++;
+        updateUI();
+      }
+    }
+
+    // --- Bundle 10 Tokens ---
+    function bundleTokens() {
+      if (state.tokenCount >= 10 && !state.isBundling) {
+        state.isBundling = true;
+        state.bundleProgress = 0;
+      }
+    }
+
+    // --- Audience Switch ---
+    function setAudience(mode) {
+      state.audience = mode;
+      document.querySelectorAll('.aud-btn').forEach(btn => {
+        btn.classList.toggle('active', btn.id.toLowerCase().includes(mode));
+      });
+      updateUI();
+    }
+
+    // --- Update Text & UI ---
+    function updateUI() {
+      const isH = state.tier === 'hundreds';
+      const unitVal = isH ? 100 : 1000;
+      const targetVal = isH ? 1000 : 10000;
+      const totalVal = (state.tokenCount * unitVal) + (state.bundledCount * targetVal);
+
+      const canBundle = state.tokenCount >= 10 && !state.isBundling;
+      ['phone', 'desk', 'drawer'].forEach(p => {
+        const btnB = document.getElementById(`${p}BtnBundle`);
+        if (btnB) btnB.disabled = !canBundle;
+
+        const valSpan = document.getElementById(`${p}SliderVal`);
+        if (valSpan) valSpan.textContent = isH ? '100 to 1,000' : '1,000 to 10,000';
+
+        const counterEl = document.getElementById(`${p}StageCounter`);
+        if (counterEl) counterEl.textContent = `Total: ${totalVal.toLocaleString()}`;
+
+        const ruleEl = document.getElementById(`${p}StageRule`);
+        if (ruleEl) ruleEl.textContent = isH ? '10 × 100 = 1,000' : '10 × 1,000 = 10,000';
+      });
+
+      // Pill Mode
+      document.getElementById('pillTitle').textContent = isH ? 'Base-10: 100 to 1,000' : 'Base-10: 1,000 to 10,000';
+      document.getElementById('pillSubtitle').textContent = `Total value: ${totalVal.toLocaleString()}`;
+
+      // Takeaway Text
+      let takeaway = '';
+      if (state.audience === 'junior') {
+        if (isH) {
+          takeaway = state.tokenCount === 10
+            ? '10 Hundreds are ready! Tap Bundle 10 to combine them into 1 Thousand token.'
+            : `You have ${state.tokenCount} Hundreds (${state.tokenCount * 100}). Add ${10 - state.tokenCount} more to make 1 Thousand!`;
+        } else {
+          takeaway = state.tokenCount === 10
+            ? '10 Thousands are ready! Tap Bundle 10 to combine them into 1 Ten Thousand token.'
+            : `You have ${state.tokenCount} Thousands (${(state.tokenCount * 1000).toLocaleString()}). Add ${10 - state.tokenCount} more to reach 10,000!`;
+        }
+      } else {
+        if (isH) {
+          takeaway = 'Base-10 positional exchange: 10 × 10^2 = 10^3. Cardinality remains invariant across regrouping.';
+        } else {
+          takeaway = 'Base-10 positional exchange: 10 × 10^3 = 10^4. Decimal carry mechanism: 10 Thousands = 1 Ten Thousand.';
+        }
+      }
+
+      ['phone', 'desk', 'drawer'].forEach(p => {
+        const el = document.getElementById(`${p}TakeawayText`);
+        if (el) el.textContent = takeaway;
+      });
+
+      // STEM Formula Display
+      const isStem = state.audience === 'stem';
+      const deskF = document.getElementById('deskFormula');
+      const phoneF = document.getElementById('phoneFormula');
+
+      [deskF, phoneF].forEach(f => {
+        if (!f) return;
+        f.classList.toggle('active', isStem);
+        if (isStem && window.katex) {
+          const fStr = isH 
+            ? '10 \\times 100 = 1,000 \\quad (10 \\times 10^2 = 10^3)' 
+            : '10 \\times 1,000 = 10,000 \\quad (10 \\times 10^3 = 10^4)';
+          katex.render(fStr, f, { throwOnError: false });
+        } else {
+          f.innerHTML = '';
+        }
+      });
+    }
+
+    // --- View Switcher ---
+    function setViewMode(mode) {
+      document.querySelectorAll('.switch-btn').forEach(btn => btn.classList.remove('active'));
+      const activeBtn = document.getElementById('btnView' + mode.charAt(0).toUpperCase() + mode.slice(1));
+      if (activeBtn) activeBtn.classList.add('active');
+
+      const topGrid = document.getElementById('topGrid');
+      const pillSec = document.getElementById('sectionPill');
+      const phoneSec = document.getElementById('sectionPhone');
+      const deskSec = document.getElementById('sectionDesktop');
+
+      if (mode === 'all') {
+        topGrid.style.display = 'flex';
+        pillSec.style.display = 'flex';
+        phoneSec.style.display = 'flex';
+        deskSec.style.display = 'block';
+      } else if (mode === 'pill') {
+        topGrid.style.display = 'flex';
+        pillSec.style.display = 'flex';
+        phoneSec.style.display = 'none';
+        deskSec.style.display = 'none';
+      } else if (mode === 'phone') {
+        topGrid.style.display = 'flex';
+        pillSec.style.display = 'none';
+        phoneSec.style.display = 'flex';
+        deskSec.style.display = 'none';
+      } else if (mode === 'desktop') {
+        topGrid.style.display = 'none';
+        deskSec.style.display = 'block';
+      }
+      setTimeout(resizeCanvases, 50);
+    }
+
+    // --- Drawer Controls ---
+    function openDrawer() {
+      document.getElementById('drawerOverlay').classList.add('active');
+      document.body.style.overflow = 'hidden';
+      setTimeout(resizeCanvases, 60);
+    }
+
+    function closeDrawer(e) {
+      if (e && e.target !== e.currentTarget && !e.target.classList.contains('drawer-close-btn')) return;
+      document.getElementById('drawerOverlay').classList.remove('active');
+      document.body.style.overflow = '';
+    }
+
+    // --- Canvas Resizing ---
+    function resizeCanvases() {
+      const list = [
+        { cv: pillCanvas, w: 76, h: 52 },
+        { cv: phoneCanvas, w: phoneCanvas.parentElement.clientWidth, h: phoneCanvas.parentElement.clientHeight },
+        { cv: deskCanvas, w: deskCanvas.parentElement.clientWidth, h: deskCanvas.parentElement.clientHeight },
+        { cv: drawerCanvas, w: drawerCanvas.parentElement.clientWidth, h: drawerCanvas.parentElement.clientHeight }
+      ];
+
+      const dpr = window.devicePixelRatio || 1;
+      list.forEach(({ cv, w, h }) => {
+        if (!cv || !w || !h) return;
+        if (cv.width !== Math.round(w * dpr) || cv.height !== Math.round(h * dpr)) {
+          cv.width = Math.round(w * dpr);
+          cv.height = Math.round(h * dpr);
+        }
+      });
+    }
+
+    window.addEventListener('resize', resizeCanvases);
+
+    // --- Draw Refined Tactile Base-10 Token ---
+    function drawToken(ctx, x, y, r, label, type) {
+      ctx.save();
+      // Soft ambient drop shadow
+      ctx.shadowColor = 'rgba(0, 0, 0, 0.08)';
+      ctx.shadowBlur = 4;
+      ctx.shadowOffsetY = 2;
+
+      let bgColor = '#ffffff';
+      let borderColor = '#0284c7';
+      let textColor = '#0369a1';
+
+      if (type === 'hundred') {
+        // Warm refined cream chip with soft golden-amber border
+        bgColor = '#fefce8';
+        borderColor = '#eab308';
+        textColor = '#854d0e';
+      } else if (type === 'thousand') {
+        // Soft blue chip with navy text
+        bgColor = '#eff6ff';
+        borderColor = '#2563eb';
+        textColor = '#1e40af';
+      } else {
+        // Soft mint chip with dark forest text
+        bgColor = '#f0fdf4';
+        borderColor = '#16a34a';
+        textColor = '#166534';
+      }
+
+      ctx.fillStyle = bgColor;
+      ctx.beginPath();
+      ctx.arc(x, y, r, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Clean border ring
+      ctx.shadowColor = 'transparent';
+      ctx.strokeStyle = borderColor;
+      ctx.lineWidth = Math.max(1.4, r * 0.12);
+      ctx.stroke();
+
+      // Number Label in crisp JetBrains Mono
+      ctx.fillStyle = textColor;
+      ctx.font = `700 ${Math.max(8, r * 0.58)}px 'JetBrains Mono', monospace`;
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText(label, x, y);
+
+      ctx.restore();
+    }
+
+    // --- Render Token Bank Scene ---
+    function renderScene(canvas, isMini = false) {
+      if (!canvas) return;
+      const ctx = canvas.getContext('2d');
+      const dpr = window.devicePixelRatio || 1;
+      const w = canvas.width / dpr;
+      const h = canvas.height / dpr;
+
+      ctx.save();
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      ctx.clearRect(0, 0, w, h);
+
+      const isH = state.tier === 'hundreds';
+      const curType = isH ? 'hundred' : 'thousand';
+      const targetType = isH ? 'thousand' : 'tenthousand';
+      const curLabel = isH ? '100' : '1k';
+      const targetLabel = isH ? '1,000' : '10k';
+
+      const centerX = w * 0.5;
+      const centerY = (h - (isMini ? 0 : 38)) * 0.52;
+      const ringR = Math.min(w, h) * (isMini ? 0.38 : 0.32);
+
+      // 1. Tactile Bundling Tray in Center (Clean, Non-Gaudy)
+      ctx.fillStyle = '#ffffff';
+      ctx.beginPath();
+      ctx.arc(centerX, centerY, ringR, 0, Math.PI * 2);
+      ctx.fill();
+
+      ctx.strokeStyle = state.tokenCount === 10 ? '#0284c7' : '#e2e8f0';
+      ctx.lineWidth = state.tokenCount === 10 ? 2 : 1.2;
+      ctx.stroke();
+
+      // Tray status indicator
+      if (!isMini) {
+        ctx.fillStyle = state.tokenCount === 10 ? '#0284c7' : '#94a3b8';
+        ctx.font = '600 11px Inter, sans-serif';
+        ctx.textAlign = 'center';
+        ctx.fillText(
+          state.tokenCount === 10 ? '10 tokens ready to bundle' : `Tray: ${state.tokenCount} of 10 tokens`,
+          centerX,
+          centerY - ringR - 8
+        );
+      }
+
+      // 2. Render Tokens in Bundling Ring
+      const tokenR = isMini ? 7 : (Math.min(w, h) * 0.065);
+      const angleStep = (Math.PI * 2) / 10;
+
+      if (!state.isBundling) {
+        for (let i = 0; i < state.tokenCount; i++) {
+          const ang = -Math.PI / 2 + i * angleStep;
+          const dist = ringR * 0.62;
+          const tx = centerX + Math.cos(ang) * dist;
+          const ty = centerY + Math.sin(ang) * dist;
+          drawToken(ctx, tx, ty, tokenR, curLabel, curType);
+        }
+      } else {
+        // Bundling Animation: Tokens spiral inward
+        const p = state.bundleProgress;
+        const currentR = tokenR * (1 - p * 0.3);
+        for (let i = 0; i < 10; i++) {
+          const ang = -Math.PI / 2 + i * angleStep + p * Math.PI;
+          const dist = ringR * 0.62 * (1 - p);
+          const tx = centerX + Math.cos(ang) * dist;
+          const ty = centerY + Math.sin(ang) * dist;
+          drawToken(ctx, tx, ty, currentR, curLabel, curType);
+        }
+
+        // Emerging higher token
+        if (p > 0.4) {
+          const bigP = (p - 0.4) / 0.6;
+          drawToken(ctx, centerX, centerY, tokenR * 1.8 * bigP, targetLabel, targetType);
+        }
+      }
+
+      // 3. Stored Higher-Order Tokens on Stage
+      if (state.bundledCount > 0 && !isMini) {
+        for (let b = 0; b < state.bundledCount; b++) {
+          const bx = w * 0.85;
+          const by = 28 + b * 26;
+          drawToken(ctx, bx, by, tokenR * 1.15, targetLabel, targetType);
+        }
+      }
+
+      // 4. Subtle Clean Particles
+      burstParticles.forEach(pt => {
+        ctx.fillStyle = pt.color;
+        ctx.beginPath();
+        ctx.arc(pt.x, pt.y, pt.r, 0, Math.PI * 2);
+        ctx.fill();
+      });
+
+      ctx.restore();
+    }
+
+    // --- Dynamic Loop ---
+    function updateAnimation() {
+      if (state.isBundling) {
+        state.bundleProgress += 0.035;
+        if (state.bundleProgress >= 1) {
+          state.isBundling = false;
+          state.tokenCount = 0;
+          state.bundledCount++;
+          // Clean subtle burst
+          for (let k = 0; k < 20; k++) {
+            burstParticles.push({
+              x: 150 + (Math.random() - 0.5) * 30,
+              y: 120 + (Math.random() - 0.5) * 30,
+              vx: (Math.random() - 0.5) * 3,
+              vy: (Math.random() - 0.5) * 3,
+              r: 1.5 + Math.random() * 1.5,
+              life: 1,
+              color: state.tier === 'hundreds' ? '#0284c7' : '#16a34a'
+            });
+          }
+          updateUI();
+        }
+      }
+
+      burstParticles.forEach(pt => {
+        pt.x += pt.vx;
+        pt.y += pt.vy;
+        pt.life -= 0.05;
+      });
+      burstParticles = burstParticles.filter(pt => pt.life > 0);
+    }
+
+    function animate() {
+      updateAnimation();
+
+      renderScene(pillCanvas, true);
+      renderScene(phoneCanvas);
+      renderScene(deskCanvas);
+      renderScene(drawerCanvas);
+
+      requestAnimationFrame(animate);
+    }
+
+    // --- Init ---
+    window.addEventListener('DOMContentLoaded', () => {
+      resizeCanvases();
+      updateUI();
+      animate();
+    });
+  </script>
+</body>
+</html>

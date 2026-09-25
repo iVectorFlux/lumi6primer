@@ -1,0 +1,1239 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Place value columns — InteractEd</title>
+  
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;600;700&display=swap" rel="stylesheet">
+
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    body {
+      background-color: #f8fafc;
+      color: #0f172a;
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 16px 20px 48px;
+    }
+
+    /* Top Navigation Mode Switcher */
+    .top-header {
+      width: 100%;
+      max-width: 1280px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 20px;
+    }
+
+    .view-switcher {
+      display: flex;
+      align-items: center;
+      background: #ffffff;
+      border: 1px solid #e2e8f0;
+      padding: 4px;
+      border-radius: 12px;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+      gap: 4px;
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+
+    .switch-btn {
+      background: none;
+      border: none;
+      color: #64748b;
+      padding: 7px 14px;
+      font-size: 12.5px;
+      font-weight: 600;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: all 0.15s ease;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .switch-btn:hover {
+      background: #f1f5f9;
+      color: #0f172a;
+    }
+
+    .switch-btn.active {
+      background: #0f172a;
+      color: #ffffff;
+    }
+
+    /* Showcase Layout */
+    .showcase-container {
+      width: 100%;
+      max-width: 1280px;
+      display: flex;
+      flex-direction: column;
+      gap: 28px;
+      align-items: center;
+    }
+
+    .showcase-grid-top {
+      width: 100%;
+      display: flex;
+      justify-content: center;
+      align-items: flex-start;
+      gap: 32px;
+      flex-wrap: wrap;
+    }
+
+    .view-section {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .section-title {
+      font-size: 13px;
+      font-weight: 600;
+      color: #64748b;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .section-badge {
+      background: #e2e8f0;
+      color: #334155;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 11px;
+      padding: 2px 6px;
+      border-radius: 4px;
+      font-weight: 500;
+    }
+
+    /* 1. Pill Mode — Standard In-Chat Capsule */
+    .chat-pill-card {
+      width: 100%;
+      max-width: 350px;
+      background: #ffffff;
+      border: 1px solid #e2e8f0;
+      border-radius: 18px;
+      padding: 8px 14px 8px 10px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 14px;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+      cursor: pointer;
+      transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+      user-select: none;
+    }
+
+    .chat-pill-card:hover {
+      border-color: #0071e3;
+      transform: translateY(-2px);
+      box-shadow: 0 8px 24px rgba(0, 113, 227, 0.12);
+    }
+
+    .pill-icon-box {
+      width: 76px;
+      height: 52px;
+      border-radius: 12px;
+      background: #f8fafc;
+      border: 1px solid #f1f5f9;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      overflow: hidden;
+      position: relative;
+    }
+
+    .pill-icon-box canvas {
+      width: 100%;
+      height: 100%;
+      display: block;
+    }
+
+    .pill-content {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+      min-width: 0;
+    }
+
+    .pill-title {
+      font-size: 16px;
+      font-weight: 600;
+      color: #0f172a;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .pill-subtitle {
+      font-size: 11px;
+      color: #64748b;
+      font-family: 'JetBrains Mono', monospace;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .pill-expand-btn {
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      background: #f8fafc;
+      border: 1px solid #e2e8f0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #334155;
+      flex-shrink: 0;
+      transition: all 0.15s ease;
+    }
+
+    .chat-pill-card:hover .pill-expand-btn {
+      background: #0071e3;
+      color: #ffffff;
+      border-color: #0071e3;
+    }
+
+    /* 2. Mobile Phone Frame (375x540) */
+    .mobile-phone-frame {
+      width: 100%;
+      max-width: 375px;
+      height: 540px;
+      background: #ffffff;
+      border: 1px solid #e2e8f0;
+      border-radius: 26px;
+      box-shadow: 0 12px 32px rgba(0, 0, 0, 0.08);
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      position: relative;
+    }
+
+    .phone-stage {
+      height: 285px;
+      min-height: 285px;
+      width: 100%;
+      background: radial-gradient(circle at 50% 50%, #ffffff 0%, #f8fafc 60%, #edf2f7 100%);
+      position: relative;
+      border-bottom: 1px solid #f1f5f9;
+      touch-action: none;
+    }
+
+    .phone-stage canvas {
+      width: 100%;
+      height: 100%;
+      display: block;
+    }
+
+    .phone-controls {
+      height: 255px;
+      width: 100%;
+      background: #ffffff;
+      padding: 12px 16px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      overflow-y: hidden;
+    }
+
+    /* 3. Desktop Split Card (880x490) */
+    #sectionDesktop {
+      width: 100%;
+      max-width: 880px;
+    }
+
+    .desktop-card {
+      width: 100%;
+      max-width: 880px;
+      height: 490px;
+      background: #ffffff;
+      border: 1px solid #e2e8f0;
+      border-radius: 24px;
+      box-shadow: 0 8px 24px -4px rgba(0, 0, 0, 0.06);
+      display: grid;
+      grid-template-columns: 370px 1fr;
+      overflow: hidden;
+    }
+
+    .math-panel {
+      width: 370px;
+      padding: 22px 24px;
+      background: #ffffff;
+      border-right: 1px solid #f1f5f9;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      overflow: hidden;
+    }
+
+    .stage-panel {
+      width: 100%;
+      height: 100%;
+      background: radial-gradient(circle at 50% 48%, #ffffff 0%, #f8fafc 55%, #edf2f7 100%);
+      position: relative;
+      overflow: hidden;
+      touch-action: none;
+    }
+
+    .stage-panel canvas {
+      width: 100%;
+      height: 100%;
+      display: block;
+    }
+
+    /* Floating Canvas Pill Badge */
+    .canvas-overlay-pill {
+      position: absolute;
+      top: 14px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: rgba(255, 255, 255, 0.88);
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+      border: 1px solid rgba(0, 0, 0, 0.08);
+      border-radius: 999px;
+      padding: 5px 14px;
+      font-size: 11.5px;
+      font-weight: 600;
+      color: #0f172a;
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      box-shadow: 0 4px 14px rgba(0, 0, 0, 0.05);
+      pointer-events: none;
+      white-space: nowrap;
+      z-index: 10;
+    }
+
+    .status-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: #0071e3;
+      box-shadow: 0 0 6px rgba(0, 113, 227, 0.6);
+    }
+
+    /* Common Interactive UI Controls */
+    .hero-concept {
+      margin-bottom: 8px;
+    }
+
+    .hero-title {
+      font-size: 18px;
+      font-weight: 700;
+      letter-spacing: -0.025em;
+      color: #0f172a;
+      margin-bottom: 2px;
+    }
+
+    .hero-sub {
+      font-size: 12px;
+      color: #64748b;
+      line-height: 1.4;
+    }
+
+    /* Segmented Control */
+    .segmented-control {
+      display: flex;
+      background: #f1f5f9;
+      border-radius: 10px;
+      padding: 3px;
+      gap: 3px;
+      margin-bottom: 10px;
+    }
+
+    .segment-btn {
+      flex: 1;
+      padding: 6px 10px;
+      font-size: 12px;
+      font-weight: 600;
+      color: #64748b;
+      background: none;
+      border: none;
+      border-radius: 7px;
+      cursor: pointer;
+      transition: all 0.18s cubic-bezier(0.16, 1, 0.3, 1);
+      text-align: center;
+    }
+
+    .segment-btn.active {
+      background: #ffffff;
+      color: #0f172a;
+      box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08);
+    }
+
+    /* Dynamic Takeaway Card */
+    .takeaway-card {
+      background: #f8fafc;
+      border: 1px solid #e2e8f0;
+      border-left: 3.5px solid #0071e3;
+      border-radius: 12px;
+      padding: 10px 13px;
+      margin-bottom: 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 3px;
+    }
+
+    .takeaway-badge {
+      font-size: 10.5px;
+      font-weight: 600;
+      color: #0071e3;
+      display: flex;
+      align-items: center;
+      gap: 5px;
+    }
+
+    .takeaway-text {
+      font-size: 12px;
+      line-height: 1.45;
+      color: #334155;
+    }
+
+    /* Column Steppers Strip */
+    .steppers-strip {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 5px;
+      background: #f8fafc;
+      border: 1px solid #e2e8f0;
+      border-radius: 12px;
+      padding: 8px 6px;
+    }
+
+    .col-stepper {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .col-header-tag {
+      font-size: 10.5px;
+      font-weight: 700;
+    }
+
+    .col-header-tag.tth { color: #ff9f0a; }
+    .col-header-tag.th  { color: #0071e3; }
+    .col-header-tag.h   { color: #34c759; }
+    .col-header-tag.t   { color: #ff9500; }
+    .col-header-tag.o   { color: #af52de; }
+
+    .mini-btn {
+      width: 26px;
+      height: 26px;
+      border-radius: 50%;
+      border: 1px solid #e2e8f0;
+      background: #ffffff;
+      color: #0f172a;
+      font-size: 14px;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: all 0.15s ease;
+      touch-action: manipulation;
+    }
+
+    .mini-btn:hover {
+      background: #0071e3;
+      color: #ffffff;
+      border-color: #0071e3;
+    }
+
+    .col-digit {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 14px;
+      font-weight: 700;
+      color: #0f172a;
+    }
+
+    .preset-pills {
+      display: flex;
+      gap: 6px;
+      flex-wrap: wrap;
+      margin-top: 8px;
+    }
+
+    .preset-pill {
+      background: #ffffff;
+      border: 1px solid #e2e8f0;
+      color: #475569;
+      font-size: 11.5px;
+      font-weight: 600;
+      padding: 5px 10px;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: all 0.15s ease;
+    }
+
+    .preset-pill:hover {
+      background: #f1f5f9;
+      color: #0f172a;
+    }
+
+    .preset-pill.active {
+      background: #0f172a;
+      color: #ffffff;
+      border-color: #0f172a;
+    }
+
+    /* 4. Slide-Over Drawer */
+    .drawer-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(15, 23, 42, 0.4);
+      backdrop-filter: blur(4px);
+      -webkit-backdrop-filter: blur(4px);
+      z-index: 999;
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-end;
+      align-items: center;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.25s ease;
+    }
+
+    .drawer-overlay.active {
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    .drawer-content {
+      width: 100%;
+      max-width: 420px;
+      max-height: 90vh;
+      background: #ffffff;
+      border-radius: 26px 26px 0 0;
+      box-shadow: 0 -8px 32px rgba(0, 0, 0, 0.15);
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      transform: translateY(100%);
+      transition: transform 0.28s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    .drawer-overlay.active .drawer-content {
+      transform: translateY(0);
+    }
+
+    .drawer-handle-bar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 10px 18px 8px;
+      border-bottom: 1px solid #f1f5f9;
+    }
+
+    .drawer-notch {
+      width: 36px;
+      height: 4px;
+      border-radius: 999px;
+      background: #cbd5e1;
+    }
+
+    .drawer-close-btn {
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      background: #f1f5f9;
+      border: none;
+      color: #475569;
+      font-size: 13px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: all 0.15s ease;
+    }
+
+    .drawer-close-btn:hover {
+      background: #e2e8f0;
+      color: #0f172a;
+    }
+
+    .drawer-stage {
+      height: 285px;
+      width: 100%;
+      background: radial-gradient(circle at 50% 50%, #ffffff 0%, #f8fafc 60%, #edf2f7 100%);
+      position: relative;
+      border-bottom: 1px solid #f1f5f9;
+      touch-action: none;
+    }
+
+    .drawer-stage canvas {
+      width: 100%;
+      height: 100%;
+      display: block;
+    }
+
+    .drawer-controls {
+      padding: 14px 18px 20px;
+      background: #ffffff;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    /* MANDATORY Responsive Mobile Guard */
+    @media (max-width: 960px) {
+      body {
+        padding: 12px 14px 32px;
+      }
+      .desktop-card {
+        grid-template-columns: 1fr;
+        height: auto;
+        max-width: 100%;
+      }
+      .desktop-card .stage-panel {
+        height: 285px;
+        order: 1;
+      }
+      .desktop-card .math-panel {
+        order: 2;
+        border-right: none;
+        border-top: 1px solid #f1f5f9;
+        width: 100%;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Top Navigation Mode Switcher -->
+  <div class="top-header">
+    <div class="view-switcher">
+      <button class="switch-btn active" id="btnShowAll" onclick="setMode('all')">
+        👁️ View all modes
+      </button>
+      <button class="switch-btn" id="btnPillView" onclick="setMode('pill')">
+        💊 1. Pill mode
+      </button>
+      <button class="switch-btn" id="btnDrawerView" onclick="setMode('drawer')">
+        📱 2. Mobile card drawer
+      </button>
+      <button class="switch-btn" id="btnMobileView" onclick="setMode('mobile')">
+        📲 3. Mobile screen (375×540)
+      </button>
+      <button class="switch-btn" id="btnDesktopView" onclick="setMode('desktop')">
+        🖥️ 4. Desktop mode (880×490)
+      </button>
+    </div>
+  </div>
+
+  <!-- Showcase Container -->
+  <div class="showcase-container">
+
+    <!-- Top Row: Pill Mode + Mobile Phone Screen -->
+    <div class="showcase-grid-top" id="gridTop">
+
+      <!-- SECTION 1: PILL MODE -->
+      <div class="view-section" id="sectionPill">
+        <div class="section-title">
+          <span>💊 1. Pill mode</span>
+          <span class="section-badge">Compact capsule (350px)</span>
+        </div>
+
+        <div class="chat-pill-card" id="chatPillTrigger" onclick="openDrawer()">
+          <div class="pill-icon-box">
+            <canvas id="pillCanvas" width="152" height="104"></canvas>
+          </div>
+          <div class="pill-content">
+            <div class="pill-title">Place value columns</div>
+            <div class="pill-subtitle" id="pillSubText">48,276 • 5-digit expanded form</div>
+          </div>
+          <div class="pill-expand-btn" title="Expand to card drawer">
+            <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24">
+              <polyline points="15 3 21 3 21 9"/>
+              <polyline points="9 21 3 21 3 15"/>
+              <line x1="21" y1="3" x2="14" y2="10"/>
+              <line x1="3" y1="21" x2="10" y2="14"/>
+            </svg>
+          </div>
+        </div>
+      </div>
+
+      <!-- SECTION 2: MOBILE SCREEN MODE (375x540) -->
+      <div class="view-section" id="sectionMobile">
+        <div class="section-title">
+          <span>📲 2. Mobile screen mode (Top stage, bottom controls)</span>
+          <span class="section-badge">375 × 540 px</span>
+        </div>
+
+        <div class="mobile-phone-frame">
+          <div class="phone-stage">
+            <canvas id="mobileCanvas"></canvas>
+            <div class="canvas-overlay-pill">
+              <div class="status-dot"></div>
+              <span id="mobileStatusLabel">Total: 48,276</span>
+            </div>
+          </div>
+
+          <div class="phone-controls">
+            <div>
+              <div class="hero-concept">
+                <div class="hero-title" style="font-size: 16px;">Place value columns</div>
+                <div class="hero-sub" style="font-size: 11.5px;">5-digit place value decomposition</div>
+              </div>
+
+              <div class="takeaway-card" style="padding: 7px 10px; margin-bottom: 8px;">
+                <div class="takeaway-badge">
+                  <span>●</span> <span>Expanded form</span>
+                </div>
+                <div class="takeaway-text" id="mobileTakeawayText" style="font-size: 11.5px;">
+                  40,000 + 8,000 + 200 + 70 + 6 = 48,276
+                </div>
+              </div>
+            </div>
+
+            <div class="controls-block">
+              <!-- Steppers strip for 5 digits -->
+              <div class="steppers-strip">
+                <div class="col-stepper">
+                  <span class="col-header-tag tth">TTh</span>
+                  <button class="mini-btn" onclick="stepCol(0, 1)">+</button>
+                  <span class="col-digit" id="mDig0">4</span>
+                  <button class="mini-btn" onclick="stepCol(0, -1)">−</button>
+                </div>
+                <div class="col-stepper">
+                  <span class="col-header-tag th">Th</span>
+                  <button class="mini-btn" onclick="stepCol(1, 1)">+</button>
+                  <span class="col-digit" id="mDig1">8</span>
+                  <button class="mini-btn" onclick="stepCol(1, -1)">−</button>
+                </div>
+                <div class="col-stepper">
+                  <span class="col-header-tag h">H</span>
+                  <button class="mini-btn" onclick="stepCol(2, 1)">+</button>
+                  <span class="col-digit" id="mDig2">2</span>
+                  <button class="mini-btn" onclick="stepCol(2, -1)">−</button>
+                </div>
+                <div class="col-stepper">
+                  <span class="col-header-tag t">T</span>
+                  <button class="mini-btn" onclick="stepCol(3, 1)">+</button>
+                  <span class="col-digit" id="mDig3">7</span>
+                  <button class="mini-btn" onclick="stepCol(3, -1)">−</button>
+                </div>
+                <div class="col-stepper">
+                  <span class="col-header-tag o">O</span>
+                  <button class="mini-btn" onclick="stepCol(4, 1)">+</button>
+                  <span class="col-digit" id="mDig4">6</span>
+                  <button class="mini-btn" onclick="stepCol(4, -1)">−</button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- SECTION 3: DESKTOP SPLIT VIEW (880x490) -->
+    <div class="view-section" id="sectionDesktop" style="width: 100%; max-width: 880px;">
+      <div class="section-title">
+        <span>🖥️ 3. Desktop split view (Side-by-side)</span>
+        <span class="section-badge">880 × 490 px</span>
+      </div>
+
+      <div class="desktop-card">
+        <!-- Left: Controls Panel (370px) -->
+        <div class="math-panel">
+          <div>
+            <div class="hero-concept">
+              <h2 class="hero-title">Place value columns</h2>
+              <p class="hero-sub">Explore the powers of 10 in 5-digit number decomposition.</p>
+            </div>
+
+            <div class="segmented-control">
+              <button class="segment-btn active" data-view="standard" onclick="setViewMode('standard')">Standard form</button>
+              <button class="segment-btn" data-view="expanded" onclick="setViewMode('expanded')">Expanded notation</button>
+            </div>
+
+            <div class="takeaway-card">
+              <div class="takeaway-badge">
+                <span>●</span> <span id="desktopTakeawayBadge">Expanded breakdown</span>
+              </div>
+              <div class="takeaway-text" id="desktopTakeawayText">
+                4 Ten Thousands (40,000) + 8 Thousands (8,000) + 2 Hundreds (200) + 7 Tens (70) + 6 Ones (6) = 48,276
+              </div>
+            </div>
+          </div>
+
+          <div class="controls-block">
+            <div class="steppers-strip">
+              <div class="col-stepper">
+                <span class="col-header-tag tth">TTh (×10k)</span>
+                <button class="mini-btn" onclick="stepCol(0, 1)">+</button>
+                <span class="col-digit" id="dDig0">4</span>
+                <button class="mini-btn" onclick="stepCol(0, -1)">−</button>
+              </div>
+              <div class="col-stepper">
+                <span class="col-header-tag th">Th (×1k)</span>
+                <button class="mini-btn" onclick="stepCol(1, 1)">+</button>
+                <span class="col-digit" id="dDig1">8</span>
+                <button class="mini-btn" onclick="stepCol(1, -1)">−</button>
+              </div>
+              <div class="col-stepper">
+                <span class="col-header-tag h">H (×100)</span>
+                <button class="mini-btn" onclick="stepCol(2, 1)">+</button>
+                <span class="col-digit" id="dDig2">2</span>
+                <button class="mini-btn" onclick="stepCol(2, -1)">−</button>
+              </div>
+              <div class="col-stepper">
+                <span class="col-header-tag t">T (×10)</span>
+                <button class="mini-btn" onclick="stepCol(3, 1)">+</button>
+                <span class="col-digit" id="dDig3">7</span>
+                <button class="mini-btn" onclick="stepCol(3, -1)">−</button>
+              </div>
+              <div class="col-stepper">
+                <span class="col-header-tag o">O (×1)</span>
+                <button class="mini-btn" onclick="stepCol(4, 1)">+</button>
+                <span class="col-digit" id="dDig4">6</span>
+                <button class="mini-btn" onclick="stepCol(4, -1)">−</button>
+              </div>
+            </div>
+
+            <div class="preset-pills">
+              <button class="preset-pill active" onclick="setPreset([4, 8, 2, 7, 6])">48,276</button>
+              <button class="preset-pill" onclick="setPreset([1, 0, 0, 0, 0])">10,000</button>
+              <button class="preset-pill" onclick="setPreset([3, 5, 4, 1, 9])">35,419</button>
+              <button class="preset-pill" onclick="setPreset([9, 9, 9, 9, 9])">99,999</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Right: Stage Panel -->
+        <div class="stage-panel">
+          <canvas id="desktopCanvas"></canvas>
+          <div class="canvas-overlay-pill">
+            <div class="status-dot"></div>
+            <span id="desktopStatusLabel">Total: 48,276</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- SECTION 4: SLIDE-OVER DRAWER -->
+  <div class="drawer-overlay" id="drawerOverlay" onclick="handleDrawerBackdrop(event)">
+    <div class="drawer-content" onclick="event.stopPropagation()">
+      <div class="drawer-handle-bar">
+        <div class="drawer-notch"></div>
+        <button class="drawer-close-btn" onclick="closeDrawer()">✕</button>
+      </div>
+
+      <div class="drawer-stage">
+        <canvas id="drawerCanvas"></canvas>
+        <div class="canvas-overlay-pill">
+          <div class="status-dot"></div>
+          <span id="drawerStatusLabel">Total: 48,276</span>
+        </div>
+      </div>
+
+      <div class="drawer-controls">
+        <div class="hero-concept">
+          <div class="hero-title" style="font-size: 17px;">Place value columns</div>
+          <div class="hero-sub">5-digit expanded notation</div>
+        </div>
+
+        <div class="takeaway-card" style="padding: 8px 11px;">
+          <div class="takeaway-badge">
+            <span>●</span> <span>Expanded breakdown</span>
+          </div>
+          <div class="takeaway-text" id="drawerTakeawayText">
+            40,000 + 8,000 + 200 + 70 + 6 = 48,276
+          </div>
+        </div>
+
+        <div class="steppers-strip">
+          <div class="col-stepper">
+            <span class="col-header-tag tth">TTh</span>
+            <button class="mini-btn" onclick="stepCol(0, 1)">+</button>
+            <span class="col-digit" id="drDig0">4</span>
+            <button class="mini-btn" onclick="stepCol(0, -1)">−</button>
+          </div>
+          <div class="col-stepper">
+            <span class="col-header-tag th">Th</span>
+            <button class="mini-btn" onclick="stepCol(1, 1)">+</button>
+            <span class="col-digit" id="drDig1">8</span>
+            <button class="mini-btn" onclick="stepCol(1, -1)">−</button>
+          </div>
+          <div class="col-stepper">
+            <span class="col-header-tag h">H</span>
+            <button class="mini-btn" onclick="stepCol(2, 1)">+</button>
+            <span class="col-digit" id="drDig2">2</span>
+            <button class="mini-btn" onclick="stepCol(2, -1)">−</button>
+          </div>
+          <div class="col-stepper">
+            <span class="col-header-tag t">T</span>
+            <button class="mini-btn" onclick="stepCol(3, 1)">+</button>
+            <span class="col-digit" id="drDig3">7</span>
+            <button class="mini-btn" onclick="stepCol(3, -1)">−</button>
+          </div>
+          <div class="col-stepper">
+            <span class="col-header-tag o">O</span>
+            <button class="mini-btn" onclick="stepCol(4, 1)">+</button>
+            <span class="col-digit" id="drDig4">6</span>
+            <button class="mini-btn" onclick="stepCol(4, -1)">−</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const state = {
+      digits: [4, 8, 2, 7, 6],
+      viewMode: 'standard', // 'standard' | 'expanded'
+      animBeads: [4, 8, 2, 7, 6],
+      weights: [10000, 1000, 100, 10, 1],
+      labels: ['TTh', 'Th', 'H', 'T', 'O'],
+      themes: [
+        { accent: '#ff9f0a', light: '#fff8eb', dark: '#d97706', glow: 'rgba(255, 159, 10, 0.35)' }, // Ten Thousands
+        { accent: '#0071e3', light: '#edf5ff', dark: '#0284c7', glow: 'rgba(0, 113, 227, 0.35)' },  // Thousands
+        { accent: '#34c759', light: '#eafaf0', dark: '#16a34a', glow: 'rgba(52, 199, 89, 0.35)' },  // Hundreds
+        { accent: '#ff9500', light: '#fff5ea', dark: '#ea580c', glow: 'rgba(255, 149, 0, 0.35)' },  // Tens
+        { accent: '#af52de', light: '#f9f0fe', dark: '#9333ea', glow: 'rgba(175, 82, 222, 0.35)' }  // Ones
+      ]
+    };
+
+    function setMode(view) {
+      document.querySelectorAll('.switch-btn').forEach(b => b.classList.remove('active'));
+      const secPill = document.getElementById('sectionPill');
+      const secMobile = document.getElementById('sectionMobile');
+      const secDesktop = document.getElementById('sectionDesktop');
+      const gridTop = document.getElementById('gridTop');
+      const drawer = document.getElementById('drawerOverlay');
+
+      if (view === 'all') {
+        document.getElementById('btnShowAll').classList.add('active');
+        secPill.style.display = 'flex';
+        secMobile.style.display = 'flex';
+        secDesktop.style.display = 'flex';
+        gridTop.style.display = 'flex';
+        drawer.classList.remove('active');
+      } else if (view === 'pill') {
+        document.getElementById('btnPillView').classList.add('active');
+        secPill.style.display = 'flex';
+        secMobile.style.display = 'none';
+        secDesktop.style.display = 'none';
+        gridTop.style.display = 'flex';
+        drawer.classList.remove('active');
+      } else if (view === 'drawer') {
+        document.getElementById('btnDrawerView').classList.add('active');
+        secPill.style.display = 'none';
+        secMobile.style.display = 'none';
+        secDesktop.style.display = 'none';
+        drawer.classList.add('active');
+      } else if (view === 'mobile') {
+        document.getElementById('btnMobileView').classList.add('active');
+        secPill.style.display = 'none';
+        secMobile.style.display = 'flex';
+        secDesktop.style.display = 'none';
+        gridTop.style.display = 'flex';
+        drawer.classList.remove('active');
+      } else if (view === 'desktop') {
+        document.getElementById('btnDesktopView').classList.add('active');
+        secPill.style.display = 'none';
+        secMobile.style.display = 'none';
+        secDesktop.style.display = 'flex';
+        gridTop.style.display = 'none';
+        drawer.classList.remove('active');
+      }
+    }
+
+    function openDrawer() {
+      document.getElementById('drawerOverlay').classList.add('active');
+    }
+
+    function closeDrawer() {
+      document.getElementById('drawerOverlay').classList.remove('active');
+      if (document.getElementById('btnDrawerView').classList.contains('active')) {
+        setMode('all');
+      }
+    }
+
+    function handleDrawerBackdrop(e) {
+      if (e.target === document.getElementById('drawerOverlay')) {
+        closeDrawer();
+      }
+    }
+
+    function setViewMode(mode) {
+      state.viewMode = mode;
+      document.querySelectorAll('.segment-btn[data-view]').forEach(b => {
+        b.classList.toggle('active', b.getAttribute('data-view') === mode);
+      });
+      updateUI();
+    }
+
+    function stepCol(colIdx, delta) {
+      const cur = state.digits[colIdx];
+      const next = Math.max(0, Math.min(9, cur + delta));
+      state.digits[colIdx] = next;
+      updateUI();
+    }
+
+    function setPreset(arr) {
+      state.digits = [...arr];
+      updateUI();
+    }
+
+    function getTotal() {
+      return state.digits.reduce((sum, d, i) => sum + d * state.weights[i], 0);
+    }
+
+    function updateUI() {
+      const total = getTotal();
+      const s = total.toLocaleString();
+
+      // Update column digits
+      for (let i = 0; i < 5; i++) {
+        const v = state.digits[i];
+        const mEl = document.getElementById(`mDig${i}`);
+        const dEl = document.getElementById(`dDig${i}`);
+        const drEl = document.getElementById(`drDig${i}`);
+        if (mEl) mEl.textContent = v;
+        if (dEl) dEl.textContent = v;
+        if (drEl) drEl.textContent = v;
+      }
+
+      // Update Pill
+      const pillSub = document.getElementById('pillSubText');
+      if (pillSub) pillSub.textContent = `${s} • 5-digit expanded form`;
+
+      // Status labels
+      ['mobile', 'desktop', 'drawer'].forEach(p => {
+        const label = document.getElementById(`${p}StatusLabel`);
+        if (label) label.textContent = `Total: ${s}`;
+      });
+
+      // Expanded breakdown
+      const parts = state.digits.map((d, i) => `${(d * state.weights[i]).toLocaleString()}`);
+      const expandedStr = `${parts.join(' + ')} = ${s}`;
+      const standardStr = `${state.digits[0]} TTh + ${state.digits[1]} Th + ${state.digits[2]} H + ${state.digits[3]} T + ${state.digits[4]} O = ${s}`;
+
+      const tText = state.viewMode === 'expanded' ? expandedStr : standardStr;
+
+      const dt = document.getElementById('desktopTakeawayText');
+      const mt = document.getElementById('mobileTakeawayText');
+      const dr = document.getElementById('drawerTakeawayText');
+      if (dt) dt.textContent = tText;
+      if (mt) mt.textContent = expandedStr;
+      if (dr) dr.textContent = expandedStr;
+    }
+
+    // --- High-Fidelity Apple Retina Canvas Rendering ---
+    const canvases = [
+      { id: 'desktopCanvas', isMini: false },
+      { id: 'mobileCanvas', isMini: false },
+      { id: 'drawerCanvas', isMini: false },
+      { id: 'pillCanvas', isMini: true }
+    ];
+
+    function drawStage(cv, isMini) {
+      const rect = cv.getBoundingClientRect();
+      const w = isMini ? 152 : rect.width || 370;
+      const h = isMini ? 104 : rect.height || 285;
+      const dpr = window.devicePixelRatio || 1;
+
+      if (cv.width !== Math.round(w * dpr) || cv.height !== Math.round(h * dpr)) {
+        cv.width = Math.round(w * dpr);
+        cv.height = Math.round(h * dpr);
+      }
+
+      const ctx = cv.getContext('2d');
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      ctx.clearRect(0, 0, w, h);
+
+      if (isMini) {
+        // Mini Pill Canvas: 5 tiny glass rods with beads
+        const colW = 16;
+        const colH = 68;
+        const gap = 8;
+        const startX = (w - (5 * colW + 4 * gap)) / 2;
+        const startY = (h - colH) / 2;
+
+        for (let i = 0; i < 5; i++) {
+          const x = startX + i * (colW + gap);
+          const count = state.digits[i];
+          const theme = state.themes[i];
+
+          // Mini rod
+          ctx.fillStyle = '#f1f5f9';
+          ctx.strokeStyle = '#e2e8f0';
+          ctx.lineWidth = 1;
+          ctx.beginPath();
+          ctx.roundRect(x, startY, colW, colH, 8);
+          ctx.fill();
+          ctx.stroke();
+
+          // Mini beads
+          const beadR = 4;
+          const maxBeads = Math.min(count, 7);
+          for (let b = 0; b < maxBeads; b++) {
+            const by = startY + colH - 8 - b * 8;
+            ctx.fillStyle = theme.accent;
+            ctx.beginPath();
+            ctx.arc(x + colW / 2, by, beadR, 0, Math.PI * 2);
+            ctx.fill();
+          }
+        }
+        return;
+      }
+
+      // Main Channels
+      const totalCols = 5;
+      const gap = Math.min(14, (w - 40) / 30);
+      const colW = Math.min(54, (w - 40 - (totalCols - 1) * gap) / totalCols);
+      const colH = Math.min(190, h - 70);
+      const startX = (w - (totalCols * colW + (totalCols - 1) * gap)) / 2;
+      const startY = 44;
+
+      for (let i = 0; i < 5; i++) {
+        const x = startX + i * (colW + gap);
+        const y = startY;
+        const count = state.digits[i];
+        const theme = state.themes[i];
+        const label = state.labels[i];
+
+        // Column Channel Body (Frosted Acrylic Channel)
+        ctx.save();
+        ctx.shadowColor = 'rgba(0, 0, 0, 0.04)';
+        ctx.shadowBlur = 10;
+        ctx.shadowOffsetY = 4;
+
+        const channelGrad = ctx.createLinearGradient(x, y, x + colW, y);
+        channelGrad.addColorStop(0, 'rgba(255, 255, 255, 0.95)');
+        channelGrad.addColorStop(0.5, 'rgba(248, 250, 252, 0.7)');
+        channelGrad.addColorStop(1, 'rgba(241, 245, 249, 0.95)');
+
+        ctx.fillStyle = channelGrad;
+        ctx.beginPath();
+        ctx.roundRect(x, y, colW, colH, 18);
+        ctx.fill();
+        ctx.shadowColor = 'transparent';
+
+        // Outer crisp rim with subtle accent tint
+        ctx.strokeStyle = count > 0 ? theme.accent : '#e2e8f0';
+        ctx.lineWidth = count > 0 ? 1.8 : 1.2;
+        ctx.stroke();
+
+        // Column Top Header Badge
+        ctx.font = '700 11px -apple-system, sans-serif';
+        ctx.fillStyle = theme.accent;
+        ctx.textAlign = 'center';
+        ctx.fillText(label, x + colW / 2, y - 8);
+
+        // 3D Glass/Ceramic Beads stacked inside — dynamically sized to fit
+        const beadPad = 16;
+        const availH = colH - beadPad * 2;
+        const maxBeadR = Math.min(12, colW * 0.28);
+        const beadR = count > 0 ? Math.min(maxBeadR, availH / (count * 2.2)) : maxBeadR;
+        const beadSpacing = count > 1 ? Math.min(beadR * 2 + 2, (availH - beadR * 2) / (count - 1)) : 0;
+
+        for (let b = 0; b < count; b++) {
+          const bx = x + colW / 2;
+          const by = y + colH - beadPad - beadR - b * beadSpacing;
+
+          // Bead contact shadow
+          ctx.shadowColor = theme.glow;
+          ctx.shadowBlur = 6;
+          ctx.shadowOffsetY = 2;
+
+          // 3D Bead Gradient
+          const bGrad = ctx.createRadialGradient(
+            bx - beadR * 0.35, by - beadR * 0.35, beadR * 0.1,
+            bx, by, beadR
+          );
+          bGrad.addColorStop(0, '#ffffff');
+          bGrad.addColorStop(0.3, theme.accent);
+          bGrad.addColorStop(0.85, theme.dark);
+          bGrad.addColorStop(1, '#0f172a');
+
+          ctx.fillStyle = bGrad;
+          ctx.beginPath();
+          ctx.arc(bx, by, beadR, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.shadowColor = 'transparent';
+
+          // Curved specular highlight
+          ctx.fillStyle = 'rgba(255, 255, 255, 0.85)';
+          ctx.beginPath();
+          ctx.ellipse(bx - beadR * 0.3, by - beadR * 0.3, beadR * 0.35, beadR * 0.2, -Math.PI / 4, 0, Math.PI * 2);
+          ctx.fill();
+        }
+
+        // Bottom Digit Text
+        ctx.font = '700 16px "JetBrains Mono", monospace';
+        ctx.fillStyle = count > 0 ? theme.accent : '#94a3b8';
+        ctx.textAlign = 'center';
+        ctx.fillText(String(count), x + colW / 2, y + colH + 20);
+
+        ctx.restore();
+      }
+    }
+
+    function renderLoop() {
+      canvases.forEach(item => {
+        const cv = document.getElementById(item.id);
+        if (cv && cv.offsetParent !== null) {
+          drawStage(cv, item.isMini);
+        }
+      });
+      requestAnimationFrame(renderLoop);
+    }
+    requestAnimationFrame(renderLoop);
+
+    // Direct Canvas Interaction: Tap a column to add bead, tap near bottom to remove
+    ['desktopCanvas', 'mobileCanvas', 'drawerCanvas'].forEach(id => {
+      const cv = document.getElementById(id);
+      if (!cv) return;
+
+      cv.addEventListener('pointerdown', e => {
+        const rect = cv.getBoundingClientRect();
+        const clickX = e.clientX - rect.left;
+        const clickY = e.clientY - rect.top;
+        const w = rect.width;
+        const totalCols = 5;
+        const gap = Math.min(14, (w - 40) / 30);
+        const colW = Math.min(54, (w - 40 - (totalCols - 1) * gap) / totalCols);
+        const startX = (w - (totalCols * colW + (totalCols - 1) * gap)) / 2;
+
+        for (let i = 0; i < 5; i++) {
+          const colLeft = startX + i * (colW + gap);
+          const colRight = colLeft + colW;
+          if (clickX >= colLeft && clickX <= colRight) {
+            // Tap upper half to add (+1), lower half to remove (-1)
+            const isUpper = clickY < rect.height / 2;
+            stepCol(i, isUpper ? 1 : -1);
+            break;
+          }
+        }
+      });
+    });
+
+    updateUI();
+  </script>
+</body>
+</html>

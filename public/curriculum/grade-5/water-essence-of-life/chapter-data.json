@@ -1,0 +1,737 @@
+{
+  "book": {
+    "id": "grade-5-science-evs",
+    "title": "Our Wondrous World (Class 5 EVS)",
+    "gradeNumber": 5,
+    "gradeLabel": "Grade 5",
+    "subject": "Science EVS",
+    "curriculum": "NCERT",
+    "nationalEducationPolicy": "NEP 2020 Aligned (Preparatory Stage)",
+    "edition": "Reprint 2026-27",
+    "publisher": "National Council of Educational Research and Training, New Delhi, India",
+    "unit": {
+      "id": "unit-sci-5-01",
+      "number": 1,
+      "title": "Water — The Essence of Life",
+      "aboutUnit": "Highlights the crucial role of nature as a home to animals, birds, and plants, with water being the primary sustainer of all terrestrial and aquatic life. Emphasizes environmental observation, states of matter, the water cycle, and responsible water conservation.",
+      "bannerImage": "https://kpigixuqpigjremowykx.supabase.co/storage/v1/object/public/curriculum-assets/grade-5/science/ch01/images/rain_at_window_family.jpg",
+      "facilitationGuide": {
+        "title": "How to Facilitate in the Science Classroom",
+        "points": [
+          {
+            "headline": "Local Water Bodies",
+            "text": "Encourage students to think about water bodies near their homes (ponds, lakes, rivers, wells)."
+          },
+          {
+            "headline": "States of Matter Experiments",
+            "text": "Guide students to observe condensation on cold glasses and evaporation from puddles."
+          },
+          {
+            "headline": "Mapping India's Water Flow",
+            "text": "Use the India rivers map to trace flow toward the Bay of Bengal vs Arabian Sea."
+          }
+        ]
+      }
+    }
+  },
+  "chapter": {
+    "id": "science-5-ch01-water-essence-of-life",
+    "number": 1,
+    "title": "Water — The Essence of Life",
+    "tagline": "Discover the incredible journey of water across solid, liquid, and vapour forms, uncover Earth’s hidden freshwater sources, and explore pond ecosystems.",
+    "overview": "Introduces states of water, the water cycle, groundwater seepage, surface vs underground water, aquatic adaptations, and water conservation ethics.",
+    "sourcePdf": "eeev101.pdf",
+    "totalPages": 20,
+    "characters": [
+      {
+        "id": "afreen",
+        "name": "Afreen",
+        "avatar": "👧",
+        "role": "Inquisitive Nature Observer",
+        "bio": "Loves watching rain, tracing rivers on maps, and investigating ecosystems."
+      },
+      {
+        "id": "jyoti",
+        "name": "Jyoti",
+        "avatar": "👧",
+        "role": "Curious Scientific Experimenter",
+        "bio": "Asks thought-provoking questions about where rain comes from and how water changes forms."
+      }
+    ],
+    "sections": [
+      {
+        "id": "sec-sci-5-ch01-01",
+        "lessonNumber": 1,
+        "title": "Rain at the Window — Where Does Water Come From?",
+        "subtitle": "Discovering Earth's water distribution and freshwater scarcity",
+        "pageRange": "Pages 3–4",
+        "storyNarrative": {
+          "characterId": "afreen",
+          "characterName": "Afreen",
+          "setting": "Inside home during a monsoon downpour, watching raindrops race down window panes.",
+          "dialogue": "“It is raining! Afreen rushed to the window where Jyoti was watching tiny raindrops slide down the glass. ‘Where do you think all this water comes from, and where does it go after it hits the ground?’ asked Afreen.”",
+          "audioText": "Afreen and Jyoti watch rain droplets slide down the glass and ask about water sources."
+        },
+        "textbookCoreText": "It is raining. Afreen rushed to the window where Jyoti was already watching tiny raindrops slide down the glass. “Where do you think all this water comes from, and where does it go?” asked Afreen. Although most of Earth’s surface is covered with water, the majority of it is salty, leaving less than 3% as freshwater.",
+        "concept": {
+          "heading": "Earth's Water Distribution (Salty vs Freshwater)",
+          "explanation": "Around 71% of Earth is covered in water. But over 97% is salty ocean water. Less than 3% is freshwater, and most of that is locked in polar ice caps and high mountain glaciers. Only a tiny fraction is accessible in lakes, rivers, and groundwater.",
+          "keyRule": "Over 97% of Earth's water is salty ocean water; less than 3% is freshwater."
+        },
+        "blocks": [
+          {
+            "type": "story-narrative",
+            "title": "Rain Window Dialogue",
+            "content": {
+              "speaker": "Afreen & Jyoti",
+              "dialogue": "“Where do you think all this water comes from, and where does it go?”",
+              "bannerImage": "https://kpigixuqpigjremowykx.supabase.co/storage/v1/object/public/curriculum-assets/grade-5/science/ch01/images/rain_at_window_family.jpg"
+            }
+          },
+          {
+            "type": "callout-spotlight",
+            "title": "Wular Lake Freshwater Fact",
+            "content": {
+              "badge": "Freshwater Wonder • Jammu & Kashmir",
+              "text": "Wular Lake in Jammu and Kashmir is one of the largest freshwater lakes in Asia. It acts as a giant natural flood basin and sustains hundreds of bird species."
+            }
+          },
+          {
+            "type": "interactive_simulation",
+            "title": "Interactive Lab: Global Blue Planet 3D Water & Land Ratio Explorer",
+            "content": {
+              "interactiveId": "interactive-sci-5-ch01-les01",
+              "interactiveTitle": "Global Blue Planet 3D Water & Land Ratio Explorer",
+              "interactiveType": "3d_globe_surface_explorer",
+              "cdnUrl": "https://kpigixuqpigjremowykx.supabase.co/storage/v1/object/public/curriculum-assets/grade-5/interactives/interactive-sci-5-ch01-les01.html",
+              "localUrl": "/curriculum interactive/interactive-sci-5-ch01-les01.html",
+              "pedagogicalObjective": "Understand that water covers over 70% of Earth's surface and is essential for all living organisms.",
+              "explanation": "Afreen and Jyoti watch raindrops on their window and wonder how much of Earth is covered by water. Students rotate a 3D Earth globe, toggle ocean and land layers, and discover that over 71% of Earth's surface is blue water.",
+              "simpleExplanation": "Spin planet Earth in 3D to see why our home is called the Blue Planet, covered in 71% shimmering oceans!",
+              "stemExplanation": "Planetary hydrology and geosphere surface area distribution (361 million km² water vs 149 million km² land).",
+              "modes": [
+                "pill",
+                "drawer",
+                "mobile",
+                "desktop"
+              ],
+              "legoBlocks": [
+                "threejs-globe",
+                "layer-toggle",
+                "pie-chart-hud"
+              ]
+            }
+          }
+        ],
+        "questions": [
+          {
+            "id": "q-sci-5-ch01-01",
+            "type": "mcq",
+            "prompt": "Why can humans not drink ocean water directly?",
+            "options": [
+              "It is too cold",
+              "It contains high dissolved salts",
+              "It has no oxygen",
+              "It has frozen into ice"
+            ],
+            "correctAnswer": "It contains high dissolved salts",
+            "hint": "Think about what gives seawater its salty taste.",
+            "explanation": "Ocean water has around 35 grams of dissolved salt per litre, which dehydrates the human body."
+          }
+        ],
+        "interactive": {
+          "id": "interactive-sci-5-ch01-les01",
+          "title": "Global Blue Planet 3D Water & Land Ratio Explorer",
+          "type": "3d_globe_surface_explorer",
+          "pedagogicalObjective": "Understand that water covers over 70% of Earth's surface and is essential for all living organisms.",
+          "localUrl": "/curriculum interactive/interactive-sci-5-ch01-les01.html",
+          "cdnUrl": "https://kpigixuqpigjremowykx.supabase.co/storage/v1/object/public/curriculum-assets/grade-5/interactives/interactive-sci-5-ch01-les01.html",
+          "iframeCode": "<iframe src=\"https://kpigixuqpigjremowykx.supabase.co/storage/v1/object/public/curriculum-assets/grade-5/interactives/interactive-sci-5-ch01-les01.html\" width=\"100%\" height=\"600\" frameborder=\"0\" allowfullscreen title=\"Global Blue Planet 3D Water & Land Ratio Explorer\"></iframe>",
+          "modes": [
+            "pill",
+            "drawer",
+            "mobile",
+            "desktop"
+          ],
+          "legoBlocks": [
+            "threejs-globe",
+            "layer-toggle",
+            "pie-chart-hud"
+          ]
+        }
+      },
+      {
+        "id": "sec-sci-5-ch01-02",
+        "lessonNumber": 2,
+        "title": "Three Forms of Water & The Cold Glass Experiment",
+        "subtitle": "Observing condensation and phase changes between solid, liquid, and vapour",
+        "pageRange": "Pages 5–7",
+        "storyNarrative": {
+          "characterId": "jyoti",
+          "characterName": "Jyoti",
+          "setting": "Kitchen table testing cold glasses and ice cubes.",
+          "dialogue": "“Jyoti asked: ‘Is there water in the air too? And is snow a form of water?’ Let's put ice in a dry steel glass and watch what happens on the outside wall!”",
+          "audioText": "Jyoti tests the forms of water using ice cubes."
+        },
+        "textbookCoreText": "Water has different forms: liquid (rain), solid (ice, snow), and vapour (steam, humidity). Activity 2: Take a steel glass. Put some ice cubes in it. Observe small water droplets forming on the dry outer wall. Where do these droplets come from?",
+        "concept": {
+          "heading": "Evaporation and Condensation",
+          "explanation": "When water is heated by the Sun, it turns into invisible water vapour (Evaporation). When warm water vapour touches a cold surface (like the ice-cold steel glass), it cools down and turns back into liquid water droplets (Condensation).",
+          "keyRule": "Heating causes Evaporation (Liquid ➔ Vapour). Cooling causes Condensation (Vapour ➔ Liquid)."
+        },
+        "blocks": [
+          {
+            "type": "experiment-protocol",
+            "title": "Activity 2: Cold Glass Condensation Experiment",
+            "content": {
+              "image": "https://kpigixuqpigjremowykx.supabase.co/storage/v1/object/public/curriculum-assets/grade-5/science/ch01/images/ice_cube_condensation_glass.jpg",
+              "materials": [
+                "1 Steel or glass tumbler",
+                "4–5 Ice cubes",
+                "1 Dry cotton cloth"
+              ],
+              "steps": [
+                "Wipe the outside of the tumbler completely dry.",
+                "Place ice cubes inside the tumbler.",
+                "Leave undisturbed for 3 minutes.",
+                "Observe water droplets condensing on the outer surface."
+              ]
+            }
+          },
+          {
+            "type": "interactive-table",
+            "title": "Observing Changes Log",
+            "content": {
+              "headers": [
+                "Process / Activity",
+                "Form Change",
+                "What do you observe?"
+              ],
+              "rows": [
+                [
+                  "Ice Melting",
+                  "Solid ➔ Liquid",
+                  "Ice cubes turn to liquid water at room temperature"
+                ],
+                [
+                  "Water Boiling",
+                  "Liquid ➔ Vapour",
+                  "Steam rises from the pot as bubbles form"
+                ],
+                [
+                  "Cold Glass Wall",
+                  "Vapour ➔ Liquid",
+                  "Invisible air moisture turns to liquid water droplets"
+                ]
+              ]
+            }
+          },
+          {
+            "type": "interactive_simulation",
+            "title": "Interactive Lab: Ice Tumbler Condensation & States of Matter Lab",
+            "content": {
+              "interactiveId": "interactive-sci-5-ch01-les02",
+              "interactiveTitle": "Ice Tumbler Condensation & States of Matter Lab",
+              "interactiveType": "condensation_thermodynamic_simulator",
+              "cdnUrl": "https://kpigixuqpigjremowykx.supabase.co/storage/v1/object/public/curriculum-assets/grade-5/interactives/interactive-sci-5-ch01-les02.html",
+              "localUrl": "/curriculum interactive/interactive-sci-5-ch01-les02.html",
+              "pedagogicalObjective": "Demonstrate that atmospheric water vapour condenses into liquid droplets upon touching cold surfaces.",
+              "explanation": "Afreen places ice cubes inside a dry steel glass. Outside droplets appear. In this simulation, students adjust glass temperature from 30°C down to 0°C, watching invisible surrounding air molecules cool and condense into glittering droplets on the exterior metal surface.",
+              "simpleExplanation": "Put ice in a dry metal glass and watch invisible water vapour in the warm air turn into glistening water beads on the outside!",
+              "stemExplanation": "Phase transition equilibria and dew point thermodynamics: P_vapour >= P_sat(T_surface) triggering surface condensation.",
+              "modes": [
+                "pill",
+                "drawer",
+                "mobile",
+                "desktop"
+              ],
+              "legoBlocks": [
+                "particle-simulation",
+                "thermal-slider",
+                "microscope-cutout"
+              ]
+            }
+          }
+        ],
+        "questions": [
+          {
+            "id": "q-sci-5-ch01-02",
+            "type": "mcq",
+            "prompt": "Where do the water droplets on the outside of an ice-cold glass come from?",
+            "options": [
+              "They leaked through the steel",
+              "They condensed from water vapour in the room air",
+              "They were already there",
+              "They fell from the ceiling"
+            ],
+            "correctAnswer": "They condensed from water vapour in the room air",
+            "hint": "Water cannot pass through solid steel.",
+            "explanation": "The invisible water vapour present in the surrounding air condenses when cooled by the glass wall."
+          }
+        ],
+        "interactive": {
+          "id": "interactive-sci-5-ch01-les02",
+          "title": "Ice Tumbler Condensation & States of Matter Lab",
+          "type": "condensation_thermodynamic_simulator",
+          "pedagogicalObjective": "Demonstrate that atmospheric water vapour condenses into liquid droplets upon touching cold surfaces.",
+          "localUrl": "/curriculum interactive/interactive-sci-5-ch01-les02.html",
+          "cdnUrl": "https://kpigixuqpigjremowykx.supabase.co/storage/v1/object/public/curriculum-assets/grade-5/interactives/interactive-sci-5-ch01-les02.html",
+          "iframeCode": "<iframe src=\"https://kpigixuqpigjremowykx.supabase.co/storage/v1/object/public/curriculum-assets/grade-5/interactives/interactive-sci-5-ch01-les02.html\" width=\"100%\" height=\"600\" frameborder=\"0\" allowfullscreen title=\"Ice Tumbler Condensation & States of Matter Lab\"></iframe>",
+          "modes": [
+            "pill",
+            "drawer",
+            "mobile",
+            "desktop"
+          ],
+          "legoBlocks": [
+            "particle-simulation",
+            "thermal-slider",
+            "microscope-cutout"
+          ]
+        }
+      },
+      {
+        "id": "sec-sci-5-ch01-03",
+        "lessonNumber": 3,
+        "title": "The Complete Water Cycle — Nature's Endless Circle",
+        "subtitle": "How the Sun's heat drives evaporation, clouds, rain, and snow",
+        "pageRange": "Pages 8–9",
+        "storyNarrative": {
+          "characterId": "afreen",
+          "characterName": "Afreen",
+          "setting": "Looking at the clouds gathering over distant hills.",
+          "dialogue": "“The water we drink today might have fallen as rain on dinosaurs millions of years ago! It evaporates from seas, forms fluffy clouds, falls as rain, and returns to rivers in an endless dance!”",
+          "audioText": "Afreen explains the continuous natural water cycle."
+        },
+        "textbookCoreText": "As you have seen, the Sun’s heat causes water to turn into water vapour. When this vapour rises high into the sky, it cools down and condenses into tiny drops to form clouds. When clouds become heavy, water falls back as rain, hail, or snow. This continuous cycle is called the Water Cycle.",
+        "concept": {
+          "heading": "Four Stages of the Water Cycle",
+          "explanation": "1. Evaporation: Water from oceans, lakes, and plants heats up and rises.\n2. Condensation: Vapour cools in high altitude to form clouds.\n3. Precipitation: Drops merge and fall as rain or snow.\n4. Collection: Water gathers in rivers, soil, and oceans.",
+          "keyRule": "Nature recycles 100% of Earth's water through the continuous Water Cycle."
+        },
+        "blocks": [
+          {
+            "type": "map-diagram-explorer",
+            "title": "Interactive Water Cycle Diagram",
+            "content": {
+              "image": "https://kpigixuqpigjremowykx.supabase.co/storage/v1/object/public/curriculum-assets/grade-5/science/ch01/images/complete_water_cycle_diagram.jpg",
+              "stages": [
+                {
+                  "name": "Evaporation",
+                  "desc": "Sun heats ocean water turning it into vapour."
+                },
+                {
+                  "name": "Condensation",
+                  "desc": "Vapour cools high up to form clouds."
+                },
+                {
+                  "name": "Precipitation",
+                  "desc": "Water droplets fall as rain or snow."
+                },
+                {
+                  "name": "Infiltration / Seepage",
+                  "desc": "Rainwater soaks into soil creating groundwater."
+                }
+              ]
+            }
+          },
+          {
+            "type": "interactive_simulation",
+            "title": "Interactive Lab: Thermodynamic Global Water Cycle Machine",
+            "content": {
+              "interactiveId": "interactive-sci-5-ch01-les03",
+              "interactiveTitle": "Thermodynamic Global Water Cycle Machine",
+              "interactiveType": "water_cycle_simulator",
+              "cdnUrl": "https://kpigixuqpigjremowykx.supabase.co/storage/v1/object/public/curriculum-assets/grade-5/interactives/interactive-sci-5-ch01-les03.html",
+              "localUrl": "/curriculum interactive/interactive-sci-5-ch01-les03.html",
+              "pedagogicalObjective": "Trace the continuous closed cycle of evaporation, condensation, precipitation, and collection.",
+              "explanation": "Students control the global water cycle. By increasing solar heat, ocean water evaporates into vapour; cooling upper air condenses vapour into fluffy cumulus clouds; saturating clouds precipitates rain and snow over mountains, flowing back to rivers.",
+              "simpleExplanation": "Control the Sun and weather to see how water journeys from the sea to the sky as clouds, rains down on hills, and flows right back home!",
+              "stemExplanation": "Conservation of mass in closed thermodynamic planetary hydrologic systems (Q_solar -> latent heat of vaporization -> adiabatic cooling -> precipitation).",
+              "modes": [
+                "pill",
+                "drawer",
+                "mobile",
+                "desktop"
+              ],
+              "legoBlocks": [
+                "landscape-canvas",
+                "weather-engine",
+                "phase-indicator"
+              ]
+            }
+          }
+        ],
+        "questions": [
+          {
+            "id": "q-sci-5-ch01-03",
+            "type": "mcq",
+            "prompt": "What provides the primary energy that drives the global water cycle?",
+            "options": [
+              "The Moon's gravity",
+              "The Sun's heat",
+              "Earthquakes",
+              "Wind mills"
+            ],
+            "correctAnswer": "The Sun's heat",
+            "hint": "Think about what heats up ocean water causing it to evaporate.",
+            "explanation": "Solar energy warms surface water, driving evaporation into the atmosphere."
+          }
+        ],
+        "interactive": {
+          "id": "interactive-sci-5-ch01-les03",
+          "title": "Thermodynamic Global Water Cycle Machine",
+          "type": "water_cycle_simulator",
+          "pedagogicalObjective": "Trace the continuous closed cycle of evaporation, condensation, precipitation, and collection.",
+          "localUrl": "/curriculum interactive/interactive-sci-5-ch01-les03.html",
+          "cdnUrl": "https://kpigixuqpigjremowykx.supabase.co/storage/v1/object/public/curriculum-assets/grade-5/interactives/interactive-sci-5-ch01-les03.html",
+          "iframeCode": "<iframe src=\"https://kpigixuqpigjremowykx.supabase.co/storage/v1/object/public/curriculum-assets/grade-5/interactives/interactive-sci-5-ch01-les03.html\" width=\"100%\" height=\"600\" frameborder=\"0\" allowfullscreen title=\"Thermodynamic Global Water Cycle Machine\"></iframe>",
+          "modes": [
+            "pill",
+            "drawer",
+            "mobile",
+            "desktop"
+          ],
+          "legoBlocks": [
+            "landscape-canvas",
+            "weather-engine",
+            "phase-indicator"
+          ]
+        }
+      },
+      {
+        "id": "sec-sci-5-ch01-04",
+        "lessonNumber": 4,
+        "title": "Underground Water & The Soil Infiltration Experiment",
+        "subtitle": "How soil recharges aquifers and why concrete blocks rainwater",
+        "pageRange": "Pages 9–11",
+        "storyNarrative": {
+          "characterId": "jyoti",
+          "characterName": "Jyoti",
+          "setting": "Garden soil patch with a clear glass and water spoon.",
+          "dialogue": "“When it rains on natural mud and forest soil, where does the water go? It soaks deep down! But on cemented city roads, rainwater cannot sink and runs off into drains!”",
+          "audioText": "Jyoti investigates soil percolation and groundwater."
+        },
+        "textbookCoreText": "Activity 4: Take a transparent glass. Fill half with soil. Slowly pour water into the soil using a spoon. Observe what happens. When it rains, water sinks through soil and rocks. Water stored deep underground is called groundwater. We dig wells, tube wells, and handpumps to draw it.",
+        "concept": {
+          "heading": "Groundwater Recharge vs Runoff",
+          "explanation": "Permeable surfaces (soil, grass, forests) allow rainwater to percolate into the ground, recharging underground aquifers. Impermeable surfaces (concrete, tar roads) block infiltration, causing urban waterlogging and lowering groundwater tables.",
+          "keyRule": "Natural soil recharges groundwater; cemented concrete blocks recharge."
+        },
+        "blocks": [
+          {
+            "type": "experiment-protocol",
+            "title": "Activity 4: Soil Water Infiltration Glass",
+            "content": {
+              "image": "https://kpigixuqpigjremowykx.supabase.co/storage/v1/object/public/curriculum-assets/grade-5/science/ch01/images/soil_water_seepage_glass.jpg",
+              "materials": [
+                "Transparent glass",
+                "Dry soil / sand",
+                "Spoon and water"
+              ],
+              "steps": [
+                "Fill glass halfway with dry garden soil.",
+                "Slowly pour spoonfuls of water onto the surface.",
+                "Watch water seep through gaps between soil particles down to the base."
+              ]
+            }
+          },
+          {
+            "type": "interactive_simulation",
+            "title": "Interactive Lab: Soil Infiltration & Aquifer Percolation Tank",
+            "content": {
+              "interactiveId": "interactive-sci-5-ch01-les04",
+              "interactiveTitle": "Soil Infiltration & Aquifer Percolation Tank",
+              "interactiveType": "soil_permeability_simulator",
+              "cdnUrl": "https://kpigixuqpigjremowykx.supabase.co/storage/v1/object/public/curriculum-assets/grade-5/interactives/interactive-sci-5-ch01-les04.html",
+              "localUrl": "/curriculum interactive/interactive-sci-5-ch01-les04.html",
+              "pedagogicalObjective": "Observe how permeable topsoil allows rainwater percolation to recharge underground aquifers, while impermeable surfaces cause runoff.",
+              "explanation": "Jyoti pours water on garden soil and watches it soak in, while on concrete it puddles and runs away. Students pour rain onto 3 soil columns (Garden Loam, Sand, Concrete) to observe percolation rates and well replenishment.",
+              "simpleExplanation": "Pour water through loam soil, sand, and concrete to discover why gardens drink rainwater to fill underground wells, while concrete causes puddles and city floods!",
+              "stemExplanation": "Darcy's Law for porous media fluid flow: Q = -K · A · (dh/dl), hydraulic conductivity and permeability coefficients across soil textures.",
+              "modes": [
+                "pill",
+                "drawer",
+                "mobile",
+                "desktop"
+              ],
+              "legoBlocks": [
+                "cross-section-canvas",
+                "fluid-percolator",
+                "water-table-gauge"
+              ]
+            }
+          }
+        ],
+        "questions": [
+          {
+            "id": "q-sci-5-ch01-04",
+            "type": "mcq",
+            "prompt": "Which surface allows the most rainwater to recharge underground aquifers?",
+            "options": [
+              "Concrete parking lot",
+              "Tarred road",
+              "Forest soil and open grassland",
+              "Tiled roof"
+            ],
+            "correctAnswer": "Forest soil and open grassland",
+            "hint": "Permeable earth absorbs water like a sponge.",
+            "explanation": "Soil has porous air pockets that allow water to filter deep underground."
+          }
+        ],
+        "interactive": {
+          "id": "interactive-sci-5-ch01-les04",
+          "title": "Soil Infiltration & Aquifer Percolation Tank",
+          "type": "soil_permeability_simulator",
+          "pedagogicalObjective": "Observe how permeable topsoil allows rainwater percolation to recharge underground aquifers, while impermeable surfaces cause runoff.",
+          "localUrl": "/curriculum interactive/interactive-sci-5-ch01-les04.html",
+          "cdnUrl": "https://kpigixuqpigjremowykx.supabase.co/storage/v1/object/public/curriculum-assets/grade-5/interactives/interactive-sci-5-ch01-les04.html",
+          "iframeCode": "<iframe src=\"https://kpigixuqpigjremowykx.supabase.co/storage/v1/object/public/curriculum-assets/grade-5/interactives/interactive-sci-5-ch01-les04.html\" width=\"100%\" height=\"600\" frameborder=\"0\" allowfullscreen title=\"Soil Infiltration & Aquifer Percolation Tank\"></iframe>",
+          "modes": [
+            "pill",
+            "drawer",
+            "mobile",
+            "desktop"
+          ],
+          "legoBlocks": [
+            "cross-section-canvas",
+            "fluid-percolator",
+            "water-table-gauge"
+          ]
+        }
+      },
+      {
+        "id": "sec-sci-5-ch01-05",
+        "lessonNumber": 5,
+        "title": "Follow the Flow — Major Rivers of India",
+        "subtitle": "Mapping rivers flowing toward the Bay of Bengal vs Arabian Sea",
+        "pageRange": "Pages 12–13",
+        "storyNarrative": {
+          "characterId": "afreen",
+          "characterName": "Afreen",
+          "setting": "Tracing a physical relief map of India with colored yarn.",
+          "dialogue": "“Look at India's rivers! The Ganga, Brahmaputra, Godavari, and Krishna flow east into the Bay of Bengal. But the Narmada and Tapi flow west into the Arabian Sea! Why do they flow in different directions?”",
+          "audioText": "Afreen traces the drainage basins of India."
+        },
+        "textbookCoreText": "Activity 7: Follow the Flow! In the map, you can see rivers flowing in different directions. Some flow into the Bay of Bengal and some into the Arabian Sea. Observe the relief of the land and fill in the table.",
+        "concept": {
+          "heading": "Watersheds & River Drainage Basins",
+          "explanation": "Rivers always flow downhill from high mountains to the sea due to gravity. The peninsular plateau slopes gently from west to east, which is why most Indian rivers flow eastwards into the Bay of Bengal.",
+          "keyRule": "Gravity pulls water from high mountain elevations down toward sea level."
+        },
+        "blocks": [
+          {
+            "type": "map-diagram-explorer",
+            "title": "Map: India's Major River Drainage",
+            "content": {
+              "image": "https://kpigixuqpigjremowykx.supabase.co/storage/v1/object/public/curriculum-assets/grade-5/science/ch01/images/india_major_rivers_map.jpg",
+              "tablePrompt": "Classify rivers by their destination sea:"
+            }
+          },
+          {
+            "type": "interactive-table",
+            "title": "River Destination Table",
+            "content": {
+              "headers": [
+                "Name of River",
+                "Flows into Bay of Bengal",
+                "Flows into Arabian Sea"
+              ],
+              "rows": [
+                [
+                  "Ganga",
+                  "✓",
+                  ""
+                ],
+                [
+                  "Godavari",
+                  "✓",
+                  ""
+                ],
+                [
+                  "Narmada",
+                  "",
+                  "✓"
+                ],
+                [
+                  "Tapi",
+                  "",
+                  "✓"
+                ],
+                [
+                  "Krishna",
+                  "✓",
+                  ""
+                ]
+              ]
+            }
+          },
+          {
+            "type": "interactive_simulation",
+            "title": "Interactive Lab: Interactive River Basins & Wetland Ecosystem Map",
+            "content": {
+              "interactiveId": "interactive-sci-5-ch01-les05",
+              "interactiveTitle": "Interactive River Basins & Wetland Ecosystem Map",
+              "interactiveType": "river_basin_topography_map",
+              "cdnUrl": "https://kpigixuqpigjremowykx.supabase.co/storage/v1/object/public/curriculum-assets/grade-5/interactives/interactive-sci-5-ch01-les05.html",
+              "localUrl": "/curriculum interactive/interactive-sci-5-ch01-les05.html",
+              "pedagogicalObjective": "Map major river basins of India and understand wetland biodiversity and water conservation.",
+              "explanation": "Afreen studies a physical map of Indian river systems: Ganga, Brahmaputra, Godavari, Krishna, Narmada. Students click on river basins to follow their courses and inspect wetland ecosystems supporting lotus leaves, fish, and migratory birds.",
+              "simpleExplanation": "Explore the great rivers of India from mountain snow to ocean waves, and meet the amazing birds and fish living in peaceful wetlands!",
+              "stemExplanation": "Topographical fluvial geomorphology, watershed catchment delineation, and Ramsar wetland ecological conservation indices.",
+              "modes": [
+                "pill",
+                "drawer",
+                "mobile",
+                "desktop"
+              ],
+              "legoBlocks": [
+                "vector-river-map",
+                "wildlife-cards",
+                "elevation-graph"
+              ]
+            }
+          }
+        ],
+        "questions": [
+          {
+            "id": "q-sci-5-ch01-05",
+            "type": "mcq",
+            "prompt": "Which of these major Indian rivers flows west into the Arabian Sea?",
+            "options": [
+              "Ganga",
+              "Godavari",
+              "Narmada",
+              "Mahanadi"
+            ],
+            "correctAnswer": "Narmada",
+            "hint": "It flows through a rift valley between the Vindhya and Satpura ranges.",
+            "explanation": "Narmada and Tapi flow westward through rift valleys into the Arabian Sea."
+          }
+        ],
+        "interactive": {
+          "id": "interactive-sci-5-ch01-les05",
+          "title": "Interactive River Basins & Wetland Ecosystem Map",
+          "type": "river_basin_topography_map",
+          "pedagogicalObjective": "Map major river basins of India and understand wetland biodiversity and water conservation.",
+          "localUrl": "/curriculum interactive/interactive-sci-5-ch01-les05.html",
+          "cdnUrl": "https://kpigixuqpigjremowykx.supabase.co/storage/v1/object/public/curriculum-assets/grade-5/interactives/interactive-sci-5-ch01-les05.html",
+          "iframeCode": "<iframe src=\"https://kpigixuqpigjremowykx.supabase.co/storage/v1/object/public/curriculum-assets/grade-5/interactives/interactive-sci-5-ch01-les05.html\" width=\"100%\" height=\"600\" frameborder=\"0\" allowfullscreen title=\"Interactive River Basins & Wetland Ecosystem Map\"></iframe>",
+          "modes": [
+            "pill",
+            "drawer",
+            "mobile",
+            "desktop"
+          ],
+          "legoBlocks": [
+            "vector-river-map",
+            "wildlife-cards",
+            "elevation-graph"
+          ]
+        }
+      },
+      {
+        "id": "sec-sci-5-ch01-06",
+        "lessonNumber": 6,
+        "title": "Life in Water — Pond Ecosystem & Aquatic Adaptations",
+        "subtitle": "Discovering wetland biodiversity and waterproof leaf coatings",
+        "pageRange": "Pages 14–19",
+        "storyNarrative": {
+          "characterId": "jyoti",
+          "characterName": "Jyoti",
+          "setting": "Standing on a wooden footbridge over a freshwater village pond.",
+          "dialogue": "“Look at that lotus leaf! Water droplets sit on it like shiny silver pearls! Why don't the leaves rot underwater? Because they have a natural waxy waterproof coating!”",
+          "audioText": "Jyoti observes the wetland plants and animals."
+        },
+        "textbookCoreText": "Afreen noticed the rain had filled up the pond. Plants and animals live together in freshwater ecosystems: dragonflies, pond herons, turtles, and water lilies. The waxy coating on lotus leaves makes them waterproof and keeps excess water from rotting the leaf.",
+        "concept": {
+          "heading": "Aquatic Adaptations",
+          "explanation": "Aquatic animals have fins, webbed feet, and gills to breathe and swim. Aquatic plants like lotus and water hyacinth have hollow spongy stems filled with air pockets to float, and waxy cuticles on leaves to repel water.",
+          "keyRule": "Air pockets provide buoyancy; waxy coatings repel excess water."
+        },
+        "blocks": [
+          {
+            "type": "visual-manipulative",
+            "title": "Wetland Ecosystem Explorer",
+            "content": {
+              "image": "https://kpigixuqpigjremowykx.supabase.co/storage/v1/object/public/curriculum-assets/grade-5/science/ch01/images/freshwater_pond_ecosystem.jpg",
+              "lotusLeafImage": "https://kpigixuqpigjremowykx.supabase.co/storage/v1/object/public/curriculum-assets/grade-5/science/ch01/images/lotus_leaf_waterproof_droplets.jpg"
+            }
+          }
+        ],
+        "questions": [
+          {
+            "id": "q-sci-5-ch01-06",
+            "type": "mcq",
+            "prompt": "What adaptation prevents floating lotus leaves from rotting in water?",
+            "options": [
+              "Thick thorns",
+              "A waxy waterproof coating",
+              "Salty surface",
+              "Hard wood"
+            ],
+            "correctAnswer": "A waxy waterproof coating",
+            "hint": "Observe how water beads up on the leaf without soaking in.",
+            "explanation": "A hydrophobic waxy cuticle repels water droplets, keeping stomata open for photosynthesis."
+          }
+        ]
+      },
+      {
+        "id": "sec-sci-5-ch01-07",
+        "lessonNumber": 7,
+        "title": "Let Us Reflect — Water Conservation & Design Thinking",
+        "subtitle": "Formative evaluation, matching pairs, and water-wise architecture",
+        "pageRange": "Page 20",
+        "storyNarrative": {
+          "characterId": "afreen",
+          "characterName": "Afreen",
+          "setting": "School courtyard drafting ideas for a water-conserving campus.",
+          "dialogue": "“What would happen if it did not rain in our region for two full years? Can we design a school building that catches every single drop of rain from its rooftop?”",
+          "audioText": "Afreen invites students to reflect on water conservation."
+        },
+        "textbookCoreText": "Let us reflect: 1. Match the following (Ocean water, Snow, Steam, Rainwater). 2. Why can't most water on Earth be used for drinking? 3. What would happen if it did not rain for two years? 4. Can you design a house or school that conserves water wisely?",
+        "concept": {
+          "heading": "Rainwater Harvesting & Water Wisdom",
+          "explanation": "Rooftop rainwater harvesting channels rain from roofs into underground storage tanks or percolation pits, turning homes into self-sufficient water producers.",
+          "keyRule": "Catch water where it falls: Reduce, Reuse, Recharge."
+        },
+        "blocks": [
+          {
+            "type": "matching-sorting",
+            "title": "Match the Forms of Water",
+            "content": {
+              "pairs": [
+                [
+                  "Ocean Water",
+                  "Salty water / Not fit for drinking"
+                ],
+                [
+                  "Snow",
+                  "Solid form of water"
+                ],
+                [
+                  "Steam",
+                  "Vapour form of water"
+                ],
+                [
+                  "Rainwater",
+                  "Natural freshwater source"
+                ]
+              ]
+            }
+          }
+        ],
+        "questions": [
+          {
+            "id": "q-sci-5-ch01-07",
+            "type": "open_reflection",
+            "prompt": "What would happen to your local neighborhood if it did not rain for two full years?",
+            "correctAnswer": "Drought, wells dry up, crops wither, drinking water shortage.",
+            "hint": "Think about what supplies tap water and irrigation.",
+            "explanation": "Without rainfall, groundwater aquifers are depleted, lakes dry up, and severe drought occurs."
+          }
+        ]
+      }
+    ]
+  }
+}

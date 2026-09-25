@@ -1,0 +1,2281 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>InteractEd • Apple-Grade K-12 Curriculum Platform</title>
+  
+  <!-- Apple Web App & Meta Tags -->
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="theme-color" content="#f8fafc">
+  <meta name="description" content="Immersive, character-driven NCERT Grade 5 Mathematics & Science learning platform with Socratic scaffolding and interactive simulations.">
+
+  <!-- Google Fonts: Nunito (Reading & Body) + Outfit (Display & Headings) -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Nunito:ital,wght@0,400;0,500;0,600;0,700;0,800;0,900;1,600&family=Outfit:wght@600;700;800;900&family=JetBrains+Mono:wght@500;600&display=swap" rel="stylesheet">
+
+  <!-- Confetti Canvas Library -->
+  <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.4/dist/confetti.browser.min.js"></script>
+
+  <style>
+    /* ═══════════════════════════════════════════════════════════════════
+       1. APPLE HIG DESIGN SYSTEM FOR CHILDREN • TOKENS & RESET
+       ═══════════════════════════════════════════════════════════════════ */
+    :root {
+      /* Typography */
+      --font-body: 'Nunito', -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+      --font-display: 'Outfit', 'Nunito', sans-serif;
+      --font-mono: 'JetBrains Mono', monospace;
+
+      /* Apple Primary Colors */
+      --apple-purple: #7c3aed;
+      --apple-indigo: #6366f1;
+      --apple-blue: #0284c7;
+      --apple-cyan: #06b6d4;
+      --apple-emerald: #10b981;
+      --apple-amber: #f59e0b;
+      --apple-coral: #f43f5e;
+      --apple-rose: #ec4899;
+
+      /* Canvas & Translucent Glass Materials */
+      --bg-canvas: #f8fafc;
+      --bg-surface: #ffffff;
+      --bg-card: rgba(255, 255, 255, 0.92);
+      --bg-glass: rgba(255, 255, 255, 0.82);
+      --border-subtle: rgba(226, 232, 240, 0.9);
+      --border-focus: rgba(99, 102, 241, 0.4);
+      --text-main: #0f172a;
+      --text-muted: #64748b;
+      --text-tertiary: #94a3b8;
+
+      /* Apple Elevation & Glows */
+      --glass-blur: blur(28px) saturate(190%);
+      --shadow-sm: 0 2px 8px rgba(15, 23, 42, 0.04);
+      --shadow-card: 0 10px 30px -6px rgba(15, 23, 42, 0.06), 0 0 0 1px rgba(226, 232, 240, 0.7);
+      --shadow-hover: 0 20px 40px -8px rgba(99, 102, 241, 0.14), 0 0 0 1px rgba(99, 102, 241, 0.25);
+      --shadow-glow-purple: 0 12px 32px -4px rgba(124, 58, 237, 0.3);
+      --shadow-glow-blue: 0 12px 32px -4px rgba(2, 132, 199, 0.3);
+
+      /* Squircles & Geometry */
+      --radius-sm: 12px;
+      --radius-md: 20px;
+      --radius-lg: 28px;
+      --radius-xl: 36px;
+      --radius-pill: 9999px;
+
+      /* Layout Transitions */
+      --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+      --ease-smooth: cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    body {
+      font-family: var(--font-body);
+      background: var(--bg-canvas);
+      color: var(--text-main);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      line-height: 1.6;
+      overflow-x: hidden;
+    }
+
+    button {
+      font-family: inherit;
+      border: none;
+      background: none;
+      cursor: pointer;
+    }
+
+    /* ═══════════════════════════════════════════════════════════════════
+       2. TOP NAVIGATION BAR (FROSTED GLASS HEADER)
+       ═══════════════════════════════════════════════════════════════════ */
+    .topbar {
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      background: var(--bg-glass);
+      backdrop-filter: var(--glass-blur);
+      -webkit-backdrop-filter: var(--glass-blur);
+      border-bottom: 1px solid var(--border-subtle);
+      height: 64px;
+      padding: 0 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      transition: background 0.2s ease;
+    }
+
+    .topbar-left {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .app-brand {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      text-decoration: none;
+      color: var(--text-main);
+      font-family: var(--font-display);
+      font-weight: 800;
+      font-size: 19px;
+      letter-spacing: -0.02em;
+    }
+
+    .brand-icon-box {
+      width: 38px;
+      height: 38px;
+      border-radius: 12px;
+      background: linear-gradient(135deg, #7c3aed, #4f46e5);
+      color: #ffffff;
+      display: grid;
+      place-items: center;
+      box-shadow: 0 4px 12px rgba(124, 58, 237, 0.3);
+      font-size: 20px;
+    }
+
+    .breadcrumbs {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 14px;
+      color: var(--text-muted);
+      font-weight: 700;
+      margin-left: 8px;
+    }
+
+    .breadcrumb-sep {
+      color: var(--text-tertiary);
+      font-size: 12px;
+    }
+
+    .breadcrumb-active {
+      color: var(--text-main);
+    }
+
+    .topbar-right {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    /* XP Pill */
+    .xp-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 14px;
+      background: rgba(245, 158, 11, 0.12);
+      border: 1px solid rgba(245, 158, 11, 0.3);
+      border-radius: var(--radius-pill);
+      color: #b45309;
+      font-family: var(--font-display);
+      font-size: 14px;
+      font-weight: 800;
+      box-shadow: 0 2px 8px rgba(245, 158, 11, 0.08);
+      transition: transform 0.2s var(--ease-spring);
+    }
+
+    .xp-pill:hover {
+      transform: scale(1.04);
+    }
+
+    /* Audio Read-Aloud Pill */
+    .audio-control-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 6px 14px;
+      background: rgba(99, 102, 241, 0.1);
+      border: 1px solid rgba(99, 102, 241, 0.25);
+      border-radius: var(--radius-pill);
+      color: var(--apple-indigo);
+      font-size: 13.5px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.2s var(--ease-spring);
+    }
+
+    .audio-control-pill:hover {
+      background: rgba(99, 102, 241, 0.18);
+      transform: translateY(-1px);
+    }
+
+    .audio-waves {
+      display: inline-flex;
+      align-items: center;
+      gap: 2.5px;
+      height: 14px;
+    }
+
+    .audio-wave-bar {
+      width: 2.5px;
+      height: 6px;
+      border-radius: 99px;
+      background: var(--apple-indigo);
+      transition: height 0.15s ease;
+    }
+
+    .audio-control-pill.is-playing .audio-wave-bar:nth-child(1) { animation: wavePulse 0.6s infinite alternate; }
+    .audio-control-pill.is-playing .audio-wave-bar:nth-child(2) { animation: wavePulse 0.8s 0.2s infinite alternate; }
+    .audio-control-pill.is-playing .audio-wave-bar:nth-child(3) { animation: wavePulse 0.5s 0.4s infinite alternate; }
+
+    @keyframes wavePulse {
+      0% { height: 4px; }
+      100% { height: 14px; }
+    }
+
+    .speed-btn {
+      padding: 4px 8px;
+      border-radius: var(--radius-sm);
+      background: rgba(0, 0, 0, 0.04);
+      font-size: 12px;
+      font-weight: 800;
+      color: var(--text-muted);
+    }
+
+    /* ═══════════════════════════════════════════════════════════════════
+       3. MAIN CONTAINER & VIEW SWITCHER
+       ═══════════════════════════════════════════════════════════════════ */
+    .app-main {
+      flex: 1 1 auto;
+      max-width: 1400px;
+      width: 100%;
+      margin: 0 auto;
+      padding: 32px 24px;
+      position: relative;
+    }
+
+    /* View containers */
+    .view-container {
+      display: none;
+      animation: fadeInView 0.32s var(--ease-smooth) forwards;
+    }
+
+    .view-container.active-view {
+      display: block;
+    }
+
+    @keyframes fadeInView {
+      from { opacity: 0; transform: translateY(12px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* ═══════════════════════════════════════════════════════════════════
+       4. LEVEL 1: SUBJECT SELECTION HUB (APPLE ARCADE STYLE)
+       ═══════════════════════════════════════════════════════════════════ */
+    .subject-hero {
+      text-align: center;
+      margin-bottom: 48px;
+      padding: 32px 20px;
+    }
+
+    .subject-badge-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 16px;
+      border-radius: var(--radius-pill);
+      background: rgba(124, 58, 237, 0.1);
+      border: 1px solid rgba(124, 58, 237, 0.25);
+      color: var(--apple-purple);
+      font-weight: 800;
+      font-size: 13.5px;
+      margin-bottom: 16px;
+    }
+
+    .subject-hero h1 {
+      font-family: var(--font-display);
+      font-size: clamp(32px, 4.5vw, 48px);
+      font-weight: 850;
+      letter-spacing: -0.03em;
+      color: var(--text-main);
+      margin-bottom: 12px;
+      line-height: 1.15;
+    }
+
+    .subject-hero p {
+      font-size: clamp(16px, 2vw, 19px);
+      color: var(--text-muted);
+      max-width: 680px;
+      margin: 0 auto;
+    }
+
+    .subject-cards-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(340px, 1fr));
+      gap: 28px;
+      max-width: 980px;
+      margin: 0 auto 60px auto;
+    }
+
+    .subject-card {
+      background: var(--bg-card);
+      border-radius: var(--radius-xl);
+      border: 1px solid var(--border-subtle);
+      padding: 36px 32px;
+      box-shadow: var(--shadow-card);
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      transition: all 0.3s var(--ease-spring);
+      cursor: pointer;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .subject-card::before {
+      content: "";
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 8px;
+      background: linear-gradient(90deg, var(--theme-color-1), var(--theme-color-2));
+    }
+
+    .subject-card.math {
+      --theme-color-1: #7c3aed;
+      --theme-color-2: #6366f1;
+    }
+
+    .subject-card.science {
+      --theme-color-1: #0284c7;
+      --theme-color-2: #10b981;
+    }
+
+    .subject-card:hover {
+      transform: translateY(-6px) scale(1.01);
+      box-shadow: var(--shadow-hover);
+      border-color: rgba(99, 102, 241, 0.4);
+    }
+
+    .subject-card-icon {
+      width: 68px;
+      height: 68px;
+      border-radius: var(--radius-lg);
+      display: grid;
+      place-items: center;
+      font-size: 34px;
+      margin-bottom: 22px;
+      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.06);
+    }
+
+    .subject-card.math .subject-card-icon {
+      background: linear-gradient(135deg, #ede9fe, #ddd6fe);
+      color: #7c3aed;
+    }
+
+    .subject-card.science .subject-card-icon {
+      background: linear-gradient(135deg, #e0f2fe, #bae6fd);
+      color: #0284c7;
+    }
+
+    .subject-card h2 {
+      font-family: var(--font-display);
+      font-size: 26px;
+      font-weight: 800;
+      margin-bottom: 8px;
+      letter-spacing: -0.02em;
+    }
+
+    .subject-card-subtitle {
+      font-size: 15px;
+      color: var(--text-muted);
+      line-height: 1.5;
+      margin-bottom: 24px;
+    }
+
+    .subject-meta-row {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      margin-bottom: 28px;
+      font-size: 13.5px;
+      font-weight: 700;
+      color: var(--text-muted);
+    }
+
+    .meta-chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 4px 10px;
+      background: rgba(0, 0, 0, 0.04);
+      border-radius: var(--radius-sm);
+    }
+
+    .subject-launch-btn {
+      width: 100%;
+      padding: 16px;
+      border-radius: var(--radius-md);
+      font-family: var(--font-display);
+      font-size: 16px;
+      font-weight: 800;
+      letter-spacing: -0.01em;
+      color: #ffffff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      transition: all 0.2s var(--ease-spring);
+    }
+
+    .subject-card.math .subject-launch-btn {
+      background: linear-gradient(135deg, #7c3aed, #6366f1);
+      box-shadow: 0 4px 16px rgba(124, 58, 237, 0.35);
+    }
+
+    .subject-card.science .subject-launch-btn {
+      background: linear-gradient(135deg, #0284c7, #0ea5e9);
+      box-shadow: 0 4px 16px rgba(2, 132, 199, 0.35);
+    }
+
+    .subject-launch-btn:hover {
+      transform: translateY(-2px);
+      filter: brightness(1.06);
+    }
+
+    /* ═══════════════════════════════════════════════════════════════════
+       5. LEVEL 2: QUEST ROADMAP VIEW (CHAPTERS ISLAND)
+       ═══════════════════════════════════════════════════════════════════ */
+    .roadmap-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 16px;
+      margin-bottom: 32px;
+      padding-bottom: 16px;
+      border-bottom: 1px solid var(--border-subtle);
+    }
+
+    .back-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 15px;
+      font-weight: 750;
+      color: var(--text-muted);
+      padding: 8px 16px;
+      border-radius: var(--radius-pill);
+      background: rgba(0, 0, 0, 0.04);
+      transition: all 0.2s ease;
+    }
+
+    .back-btn:hover {
+      background: rgba(0, 0, 0, 0.08);
+      color: var(--text-main);
+    }
+
+    .roadmap-title-box h2 {
+      font-family: var(--font-display);
+      font-size: 28px;
+      font-weight: 850;
+      letter-spacing: -0.02em;
+    }
+
+    .roadmap-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(290px, 1fr));
+      gap: 24px;
+    }
+
+    .chapter-card-item {
+      background: var(--bg-card);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-lg);
+      padding: 24px;
+      box-shadow: var(--shadow-sm);
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      position: relative;
+      transition: all 0.25s var(--ease-spring);
+    }
+
+    .chapter-card-item.is-unlocked {
+      cursor: pointer;
+      border-color: rgba(124, 58, 237, 0.3);
+      box-shadow: 0 8px 24px -4px rgba(124, 58, 237, 0.12);
+    }
+
+    .chapter-card-item.is-unlocked:hover {
+      transform: translateY(-4px) scale(1.01);
+      box-shadow: var(--shadow-hover);
+      border-color: var(--apple-purple);
+    }
+
+    .chapter-card-item.is-locked {
+      opacity: 0.72;
+      background: rgba(248, 250, 252, 0.6);
+      cursor: not-allowed;
+    }
+
+    .chapter-num-badge {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 32px;
+      height: 32px;
+      border-radius: 10px;
+      font-family: var(--font-display);
+      font-weight: 800;
+      font-size: 14px;
+      margin-bottom: 14px;
+    }
+
+    .is-unlocked .chapter-num-badge {
+      background: #7c3aed;
+      color: #ffffff;
+      box-shadow: 0 4px 10px rgba(124, 58, 237, 0.3);
+    }
+
+    .is-locked .chapter-num-badge {
+      background: #e2e8f0;
+      color: #94a3b8;
+    }
+
+    .chapter-title-text {
+      font-family: var(--font-display);
+      font-size: 19px;
+      font-weight: 800;
+      line-height: 1.3;
+      margin-bottom: 8px;
+    }
+
+    .chapter-tagline-text {
+      font-size: 13.5px;
+      color: var(--text-muted);
+      line-height: 1.5;
+      margin-bottom: 18px;
+    }
+
+    .chapter-quest-reward {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding-top: 14px;
+      border-top: 1px dashed var(--border-subtle);
+      font-size: 13px;
+      font-weight: 750;
+    }
+
+    .badge-preview {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      color: #7c3aed;
+    }
+
+    .xp-bounty {
+      color: #d97706;
+      font-family: var(--font-mono);
+      font-weight: 800;
+    }
+
+    /* ═══════════════════════════════════════════════════════════════════
+       6. LEVEL 3: CHAPTER BRIEFING HUB
+       ═══════════════════════════════════════════════════════════════════ */
+    .chapter-hub-hero {
+      background: var(--bg-card);
+      border-radius: var(--radius-xl);
+      border: 1px solid var(--border-subtle);
+      overflow: hidden;
+      box-shadow: var(--shadow-card);
+      margin-bottom: 36px;
+    }
+
+    .chapter-hero-banner {
+      width: 100%;
+      height: 260px;
+      object-fit: cover;
+      display: block;
+      background: #ede9fe;
+    }
+
+    .chapter-hero-content {
+      padding: 32px;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    .hero-top-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+
+    .chapter-hero-title {
+      font-family: var(--font-display);
+      font-size: clamp(24px, 3.5vw, 36px);
+      font-weight: 850;
+      letter-spacing: -0.02em;
+    }
+
+    .character-guides-bar {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      flex-wrap: wrap;
+      margin-top: 6px;
+    }
+
+    .character-chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 6px 14px;
+      background: rgba(124, 58, 237, 0.08);
+      border: 1px solid rgba(124, 58, 237, 0.2);
+      border-radius: var(--radius-pill);
+      font-size: 13.5px;
+      font-weight: 750;
+      color: #6b21a8;
+    }
+
+    .character-avatar {
+      font-size: 18px;
+    }
+
+    .steppers-container {
+      margin-top: 16px;
+    }
+
+    .steppers-title {
+      font-family: var(--font-display);
+      font-size: 20px;
+      font-weight: 800;
+      margin-bottom: 16px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .steppers-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+      gap: 16px;
+    }
+
+    .stepper-card {
+      background: #ffffff;
+      border: 1.5px solid var(--border-subtle);
+      border-radius: var(--radius-lg);
+      padding: 20px;
+      cursor: pointer;
+      transition: all 0.2s var(--ease-spring);
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+    }
+
+    .stepper-card:hover {
+      border-color: var(--apple-purple);
+      transform: translateY(-3px);
+      box-shadow: 0 10px 24px rgba(124, 58, 237, 0.12);
+    }
+
+    .stepper-card.active-step {
+      border-color: var(--apple-purple);
+      background: #fdfcff;
+      box-shadow: 0 0 0 3px rgba(124, 58, 237, 0.15);
+    }
+
+    .stepper-card.completed-step {
+      border-color: var(--apple-emerald);
+      background: #f0fdf4;
+    }
+
+    .step-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 8px;
+    }
+
+    .step-badge {
+      font-size: 12px;
+      font-weight: 800;
+      padding: 3px 8px;
+      border-radius: var(--radius-sm);
+      background: #ede9fe;
+      color: #6d28d9;
+    }
+
+    .step-time {
+      font-size: 12px;
+      color: var(--text-muted);
+      font-weight: 600;
+    }
+
+    .step-title {
+      font-size: 15.5px;
+      font-weight: 800;
+      line-height: 1.35;
+      margin-bottom: 4px;
+    }
+
+    .step-subtitle {
+      font-size: 12.5px;
+      color: var(--text-muted);
+      line-height: 1.4;
+    }
+
+    /* ═══════════════════════════════════════════════════════════════════
+       7. LEVEL 4: ACTIVE LESSON VIEW (5-BEAT SPLIT WORKSPACE)
+       ═══════════════════════════════════════════════════════════════════ */
+    .lesson-workspace {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 28px;
+      align-items: start;
+    }
+
+    @media (max-width: 1024px) {
+      .lesson-workspace {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    /* Left Column: Lesson Story & Instructional Journey */
+    .lesson-feed {
+      display: flex;
+      flex-direction: column;
+      gap: 24px;
+    }
+
+    /* Beat 1: Character Dialogue Bubble */
+    .beat-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-xl);
+      padding: 28px;
+      box-shadow: var(--shadow-sm);
+      position: relative;
+    }
+
+    .dialogue-bubble-box {
+      display: flex;
+      gap: 16px;
+      align-items: flex-start;
+    }
+
+    .dialogue-avatar-circle {
+      width: 48px;
+      height: 48px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #ede9fe, #c4b5fd);
+      display: grid;
+      place-items: center;
+      font-size: 24px;
+      flex-shrink: 0;
+      box-shadow: 0 4px 12px rgba(124, 58, 237, 0.2);
+    }
+
+    .dialogue-body {
+      flex: 1 1 auto;
+    }
+
+    .dialogue-speaker-name {
+      font-family: var(--font-display);
+      font-size: 15px;
+      font-weight: 800;
+      color: #6d28d9;
+      margin-bottom: 6px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .read-aloud-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 12px;
+      font-weight: 750;
+      color: var(--apple-indigo);
+      padding: 4px 10px;
+      border-radius: var(--radius-pill);
+      background: rgba(99, 102, 241, 0.08);
+      transition: all 0.15s ease;
+    }
+
+    .read-aloud-btn:hover {
+      background: rgba(99, 102, 241, 0.18);
+    }
+
+    .dialogue-text {
+      font-size: 17.5px;
+      line-height: 1.7;
+      color: #1e293b;
+      font-weight: 600;
+    }
+
+    /* Karaoke Highlighting */
+    .karaoke-word {
+      display: inline-block;
+      padding: 1px 3px;
+      border-radius: 4px;
+      transition: all 0.12s var(--ease-spring);
+    }
+
+    .karaoke-word.active {
+      background: linear-gradient(135deg, rgba(124, 58, 237, 0.2), rgba(99, 102, 241, 0.25));
+      color: #4c1d95;
+      font-weight: 850;
+      border-radius: 6px;
+      box-shadow: 0 2px 8px rgba(124, 58, 237, 0.2);
+      transform: scale(1.05);
+    }
+
+    /* Beat 2: Core Concept Card */
+    .concept-card {
+      border-left: 6px solid var(--apple-purple);
+    }
+
+    .concept-tag {
+      font-family: var(--font-display);
+      font-size: 12px;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      color: var(--apple-purple);
+      margin-bottom: 6px;
+    }
+
+    .concept-title {
+      font-family: var(--font-display);
+      font-size: 22px;
+      font-weight: 800;
+      margin-bottom: 12px;
+      color: var(--text-main);
+    }
+
+    .concept-explanation {
+      font-size: 16.5px;
+      line-height: 1.75;
+      color: #334155;
+      margin-bottom: 18px;
+    }
+
+    /* Tap-to-Learn Glossary Tooltip */
+    .tap-glossary-term {
+      border-bottom: 2.5px dotted #6366f1;
+      color: #4338ca;
+      font-weight: 750;
+      cursor: pointer;
+      position: relative;
+      display: inline-block;
+      padding: 0 2px;
+      border-radius: 3px;
+      transition: background 0.15s ease;
+    }
+
+    .tap-glossary-term:hover {
+      background: rgba(99, 102, 241, 0.1);
+    }
+
+    /* Diagram in Feed */
+    .lesson-diagram-card {
+      text-align: center;
+      padding: 16px;
+      border-radius: var(--radius-lg);
+      background: #ffffff;
+      border: 1px solid var(--border-subtle);
+      margin-top: 14px;
+    }
+
+    .lesson-diagram-img {
+      max-width: 100%;
+      height: auto;
+      max-height: 280px;
+      border-radius: var(--radius-md);
+      object-fit: contain;
+      display: block;
+      margin: 0 auto 10px auto;
+      cursor: zoom-in;
+    }
+
+    .diagram-caption {
+      font-size: 13px;
+      color: var(--text-muted);
+      font-weight: 600;
+    }
+
+    /* Adult Supervision Green Shield Badge */
+    .safety-shield-box {
+      display: flex;
+      align-items: flex-start;
+      gap: 12px;
+      padding: 16px;
+      background: rgba(16, 185, 129, 0.1);
+      border: 1px solid rgba(16, 185, 129, 0.28);
+      border-radius: var(--radius-lg);
+      margin-top: 16px;
+    }
+
+    .safety-shield-icon {
+      font-size: 24px;
+      flex-shrink: 0;
+    }
+
+    .safety-shield-title {
+      font-family: var(--font-display);
+      font-size: 14px;
+      font-weight: 800;
+      color: #065f46;
+      margin-bottom: 2px;
+    }
+
+    .safety-shield-desc {
+      font-size: 13px;
+      color: #047857;
+      line-height: 1.45;
+    }
+
+    /* Beat 4: Socratic Quiz Card */
+    .quiz-card {
+      background: #ffffff;
+      border: 2px solid rgba(124, 58, 237, 0.2);
+    }
+
+    .quiz-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 14px;
+    }
+
+    .quiz-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 12px;
+      font-weight: 800;
+      padding: 4px 10px;
+      border-radius: var(--radius-pill);
+      background: rgba(124, 58, 237, 0.12);
+      color: #7c3aed;
+    }
+
+    .quiz-prompt {
+      font-family: var(--font-display);
+      font-size: 18px;
+      font-weight: 800;
+      margin-bottom: 18px;
+      color: var(--text-main);
+      line-height: 1.4;
+    }
+
+    .quiz-options-list {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      margin-bottom: 20px;
+    }
+
+    .quiz-option-btn {
+      width: 100%;
+      text-align: left;
+      padding: 14px 18px;
+      border: 1.5px solid var(--border-subtle);
+      border-radius: var(--radius-md);
+      font-size: 16px;
+      font-weight: 700;
+      color: #1e293b;
+      background: #ffffff;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      transition: all 0.18s var(--ease-spring);
+    }
+
+    .quiz-option-btn:hover {
+      border-color: var(--apple-indigo);
+      background: #f8fafc;
+      transform: translateX(4px);
+    }
+
+    .quiz-option-btn.selected-correct {
+      border-color: var(--apple-emerald);
+      background: #ecfdf5;
+      color: #065f46;
+      box-shadow: 0 0 0 2px rgba(16, 185, 129, 0.3);
+    }
+
+    .quiz-option-btn.selected-wrong {
+      border-color: #f43f5e;
+      background: #fff1f2;
+      color: #9f1239;
+    }
+
+    /* Socratic Misconception Feedback Box */
+    .misconception-box {
+      display: none;
+      padding: 16px;
+      border-radius: var(--radius-md);
+      background: #fffbeb;
+      border: 1px solid #fcd34d;
+      margin-bottom: 16px;
+      animation: fadeIn 0.25s ease;
+    }
+
+    .misconception-box.active {
+      display: block;
+    }
+
+    .misconception-title {
+      font-family: var(--font-display);
+      font-size: 14px;
+      font-weight: 800;
+      color: #92400e;
+      margin-bottom: 4px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .misconception-desc {
+      font-size: 14px;
+      color: #b45309;
+      line-height: 1.5;
+    }
+
+    /* 3-Tier Hint Ladder */
+    .hint-ladder-box {
+      margin-top: 14px;
+      padding-top: 14px;
+      border-top: 1px dashed var(--border-subtle);
+    }
+
+    .hint-buttons-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .hint-trigger-btn {
+      font-size: 12.5px;
+      font-weight: 800;
+      padding: 6px 12px;
+      border-radius: var(--radius-pill);
+      background: rgba(99, 102, 241, 0.08);
+      color: var(--apple-indigo);
+      border: 1px solid rgba(99, 102, 241, 0.2);
+      transition: all 0.15s ease;
+    }
+
+    .hint-trigger-btn:hover {
+      background: rgba(99, 102, 241, 0.16);
+    }
+
+    .hint-revelation-box {
+      display: none;
+      margin-top: 12px;
+      padding: 12px 16px;
+      background: #f1f5f9;
+      border-left: 4px solid var(--apple-indigo);
+      border-radius: var(--radius-sm);
+      font-size: 13.5px;
+      color: #334155;
+      line-height: 1.5;
+    }
+
+    .hint-revelation-box.active {
+      display: block;
+    }
+
+    /* Beat 5: Lesson Complete Action Card */
+    .lesson-complete-card {
+      display: none;
+      text-align: center;
+      background: linear-gradient(135deg, #ecfdf5, #d1fae5);
+      border: 2px solid #a7f3d0;
+      border-radius: var(--radius-xl);
+      padding: 32px;
+      box-shadow: 0 12px 32px rgba(16, 185, 129, 0.15);
+      animation: bounceIn 0.4s var(--ease-spring);
+    }
+
+    .lesson-complete-card.active {
+      display: block;
+    }
+
+    .complete-icon {
+      font-size: 48px;
+      margin-bottom: 12px;
+    }
+
+    .complete-title {
+      font-family: var(--font-display);
+      font-size: 24px;
+      font-weight: 850;
+      color: #065f46;
+      margin-bottom: 6px;
+    }
+
+    .complete-desc {
+      font-size: 15px;
+      color: #047857;
+      margin-bottom: 24px;
+    }
+
+    .continue-lesson-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      padding: 14px 28px;
+      border-radius: var(--radius-pill);
+      background: #10b981;
+      color: #ffffff;
+      font-family: var(--font-display);
+      font-size: 16px;
+      font-weight: 800;
+      box-shadow: 0 6px 20px rgba(16, 185, 129, 0.35);
+      transition: all 0.2s var(--ease-spring);
+    }
+
+    .continue-lesson-btn:hover {
+      transform: translateY(-2px) scale(1.03);
+      background: #059669;
+    }
+
+    /* Right Column: Sticky Simulation Lab */
+    .lab-column {
+      position: sticky;
+      top: 84px;
+      height: calc(100vh - 108px);
+      min-height: 580px;
+      display: flex;
+      flex-direction: column;
+      border-radius: var(--radius-xl);
+      background: #ffffff;
+      border: 1px solid var(--border-subtle);
+      box-shadow: var(--shadow-card);
+      overflow: hidden;
+    }
+
+    .lab-header-bar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 14px 20px;
+      background: #f8fafc;
+      border-bottom: 1px solid var(--border-subtle);
+    }
+
+    .lab-title-box {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .lab-status-dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background: #10b981;
+      box-shadow: 0 0 8px #10b981;
+    }
+
+    .lab-title {
+      font-family: var(--font-display);
+      font-size: 15px;
+      font-weight: 800;
+      color: var(--text-main);
+    }
+
+    .lab-controls-right {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .lab-btn {
+      padding: 6px 12px;
+      border-radius: var(--radius-pill);
+      background: #ffffff;
+      border: 1px solid var(--border-subtle);
+      font-size: 12px;
+      font-weight: 750;
+      color: var(--text-muted);
+      transition: all 0.15s ease;
+    }
+
+    .lab-btn:hover {
+      color: var(--text-main);
+      border-color: #cbd5e1;
+    }
+
+    .lab-iframe-container {
+      flex: 1 1 auto;
+      width: 100%;
+      height: 100%;
+      position: relative;
+    }
+
+    .lab-iframe {
+      width: 100%;
+      height: 100%;
+      border: none;
+      display: block;
+    }
+
+    /* ═══════════════════════════════════════════════════════════════════
+       8. TAP-TO-LEARN FLOATING POPOVER
+       ═══════════════════════════════════════════════════════════════════ */
+    .glossary-popover-card {
+      position: fixed;
+      z-index: 200;
+      width: min(340px, 90vw);
+      background: rgba(255, 255, 255, 0.96);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border: 1px solid rgba(99, 102, 241, 0.3);
+      border-radius: var(--radius-lg);
+      padding: 20px;
+      box-shadow: 0 16px 40px rgba(0, 0, 0, 0.16);
+      display: none;
+      animation: popIn 0.2s var(--ease-spring);
+    }
+
+    .glossary-popover-card.active {
+      display: block;
+    }
+
+    .glossary-header {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      margin-bottom: 8px;
+    }
+
+    .glossary-term-name {
+      font-family: var(--font-display);
+      font-size: 18px;
+      font-weight: 800;
+      color: #4338ca;
+    }
+
+    .glossary-pronounce-btn {
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      background: #ede9fe;
+      color: #7c3aed;
+      display: grid;
+      place-items: center;
+      font-size: 15px;
+      transition: transform 0.15s ease;
+    }
+
+    .glossary-pronounce-btn:hover {
+      transform: scale(1.1);
+    }
+
+    .glossary-phonetic {
+      font-family: var(--font-mono);
+      font-size: 13px;
+      color: #6d28d9;
+      margin-bottom: 10px;
+    }
+
+    .glossary-definition {
+      font-size: 14.5px;
+      line-height: 1.5;
+      color: #1e293b;
+      margin-bottom: 12px;
+    }
+
+    .glossary-fun-fact {
+      background: #eff6ff;
+      border-left: 3px solid #3b82f6;
+      padding: 8px 12px;
+      border-radius: var(--radius-sm);
+      font-size: 12.5px;
+      color: #1e40af;
+      line-height: 1.4;
+    }
+
+    /* ═══════════════════════════════════════════════════════════════════
+       9. CHAPTER MASTERY CELEBRATION MODAL
+       ═══════════════════════════════════════════════════════════════════ */
+    .modal-overlay {
+      position: fixed;
+      inset: 0;
+      z-index: 300;
+      background: rgba(15, 23, 42, 0.6);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      display: none;
+      place-items: center;
+      padding: 20px;
+    }
+
+    .modal-overlay.active {
+      display: grid;
+      animation: fadeIn 0.25s ease;
+    }
+
+    .mastery-modal-card {
+      width: min(480px, 94vw);
+      background: #ffffff;
+      border-radius: var(--radius-xl);
+      padding: 40px 32px;
+      text-align: center;
+      box-shadow: 0 24px 60px rgba(0, 0, 0, 0.25);
+      animation: popIn 0.35s var(--ease-spring);
+      position: relative;
+    }
+
+    .badge-trophy-display {
+      width: 100px;
+      height: 100px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #fef08a, #f59e0b);
+      display: grid;
+      place-items: center;
+      font-size: 52px;
+      margin: 0 auto 20px auto;
+      box-shadow: 0 12px 30px rgba(245, 158, 11, 0.4);
+      animation: trophyFloat 3s ease-in-out infinite;
+    }
+
+    @keyframes trophyFloat {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-8px); }
+    }
+
+    .mastery-modal-card h2 {
+      font-family: var(--font-display);
+      font-size: 28px;
+      font-weight: 850;
+      color: var(--text-main);
+      margin-bottom: 6px;
+    }
+
+    .mastery-badge-name {
+      font-size: 19px;
+      font-weight: 800;
+      color: #7c3aed;
+      margin-bottom: 12px;
+    }
+
+    .mastery-xp-banner {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 18px;
+      background: #fef3c7;
+      border: 1px solid #fde68a;
+      border-radius: var(--radius-pill);
+      color: #b45309;
+      font-family: var(--font-display);
+      font-size: 16px;
+      font-weight: 800;
+      margin-bottom: 24px;
+    }
+
+    .modal-close-btn {
+      width: 100%;
+      padding: 16px;
+      border-radius: var(--radius-md);
+      background: linear-gradient(135deg, #7c3aed, #4f46e5);
+      color: #ffffff;
+      font-family: var(--font-display);
+      font-size: 16.5px;
+      font-weight: 800;
+      box-shadow: 0 6px 20px rgba(124, 58, 237, 0.35);
+      cursor: pointer;
+    }
+
+    /* ═══════════════════════════════════════════════════════════════════
+       10. ANIMATIONS & RESPONSIVE UTILITIES
+       ═══════════════════════════════════════════════════════════════════ */
+    @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+    @keyframes popIn {
+      from { opacity: 0; transform: scale(0.92); }
+      to { opacity: 1; transform: scale(1); }
+    }
+    @keyframes bounceIn {
+      0% { opacity: 0; transform: scale(0.85); }
+      70% { opacity: 1; transform: scale(1.03); }
+      100% { opacity: 1; transform: scale(1); }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- ═══════════════════════════════════════════════════════════════════
+       TOP NAVIGATION BAR
+       ═══════════════════════════════════════════════════════════════════ -->
+  <header class="topbar">
+    <div class="topbar-left">
+      <a href="#" class="app-brand" onclick="goHome(event)">
+        <div class="brand-icon-box">🌟</div>
+        <span>InteractEd</span>
+      </a>
+      <div class="breadcrumbs" id="topbarBreadcrumbs">
+        <span class="breadcrumb-sep">•</span>
+        <span class="breadcrumb-active" id="currentSubjectBreadcrumb">Choose Subject</span>
+      </div>
+    </div>
+
+    <div class="topbar-right">
+      <!-- Read-Aloud Voice Control -->
+      <button id="globalAudioToggle" class="audio-control-pill" onclick="toggleReadAloud()" title="Read aloud with Karaoke highlight">
+        <div class="audio-waves">
+          <span class="audio-wave-bar"></span>
+          <span class="audio-wave-bar"></span>
+          <span class="audio-wave-bar"></span>
+        </div>
+        <span id="audioPillLabel">Read Aloud</span>
+      </button>
+
+      <!-- Voice Speed Selector -->
+      <button class="speed-btn" id="voiceSpeedBtn" onclick="cycleVoiceSpeed()" title="Change voice pacing">
+        0.9x
+      </button>
+
+      <!-- Student XP Progress -->
+      <div class="xp-pill" id="totalXpPill">
+        <span>⭐</span>
+        <span id="xpCountDisplay">0 XP</span>
+      </div>
+    </div>
+  </header>
+
+  <!-- ═══════════════════════════════════════════════════════════════════
+       MAIN APPLICATION WORKSPACE
+       ═══════════════════════════════════════════════════════════════════ -->
+  <main class="app-main">
+
+    <!-- ── VIEW 1: SUBJECT SELECTION HUB ── -->
+    <section id="viewSubjectPicker" class="view-container active-view">
+      <div class="subject-hero">
+        <div class="subject-badge-pill">🎒 NCERT Grade 5 • NEP 2020 Aligned</div>
+        <h1>Choose Your Learning Adventure</h1>
+        <p>Step inside interactive worlds where characters come alive, numbers tell stories, and science is an active experiment.</p>
+      </div>
+
+      <div class="subject-cards-grid">
+        <!-- Mathematics Card -->
+        <div class="subject-card math" onclick="selectSubject('grade-5-mathematics')">
+          <div>
+            <div class="subject-card-icon">📐</div>
+            <h2>Mathematics</h2>
+            <p class="subject-card-subtitle">Class 5 • Number sense, five-digit place values, fractions, angle navigation & mathematical puzzles.</p>
+            <div class="subject-meta-row">
+              <span class="meta-chip">📚 15 Chapters</span>
+              <span class="meta-chip">🏆 1,800 XP</span>
+            </div>
+          </div>
+          <button class="subject-launch-btn">
+            <span>Explore Mathematics</span>
+            <span>➔</span>
+          </button>
+        </div>
+
+        <!-- Science EVS Card -->
+        <div class="subject-card science" onclick="selectSubject('grade-5-science-evs')">
+          <div>
+            <div class="subject-card-icon">💧</div>
+            <h2>Science EVS</h2>
+            <p class="subject-card-subtitle">Class 5 • Our Wondrous World: states of matter, the water cycle, soil percolation & planet ecosystems.</p>
+            <div class="subject-meta-row">
+              <span class="meta-chip">🌱 10 Chapters</span>
+              <span class="meta-chip">🏆 1,200 XP</span>
+            </div>
+          </div>
+          <button class="subject-launch-btn">
+            <span>Explore Science</span>
+            <span>➔</span>
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <!-- ── VIEW 2: QUEST ROADMAP VIEW ── -->
+    <section id="viewRoadmap" class="view-container">
+      <div class="roadmap-header">
+        <button class="back-btn" onclick="showSubjectPicker()">
+          <span>←</span>
+          <span>All Subjects</span>
+        </button>
+        <div class="roadmap-title-box">
+          <h2 id="roadmapSubjectTitle">Mathematics Class 5</h2>
+        </div>
+        <div class="xp-pill" id="roadmapXpBadge">⭐ 100 XP Bounty</div>
+      </div>
+
+      <div class="roadmap-grid" id="roadmapChaptersGrid">
+        <!-- Chapters dynamically populated by JavaScript -->
+      </div>
+    </section>
+
+    <!-- ── VIEW 3: CHAPTER BRIEFING HUB ── -->
+    <section id="viewChapterHub" class="view-container">
+      <div class="roadmap-header">
+        <button class="back-btn" onclick="showRoadmap()">
+          <span>←</span>
+          <span>Chapter Roadmap</span>
+        </button>
+        <div class="xp-pill" id="chapterBountyPill">🏆 100 XP Bounty</div>
+      </div>
+
+      <div class="chapter-hub-hero">
+        <img id="chapterBannerImg" class="chapter-hero-banner" src="" alt="Chapter Banner">
+        <div class="chapter-hero-content">
+          <div class="hero-top-row">
+            <h1 class="chapter-hero-title" id="chapterHubTitle">We the Travellers — I</h1>
+            <div class="character-guides-bar" id="characterGuidesList"></div>
+          </div>
+          <p id="chapterHubTagline" style="font-size: 16.5px; color: var(--text-muted); line-height: 1.6;"></p>
+
+          <div class="steppers-container">
+            <div class="steppers-title">
+              <span>🚀 5 Micro-Lesson Missions</span>
+            </div>
+            <div class="steppers-grid" id="stepperCardsGrid">
+              <!-- Stepper cards populated by JavaScript -->
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ── VIEW 4: ACTIVE LESSON VIEW (5-BEAT SPLIT WORKSPACE) ── -->
+    <section id="viewActiveLesson" class="view-container">
+      <div class="roadmap-header" style="margin-bottom: 20px;">
+        <button class="back-btn" onclick="showChapterHub()">
+          <span>←</span>
+          <span id="lessonBackLabel">Chapter Missions</span>
+        </button>
+        <div style="font-family: var(--font-display); font-size: 18px; font-weight: 800; color: var(--apple-purple);" id="activeLessonTitleBadge">
+          Lesson 1: The Train Journey Begins
+        </div>
+        <div class="xp-pill">⭐ +25 XP on Finish</div>
+      </div>
+
+      <div class="lesson-workspace">
+        <!-- Left Column: Instructional Story Feed -->
+        <div class="lesson-feed">
+          <!-- Beat 1: Dialogue Hook -->
+          <div class="beat-card" id="beatDialogueCard">
+            <div class="dialogue-bubble-box">
+              <div class="dialogue-avatar-circle" id="speakerAvatar">👦</div>
+              <div class="dialogue-body">
+                <div class="dialogue-speaker-name">
+                  <span id="speakerName">Sanju</span>
+                  <button class="read-aloud-btn" onclick="playSectionDialogueAudio()">
+                    <span>🔊 Read to Me</span>
+                  </button>
+                </div>
+                <div class="dialogue-text" id="karaokeDialogueContainer">
+                  <!-- Spoken words injected as karaoke spans -->
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Beat 2: Core Concept & Diagram -->
+          <div class="beat-card concept-card" id="beatConceptCard">
+            <div class="concept-tag" id="conceptTagLabel">Core Concept</div>
+            <h3 class="concept-title" id="conceptHeading">Entering the Ten Thousands</h3>
+            <div class="concept-explanation" id="conceptExplanationText"></div>
+
+            <!-- Optional Visual Diagram -->
+            <div class="lesson-diagram-card" id="diagramWrapper" style="display: none;">
+              <img id="diagramImage" class="lesson-diagram-img" src="" alt="Lesson Diagram">
+              <div class="diagram-caption" id="diagramCaptionText"></div>
+            </div>
+
+            <!-- Child Safety Flag (Visible for Science Activities) -->
+            <div class="safety-shield-box" id="safetyShieldBox" style="display: none;">
+              <div class="safety-shield-icon">🛡️</div>
+              <div>
+                <div class="safety-shield-title">Adult Supervision Mandate</div>
+                <div class="safety-shield-desc">Learners should conduct this observation with a parent, guardian, or teacher. Zero hazardous chemicals or flames.</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Beat 4: Socratic Quiz -->
+          <div class="beat-card quiz-card" id="beatQuizCard">
+            <div class="quiz-header">
+              <span class="quiz-pill">🎯 Check Your Understanding</span>
+            </div>
+            <div class="quiz-prompt" id="quizPromptText"></div>
+            
+            <div class="quiz-options-list" id="quizOptionsContainer"></div>
+
+            <!-- Misconception Empathetic Feedback -->
+            <div class="misconception-box" id="misconceptionBox">
+              <div class="misconception-title">
+                <span>💡 Gentle Reflection:</span>
+                <span id="misconceptionTrapName"></span>
+              </div>
+              <div class="misconception-desc" id="misconceptionDiagnosis"></div>
+            </div>
+
+            <!-- 3-Tier Progressive Hint Ladder -->
+            <div class="hint-ladder-box">
+              <div class="hint-buttons-row">
+                <button class="hint-trigger-btn" onclick="revealHint(1)">💡 Hint 1: Nudge</button>
+                <button class="hint-trigger-btn" onclick="revealHint(2)">🔍 Hint 2: Visual Clue</button>
+                <button class="hint-trigger-btn" onclick="revealHint(3)">🧭 Hint 3: Walkthrough</button>
+              </div>
+              <div class="hint-revelation-box" id="hintRevelationBox"></div>
+            </div>
+          </div>
+
+          <!-- Beat 5: Lesson Completion Banner -->
+          <div class="lesson-complete-card" id="lessonCompleteBanner">
+            <div class="complete-icon">🎉</div>
+            <h3 class="complete-title">Brilliant Job, Explorer!</h3>
+            <p class="complete-desc">You mastered this lesson and earned <strong>+25 XP</strong>!</p>
+            <button class="continue-lesson-btn" id="nextLessonBtn" onclick="advanceToNextLesson()">
+              <span>Next Mission ➔</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Right Column: Interactive Simulation Lab -->
+        <div class="lab-column">
+          <div class="lab-header-bar">
+            <div class="lab-title-box">
+              <div class="lab-status-dot"></div>
+              <span class="lab-title" id="labTitleText">Interactive Simulation Lab</span>
+            </div>
+            <div class="lab-controls-right">
+              <button class="lab-btn" onclick="reloadInteractive()">🔄 Reset Lab</button>
+              <button class="lab-btn" onclick="openFullscreenLab()">⛶ Fullscreen</button>
+            </div>
+          </div>
+          <div class="lab-iframe-container">
+            <iframe id="interactiveLabIframe" class="lab-iframe" src="about:blank" title="Interactive Lab"></iframe>
+          </div>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- ═══════════════════════════════════════════════════════════════════
+       TAP-TO-LEARN FLOATING POPOVER
+       ═══════════════════════════════════════════════════════════════════ -->
+  <div id="glossaryPopover" class="glossary-popover-card">
+    <div class="glossary-header">
+      <span class="glossary-term-name" id="popoverTerm">Ten Thousand</span>
+      <button class="glossary-pronounce-btn" onclick="speakCurrentGlossaryTerm()">🔊</button>
+    </div>
+    <div class="glossary-phonetic" id="popoverPhonetic">[ten-THOW-zand]</div>
+    <div class="glossary-definition" id="popoverDef">The number that comes right after 9,999. It has five digits and starts the TTh column!</div>
+    <div class="glossary-fun-fact" id="popoverFunFact">Did you know? Ten thousand seconds is about 2 hours and 46 minutes!</div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════════════════════════════
+       CHAPTER MASTERY CELEBRATION MODAL
+       ═══════════════════════════════════════════════════════════════════ -->
+  <div id="masteryModal" class="modal-overlay">
+    <div class="mastery-modal-card">
+      <div class="badge-trophy-display" id="modalBadgeIcon">🚂</div>
+      <h2>Quest Mastered!</h2>
+      <div class="mastery-badge-name" id="modalBadgeName">Five-Digit Tracker Badge</div>
+      <div class="mastery-xp-banner">
+        <span>⭐</span>
+        <span id="modalXpAwarded">+100 XP Chapter Bounty Awarded!</span>
+      </div>
+      <p style="font-size: 15px; color: var(--text-muted); margin-bottom: 24px;">
+        You completed all 5 micro-lessons, conquered the interactive simulations, and proved your mastery!
+      </p>
+      <button class="modal-close-btn" onclick="closeMasteryModal()">
+        <span>Continue Exploring 🚀</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════════════════════════════
+       APPLICATION LOGIC & DATA SYNCHRONIZATION
+       ═══════════════════════════════════════════════════════════════════ -->
+  <script>
+    /* Global Application State */
+    const AppState = {
+      bundle: null,
+      currentSubjectId: null,
+      currentChapterId: null,
+      currentSectionIndex: 0,
+      studentXp: parseInt(localStorage.getItem('interacted_xp') || '125', 10),
+      completedLessons: JSON.parse(localStorage.getItem('interacted_completed_lessons') || '[]'),
+      unlockedBadges: JSON.parse(localStorage.getItem('interacted_badges') || '[]'),
+      voiceRate: 0.9,
+      isSpeaking: false,
+      activeUtterance: null,
+      currentGlossaryWord: ''
+    };
+
+    /* Initialize Application */
+    document.addEventListener('DOMContentLoaded', async () => {
+      updateXpDisplay();
+      await loadCurriculumBundle();
+      setupGlobalClickListeners();
+    });
+
+    /* Load Curriculum Data */
+    async function loadCurriculumBundle() {
+      try {
+        const res = await fetch('/curriculum/curriculum-data-bundle.json');
+        if (!res.ok) throw new Error('Could not load curriculum bundle JSON');
+        AppState.bundle = await res.json();
+        console.log('✅ Curriculum bundle loaded:', AppState.bundle.books.length, 'books available.');
+      } catch (err) {
+        console.warn('⚠️ Bundle load error, attempting fallback:', err.message);
+      }
+    }
+
+    /* XP Engine */
+    function awardXp(amount) {
+      AppState.studentXp += amount;
+      localStorage.setItem('interacted_xp', String(AppState.studentXp));
+      updateXpDisplay();
+      triggerConfetti();
+      playChimeAudio();
+    }
+
+    function updateXpDisplay() {
+      const el = document.getElementById('xpCountDisplay');
+      if (el) el.textContent = `${AppState.studentXp} XP`;
+    }
+
+    /* Navigation Helpers */
+    function switchView(viewId) {
+      document.querySelectorAll('.view-container').forEach(el => el.classList.remove('active-view'));
+      const target = document.getElementById(viewId);
+      if (target) target.classList.add('active-view');
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    function goHome(e) {
+      if (e) e.preventDefault();
+      showSubjectPicker();
+    }
+
+    function showSubjectPicker() {
+      AppState.currentSubjectId = null;
+      document.getElementById('currentSubjectBreadcrumb').textContent = 'Choose Subject';
+      switchView('viewSubjectPicker');
+    }
+
+    /* Level 1 -> Level 2: Subject Picker */
+    function selectSubject(bookId) {
+      if (!AppState.bundle) return;
+      const book = AppState.bundle.books.find(b => b.id === bookId);
+      if (!book) return;
+
+      AppState.currentSubjectId = book.id;
+      document.getElementById('currentSubjectBreadcrumb').textContent = book.title;
+      document.getElementById('roadmapSubjectTitle').textContent = `${book.title} (Class 5)`;
+
+      const grid = document.getElementById('roadmapChaptersGrid');
+      grid.innerHTML = '';
+
+      book.chapters.forEach(ch => {
+        const isUnlocked = ch.unlocked || ch.chapter_number === 1;
+        const card = document.createElement('div');
+        card.className = `chapter-card-item ${isUnlocked ? 'is-unlocked' : 'is-locked'}`;
+        card.innerHTML = `
+          <div>
+            <div class="chapter-num-badge">${ch.chapter_number}</div>
+            <div class="chapter-title-text">${ch.title}</div>
+            <div class="chapter-tagline-text">${ch.tagline || 'Explore real-world challenges.'}</div>
+          </div>
+          <div class="chapter-quest-reward">
+            <span class="badge-preview">${ch.badge ? `${ch.badge.badge_icon || '🏆'} ${ch.badge.badge_name}` : '🔒 Mystery Badge'}</span>
+            <span class="xp-bounty">+${ch.badge ? ch.badge.xp_points : 100} XP</span>
+          </div>
+        `;
+        if (isUnlocked) {
+          card.onclick = () => selectChapter(ch.id);
+        }
+        grid.appendChild(card);
+      });
+
+      switchView('viewRoadmap');
+    }
+
+    function showRoadmap() {
+      if (AppState.currentSubjectId) {
+        selectSubject(AppState.currentSubjectId);
+      } else {
+        showSubjectPicker();
+      }
+    }
+
+    /* Level 2 -> Level 3: Chapter Briefing Hub */
+    function selectChapter(chapterId) {
+      if (!AppState.bundle) return;
+      const book = AppState.bundle.books.find(b => b.id === AppState.currentSubjectId);
+      if (!book) return;
+
+      const ch = book.chapters.find(c => c.id === chapterId);
+      if (!ch) return;
+
+      AppState.currentChapterId = ch.id;
+      document.getElementById('chapterHubTitle').textContent = `Chapter ${ch.chapter_number}: ${ch.title}`;
+      document.getElementById('chapterHubTagline').textContent = ch.tagline;
+
+      // Banner image
+      const banner = document.getElementById('chapterBannerImg');
+      const defaultBanner = ch.book_id.includes('math')
+        ? 'https://kpigixuqpigjremowykx.supabase.co/storage/v1/object/public/curriculum-assets/grade-5/maths/ch01/images/sanju_mira_train_banner.png'
+        : 'https://kpigixuqpigjremowykx.supabase.co/storage/v1/object/public/curriculum-assets/grade-5/science/ch01/images/rain_at_window_family.jpg';
+      banner.src = defaultBanner;
+
+      // Guides
+      const guidesBar = document.getElementById('characterGuidesList');
+      guidesBar.innerHTML = '';
+      const guides = ch.characters && ch.characters.length ? ch.characters : [
+        { name: ch.book_id.includes('math') ? 'Sanju & Mira' : 'Afreen & Jyoti', role: 'Curriculum Guides', avatar: '👦' }
+      ];
+      guides.forEach(g => {
+        const chip = document.createElement('span');
+        chip.className = 'character-chip';
+        chip.innerHTML = `<span class="character-avatar">${g.avatar || '👦'}</span> <span>${g.name} (${g.role || 'Explorer'})</span>`;
+        guidesBar.appendChild(chip);
+      });
+
+      // 5 Stepper Stones
+      const steppersGrid = document.getElementById('stepperCardsGrid');
+      steppersGrid.innerHTML = '';
+      const sections = ch.sections && ch.sections.length ? ch.sections : [];
+
+      sections.forEach((sec, idx) => {
+        const isDone = AppState.completedLessons.includes(sec.id);
+        const card = document.createElement('div');
+        card.className = `stepper-card ${isDone ? 'completed-step' : (idx === 0 ? 'active-step' : '')}`;
+        card.innerHTML = `
+          <div>
+            <div class="step-header">
+              <span class="step-badge">Mission ${sec.lesson_number}</span>
+              <span class="step-time">⏱️ 8-10 min</span>
+            </div>
+            <div class="step-title">${sec.title}</div>
+            <div class="step-subtitle">${sec.subtitle || 'Hands-on concept lab'}</div>
+          </div>
+          <div style="margin-top: 14px; font-size: 13px; font-weight: 800; color: ${isDone ? '#059669' : '#7c3aed'};">
+            ${isDone ? '✅ Completed (+25 XP)' : '🚀 Begin Mission ➔'}
+          </div>
+        `;
+        card.onclick = () => loadActiveLesson(idx);
+        steppersGrid.appendChild(card);
+      });
+
+      switchView('viewChapterHub');
+    }
+
+    function showChapterHub() {
+      selectChapter(AppState.currentChapterId);
+    }
+
+    /* Level 3 -> Level 4: Active Lesson Experience */
+    function loadActiveLesson(sectionIndex) {
+      AppState.currentSectionIndex = sectionIndex;
+      const book = AppState.bundle.books.find(b => b.id === AppState.currentSubjectId);
+      const ch = book.chapters.find(c => c.id === AppState.currentChapterId);
+      const sec = ch.sections[sectionIndex];
+      if (!sec) return;
+
+      document.getElementById('activeLessonTitleBadge').textContent = `Mission ${sec.lesson_number}: ${sec.title}`;
+      document.getElementById('lessonBackLabel').textContent = `Chapter ${ch.chapter_number}`;
+
+      // Reset state for new lesson
+      document.getElementById('lessonCompleteBanner').classList.remove('active');
+      document.getElementById('misconceptionBox').classList.remove('active');
+      document.getElementById('hintRevelationBox').classList.remove('active');
+
+      // Populate Beat 1: Dialogue Hook
+      const dialogueBlock = sec.blocks.find(b => b.block_type === 'story_narrative' || b.block_type === 'story-narrative') || sec.blocks[0];
+      const speaker = dialogueBlock?.content?.speaker || (ch.book_id.includes('math') ? 'Sanju' : 'Afreen');
+      const text = dialogueBlock?.content?.dialogue || dialogueBlock?.content?.explanation || 'Welcome to this learning journey! Let us explore together.';
+      
+      document.getElementById('speakerName').textContent = speaker;
+      document.getElementById('speakerAvatar').textContent = speaker.startsWith('M') || speaker.startsWith('J') ? '👧' : '👦';
+      
+      // Inject Karaoke spans
+      renderKaraokeText(text);
+
+      // Populate Beat 2: Core Concept
+      const conceptBlock = sec.blocks.find(b => b.block_type === 'concept') || sec.blocks[1] || sec.blocks[0];
+      document.getElementById('conceptHeading').textContent = conceptBlock?.title || 'Core Rule & Principle';
+      
+      let explanation = conceptBlock?.content?.explanation || 'Observe how this principle works in the physical world.';
+      explanation = enrichWithGlossaryTooltips(explanation, ch.glossary || []);
+      document.getElementById('conceptExplanationText').innerHTML = explanation;
+
+      // Diagram
+      const diagramBlock = sec.blocks.find(b => b.block_type === 'image_diagram') || sec.blocks[2];
+      const diagramWrapper = document.getElementById('diagramWrapper');
+      if (diagramBlock && diagramBlock.content && diagramBlock.content.cdnUrl) {
+        document.getElementById('diagramImage').src = diagramBlock.content.cdnUrl;
+        document.getElementById('diagramCaptionText').textContent = diagramBlock.content.caption || 'Examine this diagram carefully.';
+        diagramWrapper.style.display = 'block';
+      } else {
+        diagramWrapper.style.display = 'none';
+      }
+
+      // Safety Shield
+      const safetyBox = document.getElementById('safetyShieldBox');
+      safetyBox.style.display = ch.book_id.includes('sci') ? 'flex' : 'none';
+
+      // Populate Beat 3: Embedded Simulation
+      const simBlock = sec.blocks.find(b => b.block_type === 'interactive_simulation');
+      const iframe = document.getElementById('interactiveLabIframe');
+      const labTitle = document.getElementById('labTitleText');
+
+      if (simBlock && simBlock.content) {
+        labTitle.textContent = simBlock.content.interactiveTitle || 'Interactive Lab';
+        iframe.src = simBlock.content.localUrl || simBlock.content.cdnUrl;
+      } else {
+        // Fallback to matching interactive by lesson number
+        const matched = AppState.bundle.interactives.find(i => 
+          i.chapter_number === ch.chapter_number && i.lesson_number === sec.lesson_number &&
+          (ch.book_id.includes('math') ? i.subject.includes('math') : i.subject.includes('sci'))
+        );
+        if (matched) {
+          labTitle.textContent = matched.title;
+          iframe.src = matched.local_url || matched.cdn_url;
+        } else {
+          labTitle.textContent = 'Interactive Lab';
+          iframe.src = 'about:blank';
+        }
+      }
+
+      // Populate Beat 4: Socratic Quiz
+      renderSocraticQuiz(sec.questions && sec.questions.length ? sec.questions[0] : null);
+
+      switchView('viewActiveLesson');
+    }
+
+    /* Karaoke Text Engine */
+    function renderKaraokeText(text) {
+      const container = document.getElementById('karaokeDialogueContainer');
+      container.innerHTML = '';
+      const words = text.split(/\s+/);
+      words.forEach((word, idx) => {
+        const span = document.createElement('span');
+        span.className = 'karaoke-word';
+        span.dataset.index = idx;
+        span.textContent = word + ' ';
+        container.appendChild(span);
+      });
+      container.dataset.fullText = text;
+    }
+
+    /* Web Speech API with Real-Time Karaoke Highlighting */
+    function playSectionDialogueAudio() {
+      const container = document.getElementById('karaokeDialogueContainer');
+      const text = container.dataset.fullText;
+      if (!text || !('speechSynthesis' in window)) return;
+
+      window.speechSynthesis.cancel();
+      const utterance = new SpeechSynthesisUtterance(text);
+      utterance.rate = AppState.voiceRate;
+      utterance.pitch = 1.05; // Slightly warm friendly pitch for kids
+
+      // Try selecting a natural English voice
+      const voices = window.speechSynthesis.getVoices();
+      const naturalVoice = voices.find(v => (v.name.includes('Samantha') || v.name.includes('Google') || v.name.includes('Natural')) && v.lang.startsWith('en'));
+      if (naturalVoice) utterance.voice = naturalVoice;
+
+      const wordsSpans = container.querySelectorAll('.karaoke-word');
+
+      utterance.onboundary = (event) => {
+        if (event.name === 'word') {
+          const charIndex = event.charIndex;
+          let runningChars = 0;
+          let matchedWordIdx = -1;
+
+          for (let i = 0; i < wordsSpans.length; i++) {
+            const wordLen = wordsSpans[i].textContent.trim().length;
+            if (charIndex >= runningChars && charIndex <= runningChars + wordLen + 1) {
+              matchedWordIdx = i;
+              break;
+            }
+            runningChars += wordsSpans[i].textContent.length;
+          }
+
+          wordsSpans.forEach(s => s.classList.remove('active'));
+          if (matchedWordIdx !== -1 && wordsSpans[matchedWordIdx]) {
+            wordsSpans[matchedWordIdx].classList.add('active');
+          }
+        }
+      };
+
+      utterance.onend = () => {
+        wordsSpans.forEach(s => s.classList.remove('active'));
+        AppState.isSpeaking = false;
+        document.getElementById('globalAudioToggle').classList.remove('is-playing');
+      };
+
+      AppState.activeUtterance = utterance;
+      AppState.isSpeaking = true;
+      document.getElementById('globalAudioToggle').classList.add('is-playing');
+      window.speechSynthesis.speak(utterance);
+    }
+
+    function toggleReadAloud() {
+      if (AppState.isSpeaking) {
+        window.speechSynthesis.cancel();
+        AppState.isSpeaking = false;
+        document.getElementById('globalAudioToggle').classList.remove('is-playing');
+      } else {
+        playSectionDialogueAudio();
+      }
+    }
+
+    function cycleVoiceSpeed() {
+      const speeds = [0.8, 0.9, 1.0, 1.2];
+      const curIdx = speeds.indexOf(AppState.voiceRate);
+      AppState.voiceRate = speeds[(curIdx + 1) % speeds.length];
+      document.getElementById('voiceSpeedBtn').textContent = `${AppState.voiceRate}x`;
+      if (AppState.isSpeaking) {
+        playSectionDialogueAudio();
+      }
+    }
+
+    /* Tap-to-Learn Glossary Tooltips */
+    function enrichWithGlossaryTooltips(html, glossary) {
+      if (!glossary || !glossary.length) return html;
+      let enriched = html;
+      glossary.forEach(g => {
+        const regex = new RegExp(`\\b(${escapeRegExp(g.term)})\\b`, 'gi');
+        enriched = enriched.replace(regex, (match) => {
+          return `<span class="tap-glossary-term" data-term="${encodeURIComponent(g.term)}" data-phonetic="${encodeURIComponent(g.phonetic || '')}" data-def="${encodeURIComponent(g.child_friendly_definition || '')}" data-fact="${encodeURIComponent(g.fun_fact || '')}">${match}</span>`;
+        });
+      });
+      return enriched;
+    }
+
+    function escapeRegExp(string) {
+      return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    }
+
+    function setupGlobalClickListeners() {
+      document.addEventListener('click', (e) => {
+        const target = e.target.closest('.tap-glossary-term');
+        const popover = document.getElementById('glossaryPopover');
+        if (target) {
+          e.stopPropagation();
+          const term = decodeURIComponent(target.dataset.term);
+          const phonetic = decodeURIComponent(target.dataset.phonetic);
+          const def = decodeURIComponent(target.dataset.def);
+          const fact = decodeURIComponent(target.dataset.fact);
+
+          document.getElementById('popoverTerm').textContent = term;
+          document.getElementById('popoverPhonetic').textContent = phonetic || `[${term.toLowerCase()}]`;
+          document.getElementById('popoverDef').textContent = def || 'An important educational concept in this chapter.';
+          document.getElementById('popoverFunFact').textContent = fact ? `💡 Did you know? ${fact}` : '🌟 Master this term to unlock chapter rewards!';
+          AppState.currentGlossaryWord = term;
+
+          const rect = target.getBoundingClientRect();
+          popover.style.top = `${Math.min(rect.bottom + 8, window.innerHeight - 240)}px`;
+          popover.style.left = `${Math.max(16, Math.min(rect.left, window.innerWidth - 360))}px`;
+          popover.classList.add('active');
+        } else if (!e.target.closest('#glossaryPopover')) {
+          popover.classList.remove('active');
+        }
+      });
+    }
+
+    function speakCurrentGlossaryTerm() {
+      if (!AppState.currentGlossaryWord || !('speechSynthesis' in window)) return;
+      window.speechSynthesis.cancel();
+      const u = new SpeechSynthesisUtterance(AppState.currentGlossaryWord);
+      u.rate = 0.85;
+      window.speechSynthesis.speak(u);
+    }
+
+    /* Socratic Quiz Engine */
+    function renderSocraticQuiz(q) {
+      const container = document.getElementById('quizOptionsContainer');
+      container.innerHTML = '';
+
+      if (!q) {
+        document.getElementById('quizPromptText').textContent = 'Well done! Review the interactive simulation to deepen your understanding.';
+        return;
+      }
+
+      document.getElementById('quizPromptText').textContent = q.prompt;
+      const options = q.options || [];
+      const correct = String(q.correct_answer).replace(/^"|"$/g, '');
+
+      options.forEach(opt => {
+        const btn = document.createElement('button');
+        btn.className = 'quiz-option-btn';
+        btn.innerHTML = `<span>${opt}</span> <span class="opt-icon">⭕</span>`;
+        btn.onclick = () => evaluateQuizAnswer(opt, correct, q, btn);
+        container.appendChild(btn);
+      });
+    }
+
+    function evaluateQuizAnswer(selected, correct, questionData, btn) {
+      const container = document.getElementById('quizOptionsContainer');
+      const allButtons = container.querySelectorAll('.quiz-option-btn');
+      const misBox = document.getElementById('misconceptionBox');
+
+      if (selected === correct) {
+        // Correct Answer!
+        btn.classList.add('selected-correct');
+        btn.querySelector('.opt-icon').textContent = '✅';
+        allButtons.forEach(b => b.disabled = true);
+        misBox.classList.remove('active');
+
+        // Reveal complete banner
+        document.getElementById('lessonCompleteBanner').classList.add('active');
+        awardXp(25);
+
+        // Mark as completed
+        const book = AppState.bundle.books.find(b => b.id === AppState.currentSubjectId);
+        const ch = book.chapters.find(c => c.id === AppState.currentChapterId);
+        const sec = ch.sections[AppState.currentSectionIndex];
+        if (!AppState.completedLessons.includes(sec.id)) {
+          AppState.completedLessons.push(sec.id);
+          localStorage.setItem('interacted_completed_lessons', JSON.stringify(AppState.completedLessons));
+        }
+
+        // Check if finished entire chapter
+        if (AppState.currentSectionIndex === ch.sections.length - 1) {
+          setTimeout(() => triggerChapterMastery(ch), 800);
+        }
+      } else {
+        // Incorrect Answer -> Socratic Misconception Diagnosis
+        btn.classList.add('selected-wrong');
+        btn.querySelector('.opt-icon').textContent = '💭';
+
+        const trap = questionData.misconceptions && questionData.misconceptions[selected];
+        if (trap) {
+          document.getElementById('misconceptionTrapName').textContent = trap.cognitive_trap || 'Notice the Pattern:';
+          document.getElementById('misconceptionDiagnosis').textContent = `${trap.diagnosis} ${trap.socratic_nudge || ''}`;
+          misBox.classList.add('active');
+        } else {
+          document.getElementById('misconceptionTrapName').textContent = 'Take another look:';
+          document.getElementById('misconceptionDiagnosis').textContent = 'Consider what you observed on the simulation dials and number line.';
+          misBox.classList.add('active');
+        }
+      }
+    }
+
+    /* 3-Tier Hint Ladder Revelation */
+    function revealHint(tier) {
+      const book = AppState.bundle.books.find(b => b.id === AppState.currentSubjectId);
+      const ch = book.chapters.find(c => c.id === AppState.currentChapterId);
+      const sec = ch.sections[AppState.currentSectionIndex];
+      const q = sec.questions && sec.questions.length ? sec.questions[0] : null;
+      const box = document.getElementById('hintRevelationBox');
+
+      if (!q || !q.hint_ladder || !q.hint_ladder.length) {
+        box.textContent = 'Observe the values on the dials carefully.';
+        box.classList.add('active');
+        return;
+      }
+
+      const hintObj = q.hint_ladder.find(h => h.tier === tier) || q.hint_ladder[tier - 1] || q.hint_ladder[0];
+      box.innerHTML = `<strong>Tier ${tier} Clue:</strong> ${hintObj.hint || hintObj.nudge || 'Think through the step-by-step logic.'}`;
+      box.classList.add('active');
+    }
+
+    function advanceToNextLesson() {
+      const book = AppState.bundle.books.find(b => b.id === AppState.currentSubjectId);
+      const ch = book.chapters.find(c => c.id === AppState.currentChapterId);
+      if (AppState.currentSectionIndex < ch.sections.length - 1) {
+        loadActiveLesson(AppState.currentSectionIndex + 1);
+      } else {
+        showChapterHub();
+      }
+    }
+
+    /* Chapter Quest Mastery Modal */
+    function triggerChapterMastery(chapter) {
+      const modal = document.getElementById('masteryModal');
+      const badge = chapter.badge || { badge_name: 'Chapter Mastery Explorer', badge_icon: '🏆', xp_points: 100 };
+      
+      document.getElementById('modalBadgeIcon').textContent = badge.badge_icon || '🏆';
+      document.getElementById('modalBadgeName').textContent = `${badge.badge_name} Badge`;
+      document.getElementById('modalXpAwarded').textContent = `+${badge.xp_points || 100} XP Chapter Quest Bounty!`;
+
+      awardXp(badge.xp_points || 100);
+      modal.classList.add('active');
+
+      // Giant Confetti Finale
+      confetti({
+        particleCount: 120,
+        spread: 100,
+        origin: { y: 0.6 }
+      });
+    }
+
+    function closeMasteryModal() {
+      document.getElementById('masteryModal').classList.remove('active');
+      showRoadmap();
+    }
+
+    /* Audio Synthesizer Chime */
+    function playChimeAudio() {
+      try {
+        const ctx = new (window.AudioContext || window.webkitAudioContext)();
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(587.33, ctx.currentTime); // D5
+        osc.frequency.exponentialRampToValueAtTime(880, ctx.currentTime + 0.15); // A5
+        gain.gain.setValueAtTime(0.18, ctx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.45);
+        osc.start();
+        osc.stop(ctx.currentTime + 0.45);
+      } catch (e) {}
+    }
+
+    function triggerConfetti() {
+      if (typeof confetti === 'function') {
+        confetti({
+          particleCount: 50,
+          spread: 60,
+          origin: { y: 0.7 }
+        });
+      }
+    }
+
+    /* Lab Controls */
+    function reloadInteractive() {
+      const iframe = document.getElementById('interactiveLabIframe');
+      iframe.src = iframe.src;
+    }
+
+    function openFullscreenLab() {
+      const iframe = document.getElementById('interactiveLabIframe');
+      if (iframe.requestFullscreen) {
+        iframe.requestFullscreen();
+      } else if (iframe.webkitRequestFullscreen) {
+        iframe.webkitRequestFullscreen();
+      }
+    }
+  </script>
+</body>
+</html>

@@ -1,0 +1,225 @@
+{
+  "book": {
+    "id": "grade-5-mathematics",
+    "title": "Mathematics (Class 5)",
+    "gradeNumber": 5,
+    "gradeLabel": "Grade 5",
+    "subject": "Mathematics",
+    "curriculum": "NCERT",
+    "nationalEducationPolicy": "NEP 2020 Aligned (Preparatory Stage)",
+    "publisher": "National Council of Educational Research and Training, New Delhi, India",
+    "edition": "Reprint 2026-27",
+    "unit": {
+      "id": "unit-math-5-03",
+      "book_id": "grade-5-mathematics",
+      "unit_number": 3,
+      "title": "Shapes, Patterns and Space",
+      "about_unit": "Explores angles, turns, right angles, acute and obtuse angles, symmetrical patterns, tessellations, and directional navigation.",
+      "banner_image_url": "https://kpigixuqpigjremowykx.supabase.co/storage/v1/object/public/curriculum-assets/grade-5/maths/ch03/images/clock_hands_angles.png",
+      "facilitation_guide": [
+        {
+          "headline": "Embodied Geometry",
+          "text": "Use the statue game and yoga postures to feel angles as amount of turning."
+        },
+        {
+          "headline": "Angle Tester",
+          "text": "Construct cardboard angle testers to check right angles in the classroom environment."
+        }
+      ]
+    }
+  },
+  "chapter": {
+    "id": "ch-math-5-14",
+    "number": 14,
+    "title": "Finding Directions",
+    "tagline": "Mastering cardinal directions, the rising sun, grid navigation, and compass maps",
+    "overview": "Manu stands outside at dawn facing the rising Sun to identify East, West, North, and South. With four little chicks lost on a grid farm map, students use turns, grid coordinates, and cardinal directions to navigate routes and landmarks.",
+    "sourcePdf": "public/Books/Maths/eemm114.pdf",
+    "totalPages": 8,
+    "characters": [
+      {
+        "name": "Manu",
+        "role": "Navigator",
+        "avatar": "\ud83d\udc66"
+      },
+      {
+        "name": "Four Little Chicks",
+        "role": "Farm Explorers",
+        "avatar": "\ud83d\udc25"
+      }
+    ],
+    "sections": [
+      {
+        "id": "sec-math-5-14-01",
+        "lessonNumber": 1,
+        "title": "Facing the Rising Sun: Cardinal Directions",
+        "subtitle": "Deducing North, South, East, and West using solar orientation",
+        "storyNarrative": {
+          "characterName": "Manu",
+          "dialogue": "When I face the morning rising Sun, I face EAST. Behind me is WEST. My left hand points NORTH, and my right hand points SOUTH!"
+        },
+        "concept": {
+          "heading": "The Solar Compass Rule",
+          "keyRule": "Facing East: Back = West, Left = North, Right = South."
+        },
+        "image": "https://kpigixuqpigjremowykx.supabase.co/storage/v1/object/public/curriculum-assets/grade-5/maths/ch14/images/manu_facing_rising_sun.png",
+        "blocks": [
+          {
+            "type": "story_narrative",
+            "title": "Story Scene: Manu's Dialogue",
+            "content": {
+              "speaker": "Manu",
+              "dialogue": "When I face the morning rising Sun, I face EAST. Behind me is WEST. My left hand points NORTH, and my right hand points SOUTH!"
+            }
+          },
+          {
+            "type": "concept",
+            "title": "The Solar Compass Rule",
+            "content": {
+              "heading": "The Solar Compass Rule",
+              "explanation": "Facing East: Back = West, Left = North, Right = South.",
+              "keyRule": "Facing East: Back = West, Left = North, Right = South."
+            }
+          },
+          {
+            "type": "image_diagram",
+            "title": "Facing the Rising Sun: Cardinal Directions",
+            "content": {
+              "fileName": "manu_facing_rising_sun.png",
+              "publicUrl": "https://kpigixuqpigjremowykx.supabase.co/storage/v1/object/public/curriculum-assets/grade-5/maths/ch14/images/manu_facing_rising_sun.png",
+              "caption": "Facing the Rising Sun: Cardinal Directions"
+            }
+          }
+        ],
+        "questions": [
+          {
+            "id": "qst-sec-math-5-14-01-01",
+            "prompt": "If you are facing North, which direction is behind your back?",
+            "options": [
+              "East",
+              "West",
+              "South",
+              "North-East"
+            ],
+            "correctAnswer": "South",
+            "hint": "South is directly opposite North."
+          }
+        ]
+      },
+      {
+        "id": "sec-math-5-14-02",
+        "lessonNumber": 2,
+        "title": "The Four Little Chicks Direction Puzzle",
+        "subtitle": "Solving spatial clues involving relative turns and steps",
+        "storyNarrative": {
+          "characterName": "Four Little Chicks",
+          "dialogue": "Peep! Chick 1 walked 3 steps North and turned East. Chick 2 walked 2 steps West and turned South! Where will our paths cross?"
+        },
+        "concept": {
+          "heading": "Coordinate Vector Steps",
+          "keyRule": "Displacements on a 2D plane can be mapped as orthogonal (x, y) steps along cardinal axes."
+        },
+        "image": "https://kpigixuqpigjremowykx.supabase.co/storage/v1/object/public/curriculum-assets/grade-5/maths/ch14/images/four_chicks_direction_puzzle.png",
+        "blocks": [
+          {
+            "type": "story_narrative",
+            "title": "Story Scene: Four Little Chicks's Dialogue",
+            "content": {
+              "speaker": "Four Little Chicks",
+              "dialogue": "Peep! Chick 1 walked 3 steps North and turned East. Chick 2 walked 2 steps West and turned South! Where will our paths cross?"
+            }
+          },
+          {
+            "type": "concept",
+            "title": "Coordinate Vector Steps",
+            "content": {
+              "heading": "Coordinate Vector Steps",
+              "explanation": "Displacements on a 2D plane can be mapped as orthogonal (x, y) steps along cardinal axes.",
+              "keyRule": "Displacements on a 2D plane can be mapped as orthogonal (x, y) steps along cardinal axes."
+            }
+          },
+          {
+            "type": "image_diagram",
+            "title": "The Four Little Chicks Direction Puzzle",
+            "content": {
+              "fileName": "four_chicks_direction_puzzle.png",
+              "publicUrl": "https://kpigixuqpigjremowykx.supabase.co/storage/v1/object/public/curriculum-assets/grade-5/maths/ch14/images/four_chicks_direction_puzzle.png",
+              "caption": "The Four Little Chicks Direction Puzzle"
+            }
+          }
+        ],
+        "questions": [
+          {
+            "id": "qst-sec-math-5-14-02-01",
+            "prompt": "If you walk 4 steps North, then 4 steps South, where are you relative to your start?",
+            "options": [
+              "4 steps North",
+              "4 steps South",
+              "Back at starting point",
+              "8 steps East"
+            ],
+            "correctAnswer": "Back at starting point",
+            "hint": "North and South cancel each other out."
+          }
+        ]
+      },
+      {
+        "id": "sec-math-5-14-03",
+        "lessonNumber": 3,
+        "title": "Grid Maps: Navigating the Neighborhood",
+        "subtitle": "Reading map legends, road networks, and key landmarks",
+        "storyNarrative": {
+          "characterName": "Manu",
+          "dialogue": "Look at our neighborhood map: the school is 2 blocks North and 3 blocks East of the hospital!"
+        },
+        "concept": {
+          "heading": "Map Grid Referencing",
+          "keyRule": "Maps represent physical geography using standardized top-is-North orientation and grid coordinates."
+        },
+        "image": "https://kpigixuqpigjremowykx.supabase.co/storage/v1/object/public/curriculum-assets/grade-5/maths/ch14/images/neighborhood_route_map.png",
+        "blocks": [
+          {
+            "type": "story_narrative",
+            "title": "Story Scene: Manu's Dialogue",
+            "content": {
+              "speaker": "Manu",
+              "dialogue": "Look at our neighborhood map: the school is 2 blocks North and 3 blocks East of the hospital!"
+            }
+          },
+          {
+            "type": "concept",
+            "title": "Map Grid Referencing",
+            "content": {
+              "heading": "Map Grid Referencing",
+              "explanation": "Maps represent physical geography using standardized top-is-North orientation and grid coordinates.",
+              "keyRule": "Maps represent physical geography using standardized top-is-North orientation and grid coordinates."
+            }
+          },
+          {
+            "type": "image_diagram",
+            "title": "Grid Maps: Navigating the Neighborhood",
+            "content": {
+              "fileName": "neighborhood_route_map.png",
+              "publicUrl": "https://kpigixuqpigjremowykx.supabase.co/storage/v1/object/public/curriculum-assets/grade-5/maths/ch14/images/neighborhood_route_map.png",
+              "caption": "Grid Maps: Navigating the Neighborhood"
+            }
+          }
+        ],
+        "questions": [
+          {
+            "id": "qst-sec-math-5-14-03-01",
+            "prompt": "By convention on standard maps, which direction is at the top of the page?",
+            "options": [
+              "South",
+              "East",
+              "North",
+              "West"
+            ],
+            "correctAnswer": "North",
+            "hint": "Standard maps are oriented with North at the top."
+          }
+        ]
+      }
+    ]
+  }
+}

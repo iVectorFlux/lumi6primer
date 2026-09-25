@@ -1,0 +1,1249 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Rolling counter — InteractEd</title>
+  
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;600;700&display=swap" rel="stylesheet">
+
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    body {
+      background-color: #f8fafc;
+      color: #0f172a;
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 16px 20px 48px;
+    }
+
+    /* Top Navigation Mode Switcher */
+    .top-header {
+      width: 100%;
+      max-width: 1280px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 20px;
+    }
+
+    .view-switcher {
+      display: flex;
+      align-items: center;
+      background: #ffffff;
+      border: 1px solid #e2e8f0;
+      padding: 4px;
+      border-radius: 12px;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+      gap: 4px;
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+
+    .switch-btn {
+      background: none;
+      border: none;
+      color: #64748b;
+      padding: 7px 14px;
+      font-size: 12.5px;
+      font-weight: 600;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: all 0.15s ease;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .switch-btn:hover {
+      background: #f1f5f9;
+      color: #0f172a;
+    }
+
+    .switch-btn.active {
+      background: #0f172a;
+      color: #ffffff;
+    }
+
+    /* Showcase Layout */
+    .showcase-container {
+      width: 100%;
+      max-width: 1280px;
+      display: flex;
+      flex-direction: column;
+      gap: 28px;
+      align-items: center;
+    }
+
+    .showcase-grid-top {
+      width: 100%;
+      display: flex;
+      justify-content: center;
+      align-items: flex-start;
+      gap: 32px;
+      flex-wrap: wrap;
+    }
+
+    .view-section {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .section-title {
+      font-size: 13px;
+      font-weight: 600;
+      color: #64748b;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .section-badge {
+      background: #e2e8f0;
+      color: #334155;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 11px;
+      padding: 2px 6px;
+      border-radius: 4px;
+      font-weight: 500;
+    }
+
+    /* 1. Pill Mode — Standard In-Chat Capsule */
+    .chat-pill-card {
+      width: 100%;
+      max-width: 350px;
+      background: #ffffff;
+      border: 1px solid #e2e8f0;
+      border-radius: 18px;
+      padding: 8px 14px 8px 10px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 14px;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+      cursor: pointer;
+      transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+      user-select: none;
+    }
+
+    .chat-pill-card:hover {
+      border-color: #0071e3;
+      transform: translateY(-2px);
+      box-shadow: 0 8px 24px rgba(0, 113, 227, 0.12);
+    }
+
+    .pill-icon-box {
+      width: 76px;
+      height: 52px;
+      border-radius: 12px;
+      background: #f8fafc;
+      border: 1px solid #f1f5f9;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      overflow: hidden;
+      position: relative;
+    }
+
+    .pill-icon-box canvas {
+      width: 100%;
+      height: 100%;
+      display: block;
+    }
+
+    .pill-content {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+      min-width: 0;
+    }
+
+    .pill-title {
+      font-size: 16px;
+      font-weight: 600;
+      color: #0f172a;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .pill-subtitle {
+      font-size: 11px;
+      color: #64748b;
+      font-family: 'JetBrains Mono', monospace;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .pill-expand-btn {
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      background: #f8fafc;
+      border: 1px solid #e2e8f0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #334155;
+      flex-shrink: 0;
+      transition: all 0.15s ease;
+    }
+
+    .chat-pill-card:hover .pill-expand-btn {
+      background: #0071e3;
+      color: #ffffff;
+      border-color: #0071e3;
+    }
+
+    /* 2. Mobile Phone Frame (375x540) */
+    .mobile-phone-frame {
+      width: 100%;
+      max-width: 375px;
+      height: 540px;
+      background: #ffffff;
+      border: 1px solid #e2e8f0;
+      border-radius: 26px;
+      box-shadow: 0 12px 32px rgba(0, 0, 0, 0.08);
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      position: relative;
+    }
+
+    .phone-stage {
+      height: 285px;
+      min-height: 285px;
+      width: 100%;
+      background: radial-gradient(circle at 50% 50%, #ffffff 0%, #f8fafc 60%, #edf2f7 100%);
+      position: relative;
+      border-bottom: 1px solid #f1f5f9;
+      touch-action: none;
+    }
+
+    .phone-stage canvas {
+      width: 100%;
+      height: 100%;
+      display: block;
+    }
+
+    .phone-controls {
+      height: 255px;
+      width: 100%;
+      background: #ffffff;
+      padding: 12px 16px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      overflow-y: hidden;
+    }
+
+    /* 3. Desktop Split Card (880x490) */
+    #sectionDesktop {
+      width: 100%;
+      max-width: 880px;
+    }
+
+    .desktop-card {
+      width: 100%;
+      max-width: 880px;
+      height: 490px;
+      background: #ffffff;
+      border: 1px solid #e2e8f0;
+      border-radius: 24px;
+      box-shadow: 0 8px 24px -4px rgba(0, 0, 0, 0.06);
+      display: grid;
+      grid-template-columns: 370px 1fr;
+      overflow: hidden;
+    }
+
+    .math-panel {
+      width: 370px;
+      padding: 22px 24px;
+      background: #ffffff;
+      border-right: 1px solid #f1f5f9;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      overflow: hidden;
+    }
+
+    .stage-panel {
+      width: 100%;
+      height: 100%;
+      background: radial-gradient(circle at 50% 48%, #ffffff 0%, #f8fafc 55%, #edf2f7 100%);
+      position: relative;
+      overflow: hidden;
+      touch-action: none;
+    }
+
+    .stage-panel canvas {
+      width: 100%;
+      height: 100%;
+      display: block;
+    }
+
+    /* Floating Canvas Pill Badge */
+    .canvas-overlay-pill {
+      position: absolute;
+      top: 14px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: rgba(255, 255, 255, 0.88);
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+      border: 1px solid rgba(0, 0, 0, 0.08);
+      border-radius: 999px;
+      padding: 5px 14px;
+      font-size: 11.5px;
+      font-weight: 600;
+      color: #0f172a;
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      box-shadow: 0 4px 14px rgba(0, 0, 0, 0.05);
+      pointer-events: none;
+      white-space: nowrap;
+      z-index: 10;
+    }
+
+    .status-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: #ff9f0a;
+      box-shadow: 0 0 6px rgba(255, 159, 10, 0.6);
+    }
+
+    .status-dot.five-digit {
+      background: #34c759;
+      box-shadow: 0 0 6px rgba(52, 199, 89, 0.6);
+    }
+
+    /* Common Interactive UI Controls */
+    .hero-concept {
+      margin-bottom: 8px;
+    }
+
+    .hero-title {
+      font-size: 18px;
+      font-weight: 700;
+      letter-spacing: -0.025em;
+      color: #0f172a;
+      margin-bottom: 2px;
+    }
+
+    .hero-sub {
+      font-size: 12px;
+      color: #64748b;
+      line-height: 1.4;
+    }
+
+    /* Dynamic Takeaway Card */
+    .takeaway-card {
+      background: #f8fafc;
+      border: 1px solid #e2e8f0;
+      border-left: 3.5px solid #ff9f0a;
+      border-radius: 12px;
+      padding: 10px 13px;
+      margin-bottom: 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 3px;
+    }
+
+    .takeaway-badge {
+      font-size: 10.5px;
+      font-weight: 600;
+      color: #d97706;
+      display: flex;
+      align-items: center;
+      gap: 5px;
+    }
+
+    .takeaway-text {
+      font-size: 12px;
+      line-height: 1.45;
+      color: #334155;
+    }
+
+    /* Controls Block */
+    .controls-block {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .stepper-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 6px 12px;
+      background: #f8fafc;
+      border: 1px solid #e2e8f0;
+      border-radius: 12px;
+    }
+
+    .stepper-label {
+      font-size: 12px;
+      font-weight: 600;
+      color: #475569;
+    }
+
+    .stepper {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .step-btn {
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      border: 1px solid #e2e8f0;
+      background: #ffffff;
+      color: #0f172a;
+      font-size: 16px;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+      transition: all 0.15s ease;
+      touch-action: manipulation;
+    }
+
+    .step-btn:hover {
+      background: #0071e3;
+      color: #ffffff;
+      border-color: #0071e3;
+    }
+
+    .step-val {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 16px;
+      font-weight: 700;
+      min-width: 68px;
+      text-align: center;
+      color: #0f172a;
+    }
+
+    .quick-step-row {
+      display: flex;
+      gap: 6px;
+    }
+
+    .quick-btn {
+      flex: 1;
+      height: 32px;
+      background: #ffffff;
+      border: 1px solid #e2e8f0;
+      border-radius: 8px;
+      font-size: 11.5px;
+      font-weight: 600;
+      color: #334155;
+      cursor: pointer;
+      transition: all 0.15s ease;
+    }
+
+    .quick-btn:hover {
+      background: #f1f5f9;
+      color: #0071e3;
+      border-color: #0071e3;
+    }
+
+    .preset-pills {
+      display: flex;
+      gap: 6px;
+      flex-wrap: wrap;
+    }
+
+    .preset-pill {
+      background: #ffffff;
+      border: 1px solid #e2e8f0;
+      color: #475569;
+      font-size: 11.5px;
+      font-weight: 600;
+      padding: 5px 10px;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: all 0.15s ease;
+    }
+
+    .preset-pill:hover {
+      background: #f1f5f9;
+      color: #0f172a;
+    }
+
+    .preset-pill.active {
+      background: #0f172a;
+      color: #ffffff;
+      border-color: #0f172a;
+    }
+
+    /* 4. Slide-Over Drawer */
+    .drawer-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(15, 23, 42, 0.4);
+      backdrop-filter: blur(4px);
+      -webkit-backdrop-filter: blur(4px);
+      z-index: 999;
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-end;
+      align-items: center;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.25s ease;
+    }
+
+    .drawer-overlay.active {
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    .drawer-content {
+      width: 100%;
+      max-width: 420px;
+      max-height: 90vh;
+      background: #ffffff;
+      border-radius: 26px 26px 0 0;
+      box-shadow: 0 -8px 32px rgba(0, 0, 0, 0.15);
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      transform: translateY(100%);
+      transition: transform 0.28s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    .drawer-overlay.active .drawer-content {
+      transform: translateY(0);
+    }
+
+    .drawer-handle-bar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 10px 18px 8px;
+      border-bottom: 1px solid #f1f5f9;
+    }
+
+    .drawer-notch {
+      width: 36px;
+      height: 4px;
+      border-radius: 999px;
+      background: #cbd5e1;
+    }
+
+    .drawer-close-btn {
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      background: #f1f5f9;
+      border: none;
+      color: #475569;
+      font-size: 13px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: all 0.15s ease;
+    }
+
+    .drawer-close-btn:hover {
+      background: #e2e8f0;
+      color: #0f172a;
+    }
+
+    .drawer-stage {
+      height: 285px;
+      width: 100%;
+      background: radial-gradient(circle at 50% 50%, #ffffff 0%, #f8fafc 60%, #edf2f7 100%);
+      position: relative;
+      border-bottom: 1px solid #f1f5f9;
+      touch-action: none;
+    }
+
+    .drawer-stage canvas {
+      width: 100%;
+      height: 100%;
+      display: block;
+    }
+
+    .drawer-controls {
+      padding: 14px 18px 20px;
+      background: #ffffff;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    /* MANDATORY Responsive Mobile Guard */
+    @media (max-width: 960px) {
+      body {
+        padding: 12px 14px 32px;
+      }
+      .desktop-card {
+        grid-template-columns: 1fr;
+        height: auto;
+        max-width: 100%;
+      }
+      .desktop-card .stage-panel {
+        height: 285px;
+        order: 1;
+      }
+      .desktop-card .math-panel {
+        order: 2;
+        border-right: none;
+        border-top: 1px solid #f1f5f9;
+        width: 100%;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Top Navigation Mode Switcher -->
+  <div class="top-header">
+    <div class="view-switcher">
+      <button class="switch-btn active" id="btnShowAll" onclick="setMode('all')">
+        👁️ View all modes
+      </button>
+      <button class="switch-btn" id="btnPillView" onclick="setMode('pill')">
+        💊 1. Pill mode
+      </button>
+      <button class="switch-btn" id="btnDrawerView" onclick="setMode('drawer')">
+        📱 2. Mobile card drawer
+      </button>
+      <button class="switch-btn" id="btnMobileView" onclick="setMode('mobile')">
+        📲 3. Mobile screen (375×540)
+      </button>
+      <button class="switch-btn" id="btnDesktopView" onclick="setMode('desktop')">
+        🖥️ 4. Desktop mode (880×490)
+      </button>
+    </div>
+  </div>
+
+  <!-- Showcase Container -->
+  <div class="showcase-container">
+
+    <!-- Top Row: Pill Mode + Mobile Phone Screen -->
+    <div class="showcase-grid-top" id="gridTop">
+
+      <!-- SECTION 1: PILL MODE -->
+      <div class="view-section" id="sectionPill">
+        <div class="section-title">
+          <span>💊 1. Pill mode</span>
+          <span class="section-badge">Compact capsule (350px)</span>
+        </div>
+
+        <div class="chat-pill-card" id="chatPillTrigger" onclick="openDrawer()">
+          <div class="pill-icon-box">
+            <canvas id="pillCanvas" width="152" height="104"></canvas>
+          </div>
+          <div class="pill-content">
+            <div class="pill-title">Rolling counter</div>
+            <div class="pill-subtitle" id="pillSubText">09,990 • Roll to 10,000</div>
+          </div>
+          <div class="pill-expand-btn" title="Expand to card drawer">
+            <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24">
+              <polyline points="15 3 21 3 21 9"/>
+              <polyline points="9 21 3 21 3 15"/>
+              <line x1="21" y1="3" x2="14" y2="10"/>
+              <line x1="3" y1="21" x2="10" y2="14"/>
+            </svg>
+          </div>
+        </div>
+      </div>
+
+      <!-- SECTION 2: MOBILE SCREEN MODE (375x540) -->
+      <div class="view-section" id="sectionMobile">
+        <div class="section-title">
+          <span>📲 2. Mobile screen mode (Top stage, bottom controls)</span>
+          <span class="section-badge">375 × 540 px</span>
+        </div>
+
+        <div class="mobile-phone-frame">
+          <div class="phone-stage">
+            <canvas id="mobileCanvas"></canvas>
+            <div class="canvas-overlay-pill">
+              <div class="status-dot" id="mobileStatusDot"></div>
+              <span id="mobileStatusLabel">4-digit odometer</span>
+            </div>
+          </div>
+
+          <div class="phone-controls">
+            <div>
+              <div class="hero-concept">
+                <div class="hero-title" style="font-size: 16px;">Rolling counter</div>
+                <div class="hero-sub" style="font-size: 11.5px;">Multi-digit cascade counter</div>
+              </div>
+
+              <div class="takeaway-card" style="padding: 7px 10px; margin-bottom: 8px;">
+                <div class="takeaway-badge">
+                  <span>●</span> <span id="mobileTakeawayBadge">Cascade threshold</span>
+                </div>
+                <div class="takeaway-text" id="mobileTakeawayText" style="font-size: 11.5px;">
+                  Roll past 9,999 to watch all four digits reset to 0 and open the Ten Thousands column.
+                </div>
+              </div>
+            </div>
+
+            <div class="controls-block">
+              <div class="stepper-row" style="padding: 4px 10px;">
+                <span class="stepper-label">Value</span>
+                <div class="stepper">
+                  <button class="step-btn" onclick="stepVal(-1)">−</button>
+                  <span class="step-val" id="mValReadout">09,990</span>
+                  <button class="step-btn" onclick="stepVal(1)">+</button>
+                </div>
+              </div>
+
+              <div class="quick-step-row">
+                <button class="quick-btn" onclick="stepVal(10)">+10</button>
+                <button class="quick-btn" onclick="stepVal(100)">+100</button>
+                <button class="quick-btn" onclick="setVal(9999)">9,999</button>
+                <button class="quick-btn" onclick="setVal(10000)">10,000</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- SECTION 3: DESKTOP SPLIT VIEW (880x490) -->
+    <div class="view-section" id="sectionDesktop" style="width: 100%; max-width: 880px;">
+      <div class="section-title">
+        <span>🖥️ 3. Desktop split view (Side-by-side)</span>
+        <span class="section-badge">880 × 490 px</span>
+      </div>
+
+      <div class="desktop-card">
+        <!-- Left: Controls Panel (370px) -->
+        <div class="math-panel">
+          <div>
+            <div class="hero-concept">
+              <h2 class="hero-title">Rolling counter</h2>
+              <p class="hero-sub">Watch the mechanical odometer roll from 9,999 into 10,000.</p>
+            </div>
+
+            <div class="takeaway-card">
+              <div class="takeaway-badge">
+                <span>●</span> <span id="desktopTakeawayBadge">Cascade threshold</span>
+              </div>
+              <div class="takeaway-text" id="desktopTakeawayText">
+                Roll past 9,999 to watch all four digits reset to 0 and trigger the golden Ten Thousands column.
+              </div>
+            </div>
+          </div>
+
+          <div class="controls-block">
+            <div class="stepper-row">
+              <span class="stepper-label">Value counter</span>
+              <div class="stepper">
+                <button class="step-btn" onclick="stepVal(-1)" aria-label="Decrease">−</button>
+                <span class="step-val" id="valReadout">09,990</span>
+                <button class="step-btn" onclick="stepVal(1)" aria-label="Increase">+</button>
+              </div>
+            </div>
+
+            <div class="quick-step-row">
+              <button class="quick-btn" onclick="stepVal(10)">+10</button>
+              <button class="quick-btn" onclick="stepVal(100)">+100</button>
+              <button class="quick-btn" onclick="stepVal(1000)">+1,000</button>
+            </div>
+
+            <div class="preset-pills">
+              <button class="preset-pill active" data-val="9990" onclick="setVal(9990)">9,990</button>
+              <button class="preset-pill" data-val="9999" onclick="setVal(9999)">9,999</button>
+              <button class="preset-pill" data-val="10000" onclick="setVal(10000)">10,000</button>
+              <button class="preset-pill" data-val="48276" onclick="setVal(48276)">48,276</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Right: Stage Panel -->
+        <div class="stage-panel">
+          <canvas id="desktopCanvas"></canvas>
+          <div class="canvas-overlay-pill">
+            <div class="status-dot" id="desktopStatusDot"></div>
+            <span id="desktopStatusLabel">4-digit odometer</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- SECTION 4: SLIDE-OVER DRAWER -->
+  <div class="drawer-overlay" id="drawerOverlay" onclick="handleDrawerBackdrop(event)">
+    <div class="drawer-content" onclick="event.stopPropagation()">
+      <div class="drawer-handle-bar">
+        <div class="drawer-notch"></div>
+        <button class="drawer-close-btn" onclick="closeDrawer()">✕</button>
+      </div>
+
+      <div class="drawer-stage">
+        <canvas id="drawerCanvas"></canvas>
+        <div class="canvas-overlay-pill">
+          <div class="status-dot" id="drawerStatusDot"></div>
+          <span id="drawerStatusLabel">4-digit odometer</span>
+        </div>
+      </div>
+
+      <div class="drawer-controls">
+        <div class="hero-concept">
+          <div class="hero-title" style="font-size: 17px;">Rolling counter</div>
+          <div class="hero-sub">Multi-digit cascade counter</div>
+        </div>
+
+        <div class="takeaway-card" style="padding: 8px 11px;">
+          <div class="takeaway-badge">
+            <span>●</span> <span id="drawerTakeawayBadge">Cascade threshold</span>
+          </div>
+          <div class="takeaway-text" id="drawerTakeawayText">
+            Roll past 9,999 to unlock the golden Ten Thousands column.
+          </div>
+        </div>
+
+        <div class="stepper-row">
+          <span class="stepper-label">Value counter</span>
+          <div class="stepper">
+            <button class="step-btn" onclick="stepVal(-1)">−</button>
+            <span class="step-val" id="drValReadout">09,990</span>
+            <button class="step-btn" onclick="stepVal(1)">+</button>
+          </div>
+        </div>
+
+        <div class="preset-pills">
+          <button class="preset-pill" onclick="setVal(9999)">9,999</button>
+          <button class="preset-pill" onclick="setVal(10000)">10,000</button>
+          <button class="preset-pill" onclick="setVal(48276)">48,276</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const state = {
+      val: 9990,
+      targetVal: 9990,
+      wheelPos: [0, 9, 9, 9, 0],
+      wheelTarget: [0, 9, 9, 9, 0],
+      isDragging: false,
+      dragStartY: 0,
+      dragStartVal: 9990,
+      glowTimer: 0
+    };
+
+    function pad5(n) {
+      return String(Math.max(0, Math.min(99999, Math.round(n)))).padStart(5, '0');
+    }
+
+    function setMode(view) {
+      document.querySelectorAll('.switch-btn').forEach(b => b.classList.remove('active'));
+      const secPill = document.getElementById('sectionPill');
+      const secMobile = document.getElementById('sectionMobile');
+      const secDesktop = document.getElementById('sectionDesktop');
+      const gridTop = document.getElementById('gridTop');
+      const drawer = document.getElementById('drawerOverlay');
+
+      if (view === 'all') {
+        document.getElementById('btnShowAll').classList.add('active');
+        secPill.style.display = 'flex';
+        secMobile.style.display = 'flex';
+        secDesktop.style.display = 'flex';
+        gridTop.style.display = 'flex';
+        drawer.classList.remove('active');
+      } else if (view === 'pill') {
+        document.getElementById('btnPillView').classList.add('active');
+        secPill.style.display = 'flex';
+        secMobile.style.display = 'none';
+        secDesktop.style.display = 'none';
+        gridTop.style.display = 'flex';
+        drawer.classList.remove('active');
+      } else if (view === 'drawer') {
+        document.getElementById('btnDrawerView').classList.add('active');
+        secPill.style.display = 'none';
+        secMobile.style.display = 'none';
+        secDesktop.style.display = 'none';
+        drawer.classList.add('active');
+      } else if (view === 'mobile') {
+        document.getElementById('btnMobileView').classList.add('active');
+        secPill.style.display = 'none';
+        secMobile.style.display = 'flex';
+        secDesktop.style.display = 'none';
+        gridTop.style.display = 'flex';
+        drawer.classList.remove('active');
+      } else if (view === 'desktop') {
+        document.getElementById('btnDesktopView').classList.add('active');
+        secPill.style.display = 'none';
+        secMobile.style.display = 'none';
+        secDesktop.style.display = 'flex';
+        gridTop.style.display = 'none';
+        drawer.classList.remove('active');
+      }
+    }
+
+    function openDrawer() {
+      document.getElementById('drawerOverlay').classList.add('active');
+    }
+
+    function closeDrawer() {
+      document.getElementById('drawerOverlay').classList.remove('active');
+      if (document.getElementById('btnDrawerView').classList.contains('active')) {
+        setMode('all');
+      }
+    }
+
+    function handleDrawerBackdrop(e) {
+      if (e.target === document.getElementById('drawerOverlay')) {
+        closeDrawer();
+      }
+    }
+
+    function setVal(v) {
+      const clamped = Math.max(0, Math.min(99999, Math.round(v)));
+      if (clamped >= 10000 && state.targetVal < 10000) {
+        state.glowTimer = 1.0;
+      }
+      state.targetVal = clamped;
+      const digits = pad5(clamped).split('').map(Number);
+      for (let i = 0; i < 5; i++) {
+        state.wheelTarget[i] = digits[i];
+      }
+      updateUI();
+    }
+
+    function stepVal(delta) {
+      setVal(state.targetVal + delta);
+    }
+
+    function updateUI() {
+      const s = pad5(state.targetVal);
+      const isFiveDigit = state.targetVal >= 10000;
+
+      // Update Readouts
+      ['valReadout', 'mValReadout', 'drValReadout'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.textContent = s;
+      });
+
+      // Update Pill
+      const pillSub = document.getElementById('pillSubText');
+      if (pillSub) {
+        pillSub.textContent = isFiveDigit ? `${state.targetVal.toLocaleString()} • 5 digits active` : `${state.targetVal.toLocaleString()} • Roll to 10,000`;
+      }
+
+      // Update Status Badges & Dots
+      ['mobile', 'desktop', 'drawer'].forEach(p => {
+        const dot = document.getElementById(`${p}StatusDot`);
+        const label = document.getElementById(`${p}StatusLabel`);
+        if (dot) dot.classList.toggle('five-digit', isFiveDigit);
+        if (label) {
+          label.textContent = isFiveDigit ? '5-digit milestone (10,000+)' : '4-digit cascade (under 10,000)';
+        }
+      });
+
+      // Dynamic Takeaway
+      let badgeTitle = isFiveDigit ? '5-digit active' : 'Cascade threshold';
+      let takeaway = '';
+
+      if (state.targetVal >= 10000) {
+        takeaway = '10,000 reached! All four lower digits wrapped to 0, opening the golden Ten Thousands column.';
+      } else if (state.targetVal === 9999) {
+        takeaway = 'All four cylinders show 9. Tap +1 to watch them all roll simultaneously into 10,000!';
+      } else {
+        takeaway = 'Roll past 9,999 to watch the odometer cascade and unlock the fifth digit column.';
+      }
+
+      ['mobile', 'desktop', 'drawer'].forEach(p => {
+        const b = document.getElementById(`${p}TakeawayBadge`);
+        const t = document.getElementById(`${p}TakeawayText`);
+        if (b) b.textContent = badgeTitle;
+        if (t) t.textContent = takeaway;
+      });
+
+      // Preset pills active state
+      document.querySelectorAll('.preset-pill[data-val]').forEach(p => {
+        p.classList.toggle('active', parseInt(p.getAttribute('data-val'), 10) === state.targetVal);
+      });
+    }
+
+    // --- High-Fidelity Apple Retina Canvas Rendering ---
+    const canvases = [
+      { id: 'desktopCanvas', isMini: false },
+      { id: 'mobileCanvas', isMini: false },
+      { id: 'drawerCanvas', isMini: false },
+      { id: 'pillCanvas', isMini: true }
+    ];
+
+    function drawStage(cv, isMini) {
+      const rect = cv.getBoundingClientRect();
+      const w = isMini ? 152 : rect.width || 370;
+      const h = isMini ? 104 : rect.height || 285;
+      const dpr = window.devicePixelRatio || 1;
+
+      if (cv.width !== Math.round(w * dpr) || cv.height !== Math.round(h * dpr)) {
+        cv.width = Math.round(w * dpr);
+        cv.height = Math.round(h * dpr);
+      }
+
+      const ctx = cv.getContext('2d');
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      ctx.clearRect(0, 0, w, h);
+
+      // Spring physics interpolation for wheel positions
+      for (let i = 0; i < 5; i++) {
+        state.wheelPos[i] += (state.wheelTarget[i] - state.wheelPos[i]) * 0.22;
+      }
+
+      const s = pad5(state.targetVal);
+      const digits = s.split('').map(Number);
+      const labels = ['TTh', 'Th', 'H', 'T', 'O'];
+      const colThemes = [
+        { accent: '#ff9f0a', light: '#fff8eb', text: '#b26a00' }, // Gold
+        { accent: '#0071e3', light: '#edf5ff', text: '#0058b0' }, // Blue
+        { accent: '#34c759', light: '#eafaf0', text: '#1b8a38' }, // Green
+        { accent: '#ff9500', light: '#fff5ea', text: '#c23d0c' }, // Orange
+        { accent: '#af52de', light: '#f9f0fe', text: '#7d26a6' }  // Purple
+      ];
+
+      if (isMini) {
+        // Mini Pill Canvas: Compact modern pill preview
+        const wheelW = 20;
+        const wheelH = 44;
+        const startX = (w - (5 * wheelW + 4 * 4)) / 2;
+        const centerY = h / 2;
+
+        for (let i = 0; i < 5; i++) {
+          const x = startX + i * (wheelW + 4);
+          const y = centerY - wheelH / 2;
+          const isTTh = i === 0;
+          const activeTTh = digits[0] > 0;
+
+          ctx.fillStyle = isTTh && activeTTh ? colThemes[i].light : '#ffffff';
+          ctx.strokeStyle = isTTh && activeTTh ? colThemes[i].accent : '#e5e5ea';
+          ctx.lineWidth = 1;
+          ctx.beginPath();
+          ctx.roundRect(x, y, wheelW, wheelH, 5);
+          ctx.fill();
+          ctx.stroke();
+
+          ctx.font = '700 14px "JetBrains Mono", monospace';
+          ctx.textAlign = 'center';
+          ctx.textBaseline = 'middle';
+          ctx.fillStyle = isTTh && !activeTTh ? '#c7c7cc' : (isTTh ? colThemes[i].text : '#0f172a');
+          ctx.fillText(String(digits[i]), x + wheelW / 2, centerY);
+        }
+        return;
+      }
+
+      const cx = w / 2;
+      const cy = h / 2 - 4;
+
+      // Soft ground ambient shadow
+      const groundW = Math.min(w - 40, 430);
+      const groundH = 24;
+      const gGrad = ctx.createRadialGradient(cx, cy + 68, 0, cx, cy + 68, groundW / 2);
+      gGrad.addColorStop(0, 'rgba(0, 0, 0, 0.08)');
+      gGrad.addColorStop(1, 'rgba(0, 0, 0, 0)');
+      ctx.fillStyle = gGrad;
+      ctx.beginPath();
+      ctx.ellipse(cx, cy + 68, groundW / 2, groundH, 0, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Main Instrument Enclosure
+      const housingW = Math.min(w - 36, 420);
+      const housingH = 136;
+      const bx = cx - housingW / 2;
+      const by = cy - housingH / 2;
+
+      ctx.shadowColor = 'rgba(0, 0, 0, 0.06)';
+      ctx.shadowBlur = 18;
+      ctx.shadowOffsetY = 6;
+      ctx.fillStyle = '#ffffff';
+      ctx.beginPath();
+      ctx.roundRect(bx, by, housingW, housingH, 22);
+      ctx.fill();
+      ctx.shadowColor = 'transparent';
+
+      ctx.strokeStyle = 'rgba(0, 0, 0, 0.06)';
+      ctx.lineWidth = 1.2;
+      ctx.stroke();
+
+      // 5 Mechanical Cylinders
+      const gap = Math.max(6, Math.floor((housingW - 60) / 16));
+      const wheelW = Math.min(54, Math.floor((housingW - 36 - 4 * gap) / 5));
+      const wheelH = 82;
+      const startX = cx - (5 * wheelW + 4 * gap) / 2;
+      const wheelY = by + 28;
+
+      for (let i = 0; i < 5; i++) {
+        const x = startX + i * (wheelW + gap);
+        const y = wheelY;
+        const isTTh = i === 0;
+        const activeTTh = digits[0] > 0;
+        const theme = colThemes[i];
+
+        // Column Label Header
+        ctx.font = '700 11px -apple-system, sans-serif';
+        ctx.textAlign = 'center';
+        ctx.fillStyle = isTTh && !activeTTh ? '#c7c7cc' : theme.accent;
+        ctx.fillText(labels[i], x + wheelW / 2, y - 8);
+
+        // Cylinder 3D Shading
+        const drumGrad = ctx.createLinearGradient(x, y, x, y + wheelH);
+        if (isTTh && activeTTh) {
+          drumGrad.addColorStop(0, '#ffe5b4');
+          drumGrad.addColorStop(0.2, '#fff6e5');
+          drumGrad.addColorStop(0.5, '#ffffff');
+          drumGrad.addColorStop(0.8, '#fff6e5');
+          drumGrad.addColorStop(1, '#ffe5b4');
+        } else {
+          drumGrad.addColorStop(0, '#e8e8ed');
+          drumGrad.addColorStop(0.2, '#f8f8fa');
+          drumGrad.addColorStop(0.5, '#ffffff');
+          drumGrad.addColorStop(0.8, '#f8f8fa');
+          drumGrad.addColorStop(1, '#e8e8ed');
+        }
+
+        ctx.fillStyle = drumGrad;
+        ctx.beginPath();
+        ctx.roundRect(x, y, wheelW, wheelH, 10);
+        ctx.fill();
+
+        // Cylinder border & active glow
+        if (isTTh && activeTTh && state.glowTimer > 0) {
+          ctx.strokeStyle = `rgba(255, 159, 10, ${state.glowTimer})`;
+          ctx.lineWidth = 2.5;
+          ctx.beginPath();
+          ctx.roundRect(x - 1.5, y - 1.5, wheelW + 3, wheelH + 3, 11);
+          ctx.stroke();
+        } else {
+          ctx.strokeStyle = isTTh && activeTTh ? theme.accent : 'rgba(0, 0, 0, 0.08)';
+          ctx.lineWidth = 1;
+          ctx.stroke();
+        }
+
+        // Horizontal index window line
+        ctx.strokeStyle = 'rgba(0, 0, 0, 0.06)';
+        ctx.lineWidth = 1;
+        ctx.beginPath();
+        ctx.moveTo(x + 4, y + wheelH / 2);
+        ctx.lineTo(x + wheelW - 4, y + wheelH / 2);
+        ctx.stroke();
+
+        // Digit rendering with smooth rolling clipping
+        ctx.save();
+        ctx.beginPath();
+        ctx.roundRect(x + 1, y + 1, wheelW - 2, wheelH - 2, 9);
+        ctx.clip();
+
+        const currentPos = state.wheelPos[i];
+        const baseDigit = Math.floor(currentPos);
+        const frac = currentPos - baseDigit;
+
+        ctx.font = '700 28px "JetBrains Mono", monospace';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+
+        const drawDigitAt = (val, offsetFactor) => {
+          const dy = y + wheelH / 2 + offsetFactor * 32;
+          const alpha = Math.max(0, 1 - Math.abs(offsetFactor) * 0.85);
+          ctx.globalAlpha = alpha;
+          if (isTTh && !activeTTh) {
+            ctx.fillStyle = '#c7c7cc';
+            ctx.fillText('0', x + wheelW / 2, dy);
+          } else {
+            ctx.fillStyle = isTTh ? theme.text : '#0f172a';
+            ctx.fillText(String((val % 10 + 10) % 10), x + wheelW / 2, dy);
+          }
+        };
+
+        drawDigitAt(baseDigit, -frac);
+        drawDigitAt(baseDigit + 1, 1 - frac);
+        if (frac > 0.01) drawDigitAt(baseDigit - 1, -1 - frac);
+
+        ctx.restore();
+        ctx.globalAlpha = 1;
+      }
+
+      if (state.glowTimer > 0) state.glowTimer -= 0.018;
+
+      // Status pill below
+      const tagY = by + housingH + 22;
+      ctx.font = '500 13px -apple-system, sans-serif';
+      ctx.textAlign = 'center';
+      ctx.fillStyle = '#64748b';
+      ctx.fillText(`${state.targetVal.toLocaleString()} • Drag cylinders or tap buttons`, cx, tagY);
+    }
+
+    function renderLoop() {
+      canvases.forEach(item => {
+        const cv = document.getElementById(item.id);
+        if (cv && cv.offsetParent !== null) {
+          drawStage(cv, item.isMini);
+        }
+      });
+      requestAnimationFrame(renderLoop);
+    }
+    requestAnimationFrame(renderLoop);
+
+    // Draggable Cylinders Interaction
+    ['desktopCanvas', 'phoneCanvas', 'drawerCanvas'].forEach(id => {
+      const cv = document.getElementById(id);
+      if (!cv) return;
+
+      const onPointerDown = (e) => {
+        state.isDragging = true;
+        state.dragStartY = e.clientY || (e.touches && e.touches[0].clientY);
+        state.dragStartVal = state.targetVal;
+      };
+
+      const onPointerMove = (e) => {
+        if (!state.isDragging) return;
+        const curY = e.clientY || (e.touches && e.touches[0].clientY);
+        const dy = state.dragStartY - curY;
+        const stepChange = Math.round(dy / 8);
+        if (stepChange !== 0) {
+          setVal(state.dragStartVal + stepChange);
+        }
+      };
+
+      const onPointerUp = () => {
+        state.isDragging = false;
+      };
+
+      cv.addEventListener('mousedown', onPointerDown);
+      window.addEventListener('mousemove', onPointerMove);
+      window.addEventListener('mouseup', onPointerUp);
+
+      cv.addEventListener('touchstart', onPointerDown, { passive: true });
+      window.addEventListener('touchmove', onPointerMove, { passive: true });
+      window.addEventListener('touchend', onPointerUp);
+    });
+
+    updateUI();
+  </script>
+</body>
+</html>

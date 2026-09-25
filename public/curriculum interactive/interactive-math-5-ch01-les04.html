@@ -1,0 +1,1195 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Number line rounding — InteractEd</title>
+  
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    body {
+      background-color: #f8fafc;
+      color: #0f172a;
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 16px 20px 48px;
+    }
+
+    /* Top Navigation Mode Switcher */
+    .top-header {
+      width: 100%;
+      max-width: 1280px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 20px;
+    }
+
+    .view-switcher {
+      display: flex;
+      align-items: center;
+      background: #ffffff;
+      border: 1px solid #e2e8f0;
+      padding: 4px;
+      border-radius: 12px;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+      gap: 4px;
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+
+    .switch-btn {
+      background: none;
+      border: none;
+      color: #64748b;
+      padding: 7px 14px;
+      font-size: 12.5px;
+      font-weight: 600;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: all 0.15s ease;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-family: 'Inter', sans-serif;
+    }
+
+    .switch-btn:hover {
+      background: #f1f5f9;
+      color: #0f172a;
+    }
+
+    .switch-btn.active {
+      background: #0f172a;
+      color: #ffffff;
+    }
+
+    /* Showcase Layout */
+    .showcase-container {
+      width: 100%;
+      max-width: 1280px;
+      display: flex;
+      flex-direction: column;
+      gap: 28px;
+      align-items: center;
+    }
+
+    .showcase-grid-top {
+      width: 100%;
+      display: flex;
+      justify-content: center;
+      align-items: flex-start;
+      gap: 32px;
+      flex-wrap: wrap;
+    }
+
+    .view-section {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .section-title {
+      font-size: 13px;
+      font-weight: 600;
+      color: #64748b;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .section-badge {
+      background: #e2e8f0;
+      color: #334155;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 11px;
+      padding: 2px 6px;
+      border-radius: 4px;
+      font-weight: 500;
+    }
+
+    /* 1. Pill Mode — Standard In-Chat Capsule */
+    .chat-pill-card {
+      width: 100%;
+      max-width: 350px;
+      background: #ffffff;
+      border: 1px solid #e2e8f0;
+      border-radius: 18px;
+      padding: 8px 14px 8px 10px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+      cursor: pointer;
+      transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+      user-select: none;
+    }
+
+    .chat-pill-card:hover {
+      border-color: #2563eb;
+      transform: translateY(-2px);
+      box-shadow: 0 8px 24px rgba(37, 99, 235, 0.12);
+    }
+
+    .pill-icon-box {
+      width: 76px;
+      height: 52px;
+      border-radius: 12px;
+      background: #f8fafc;
+      border: 1px solid #f1f5f9;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      overflow: hidden;
+      position: relative;
+    }
+
+    .pill-icon-box canvas {
+      width: 100%;
+      height: 100%;
+      display: block;
+    }
+
+    .pill-content {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+      min-width: 0;
+    }
+
+    .pill-title {
+      font-size: 17px;
+      font-weight: 600;
+      color: #0f172a;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .pill-subtitle {
+      font-size: 11px;
+      color: #64748b;
+      font-family: 'JetBrains Mono', monospace;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .pill-expand-btn {
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      background: #f8fafc;
+      border: 1px solid #e2e8f0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #334155;
+      flex-shrink: 0;
+      transition: all 0.15s ease;
+    }
+
+    .chat-pill-card:hover .pill-expand-btn {
+      background: #2563eb;
+      color: #ffffff;
+      border-color: #2563eb;
+    }
+
+    /* 2. Mobile Phone Frame (375x540) */
+    .mobile-phone-frame {
+      width: 100%;
+      max-width: 375px;
+      height: 540px;
+      background: #ffffff;
+      border: 1px solid #e2e8f0;
+      border-radius: 26px;
+      box-shadow: 0 12px 32px rgba(0, 0, 0, 0.08);
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      position: relative;
+    }
+
+    .phone-stage {
+      height: 285px;
+      min-height: 285px;
+      width: 100%;
+      background: radial-gradient(circle at 50% 45%, #ffffff 0%, #f8fafc 65%, #edf2f7 100%);
+      position: relative;
+      border-bottom: 1px solid #f1f5f9;
+      touch-action: none;
+      overflow: hidden;
+    }
+
+    .phone-stage canvas {
+      width: 100%;
+      height: 100%;
+      display: block;
+    }
+
+    .phone-controls {
+      height: 255px;
+      width: 100%;
+      background: #ffffff;
+      padding: 12px 16px 14px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      overflow: hidden;
+    }
+
+    /* 3. Desktop Split Card (880x490) */
+    #sectionDesktop {
+      width: 100%;
+      max-width: 880px;
+    }
+
+    .desktop-card {
+      width: 100%;
+      max-width: 880px;
+      height: 490px;
+      background: #ffffff;
+      border: 1px solid #e2e8f0;
+      border-radius: 24px;
+      box-shadow: 0 8px 24px -4px rgba(0, 0, 0, 0.06);
+      display: grid;
+      grid-template-columns: 370px 1fr;
+      overflow: hidden;
+    }
+
+    .math-panel {
+      width: 370px;
+      padding: 22px 24px;
+      background: #ffffff;
+      border-right: 1px solid #f1f5f9;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      overflow: hidden;
+    }
+
+    .stage-panel {
+      width: 100%;
+      height: 100%;
+      background: radial-gradient(circle at 50% 45%, #ffffff 0%, #f8fafc 65%, #edf2f7 100%);
+      position: relative;
+      overflow: hidden;
+      touch-action: none;
+    }
+
+    .stage-panel canvas {
+      width: 100%;
+      height: 100%;
+      display: block;
+    }
+
+    /* Stage Floating Status Info Card */
+    .stage-footer-card {
+      position: absolute;
+      bottom: 8px;
+      left: 10px;
+      right: 10px;
+      background: rgba(255, 255, 255, 0.95);
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
+      border: 1px solid rgba(226, 232, 240, 0.95);
+      border-radius: 12px;
+      padding: 6px 12px 7px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      box-shadow: 0 4px 14px rgba(0, 0, 0, 0.05);
+      pointer-events: none;
+      z-index: 10;
+    }
+
+    .stage-dist-tag {
+      font-size: 11px;
+      font-weight: 600;
+      color: #64748b;
+    }
+
+    .stage-decision-tag {
+      font-size: 11.5px;
+      font-weight: 700;
+      color: #0284c7;
+    }
+
+    /* Audience Switch */
+    .audience-switch {
+      display: inline-flex;
+      background: #f1f5f9;
+      padding: 2.5px;
+      border-radius: 8px;
+      gap: 2px;
+      margin-bottom: 6px;
+      align-self: flex-start;
+    }
+
+    .aud-btn {
+      background: none;
+      border: none;
+      font-size: 10.5px;
+      font-weight: 600;
+      color: #64748b;
+      padding: 2.5px 8px;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: all 0.15s ease;
+      font-family: 'Inter', sans-serif;
+    }
+
+    .aud-btn.active {
+      background: #ffffff;
+      color: #0f172a;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+    }
+
+    /* Hero Concept */
+    .hero-concept {
+      margin-bottom: 6px;
+    }
+
+    .hero-title {
+      font-size: 17.5px;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+      color: #0f172a;
+    }
+
+    .formula-display {
+      margin: 2px 0 6px;
+      font-size: 13px;
+      color: #0f172a;
+      display: none;
+    }
+
+    .formula-display.active {
+      display: block;
+    }
+
+    /* Dynamic Takeaway Card (Clean, Fixed Height, No Vertical Shift) */
+    .takeaway-card {
+      background: #f8fafc;
+      border: 1px solid #e2e8f0;
+      border-left: 3.5px solid #0284c7;
+      border-radius: 12px;
+      padding: 8px 12px;
+      margin-bottom: 6px;
+      min-height: 46px;
+      display: flex;
+      align-items: center;
+    }
+
+    .takeaway-text {
+      font-size: 11.5px;
+      line-height: 1.4;
+      color: #334155;
+    }
+
+    /* Controls Block */
+    .controls-block {
+      display: flex;
+      flex-direction: column;
+      gap: 7px;
+    }
+
+    .control-label-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 11px;
+      font-weight: 600;
+      color: #475569;
+    }
+
+    .control-value {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 11px;
+      color: #0284c7;
+    }
+
+    .slider-track-wrap {
+      width: 100%;
+      height: 32px;
+      display: flex;
+      align-items: center;
+    }
+
+    /* Mobile Touch Ergonomics */
+    input[type="range"] {
+      -webkit-appearance: none;
+      appearance: none;
+      width: 100%;
+      height: 8px;
+      background: #e2e8f0;
+      border-radius: 999px;
+      outline: none;
+      cursor: pointer;
+      touch-action: none;
+    }
+
+    input[type="range"]::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      appearance: none;
+      width: 24px;
+      height: 24px;
+      border-radius: 50%;
+      background: #0284c7;
+      border: 2.5px solid #ffffff;
+      box-shadow: 0 2px 8px rgba(2, 132, 199, 0.4);
+      cursor: pointer;
+      transition: transform 0.15s ease, box-shadow 0.15s ease;
+    }
+
+    input[type="range"]:active::-webkit-slider-thumb {
+      transform: scale(1.15);
+      box-shadow: 0 0 0 6px rgba(2, 132, 199, 0.2);
+    }
+
+    /* Benchmark Range Selector */
+    .mode-pills {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 6px;
+      width: 100%;
+    }
+
+    .mode-pill {
+      height: 34px;
+      background: #ffffff;
+      border: 1px solid #e2e8f0;
+      border-radius: 9px;
+      font-size: 11.5px;
+      font-weight: 600;
+      color: #475569;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      white-space: nowrap;
+      transition: all 0.15s ease;
+      font-family: 'Inter', sans-serif;
+    }
+
+    .mode-pill:hover {
+      background: #f8fafc;
+      color: #0f172a;
+    }
+
+    .mode-pill.active {
+      background: #0f172a;
+      color: #ffffff;
+      border-color: #0f172a;
+      box-shadow: 0 2px 6px rgba(15, 23, 42, 0.18);
+    }
+
+    /* 4. Slide-Over Drawer */
+    .drawer-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(15, 23, 42, 0.4);
+      backdrop-filter: blur(4px);
+      -webkit-backdrop-filter: blur(4px);
+      z-index: 999;
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-end;
+      align-items: center;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.25s ease;
+    }
+
+    .drawer-overlay.active {
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    .drawer-content {
+      width: 100%;
+      max-width: 420px;
+      max-height: 90vh;
+      background: #ffffff;
+      border-radius: 26px 26px 0 0;
+      box-shadow: 0 -8px 32px rgba(0, 0, 0, 0.15);
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      transform: translateY(100%);
+      transition: transform 0.28s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    .drawer-overlay.active .drawer-content {
+      transform: translateY(0);
+    }
+
+    .drawer-handle-bar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 10px 18px 8px;
+      border-bottom: 1px solid #f1f5f9;
+    }
+
+    .drawer-notch {
+      width: 36px;
+      height: 4px;
+      border-radius: 999px;
+      background: #cbd5e1;
+    }
+
+    .drawer-close-btn {
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      background: #f1f5f9;
+      border: none;
+      color: #475569;
+      font-size: 13px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: all 0.15s ease;
+    }
+
+    .drawer-close-btn:hover {
+      background: #e2e8f0;
+      color: #0f172a;
+    }
+
+    .drawer-stage {
+      height: 285px;
+      width: 100%;
+      background: radial-gradient(circle at 50% 45%, #ffffff 0%, #f8fafc 65%, #edf2f7 100%);
+      position: relative;
+      border-bottom: 1px solid #f1f5f9;
+      touch-action: none;
+      overflow: hidden;
+    }
+
+    .drawer-stage canvas {
+      width: 100%;
+      height: 100%;
+      display: block;
+    }
+
+    .drawer-controls {
+      padding: 12px 18px 18px;
+      background: #ffffff;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    /* MANDATORY Responsive Mobile Guard */
+    @media (max-width: 960px) {
+      body {
+        padding: 12px 14px 32px;
+      }
+      .desktop-card {
+        grid-template-columns: 1fr;
+        height: auto;
+        max-width: 100%;
+      }
+      .desktop-card .stage-panel {
+        height: 285px;
+        order: 1;
+      }
+      .desktop-card .math-panel {
+        order: 2;
+        border-right: none;
+        border-top: 1px solid #f1f5f9;
+        width: 100%;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Top Navigation & View Mode Switcher -->
+  <header class="top-header">
+    <nav class="view-switcher" aria-label="Simulation view switcher">
+      <button class="switch-btn active" id="btnViewAll" onclick="setViewMode('all')">
+        <span>All views</span>
+      </button>
+      <button class="switch-btn" id="btnViewPill" onclick="setViewMode('pill')">
+        <span>Pill mode</span>
+      </button>
+      <button class="switch-btn" id="btnViewPhone" onclick="setViewMode('phone')">
+        <span>Mobile screen</span>
+      </button>
+      <button class="switch-btn" id="btnViewDesktop" onclick="setViewMode('desktop')">
+        <span>Desktop card</span>
+      </button>
+    </nav>
+  </header>
+
+  <!-- Showcase Container -->
+  <main class="showcase-container">
+
+    <!-- Top Grid: Pill Mode + Mobile Frame -->
+    <div class="showcase-grid-top" id="topGrid">
+      
+      <!-- 1. Pill Mode -->
+      <section class="view-section" id="sectionPill">
+        <h2 class="section-title">
+          <span>In-chat capsule</span>
+          <span class="section-badge">Pill</span>
+        </h2>
+        
+        <div class="chat-pill-card" id="chatPill" onclick="openDrawer()" role="button" tabindex="0" aria-label="Open Rounding lab drawer">
+          <div class="pill-icon-box">
+            <canvas id="pillCanvas" width="152" height="104"></canvas>
+          </div>
+          <div class="pill-content">
+            <div class="pill-title" id="pillTitle">48 rounds to 50</div>
+            <div class="pill-subtitle" id="pillSubtitle">Distance: 2 to 50 (8 to 40)</div>
+          </div>
+          <button class="pill-expand-btn" aria-label="Expand simulation">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+              <polyline points="15 3 21 3 21 9"></polyline>
+              <polyline points="9 21 3 21 3 15"></polyline>
+              <line x1="21" y1="3" x2="14" y2="10"></line>
+              <line x1="3" y1="21" x2="10" y2="14"></line>
+            </svg>
+          </button>
+        </div>
+      </section>
+
+      <!-- 2. Mobile Phone Frame (375x540) -->
+      <section class="view-section" id="sectionPhone">
+        <h2 class="section-title">
+          <span>Mobile view</span>
+          <span class="section-badge">375 × 540</span>
+        </h2>
+
+        <div class="mobile-phone-frame">
+          <div class="phone-stage" id="phoneStage">
+            <canvas id="phoneCanvas"></canvas>
+            <div class="stage-footer-card">
+              <span class="stage-dist-tag" id="phoneDistTag">Left: 8 | Right: 2</span>
+              <span class="stage-decision-tag" id="phoneDecisionTag">Rounds to 50</span>
+            </div>
+          </div>
+
+          <div class="phone-controls">
+            <div>
+              <div class="audience-switch">
+                <button class="aud-btn active" id="phoneAudJunior" onclick="setAudience('junior')">Junior</button>
+                <button class="aud-btn" id="phoneAudStem" onclick="setAudience('stem')">STEM</button>
+              </div>
+              <div class="hero-concept">
+                <h1 class="hero-title">Number line rounding</h1>
+              </div>
+              <div class="formula-display" id="phoneFormula"></div>
+            </div>
+
+            <div class="takeaway-card" id="phoneTakeawayCard">
+              <p class="takeaway-text" id="phoneTakeawayText">48 is only 2 away from 50, but 8 away from 40. It rounds up to 50!</p>
+            </div>
+
+            <div class="controls-block">
+              <div class="control-label-row">
+                <span>Selected value</span>
+                <span class="control-value" id="phoneSliderVal">48 (Rounds to 50)</span>
+              </div>
+              <div class="slider-track-wrap">
+                <input type="range" id="phoneSlider" min="40" max="50" value="48" oninput="onValChange(this.value)">
+              </div>
+              <div class="mode-pills">
+                <button class="mode-pill active" id="phoneMode10" onclick="setMode('10')">Nearest 10</button>
+                <button class="mode-pill" id="phoneMode100" onclick="setMode('100')">Nearest 100</button>
+                <button class="mode-pill" id="phoneMode1000" onclick="setMode('1000')">Nearest 1,000</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+    </div>
+
+    <!-- 3. Desktop Mode (880x490 Split Card) -->
+    <section class="view-section" id="sectionDesktop">
+      <h2 class="section-title">
+        <span>Desktop split card</span>
+        <span class="section-badge">880 × 490</span>
+      </h2>
+
+      <div class="desktop-card">
+        <div class="math-panel">
+          <div>
+            <div class="audience-switch">
+              <button class="aud-btn active" id="deskAudJunior" onclick="setAudience('junior')">Junior</button>
+              <button class="aud-btn" id="deskAudStem" onclick="setAudience('stem')">STEM</button>
+            </div>
+            <div class="hero-concept">
+              <h1 class="hero-title">Number line rounding</h1>
+            </div>
+            <div class="formula-display" id="deskFormula"></div>
+          </div>
+
+          <div class="takeaway-card" id="deskTakeawayCard">
+            <p class="takeaway-text" id="deskTakeawayText">48 is only 2 away from 50, but 8 away from 40. It rounds up to 50!</p>
+          </div>
+
+          <div class="controls-block">
+            <div class="control-label-row">
+              <span>Selected value</span>
+              <span class="control-value" id="deskSliderVal">48 (Rounds to 50)</span>
+            </div>
+            <div class="slider-track-wrap">
+              <input type="range" id="deskSlider" min="40" max="50" value="48" oninput="onValChange(this.value)">
+            </div>
+            <div class="mode-pills">
+              <button class="mode-pill active" id="deskMode10" onclick="setMode('10')">Nearest 10</button>
+              <button class="mode-pill" id="deskMode100" onclick="setMode('100')">Nearest 100</button>
+              <button class="mode-pill" id="deskMode1000" onclick="setMode('1000')">Nearest 1,000</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="stage-panel" id="deskStage">
+          <canvas id="deskCanvas"></canvas>
+          <div class="stage-footer-card">
+            <span class="stage-dist-tag" id="deskDistTag">Left: 8 | Right: 2</span>
+            <span class="stage-decision-tag" id="deskDecisionTag">Rounds to 50</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- 4. Slide-Over Bottom Drawer -->
+  <div class="drawer-overlay" id="drawerOverlay" onclick="closeDrawer(event)">
+    <div class="drawer-content" onclick="event.stopPropagation()">
+      <div class="drawer-handle-bar">
+        <div style="width: 28px;"></div>
+        <div class="drawer-notch"></div>
+        <button class="drawer-close-btn" onclick="closeDrawer()" aria-label="Close drawer">✕</button>
+      </div>
+
+      <div class="drawer-stage" id="drawerStage">
+        <canvas id="drawerCanvas"></canvas>
+        <div class="stage-footer-card">
+          <span class="stage-dist-tag" id="drawerDistTag">Left: 8 | Right: 2</span>
+          <span class="stage-decision-tag" id="drawerDecisionTag">Rounds to 50</span>
+        </div>
+      </div>
+
+      <div class="drawer-controls">
+        <div class="audience-switch">
+          <button class="aud-btn active" id="drawerAudJunior" onclick="setAudience('junior')">Junior</button>
+          <button class="aud-btn" id="drawerAudStem" onclick="setAudience('stem')">STEM</button>
+        </div>
+        <div class="takeaway-card" id="drawerTakeawayCard">
+          <p class="takeaway-text" id="drawerTakeawayText">48 is only 2 away from 50, but 8 away from 40. It rounds up to 50!</p>
+        </div>
+        <div class="controls-block">
+          <div class="control-label-row">
+            <span>Selected value</span>
+            <span class="control-value" id="drawerSliderVal">48 (Rounds to 50)</span>
+          </div>
+          <div class="slider-track-wrap">
+            <input type="range" id="drawerSlider" min="40" max="50" value="48" oninput="onValChange(this.value)">
+          </div>
+          <div class="mode-pills">
+            <button class="mode-pill active" id="drawerMode10" onclick="setMode('10')">Nearest 10</button>
+            <button class="mode-pill" id="drawerMode100" onclick="setMode('100')">Nearest 100</button>
+            <button class="mode-pill" id="drawerMode1000" onclick="setMode('1000')">Nearest 1,000</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // --- Scale Configurations for Modes ---
+    const modeConfigs = {
+      '10': { min: 40, max: 50, defaultVal: 48, step: 1, mid: 45, label: 'Nearest 10' },
+      '100': { min: 300, max: 400, defaultVal: 360, step: 5, mid: 350, label: 'Nearest 100' },
+      '1000': { min: 4000, max: 5000, defaultVal: 4700, step: 50, mid: 4500, label: 'Nearest 1,000' }
+    };
+
+    // --- State ---
+    let state = {
+      mode: '10',
+      val: 48,
+      audience: 'junior'
+    };
+
+    // --- DOM Elements ---
+    const pillCanvas = document.getElementById('pillCanvas');
+    const phoneCanvas = document.getElementById('phoneCanvas');
+    const deskCanvas = document.getElementById('deskCanvas');
+    const drawerCanvas = document.getElementById('drawerCanvas');
+
+    // --- Mode Selector ---
+    function setMode(modeKey) {
+      state.mode = modeKey;
+      const cfg = modeConfigs[modeKey];
+      state.val = cfg.defaultVal;
+
+      ['phone', 'desk', 'drawer'].forEach(p => {
+        ['10', '100', '1000'].forEach(m => {
+          const btn = document.getElementById(`${p}Mode${m}`);
+          if (btn) btn.classList.toggle('active', m === modeKey);
+        });
+
+        const sl = document.getElementById(`${p}Slider`);
+        if (sl) {
+          sl.min = cfg.min;
+          sl.max = cfg.max;
+          sl.step = cfg.step;
+          sl.value = cfg.defaultVal;
+        }
+      });
+
+      updateUI();
+    }
+
+    function onValChange(v) {
+      state.val = parseInt(v, 10);
+      updateUI();
+    }
+
+    // --- Audience Switch ---
+    function setAudience(mode) {
+      state.audience = mode;
+      document.querySelectorAll('.aud-btn').forEach(btn => {
+        btn.classList.toggle('active', btn.id.toLowerCase().includes(mode));
+      });
+      updateUI();
+    }
+
+    // --- Update Text & UI ---
+    function updateUI() {
+      const cfg = modeConfigs[state.mode];
+      const distL = state.val - cfg.min;
+      const distR = cfg.max - state.val;
+      const roundedVal = state.val >= cfg.mid ? cfg.max : cfg.min;
+      const isMid = state.val === cfg.mid;
+
+      // Update Sliders & Badges
+      ['phone', 'desk', 'drawer'].forEach(p => {
+        const sl = document.getElementById(`${p}Slider`);
+        if (sl) sl.value = state.val;
+
+        const valSpan = document.getElementById(`${p}SliderVal`);
+        if (valSpan) valSpan.textContent = `${state.val.toLocaleString()} (Rounds to ${roundedVal.toLocaleString()})`;
+
+        const distEl = document.getElementById(`${p}DistTag`);
+        if (distEl) distEl.textContent = `Left: ${distL} | Right: ${distR}`;
+
+        const decisionEl = document.getElementById(`${p}DecisionTag`);
+        if (decisionEl) decisionEl.textContent = `Rounds ➔ ${roundedVal.toLocaleString()}`;
+      });
+
+      // Pill Mode
+      document.getElementById('pillTitle').textContent = `${state.val.toLocaleString()} rounds to ${roundedVal.toLocaleString()}`;
+      document.getElementById('pillSubtitle').textContent = `Distance: ${distR} to ${cfg.max.toLocaleString()} (${distL} to ${cfg.min.toLocaleString()})`;
+
+      // Takeaway Text (Concise 2-line uniform length)
+      let takeaway = '';
+      if (state.audience === 'junior') {
+        if (isMid) {
+          takeaway = `At the exact halfway mark (${cfg.mid.toLocaleString()}), the rule says: round UP to ${cfg.max.toLocaleString()}!`;
+        } else if (roundedVal === cfg.max) {
+          takeaway = `${state.val.toLocaleString()} is only ${distR} away from ${cfg.max.toLocaleString()}, but ${distL} away from ${cfg.min.toLocaleString()}. It rounds UP!`;
+        } else {
+          takeaway = `${state.val.toLocaleString()} is only ${distL} away from ${cfg.min.toLocaleString()}, but ${distR} away from ${cfg.max.toLocaleString()}. It rounds DOWN!`;
+        }
+      } else {
+        takeaway = `Nearest neighbor: d(x, L) = ${distL}, d(x, R) = ${distR}. Threshold mapping: ${state.val.toLocaleString()} \\to ${roundedVal.toLocaleString()}.`;
+      }
+
+      ['phone', 'desk', 'drawer'].forEach(p => {
+        const el = document.getElementById(`${p}TakeawayText`);
+        if (el) el.textContent = takeaway;
+      });
+
+      // STEM Formula Display
+      const isStem = state.audience === 'stem';
+      const deskF = document.getElementById('deskFormula');
+      const phoneF = document.getElementById('phoneFormula');
+
+      [deskF, phoneF].forEach(f => {
+        if (!f) return;
+        f.classList.toggle('active', isStem);
+        if (isStem && window.katex) {
+          const fStr = `\\operatorname{round}(${state.val.toLocaleString()}) = ${roundedVal.toLocaleString()} \\quad (|${state.val} - ${roundedVal}| = ${Math.min(distL, distR)})`;
+          katex.render(fStr, f, { throwOnError: false });
+        } else {
+          f.innerHTML = '';
+        }
+      });
+    }
+
+    // --- View Switcher ---
+    function setViewMode(mode) {
+      document.querySelectorAll('.switch-btn').forEach(btn => btn.classList.remove('active'));
+      const activeBtn = document.getElementById('btnView' + mode.charAt(0).toUpperCase() + mode.slice(1));
+      if (activeBtn) activeBtn.classList.add('active');
+
+      const topGrid = document.getElementById('topGrid');
+      const pillSec = document.getElementById('sectionPill');
+      const phoneSec = document.getElementById('sectionPhone');
+      const deskSec = document.getElementById('sectionDesktop');
+
+      if (mode === 'all') {
+        topGrid.style.display = 'flex';
+        pillSec.style.display = 'flex';
+        phoneSec.style.display = 'flex';
+        deskSec.style.display = 'block';
+      } else if (mode === 'pill') {
+        topGrid.style.display = 'flex';
+        pillSec.style.display = 'flex';
+        phoneSec.style.display = 'none';
+        deskSec.style.display = 'none';
+      } else if (mode === 'phone') {
+        topGrid.style.display = 'flex';
+        pillSec.style.display = 'none';
+        phoneSec.style.display = 'flex';
+        deskSec.style.display = 'none';
+      } else if (mode === 'desktop') {
+        topGrid.style.display = 'none';
+        deskSec.style.display = 'block';
+      }
+      setTimeout(resizeCanvases, 50);
+    }
+
+    // --- Drawer Controls ---
+    function openDrawer() {
+      document.getElementById('drawerOverlay').classList.add('active');
+      document.body.style.overflow = 'hidden';
+      setTimeout(resizeCanvases, 60);
+    }
+
+    function closeDrawer(e) {
+      if (e && e.target !== e.currentTarget && !e.target.classList.contains('drawer-close-btn')) return;
+      document.getElementById('drawerOverlay').classList.remove('active');
+      document.body.style.overflow = '';
+    }
+
+    // --- Canvas Resizing ---
+    function resizeCanvases() {
+      const list = [
+        { cv: pillCanvas, w: 76, h: 52 },
+        { cv: phoneCanvas, w: phoneCanvas.parentElement.clientWidth, h: phoneCanvas.parentElement.clientHeight },
+        { cv: deskCanvas, w: deskCanvas.parentElement.clientWidth, h: deskCanvas.parentElement.clientHeight },
+        { cv: drawerCanvas, w: drawerCanvas.parentElement.clientWidth, h: drawerCanvas.parentElement.clientHeight }
+      ];
+
+      const dpr = window.devicePixelRatio || 1;
+      list.forEach(({ cv, w, h }) => {
+        if (!cv || !w || !h) return;
+        if (cv.width !== Math.round(w * dpr) || cv.height !== Math.round(h * dpr)) {
+          cv.width = Math.round(w * dpr);
+          cv.height = Math.round(h * dpr);
+        }
+      });
+    }
+
+    window.addEventListener('resize', resizeCanvases);
+
+    // --- Render Clean Mathematical Number Line Scene ---
+    function renderScene(canvas, isMini = false) {
+      if (!canvas) return;
+      const ctx = canvas.getContext('2d');
+      const dpr = window.devicePixelRatio || 1;
+      const w = canvas.width / dpr;
+      const h = canvas.height / dpr;
+
+      ctx.save();
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      ctx.clearRect(0, 0, w, h);
+
+      const cfg = modeConfigs[state.mode];
+      const padX = isMini ? 12 : 38;
+      const lineY = (h - (isMini ? 0 : 38)) * 0.56;
+      const trackW = w - padX * 2;
+
+      function valToX(val) {
+        const frac = (val - cfg.min) / (cfg.max - cfg.min);
+        return padX + frac * trackW;
+      }
+
+      const activeX = valToX(state.val);
+      const midX = valToX(cfg.mid);
+      const roundedVal = state.val >= cfg.mid ? cfg.max : cfg.min;
+      const isRight = roundedVal === cfg.max;
+
+      // 1. Shaded Region for Rounding Zones
+      // Left rounding zone (light blue/amber tint)
+      ctx.fillStyle = 'rgba(2, 132, 199, 0.05)';
+      ctx.fillRect(padX, lineY - 35, midX - padX, 70);
+
+      // Right rounding zone
+      ctx.fillStyle = 'rgba(2, 132, 199, 0.08)';
+      ctx.fillRect(midX, lineY - 35, w - padX - midX, 70);
+
+      // 2. Main Number Line Track
+      ctx.strokeStyle = '#cbd5e1';
+      ctx.lineWidth = isMini ? 2 : 4;
+      ctx.lineCap = 'round';
+      ctx.beginPath();
+      ctx.moveTo(padX, lineY);
+      ctx.lineTo(w - padX, lineY);
+      ctx.stroke();
+
+      // Colored Proximity Spans (Left distance in amber, Right distance in sky blue)
+      // Left distance bar
+      ctx.strokeStyle = '#d97706';
+      ctx.lineWidth = isMini ? 2 : 3.5;
+      ctx.beginPath();
+      ctx.moveTo(padX, lineY);
+      ctx.lineTo(activeX, lineY);
+      ctx.stroke();
+
+      // Right distance bar
+      ctx.strokeStyle = '#0284c7';
+      ctx.lineWidth = isMini ? 2 : 3.5;
+      ctx.beginPath();
+      ctx.moveTo(activeX, lineY);
+      ctx.lineTo(w - padX, lineY);
+      ctx.stroke();
+
+      // 3. Ticks and Graduation Labels
+      const tickStep = (cfg.max - cfg.min) / 10;
+      for (let i = 0; i <= 10; i++) {
+        const tVal = cfg.min + i * tickStep;
+        const tx = valToX(tVal);
+        const isMajor = i === 0 || i === 5 || i === 10;
+
+        ctx.strokeStyle = isMajor ? '#0f172a' : '#94a3b8';
+        ctx.lineWidth = isMajor ? 1.8 : 1;
+        ctx.beginPath();
+        ctx.moveTo(tx, lineY - (isMajor ? (isMini ? 4 : 8) : (isMini ? 2 : 4)));
+        ctx.lineTo(tx, lineY + (isMajor ? (isMini ? 4 : 8) : (isMini ? 2 : 4)));
+        ctx.stroke();
+
+        // Major Labels (Min, Mid, Max)
+        if (!isMini && isMajor) {
+          ctx.fillStyle = i === 5 ? '#0284c7' : '#0f172a';
+          ctx.font = `600 ${i === 5 ? 10 : 11}px 'JetBrains Mono', monospace`;
+          ctx.textAlign = 'center';
+          ctx.fillText(tVal.toLocaleString(), tx, lineY + 22);
+        }
+      }
+
+      // 4. Midpoint Threshold Marker (Dashed Line & Label)
+      if (!isMini) {
+        ctx.setLineDash([3, 3]);
+        ctx.strokeStyle = '#94a3b8';
+        ctx.lineWidth = 1.2;
+        ctx.beginPath();
+        ctx.moveTo(midX, lineY - 32);
+        ctx.lineTo(midX, lineY + 12);
+        ctx.stroke();
+        ctx.setLineDash([]);
+
+        ctx.fillStyle = '#64748b';
+        ctx.font = '500 9.5px Inter, sans-serif';
+        ctx.textAlign = 'center';
+        ctx.fillText('Halfway', midX, lineY - 36);
+      }
+
+      // 5. Active Position Pin (Clean, Elegant Pointer Bead)
+      // Vertical pointer drop line
+      ctx.strokeStyle = '#0284c7';
+      ctx.lineWidth = 1.5;
+      ctx.beginPath();
+      ctx.moveTo(activeX, lineY - 24);
+      ctx.lineTo(activeX, lineY);
+      ctx.stroke();
+
+      // Pin Head (Circular badge with value)
+      ctx.fillStyle = '#0284c7';
+      ctx.beginPath();
+      ctx.arc(activeX, lineY, isMini ? 3.5 : 6, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.strokeStyle = '#ffffff';
+      ctx.lineWidth = 2;
+      ctx.stroke();
+
+      // Floating Value Tag above Pin
+      if (!isMini) {
+        const tagW = 44;
+        const tagH = 20;
+        ctx.fillStyle = '#0f172a';
+        ctx.beginPath();
+        ctx.roundRect(activeX - tagW / 2, lineY - 44, tagW, tagH, 6);
+        ctx.fill();
+
+        ctx.fillStyle = '#ffffff';
+        ctx.font = "700 11px 'JetBrains Mono', monospace";
+        ctx.textAlign = 'center';
+        ctx.fillText(state.val.toLocaleString(), activeX, lineY - 30);
+      }
+
+      // 6. Proximity Caliper Distance Labels
+      if (!isMini && w > 300) {
+        const distL = state.val - cfg.min;
+        const distR = cfg.max - state.val;
+
+        // Left distance label
+        if (activeX - padX > 28) {
+          ctx.fillStyle = '#d97706';
+          ctx.font = "600 10px 'JetBrains Mono', monospace";
+          ctx.textAlign = 'center';
+          ctx.fillText(`−${distL}`, (padX + activeX) / 2, lineY - 10);
+        }
+
+        // Right distance label
+        if (w - padX - activeX > 28) {
+          ctx.fillStyle = '#0284c7';
+          ctx.font = "600 10px 'JetBrains Mono', monospace";
+          ctx.textAlign = 'center';
+          ctx.fillText(`+${distR}`, (activeX + (w - padX)) / 2, lineY - 10);
+        }
+      }
+
+      ctx.restore();
+    }
+
+    // --- Animation Loop ---
+    function animate() {
+      renderScene(pillCanvas, true);
+      renderScene(phoneCanvas);
+      renderScene(deskCanvas);
+      renderScene(drawerCanvas);
+
+      requestAnimationFrame(animate);
+    }
+
+    // --- Init ---
+    window.addEventListener('DOMContentLoaded', () => {
+      resizeCanvases();
+      updateUI();
+      animate();
+    });
+  </script>
+</body>
+</html>

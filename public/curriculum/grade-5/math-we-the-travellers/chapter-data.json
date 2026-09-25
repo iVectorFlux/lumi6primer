@@ -1,0 +1,734 @@
+{
+  "book": {
+    "id": "grade-5-mathematics",
+    "title": "Mathematics (Class 5)",
+    "gradeNumber": 5,
+    "gradeLabel": "Grade 5",
+    "subject": "Mathematics",
+    "curriculum": "NCERT",
+    "nationalEducationPolicy": "NEP 2020 Aligned (Preparatory Stage)",
+    "edition": "Reprint 2026-27",
+    "publisher": "National Council of Educational Research and Training, New Delhi, India",
+    "unit": {
+      "id": "unit-math-5-01",
+      "number": 1,
+      "title": "Numbers and Operations Around Us",
+      "aboutUnit": "In Grades 3 and 4, students developed strong intuitive number sense up to 4-digit numbers. In Grade 5, mathematics connects with human history—exploring how travel, trade, measurement, and recording large quantities led to five-digit numbers (ten thousands) and beyond.",
+      "bannerImage": "https://kpigixuqpigjremowykx.supabase.co/storage/v1/object/public/curriculum-assets/grade-5/maths/ch01/images/sanju_mira_train_banner.png",
+      "facilitationGuide": {
+        "title": "How to Facilitate in the Mathematics Classroom",
+        "points": [
+          {
+            "headline": "Real-World Contexts for Large Numbers",
+            "text": "Connect 5-digit numbers with everyday experiences: vehicle registrations, town populations, aircraft speeds, and odometer readings."
+          },
+          {
+            "headline": "Hands-on Base-10 Tokens",
+            "text": "Use physical tokens (10,000, 1,000, 100, 10, 1). Emphasize grouping 10 of any unit into 1 of the next higher unit."
+          },
+          {
+            "headline": "Number Line Spatial Rounding",
+            "text": "Use the hungry rabbit jumping on the number line to build distance intuition rather than mechanical memorization of rounding rules."
+          }
+        ]
+      }
+    }
+  },
+  "chapter": {
+    "id": "math-5-ch01-we-the-travellers",
+    "number": 1,
+    "title": "We the Travellers — I",
+    "tagline": "Embark on an exciting mathematical expedition through the history of human travel, five-digit place values, rounding on the number line, and clever railway pastime puzzles.",
+    "overview": "Bridges history, geography, and mathematics. Introduces 5-digit numbers, place value expansion, ascending/descending ordering, number line rounding, and classical logic games.",
+    "sourcePdf": "eemm101.pdf",
+    "totalPages": 16,
+    "characters": [
+      {
+        "id": "sanju",
+        "name": "Sanju",
+        "avatar": "👦",
+        "role": "Travel Explorer",
+        "bio": "Loves high-speed trains, distances, and speedometers."
+      },
+      {
+        "id": "mira",
+        "name": "Mira",
+        "avatar": "👧",
+        "role": "Curious Mathematical Thinker",
+        "bio": "Enjoys discovering number patterns, magic subtraction, and logic puzzles."
+      }
+    ],
+    "sections": [
+      {
+        "id": "sec-math-5-ch01-01",
+        "lessonNumber": 1,
+        "title": "A Trip to Remember — Numbers Beyond 10,000",
+        "subtitle": "Connecting human journey distances with five-digit numbers",
+        "pageRange": "Pages 1–2",
+        "storyNarrative": {
+          "characterId": "sanju",
+          "characterName": "Sanju",
+          "setting": "Inside a fast-moving train carriage, looking out at milestone markers.",
+          "dialogue": "“When was the last time you went on a long trip? Where did you go? How did you travel? Look at the kilometre markers on our journey—they are getting bigger and bigger!”",
+          "audioText": "Sanju wonders about long journeys and large numbers beyond thousands."
+        },
+        "textbookCoreText": "When was the last time you went on a long trip? Where did you go? How did you travel? What was the duration of your trip? How much distance did you cover? Let us start with 1,000. What numbers do we get when we keep adding a thousand?",
+        "concept": {
+          "heading": "The Ten Thousands (TTh) Place Value Unit",
+          "explanation": "In Grades 3 and 4, we counted up to 9,999. Adding 1 more to 9,999 gives 10,000 (Ten Thousand). In our place value chart, we add a new column to the left of Thousands (Th), called Ten Thousands (TTh).",
+          "keyRule": "10 Ones = 1 Ten | 10 Tens = 1 Hundred | 10 Hundreds = 1 Thousand | 10 Thousands = 1 Ten Thousand (10,000)"
+        },
+        "blocks": [
+          {
+            "type": "story-narrative",
+            "title": "Travel Discussion Hook",
+            "content": {
+              "speaker": "Sanju",
+              "dialogue": "“When was the last time you went on a long trip? Where did you go? Ask elders who went with you to help answer!”",
+              "bannerImage": "https://kpigixuqpigjremowykx.supabase.co/storage/v1/object/public/curriculum-assets/grade-5/maths/ch01/images/sanju_mira_train_banner.png"
+            }
+          },
+          {
+            "type": "interactive-table",
+            "title": "Place Value Chart (TTh to Ones)",
+            "content": {
+              "headers": [
+                "Place",
+                "Ten Thousands (TTh)",
+                "Thousands (Th)",
+                "Hundreds (H)",
+                "Tens (T)",
+                "Ones (O)"
+              ],
+              "rows": [
+                [
+                  "10,000",
+                  "1",
+                  "0",
+                  "0",
+                  "0",
+                  "0"
+                ],
+                [
+                  "20,000",
+                  "2",
+                  "0",
+                  "0",
+                  "0",
+                  "0"
+                ],
+                [
+                  "54,321",
+                  "5",
+                  "4",
+                  "3",
+                  "2",
+                  "1"
+                ]
+              ],
+              "image": "https://kpigixuqpigjremowykx.supabase.co/storage/v1/object/public/curriculum-assets/grade-5/maths/ch01/images/place_value_chart_tth.png"
+            }
+          },
+          {
+            "type": "interactive_simulation",
+            "title": "Interactive Lab: Railway Odometer & Station Population Counter",
+            "content": {
+              "interactiveId": "interactive-math-5-ch01-les01",
+              "interactiveTitle": "Railway Odometer & Station Population Counter",
+              "interactiveType": "digit_odometer_manipulative",
+              "cdnUrl": "https://kpigixuqpigjremowykx.supabase.co/storage/v1/object/public/curriculum-assets/grade-5/interactives/interactive-math-5-ch01-les01.html",
+              "localUrl": "/curriculum interactive/interactive-math-5-ch01-les01.html",
+              "pedagogicalObjective": "Understand how adding 1 to 9,999 creates 10,000, requiring the Ten Thousands (TTh) place value column.",
+              "explanation": "Sanju and Mira look at the five-digit engine number and the town population signboard on the railway platform. In this interactive, students roll the unit wheels past 9,999 to watch all four digits reset to 0 and trigger the brand new \"Ten Thousands\" dial to flip to 1, creating 10,000.",
+              "simpleExplanation": "Roll the dials past 9,999 to see the brand new Ten Thousands column flip to 1 and create 10,000!",
+              "stemExplanation": "Positional base-10 decade boundary transition (10^3 to 10^4) and modular carry mechanics.",
+              "modes": [
+                "pill",
+                "drawer",
+                "mobile",
+                "desktop"
+              ],
+              "legoBlocks": [
+                "canvas-renderer",
+                "digit-roller",
+                "audio-feedback",
+                "number-card"
+              ]
+            }
+          }
+        ],
+        "questions": [
+          {
+            "id": "q-math-5-ch01-01",
+            "type": "fill_blank",
+            "prompt": "Fill in the blank: 10 Thousands = ____________ (write in numerals)",
+            "correctAnswer": "10000",
+            "hint": "Write 1 followed by four zeroes.",
+            "explanation": "10 Thousands equals Ten Thousand, written as 10,000."
+          },
+          {
+            "id": "q-math-5-ch01-02",
+            "type": "mcq",
+            "prompt": "What is the smallest 5-digit number?",
+            "options": [
+              "9,999",
+              "10,000",
+              "10,001",
+              "100,000"
+            ],
+            "correctAnswer": "10,000",
+            "hint": "Adding 1 to the largest 4-digit number (9,999) gives the smallest 5-digit number.",
+            "explanation": "9,999 + 1 = 10,000, which has 5 digits."
+          }
+        ],
+        "interactive": {
+          "id": "interactive-math-5-ch01-les01",
+          "title": "Railway Odometer & Station Population Counter",
+          "type": "digit_odometer_manipulative",
+          "pedagogicalObjective": "Understand how adding 1 to 9,999 creates 10,000, requiring the Ten Thousands (TTh) place value column.",
+          "localUrl": "/curriculum interactive/interactive-math-5-ch01-les01.html",
+          "cdnUrl": "https://kpigixuqpigjremowykx.supabase.co/storage/v1/object/public/curriculum-assets/grade-5/interactives/interactive-math-5-ch01-les01.html",
+          "iframeCode": "<iframe src=\"https://kpigixuqpigjremowykx.supabase.co/storage/v1/object/public/curriculum-assets/grade-5/interactives/interactive-math-5-ch01-les01.html\" width=\"100%\" height=\"600\" frameborder=\"0\" allowfullscreen title=\"Railway Odometer & Station Population Counter\"></iframe>",
+          "modes": [
+            "pill",
+            "drawer",
+            "mobile",
+            "desktop"
+          ],
+          "legoBlocks": [
+            "canvas-renderer",
+            "digit-roller",
+            "audio-feedback",
+            "number-card"
+          ]
+        }
+      },
+      {
+        "id": "sec-math-5-ch01-02",
+        "lessonNumber": 2,
+        "title": "Building Numbers with Base-10 Tokens",
+        "subtitle": "Manipulative token representation and pattern expansion",
+        "pageRange": "Pages 3–6",
+        "storyNarrative": {
+          "characterId": "mira",
+          "characterName": "Mira",
+          "setting": "Sitting at the train table with colorful cardboard tokens.",
+          "dialogue": "“Look! We can represent any number beyond 10,000 using color tokens: 10,000 (blue), 1,000 (yellow), 100 (green), 10 (red), and 1 (white). Let's build 34,215 together!”",
+          "audioText": "Mira demonstrates how tokens represent place values."
+        },
+        "textbookCoreText": "Let us see how we write numbers beyond 10,000 and how we name them. We write them in the same way as numbers below 9,999. You can use the tokens given in the end of the book.",
+        "concept": {
+          "heading": "Expanded Form of 5-Digit Numbers",
+          "explanation": "To write 34,215: 3 Ten Thousands (30,000) + 4 Thousands (4,000) + 2 Hundreds (200) + 1 Ten (10) + 5 Ones (5). Thirty-four thousand two hundred fifteen.",
+          "keyRule": "Standard Form = Sum of Place Values"
+        },
+        "blocks": [
+          {
+            "type": "visual-manipulative",
+            "title": "Base-10 Token Bank",
+            "content": {
+              "tool": "token-counter",
+              "image": "https://kpigixuqpigjremowykx.supabase.co/storage/v1/object/public/curriculum-assets/grade-5/maths/ch01/images/ten_thousand_tokens_model.png",
+              "tokenDenominations": [
+                10000,
+                1000,
+                100,
+                10,
+                1
+              ]
+            }
+          },
+          {
+            "type": "fill-in-the-blank",
+            "title": "Sequence Patterns",
+            "content": {
+              "sequences": [
+                "10,000 ➔ 20,000 ➔ 30,000 ➔ [40000] ➔ 50,000",
+                "34,500 ➔ 34,600 ➔ [34700] ➔ 34,800",
+                "5,621 = 4 Thousands + [16] Hundreds + 2 Tens + 1 Ones"
+              ]
+            }
+          },
+          {
+            "type": "interactive_simulation",
+            "title": "Interactive Lab: Base-10 Multi-Column Place Value Organizer",
+            "content": {
+              "interactiveId": "interactive-math-5-ch01-les02",
+              "interactiveTitle": "Base-10 Multi-Column Place Value Organizer",
+              "interactiveType": "place_value_sorter",
+              "cdnUrl": "https://kpigixuqpigjremowykx.supabase.co/storage/v1/object/public/curriculum-assets/grade-5/interactives/interactive-math-5-ch01-les02.html",
+              "localUrl": "/curriculum interactive/interactive-math-5-ch01-les02.html",
+              "pedagogicalObjective": "Decompose multi-digit numbers into standard and expanded notation across TTh, Th, H, T, and O.",
+              "explanation": "Mira explains that every digit's value depends on its column home. Students drag digit cards into a 5-column architectural chart to see how the digit 4 in 48,276 represents 40,000, while the digit 7 represents 70.",
+              "simpleExplanation": "Drag digit tiles into the colored columns to see how place value transforms digits into tens, hundreds, thousands, and ten-thousands!",
+              "stemExplanation": "Polynomial decomposition of integers in base-10: N = Σ d_i · 10^i across discrete positional columns.",
+              "modes": [
+                "pill",
+                "drawer",
+                "mobile",
+                "desktop"
+              ],
+              "legoBlocks": [
+                "drag-and-drop",
+                "place-value-chart",
+                "expansion-slider"
+              ]
+            }
+          }
+        ],
+        "questions": [
+          {
+            "id": "q-math-5-ch01-03",
+            "type": "fill_blank",
+            "prompt": "Complete the sequence: 50,000, 60,000, 70,000, ________",
+            "correctAnswer": "80000",
+            "hint": "Each jump increases by 10,000.",
+            "explanation": "70,000 + 10,000 = 80,000 (Eighty Thousand)."
+          }
+        ],
+        "interactive": {
+          "id": "interactive-math-5-ch01-les02",
+          "title": "Base-10 Multi-Column Place Value Organizer",
+          "type": "place_value_sorter",
+          "pedagogicalObjective": "Decompose multi-digit numbers into standard and expanded notation across TTh, Th, H, T, and O.",
+          "localUrl": "/curriculum interactive/interactive-math-5-ch01-les02.html",
+          "cdnUrl": "https://kpigixuqpigjremowykx.supabase.co/storage/v1/object/public/curriculum-assets/grade-5/interactives/interactive-math-5-ch01-les02.html",
+          "iframeCode": "<iframe src=\"https://kpigixuqpigjremowykx.supabase.co/storage/v1/object/public/curriculum-assets/grade-5/interactives/interactive-math-5-ch01-les02.html\" width=\"100%\" height=\"600\" frameborder=\"0\" allowfullscreen title=\"Base-10 Multi-Column Place Value Organizer\"></iframe>",
+          "modes": [
+            "pill",
+            "drawer",
+            "mobile",
+            "desktop"
+          ],
+          "legoBlocks": [
+            "drag-and-drop",
+            "place-value-chart",
+            "expansion-slider"
+          ]
+        }
+      },
+      {
+        "id": "sec-math-5-ch01-03",
+        "lessonNumber": 3,
+        "title": "The Hungry Rabbit on the Number Line",
+        "subtitle": "Intuitive spatial distance rounding to nearest 10, 100, and 1,000",
+        "pageRange": "Pages 7–8",
+        "storyNarrative": {
+          "characterId": "sanju",
+          "characterName": "Sanju",
+          "setting": "A scenic grassy slope along the railway tracks.",
+          "dialogue": "“A hungry rabbit is hopping along the number line! If carrots are kept at multiples of 10 (like 40 and 50), to which carrot will the rabbit at 43 hop? The closer one, of course!”",
+          "audioText": "Sanju explains rounding using the hungry rabbit."
+        },
+        "textbookCoreText": "Look at the rabbit hopping along the number line. To round off to the nearest 10, see which ten is closer. 43 is closer to 40 than to 50, so 43 rounds down to 40.",
+        "concept": {
+          "heading": "Spatial Intuition for Rounding",
+          "explanation": "Rounding is finding the nearest milestone. On the number line: If a number ends in 1, 2, 3, or 4, it is closer to the lower ten. If it ends in 6, 7, 8, or 9, it is closer to the higher ten. If it is exactly in the middle (5), we agree to hop forward to the higher ten.",
+          "keyRule": "Distance to target milestone decides rounding direction."
+        },
+        "blocks": [
+          {
+            "type": "number-line-scale",
+            "title": "Hungry Rabbit Rounding Slider",
+            "content": {
+              "min": 0,
+              "max": 100,
+              "marker": "🐰",
+              "imageNearestTens": "https://kpigixuqpigjremowykx.supabase.co/storage/v1/object/public/curriculum-assets/grade-5/maths/ch01/images/rabbit_nearest_tens.png",
+              "imageNearestHundreds": "https://kpigixuqpigjremowykx.supabase.co/storage/v1/object/public/curriculum-assets/grade-5/maths/ch01/images/rabbit_nearest_hundreds.png",
+              "imageNearestThousands": "https://kpigixuqpigjremowykx.supabase.co/storage/v1/object/public/curriculum-assets/grade-5/maths/ch01/images/rabbit_nearest_thousands.png"
+            }
+          },
+          {
+            "type": "interactive_simulation",
+            "title": "Interactive Lab: Hungry Rabbit Number Line Rounding Lab",
+            "content": {
+              "interactiveId": "interactive-math-5-ch01-les04",
+              "interactiveTitle": "Hungry Rabbit Number Line Rounding Lab",
+              "interactiveType": "magnetic_number_line_jumper",
+              "cdnUrl": "https://kpigixuqpigjremowykx.supabase.co/storage/v1/object/public/curriculum-assets/grade-5/interactives/interactive-math-5-ch01-les04.html",
+              "localUrl": "/curriculum interactive/interactive-math-5-ch01-les04.html",
+              "pedagogicalObjective": "Develop spatial proximity intuition for rounding numbers to the nearest 10, 100, and 1,000.",
+              "explanation": "The hungry rabbit hops along the number line seeking the nearest carrot patch at multiples of 10, 100, or 1,000. At 48, the patch at 50 is visibly closer than 40. At 45 (the midpoint), the rabbit gathers energy and leaps forward to 50.",
+              "simpleExplanation": "Help the hungry rabbit hop to the closest carrot patch by seeing which benchmark number is nearest on the number line!",
+              "stemExplanation": "Distance metric minimization on the 1D real number line with half-open rounding boundaries [n - 0.5, n + 0.5).",
+              "modes": [
+                "pill",
+                "drawer",
+                "mobile",
+                "desktop"
+              ],
+              "legoBlocks": [
+                "number-line-canvas",
+                "magnetic-snapping",
+                "zoom-slider",
+                "sprite-animation"
+              ]
+            }
+          }
+        ],
+        "questions": [
+          {
+            "id": "q-math-5-ch01-04",
+            "type": "mcq",
+            "prompt": "Round 78 to the nearest 10:",
+            "options": [
+              "70",
+              "75",
+              "80",
+              "90"
+            ],
+            "correctAnswer": "80",
+            "hint": "Distance from 78 to 80 is 2, while distance to 70 is 8.",
+            "explanation": "78 is much closer to 80 on the number line."
+          },
+          {
+            "id": "q-math-5-ch01-05",
+            "type": "mcq",
+            "prompt": "Round 4,380 to the nearest 1,000:",
+            "options": [
+              "4,000",
+              "4,500",
+              "5,000",
+              "4,300"
+            ],
+            "correctAnswer": "4,000",
+            "hint": "Compare distance to 4,000 (380) vs distance to 5,000 (620).",
+            "explanation": "4,380 is closer to 4,000 than to 5,000."
+          }
+        ],
+        "interactive": {
+          "id": "interactive-math-5-ch01-les04",
+          "title": "Hungry Rabbit Number Line Rounding Lab",
+          "type": "magnetic_number_line_jumper",
+          "pedagogicalObjective": "Develop spatial proximity intuition for rounding numbers to the nearest 10, 100, and 1,000.",
+          "localUrl": "/curriculum interactive/interactive-math-5-ch01-les04.html",
+          "cdnUrl": "https://kpigixuqpigjremowykx.supabase.co/storage/v1/object/public/curriculum-assets/grade-5/interactives/interactive-math-5-ch01-les04.html",
+          "iframeCode": "<iframe src=\"https://kpigixuqpigjremowykx.supabase.co/storage/v1/object/public/curriculum-assets/grade-5/interactives/interactive-math-5-ch01-les04.html\" width=\"100%\" height=\"600\" frameborder=\"0\" allowfullscreen title=\"Hungry Rabbit Number Line Rounding Lab\"></iframe>",
+          "modes": [
+            "pill",
+            "drawer",
+            "mobile",
+            "desktop"
+          ],
+          "legoBlocks": [
+            "number-line-canvas",
+            "magnetic-snapping",
+            "zoom-slider",
+            "sprite-animation"
+          ]
+        }
+      },
+      {
+        "id": "sec-math-5-ch01-04",
+        "lessonNumber": 4,
+        "title": "Speeds of Travel & Multi-Step Word Problems",
+        "subtitle": "Calculating distances, travel times, and comparing vehicles",
+        "pageRange": "Pages 9–10",
+        "storyNarrative": {
+          "characterId": "mira",
+          "characterName": "Mira",
+          "setting": "Looking at an old travel speed chart from different eras of human transport.",
+          "dialogue": "“A walking human travels 4 km in an hour. A cyclist covers 15 km in an hour. A train covers 70 km, and an aeroplane flies 800 km in one hour! Let’s calculate how far each can go in 3 hours!”",
+          "audioText": "Mira compares the speeds of different modes of transport."
+        },
+        "textbookCoreText": "In an hour a person can generally travel: Walking: 4 km, Cycling: 15 km, Bus: 40 km, Train: 70 km, Aeroplane: 800 km. A cyclist can cover 15 km in one hour. How much distance can she cover in 3 hours?",
+        "concept": {
+          "heading": "Distance = Speed × Time",
+          "explanation": "When speed is constant, the total distance covered equals speed in one hour multiplied by the total hours.",
+          "keyRule": "Distance = Speed (km/h) × Time (hours)"
+        },
+        "blocks": [
+          {
+            "type": "interactive-table",
+            "title": "Speed of Travel Comparison Table",
+            "content": {
+              "headers": [
+                "Mode of Transport",
+                "Distance in 1 Hour",
+                "Distance in 3 Hours",
+                "Distance in 5 Hours"
+              ],
+              "rows": [
+                [
+                  "Walking",
+                  "4 km",
+                  "12 km",
+                  "20 km"
+                ],
+                [
+                  "Bicycle",
+                  "15 km",
+                  "45 km",
+                  "75 km"
+                ],
+                [
+                  "Bus",
+                  "40 km",
+                  "120 km",
+                  "200 km"
+                ],
+                [
+                  "Train",
+                  "70 km",
+                  "210 km",
+                  "350 km"
+                ],
+                [
+                  "Aeroplane",
+                  "800 km",
+                  "2,400 km",
+                  "4,000 km"
+                ]
+              ]
+            }
+          }
+        ],
+        "questions": [
+          {
+            "id": "q-math-5-ch01-06",
+            "type": "mcq",
+            "prompt": "If a train travels 70 km in 1 hour, how far will it travel in 4 hours?",
+            "options": [
+              "210 km",
+              "280 km",
+              "300 km",
+              "350 km"
+            ],
+            "correctAnswer": "280 km",
+            "hint": "Multiply 70 × 4.",
+            "explanation": "70 km/h × 4 h = 280 km."
+          }
+        ]
+      },
+      {
+        "id": "sec-math-5-ch01-05",
+        "lessonNumber": 5,
+        "title": "Railway Pastimes — The River Crossing & Nim Puzzle",
+        "subtitle": "Combinatorial thinking and classical recreational logic games",
+        "pageRange": "Pages 11–13",
+        "storyNarrative": {
+          "characterId": "sanju",
+          "characterName": "Sanju",
+          "setting": "Sanju challenges Mira to puzzle games as the train speeds through the countryside.",
+          "dialogue": "“Sanju introduces the River Crossing puzzle: A farmer must transport a wolf, a goat, and a cabbage across a river in a small boat. But if left alone, the wolf will eat the goat, and the goat will eat the cabbage!”",
+          "audioText": "Sanju describes the famous river crossing puzzle."
+        },
+        "textbookCoreText": "Sanju and Mira are travelling on a train. To pass time, they challenge each other with games and puzzles. A farmer needs to take a wolf, a goat and a cabbage across a river. His boat can only carry him and one other item at a time.",
+        "concept": {
+          "heading": "State Space & Invariant Analysis",
+          "explanation": "To solve river crossing: The farmer takes the goat first (leaving wolf with cabbage safely). On the return, he takes the cabbage across, but brings the goat back! Then he takes the wolf across, and finally returns to get the goat.",
+          "keyRule": "Strategic backward thinking: You can take an item back to keep the other bank safe!"
+        },
+        "blocks": [
+          {
+            "type": "logic-game-puzzle",
+            "title": "The River Crossing Puzzle",
+            "content": {
+              "image": "https://kpigixuqpigjremowykx.supabase.co/storage/v1/object/public/curriculum-assets/grade-5/maths/ch01/images/river_crossing_puzzle_boat.png",
+              "rules": "Boat carries farmer + 1 item. Wolf and goat cannot be left alone; goat and cabbage cannot be left alone."
+            }
+          },
+          {
+            "type": "logic-game-puzzle",
+            "title": "Pile of Pebbles (Nim)",
+            "content": {
+              "image": "https://kpigixuqpigjremowykx.supabase.co/storage/v1/object/public/curriculum-assets/grade-5/maths/ch01/images/two_piles_of_pebbles.png",
+              "rules": "Players take turns removing 1, 2, or 3 pebbles. The player who takes the last pebble wins."
+            }
+          },
+          {
+            "type": "interactive_simulation",
+            "title": "Interactive Lab: Two-Pile Pebble Nim Game Simulator",
+            "content": {
+              "interactiveId": "interactive-math-5-ch01-les05",
+              "interactiveTitle": "Two-Pile Pebble Nim Game Simulator",
+              "interactiveType": "combinatorial_puzzle_game",
+              "cdnUrl": "https://kpigixuqpigjremowykx.supabase.co/storage/v1/object/public/curriculum-assets/grade-5/interactives/interactive-math-5-ch01-les05.html",
+              "localUrl": "/curriculum interactive/interactive-math-5-ch01-les05.html",
+              "pedagogicalObjective": "Apply symmetry and complement-pairing strategies in logical reasoning and problem solving.",
+              "explanation": "To pass the time on the long railway journey, Sanju and Mira play a traditional pebble game with two equal piles. Whoever takes the last pebble wins. Students discover that mirroring the first player's move guarantees victory.",
+              "simpleExplanation": "Play the ancient pebble strategy game against Mira! Notice what happens when you mirror your opponent's moves on the opposite pile!",
+              "stemExplanation": "Impartial game theory, Sprague-Grundy theorem, and symmetric involution strategies in finite combinatorial games.",
+              "modes": [
+                "pill",
+                "drawer",
+                "mobile",
+                "desktop"
+              ],
+              "legoBlocks": [
+                "game-engine",
+                "ai-logic",
+                "pebble-sprites",
+                "dialogue-bubble"
+              ]
+            }
+          }
+        ],
+        "questions": [
+          {
+            "id": "q-math-5-ch01-07",
+            "type": "mcq",
+            "prompt": "In the River Crossing puzzle, which item MUST the farmer take across on his first trip?",
+            "options": [
+              "The Wolf",
+              "The Cabbage",
+              "The Goat",
+              "Nothing"
+            ],
+            "correctAnswer": "The Goat",
+            "hint": "Leaving the goat behind will cause either the wolf to eat it, or it will eat the cabbage.",
+            "explanation": "The wolf does not eat cabbage, so leaving wolf and cabbage together is safe on the first trip."
+          }
+        ],
+        "interactive": {
+          "id": "interactive-math-5-ch01-les05",
+          "title": "Two-Pile Pebble Nim Game Simulator",
+          "type": "combinatorial_puzzle_game",
+          "pedagogicalObjective": "Apply symmetry and complement-pairing strategies in logical reasoning and problem solving.",
+          "localUrl": "/curriculum interactive/interactive-math-5-ch01-les05.html",
+          "cdnUrl": "https://kpigixuqpigjremowykx.supabase.co/storage/v1/object/public/curriculum-assets/grade-5/interactives/interactive-math-5-ch01-les05.html",
+          "iframeCode": "<iframe src=\"https://kpigixuqpigjremowykx.supabase.co/storage/v1/object/public/curriculum-assets/grade-5/interactives/interactive-math-5-ch01-les05.html\" width=\"100%\" height=\"600\" frameborder=\"0\" allowfullscreen title=\"Two-Pile Pebble Nim Game Simulator\"></iframe>",
+          "modes": [
+            "pill",
+            "drawer",
+            "mobile",
+            "desktop"
+          ],
+          "legoBlocks": [
+            "game-engine",
+            "ai-logic",
+            "pebble-sprites",
+            "dialogue-bubble"
+          ]
+        }
+      },
+      {
+        "id": "sec-math-5-ch01-06",
+        "lessonNumber": 6,
+        "title": "Sorting Towns & Flexible Place Value Decomposition",
+        "subtitle": "Ascending/descending order and flexible decomposition",
+        "pageRange": "Pages 14–15",
+        "storyNarrative": {
+          "characterId": "mira",
+          "characterName": "Mira",
+          "setting": "Reading a railway almanac listing populations of different Indian towns.",
+          "dialogue": "“Look at the population table of these towns: Rampur (45,820), Anandnagar (62,104), Sitapur (45,290), and Shantiniketan (58,940). Let's arrange them from largest to smallest!”",
+          "audioText": "Mira compares the populations of various towns."
+        },
+        "textbookCoreText": "The following table shows the population of some towns. Arrange them in descending order. Notice that numbers can be expressed flexibly: 607 = 4 Hundreds + 20 Tens + 7 Ones.",
+        "concept": {
+          "heading": "Comparing 5-Digit Numbers",
+          "explanation": "Compare digits from left to right (highest place value first: TTh, then Th, H, T, O). Flexible decomposition helps in mental subtraction and regrouping.",
+          "keyRule": "Compare highest place value first."
+        },
+        "blocks": [
+          {
+            "type": "interactive-table",
+            "title": "Town Population Sorting Table",
+            "content": {
+              "headers": [
+                "Town Name",
+                "Population",
+                "Rank (Descending)"
+              ],
+              "rows": [
+                [
+                  "Anandnagar",
+                  "62,104",
+                  "1st (Largest)"
+                ],
+                [
+                  "Shantiniketan",
+                  "58,940",
+                  "2nd"
+                ],
+                [
+                  "Rampur",
+                  "45,820",
+                  "3rd"
+                ],
+                [
+                  "Sitapur",
+                  "45,290",
+                  "4th (Smallest)"
+                ]
+              ]
+            }
+          }
+        ],
+        "questions": [
+          {
+            "id": "q-math-5-ch01-08",
+            "type": "mcq",
+            "prompt": "Which number is greater: 45,820 or 45,290?",
+            "options": [
+              "45,820",
+              "45,290",
+              "Both are equal"
+            ],
+            "correctAnswer": "45,820",
+            "hint": "Both have 45 thousands. Compare the hundreds place: 8 Hundreds vs 2 Hundreds.",
+            "explanation": "8 Hundreds (800) is greater than 2 Hundreds (200)."
+          }
+        ]
+      },
+      {
+        "id": "sec-math-5-ch01-07",
+        "lessonNumber": 7,
+        "title": "The King's Horses — Perimeter Sum Logic Puzzle",
+        "subtitle": "Grid perimeter constraints and conservation of sum",
+        "pageRange": "Page 16",
+        "storyNarrative": {
+          "characterId": "sanju",
+          "characterName": "Sanju",
+          "setting": "Evening on the train, drawing a 3x3 square perimeter grid on paper.",
+          "dialogue": "“The King loves horses! He has 24 horses arranged around a square stable such that each of the four sides counts to exactly 9 horses. A visitor brings 4 more horses, but the king still counts 9 horses on each side! How is this possible?”",
+          "audioText": "Sanju shares the riddle of the King's horses."
+        },
+        "textbookCoreText": "The king counted 5 horses along each side. 'We have 5 horses along each side and there are 24 horses.' How can horses be rearranged in corner and edge boxes to change the total while keeping the side sums constant?",
+        "concept": {
+          "heading": "Corner Overlap in Perimeter Grids",
+          "explanation": "In a 3x3 square, the 4 corner cells are counted twice (once for each intersecting side). Increasing the corners allows fewer total horses to sum to the same perimeter total!",
+          "keyRule": "Corner cells count twice in perimeter sums."
+        },
+        "blocks": [
+          {
+            "type": "logic-game-puzzle",
+            "title": "The King's Horses 3x3 Stable Grid",
+            "content": {
+              "grid": [
+                [
+                  "Corner A",
+                  "Edge Top",
+                  "Corner B"
+                ],
+                [
+                  "Edge Left",
+                  "Empty Courtyard",
+                  "Edge Right"
+                ],
+                [
+                  "Corner C",
+                  "Edge Bottom",
+                  "Corner D"
+                ]
+              ],
+              "sideSumTarget": 9
+            }
+          }
+        ],
+        "questions": [
+          {
+            "id": "q-math-5-ch01-09",
+            "type": "open_reflection",
+            "prompt": "Why do corner boxes affect two sides at the same time?",
+            "correctAnswer": "Corner cells belong to two intersecting sides simultaneously.",
+            "hint": "Look at the corner of a square: it touches both the horizontal side and the vertical side.",
+            "explanation": "Because a corner is part of both a row and a column, any horse placed in a corner is counted in both side totals."
+          }
+        ]
+      }
+    ]
+  }
+}

@@ -1,0 +1,230 @@
+{
+  "book": {
+    "id": "grade-5-mathematics",
+    "title": "Mathematics (Class 5)",
+    "gradeNumber": 5,
+    "gradeLabel": "Grade 5",
+    "subject": "Mathematics",
+    "curriculum": "NCERT",
+    "nationalEducationPolicy": "NEP 2020 Aligned (Preparatory Stage)",
+    "publisher": "National Council of Educational Research and Training, New Delhi, India",
+    "edition": "Reprint 2026-27",
+    "unit": {
+      "id": "unit-math-5-01",
+      "book_id": "grade-5-mathematics",
+      "unit_number": 1,
+      "title": "Numbers and Operations Around Us",
+      "about_unit": "Explores how human travel, trade, measurement, and recording large quantities led to five-digit numbers (ten thousands), multi-digit multiplication, division arrays, and multiplicative reasoning.",
+      "banner_image_url": "https://kpigixuqpigjremowykx.supabase.co/storage/v1/object/public/curriculum-assets/grade-5/maths/ch01/images/sanju_mira_train_banner.png",
+      "facilitation_guide": [
+        {
+          "headline": "Real-World Contexts",
+          "text": "Connect numbers with train tickets, odometer readings, and village populations."
+        },
+        {
+          "headline": "Base-10 Manipulatives",
+          "text": "Emphasize grouping 10 of any unit into 1 of the next higher unit using visual tokens."
+        }
+      ]
+    }
+  },
+  "chapter": {
+    "id": "ch-math-5-13",
+    "number": 13,
+    "title": "Animal Jumps",
+    "tagline": "Skip counting, common multiples, meeting spots on number lines, and mystery multiplier boxes",
+    "overview": "A frog jumps 2 steps at a time, a rabbit jumps 3 steps, and a kangaroo leaps 5 steps. Where will they land together? Through dynamic animal jumps, students discover multiples, least common multiples (LCM), and crack function rules in mystery multiplier boxes.",
+    "sourcePdf": "public/Books/Maths/eemm113.pdf",
+    "totalPages": 7,
+    "characters": [
+      {
+        "name": "Freddy Frog",
+        "role": "Twos Jumper",
+        "avatar": "\ud83d\udc38"
+      },
+      {
+        "name": "Ruby Rabbit",
+        "role": "Threes Jumper",
+        "avatar": "\ud83d\udc07"
+      },
+      {
+        "name": "Koko Kangaroo",
+        "role": "Fives Jumper",
+        "avatar": "\ud83e\udd98"
+      }
+    ],
+    "sections": [
+      {
+        "id": "sec-math-5-13-01",
+        "lessonNumber": 1,
+        "title": "The Mystery Multiplier Box: Input-Output Machines",
+        "subtitle": "Discovering hidden functional multiplication rules",
+        "storyNarrative": {
+          "characterName": "Freddy Frog",
+          "dialogue": "Look at this magical box! When 3 goes in, 18 comes out. When 5 goes in, 30 comes out! What is the box multiplying by?"
+        },
+        "concept": {
+          "heading": "Function Rule Identification",
+          "keyRule": "Output = Input \u00d7 Multiplier (18 \u00f7 3 = 6; 30 \u00f7 5 = 6. The multiplier is 6)."
+        },
+        "image": "https://kpigixuqpigjremowykx.supabase.co/storage/v1/object/public/curriculum-assets/grade-5/maths/ch13/images/multiplier_box_mystery.png",
+        "blocks": [
+          {
+            "type": "story_narrative",
+            "title": "Story Scene: Freddy Frog's Dialogue",
+            "content": {
+              "speaker": "Freddy Frog",
+              "dialogue": "Look at this magical box! When 3 goes in, 18 comes out. When 5 goes in, 30 comes out! What is the box multiplying by?"
+            }
+          },
+          {
+            "type": "concept",
+            "title": "Function Rule Identification",
+            "content": {
+              "heading": "Function Rule Identification",
+              "explanation": "Output = Input \u00d7 Multiplier (18 \u00f7 3 = 6; 30 \u00f7 5 = 6. The multiplier is 6).",
+              "keyRule": "Output = Input \u00d7 Multiplier (18 \u00f7 3 = 6; 30 \u00f7 5 = 6. The multiplier is 6)."
+            }
+          },
+          {
+            "type": "image_diagram",
+            "title": "The Mystery Multiplier Box: Input-Output Machines",
+            "content": {
+              "fileName": "multiplier_box_mystery.png",
+              "publicUrl": "https://kpigixuqpigjremowykx.supabase.co/storage/v1/object/public/curriculum-assets/grade-5/maths/ch13/images/multiplier_box_mystery.png",
+              "caption": "The Mystery Multiplier Box: Input-Output Machines"
+            }
+          }
+        ],
+        "questions": [
+          {
+            "id": "qst-sec-math-5-13-01-01",
+            "prompt": "If a number box multiplies every input by 7, what comes out when 8 is entered?",
+            "options": [
+              "49",
+              "54",
+              "56",
+              "64"
+            ],
+            "correctAnswer": "56",
+            "hint": "8 \u00d7 7 = 56."
+          }
+        ]
+      },
+      {
+        "id": "sec-math-5-13-02",
+        "lessonNumber": 2,
+        "title": "Animal Jumps on the Number Line",
+        "subtitle": "Generating sequences of multiples via skip counting",
+        "storyNarrative": {
+          "characterName": "Ruby Rabbit",
+          "dialogue": "I jump on 0, 3, 6, 9, 12, 15, 18... while Freddy lands on 0, 2, 4, 6, 8, 10, 12...!"
+        },
+        "concept": {
+          "heading": "Multiples as Skip Counts",
+          "keyRule": "The multiples of a number k are obtained by multiplying k by 1, 2, 3, 4, 5..."
+        },
+        "image": "https://kpigixuqpigjremowykx.supabase.co/storage/v1/object/public/curriculum-assets/grade-5/maths/ch13/images/animal_jumps_number_line.png",
+        "blocks": [
+          {
+            "type": "story_narrative",
+            "title": "Story Scene: Ruby Rabbit's Dialogue",
+            "content": {
+              "speaker": "Ruby Rabbit",
+              "dialogue": "I jump on 0, 3, 6, 9, 12, 15, 18... while Freddy lands on 0, 2, 4, 6, 8, 10, 12...!"
+            }
+          },
+          {
+            "type": "concept",
+            "title": "Multiples as Skip Counts",
+            "content": {
+              "heading": "Multiples as Skip Counts",
+              "explanation": "The multiples of a number k are obtained by multiplying k by 1, 2, 3, 4, 5...",
+              "keyRule": "The multiples of a number k are obtained by multiplying k by 1, 2, 3, 4, 5..."
+            }
+          },
+          {
+            "type": "image_diagram",
+            "title": "Animal Jumps on the Number Line",
+            "content": {
+              "fileName": "animal_jumps_number_line.png",
+              "publicUrl": "https://kpigixuqpigjremowykx.supabase.co/storage/v1/object/public/curriculum-assets/grade-5/maths/ch13/images/animal_jumps_number_line.png",
+              "caption": "Animal Jumps on the Number Line"
+            }
+          }
+        ],
+        "questions": [
+          {
+            "id": "qst-sec-math-5-13-02-01",
+            "prompt": "Which of these is a multiple of 6?",
+            "options": [
+              "16",
+              "24",
+              "32",
+              "38"
+            ],
+            "correctAnswer": "24",
+            "hint": "6 \u00d7 4 = 24."
+          }
+        ]
+      },
+      {
+        "id": "sec-math-5-13-03",
+        "lessonNumber": 3,
+        "title": "Common Multiples & The Meeting Spot",
+        "subtitle": "Finding the Least Common Multiple (LCM) of two or three numbers",
+        "storyNarrative": {
+          "characterName": "Koko Kangaroo",
+          "dialogue": "Freddy jumps 2 steps, Ruby jumps 3 steps, and I jump 5 steps! The very first spot where all three of us land together is step 30!"
+        },
+        "concept": {
+          "heading": "Least Common Multiple (LCM)",
+          "keyRule": "The LCM is the smallest non-zero common multiple shared by two or more numbers. LCM(2, 3, 5) = 30."
+        },
+        "image": "https://kpigixuqpigjremowykx.supabase.co/storage/v1/object/public/curriculum-assets/grade-5/maths/ch13/images/common_multiples_meeting_spot.png",
+        "blocks": [
+          {
+            "type": "story_narrative",
+            "title": "Story Scene: Koko Kangaroo's Dialogue",
+            "content": {
+              "speaker": "Koko Kangaroo",
+              "dialogue": "Freddy jumps 2 steps, Ruby jumps 3 steps, and I jump 5 steps! The very first spot where all three of us land together is step 30!"
+            }
+          },
+          {
+            "type": "concept",
+            "title": "Least Common Multiple (LCM)",
+            "content": {
+              "heading": "Least Common Multiple (LCM)",
+              "explanation": "The LCM is the smallest non-zero common multiple shared by two or more numbers. LCM(2, 3, 5) = 30.",
+              "keyRule": "The LCM is the smallest non-zero common multiple shared by two or more numbers. LCM(2, 3, 5) = 30."
+            }
+          },
+          {
+            "type": "image_diagram",
+            "title": "Common Multiples & The Meeting Spot",
+            "content": {
+              "fileName": "common_multiples_meeting_spot.png",
+              "publicUrl": "https://kpigixuqpigjremowykx.supabase.co/storage/v1/object/public/curriculum-assets/grade-5/maths/ch13/images/common_multiples_meeting_spot.png",
+              "caption": "Common Multiples & The Meeting Spot"
+            }
+          }
+        ],
+        "questions": [
+          {
+            "id": "qst-sec-math-5-13-03-01",
+            "prompt": "What is the smallest number that is a common multiple of both 4 and 6?",
+            "options": [
+              "8",
+              "12",
+              "18",
+              "24"
+            ],
+            "correctAnswer": "12",
+            "hint": "Multiples of 4: 4, 8, 12... Multiples of 6: 6, 12..."
+          }
+        ]
+      }
+    ]
+  }
+}

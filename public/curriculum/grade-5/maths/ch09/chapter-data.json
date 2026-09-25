@@ -1,0 +1,225 @@
+{
+  "book": {
+    "id": "grade-5-mathematics",
+    "title": "Mathematics (Class 5)",
+    "gradeNumber": 5,
+    "gradeLabel": "Grade 5",
+    "subject": "Mathematics",
+    "curriculum": "NCERT",
+    "nationalEducationPolicy": "NEP 2020 Aligned (Preparatory Stage)",
+    "publisher": "National Council of Educational Research and Training, New Delhi, India",
+    "edition": "Reprint 2026-27",
+    "unit": {
+      "id": "unit-math-5-01",
+      "book_id": "grade-5-mathematics",
+      "unit_number": 1,
+      "title": "Numbers and Operations Around Us",
+      "about_unit": "Explores how human travel, trade, measurement, and recording large quantities led to five-digit numbers (ten thousands), multi-digit multiplication, division arrays, and multiplicative reasoning.",
+      "banner_image_url": "https://kpigixuqpigjremowykx.supabase.co/storage/v1/object/public/curriculum-assets/grade-5/maths/ch01/images/sanju_mira_train_banner.png",
+      "facilitation_guide": [
+        {
+          "headline": "Real-World Contexts",
+          "text": "Connect numbers with train tickets, odometer readings, and village populations."
+        },
+        {
+          "headline": "Base-10 Manipulatives",
+          "text": "Emphasize grouping 10 of any unit into 1 of the next higher unit using visual tokens."
+        }
+      ]
+    }
+  },
+  "chapter": {
+    "id": "ch-math-5-09",
+    "number": 9,
+    "title": "Boxes and Arrays",
+    "tagline": "Unpacking division and multiplication facts, fact families, and equal sharing arrays",
+    "overview": "Observing an organized array of 35 coconuts at the roadside market, children discover that one multiplication fact (5 \u00d7 7 = 35) instantly reveals two division facts (35 \u00f7 7 = 5 and 35 \u00f7 5 = 7). They master the vocabulary of Dividend, Divisor, and Quotient.",
+    "sourcePdf": "public/Books/Maths/eemm109.pdf",
+    "totalPages": 17,
+    "characters": [
+      {
+        "name": "Coconut Vendor",
+        "role": "Market Guide",
+        "avatar": "\ud83e\udd65"
+      },
+      {
+        "name": "Aditi",
+        "role": "Math Apprentice",
+        "avatar": "\ud83d\udc67"
+      }
+    ],
+    "sections": [
+      {
+        "id": "sec-math-5-09-01",
+        "lessonNumber": 1,
+        "title": "The Coconut Array: Multiplication & Division Twins",
+        "subtitle": "Seeing division as the inverse operation of multiplication",
+        "storyNarrative": {
+          "characterName": "Coconut Vendor",
+          "dialogue": "I stacked 35 coconuts in 7 neat rows of 5! That tells us 5 \u00d7 7 = 35, and also that 35 coconuts shared among 7 customers gives each 5!"
+        },
+        "concept": {
+          "heading": "Inverse Operations Principle",
+          "keyRule": "If A \u00d7 B = C, then C \u00f7 A = B and C \u00f7 B = A."
+        },
+        "image": "https://kpigixuqpigjremowykx.supabase.co/storage/v1/object/public/curriculum-assets/grade-5/maths/ch09/images/coconut_array_division.png",
+        "blocks": [
+          {
+            "type": "story_narrative",
+            "title": "Story Scene: Coconut Vendor's Dialogue",
+            "content": {
+              "speaker": "Coconut Vendor",
+              "dialogue": "I stacked 35 coconuts in 7 neat rows of 5! That tells us 5 \u00d7 7 = 35, and also that 35 coconuts shared among 7 customers gives each 5!"
+            }
+          },
+          {
+            "type": "concept",
+            "title": "Inverse Operations Principle",
+            "content": {
+              "heading": "Inverse Operations Principle",
+              "explanation": "If A \u00d7 B = C, then C \u00f7 A = B and C \u00f7 B = A.",
+              "keyRule": "If A \u00d7 B = C, then C \u00f7 A = B and C \u00f7 B = A."
+            }
+          },
+          {
+            "type": "image_diagram",
+            "title": "The Coconut Array: Multiplication & Division Twins",
+            "content": {
+              "fileName": "coconut_array_division.png",
+              "publicUrl": "https://kpigixuqpigjremowykx.supabase.co/storage/v1/object/public/curriculum-assets/grade-5/maths/ch09/images/coconut_array_division.png",
+              "caption": "The Coconut Array: Multiplication & Division Twins"
+            }
+          }
+        ],
+        "questions": [
+          {
+            "id": "qst-sec-math-5-09-01-01",
+            "prompt": "Given that 8 \u00d7 9 = 72, what is 72 \u00f7 8?",
+            "options": [
+              "7",
+              "8",
+              "9",
+              "12"
+            ],
+            "correctAnswer": "9",
+            "hint": "The missing factor in the fact family is 9."
+          }
+        ]
+      },
+      {
+        "id": "sec-math-5-09-02",
+        "lessonNumber": 2,
+        "title": "Dividend, Divisor, and Quotient: Fact Family Houses",
+        "subtitle": "Standard terminology for division equations",
+        "storyNarrative": {
+          "characterName": "Aditi",
+          "dialogue": "In 35 \u00f7 5 = 7: 35 is the Dividend (the total to split), 5 is the Divisor (the group size), and 7 is the Quotient (the number of groups)!"
+        },
+        "concept": {
+          "heading": "Division Architecture",
+          "keyRule": "Dividend (N) \u00f7 Divisor (D) = Quotient (Q) [where N = D \u00d7 Q + Remainder]."
+        },
+        "image": "https://kpigixuqpigjremowykx.supabase.co/storage/v1/object/public/curriculum-assets/grade-5/maths/ch09/images/division_fact_families.png",
+        "blocks": [
+          {
+            "type": "story_narrative",
+            "title": "Story Scene: Aditi's Dialogue",
+            "content": {
+              "speaker": "Aditi",
+              "dialogue": "In 35 \u00f7 5 = 7: 35 is the Dividend (the total to split), 5 is the Divisor (the group size), and 7 is the Quotient (the number of groups)!"
+            }
+          },
+          {
+            "type": "concept",
+            "title": "Division Architecture",
+            "content": {
+              "heading": "Division Architecture",
+              "explanation": "Dividend (N) \u00f7 Divisor (D) = Quotient (Q) [where N = D \u00d7 Q + Remainder].",
+              "keyRule": "Dividend (N) \u00f7 Divisor (D) = Quotient (Q) [where N = D \u00d7 Q + Remainder]."
+            }
+          },
+          {
+            "type": "image_diagram",
+            "title": "Dividend, Divisor, and Quotient: Fact Family Houses",
+            "content": {
+              "fileName": "division_fact_families.png",
+              "publicUrl": "https://kpigixuqpigjremowykx.supabase.co/storage/v1/object/public/curriculum-assets/grade-5/maths/ch09/images/division_fact_families.png",
+              "caption": "Dividend, Divisor, and Quotient: Fact Family Houses"
+            }
+          }
+        ],
+        "questions": [
+          {
+            "id": "qst-sec-math-5-09-02-01",
+            "prompt": "In the division problem 48 \u00f7 6 = 8, what is the Dividend?",
+            "options": [
+              "6",
+              "8",
+              "48",
+              "14"
+            ],
+            "correctAnswer": "48",
+            "hint": "The dividend is the total number being divided."
+          }
+        ]
+      },
+      {
+        "id": "sec-math-5-09-03",
+        "lessonNumber": 3,
+        "title": "Equal Grouping, Packaging & Word Problems",
+        "subtitle": "Applying division with remainders to packaging scenarios",
+        "storyNarrative": {
+          "characterName": "Coconut Vendor",
+          "dialogue": "If we have 50 sweet boxes and each carton holds 6 boxes, how many full cartons can we pack, and how many are left over?"
+        },
+        "concept": {
+          "heading": "Division with Remainder",
+          "keyRule": "50 \u00f7 6 = 8 with a remainder of 2 (8 full cartons, 2 leftover boxes)."
+        },
+        "image": "https://kpigixuqpigjremowykx.supabase.co/storage/v1/object/public/curriculum-assets/grade-5/maths/ch09/images/word_problem_box_sharing.png",
+        "blocks": [
+          {
+            "type": "story_narrative",
+            "title": "Story Scene: Coconut Vendor's Dialogue",
+            "content": {
+              "speaker": "Coconut Vendor",
+              "dialogue": "If we have 50 sweet boxes and each carton holds 6 boxes, how many full cartons can we pack, and how many are left over?"
+            }
+          },
+          {
+            "type": "concept",
+            "title": "Division with Remainder",
+            "content": {
+              "heading": "Division with Remainder",
+              "explanation": "50 \u00f7 6 = 8 with a remainder of 2 (8 full cartons, 2 leftover boxes).",
+              "keyRule": "50 \u00f7 6 = 8 with a remainder of 2 (8 full cartons, 2 leftover boxes)."
+            }
+          },
+          {
+            "type": "image_diagram",
+            "title": "Equal Grouping, Packaging & Word Problems",
+            "content": {
+              "fileName": "word_problem_box_sharing.png",
+              "publicUrl": "https://kpigixuqpigjremowykx.supabase.co/storage/v1/object/public/curriculum-assets/grade-5/maths/ch09/images/word_problem_box_sharing.png",
+              "caption": "Equal Grouping, Packaging & Word Problems"
+            }
+          }
+        ],
+        "questions": [
+          {
+            "id": "qst-sec-math-5-09-03-01",
+            "prompt": "When 38 pencils are shared equally among 5 children, how many pencils does each child get and how many are left?",
+            "options": [
+              "7 pencils each, 3 left",
+              "6 pencils each, 8 left",
+              "8 pencils each, 2 left",
+              "7 pencils each, 1 left"
+            ],
+            "correctAnswer": "7 pencils each, 3 left",
+            "hint": "5 \u00d7 7 = 35; 38 - 35 = 3."
+          }
+        ]
+      }
+    ]
+  }
+}

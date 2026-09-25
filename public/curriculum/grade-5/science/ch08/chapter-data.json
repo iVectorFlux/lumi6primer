@@ -1,0 +1,230 @@
+{
+  "book": {
+    "id": "grade-5-science-evs",
+    "title": "Our Wondrous World (Class 5 EVS)",
+    "gradeNumber": 5,
+    "gradeLabel": "Grade 5",
+    "subject": "Science EVS",
+    "curriculum": "NCERT",
+    "nationalEducationPolicy": "NEP 2020 Aligned (Preparatory Stage)",
+    "publisher": "National Council of Educational Research and Training, New Delhi, India",
+    "edition": "Reprint 2026-27",
+    "unit": {
+      "id": "unit-sci-5-04",
+      "book_id": "grade-5-science-evs",
+      "unit_number": 4,
+      "title": "Things Around Us & Traditional Crafts",
+      "about_unit": "Engages students in physical science investigations (buoyancy, density, evaporation) and traditional technologies (weaving, charkha, natural dyes).",
+      "banner_image_url": "https://kpigixuqpigjremowykx.supabase.co/storage/v1/object/public/curriculum-assets/grade-5/science/ch07/images/float_or_sink_water_experiment.jpg",
+      "facilitation_guide": [
+        {
+          "headline": "Density Experiments",
+          "text": "Use fresh vs. salt water to float lemons and eggs to observe buoyancy."
+        },
+        {
+          "headline": "Fibre to Fabric",
+          "text": "Unravel raw cotton pods and study how spinning creates continuous yarn."
+        }
+      ]
+    }
+  },
+  "chapter": {
+    "id": "ch-sci-5-08",
+    "number": 8,
+    "title": "Patterns with Threads",
+    "tagline": "Discovering nature's weavers, spinning cotton on charkhas, and weaving Pochampally textiles",
+    "overview": "Spiders, weaver birds, and silkworms were weaving long before humans ever made clothes. Students examine plant fibres (cotton, jute) and animal fibres (silk, wool), trace the path from fluffy cotton pod to spun yarn on the charkha, and celebrate the heritage of Pochampally handlooms.",
+    "sourcePdf": "public/Books/Science EVS/eeev108.pdf",
+    "totalPages": 14,
+    "characters": [
+      {
+        "name": "Weaver Uncle",
+        "role": "Master Loom Artisan",
+        "avatar": "\ud83e\uddd3"
+      },
+      {
+        "name": "Prashant",
+        "role": "Craft Apprentice",
+        "avatar": "\ud83d\udc66"
+      },
+      {
+        "name": "Spider",
+        "role": "Nature's Weaver",
+        "avatar": "\ud83d\udd77\ufe0f"
+      }
+    ],
+    "sections": [
+      {
+        "id": "sec-sci-5-08-01",
+        "lessonNumber": 1,
+        "title": "Nature's Master Weavers: Spiders and Birds",
+        "subtitle": "Biological engineering in webs and woven hanging nests",
+        "storyNarrative": {
+          "characterName": "Spider",
+          "dialogue": "I produce liquid protein silk that hardens into threads stronger than steel! I measure distances with my legs to spin a geometric orb web!"
+        },
+        "concept": {
+          "heading": "Biomimetic Weaving Principles",
+          "keyRule": "Nature evolved tensile fibres and interlocking patterns millions of years before human loom technologies."
+        },
+        "image": "https://kpigixuqpigjremowykx.supabase.co/storage/v1/object/public/curriculum-assets/grade-5/science/ch08/images/spider_web_nature_weaver.jpg",
+        "blocks": [
+          {
+            "type": "story_narrative",
+            "title": "Story Scene: Spider's Dialogue",
+            "content": {
+              "speaker": "Spider",
+              "dialogue": "I produce liquid protein silk that hardens into threads stronger than steel! I measure distances with my legs to spin a geometric orb web!"
+            }
+          },
+          {
+            "type": "concept",
+            "title": "Biomimetic Weaving Principles",
+            "content": {
+              "heading": "Biomimetic Weaving Principles",
+              "explanation": "Nature evolved tensile fibres and interlocking patterns millions of years before human loom technologies.",
+              "keyRule": "Nature evolved tensile fibres and interlocking patterns millions of years before human loom technologies."
+            }
+          },
+          {
+            "type": "image_diagram",
+            "title": "Nature's Master Weavers: Spiders and Birds",
+            "content": {
+              "fileName": "spider_web_nature_weaver.jpg",
+              "publicUrl": "https://kpigixuqpigjremowykx.supabase.co/storage/v1/object/public/curriculum-assets/grade-5/science/ch08/images/spider_web_nature_weaver.jpg",
+              "caption": "Nature's Master Weavers: Spiders and Birds"
+            }
+          }
+        ],
+        "questions": [
+          {
+            "id": "qst-sec-sci-5-08-01-01",
+            "prompt": "Which creature spins intricate geometrical webs using natural silk protein?",
+            "options": [
+              "Earthworm",
+              "Spider",
+              "Honeybee",
+              "Grasshopper"
+            ],
+            "correctAnswer": "Spider",
+            "hint": "Spiders spin webs to capture insects."
+          }
+        ]
+      },
+      {
+        "id": "sec-sci-5-08-02",
+        "lessonNumber": 2,
+        "title": "From Cotton Pod to Spun Yarn",
+        "subtitle": "Ginning, carding, and spinning thread on the Charkha",
+        "storyNarrative": {
+          "characterName": "Prashant",
+          "dialogue": "First we pick fluffy white cotton pods; remove the black seeds (ginning); comb the fibres straight; and twist them on the spinning wheel (charkha) into strong yarn!"
+        },
+        "concept": {
+          "heading": "Textile Fibre Processing",
+          "keyRule": "Fibre \u2794 Ginning \u2794 Carding \u2794 Spinning into Yarn \u2794 Weaving into Fabric on Looms."
+        },
+        "image": "https://kpigixuqpigjremowykx.supabase.co/storage/v1/object/public/curriculum-assets/grade-5/science/ch08/images/cotton_pod_to_thread_process.jpg",
+        "blocks": [
+          {
+            "type": "story_narrative",
+            "title": "Story Scene: Prashant's Dialogue",
+            "content": {
+              "speaker": "Prashant",
+              "dialogue": "First we pick fluffy white cotton pods; remove the black seeds (ginning); comb the fibres straight; and twist them on the spinning wheel (charkha) into strong yarn!"
+            }
+          },
+          {
+            "type": "concept",
+            "title": "Textile Fibre Processing",
+            "content": {
+              "heading": "Textile Fibre Processing",
+              "explanation": "Fibre \u2794 Ginning \u2794 Carding \u2794 Spinning into Yarn \u2794 Weaving into Fabric on Looms.",
+              "keyRule": "Fibre \u2794 Ginning \u2794 Carding \u2794 Spinning into Yarn \u2794 Weaving into Fabric on Looms."
+            }
+          },
+          {
+            "type": "image_diagram",
+            "title": "From Cotton Pod to Spun Yarn",
+            "content": {
+              "fileName": "cotton_pod_to_thread_process.jpg",
+              "publicUrl": "https://kpigixuqpigjremowykx.supabase.co/storage/v1/object/public/curriculum-assets/grade-5/science/ch08/images/cotton_pod_to_thread_process.jpg",
+              "caption": "From Cotton Pod to Spun Yarn"
+            }
+          }
+        ],
+        "questions": [
+          {
+            "id": "qst-sec-sci-5-08-02-01",
+            "prompt": "What traditional Indian tool is used to twist loose cotton fibres into yarn?",
+            "options": [
+              "Potter's wheel",
+              "Charkha (spinning wheel)",
+              "Plough",
+              "Scythe"
+            ],
+            "correctAnswer": "Charkha (spinning wheel)",
+            "hint": "Mahatma Gandhi championed the charkha for Khadi."
+          }
+        ]
+      },
+      {
+        "id": "sec-sci-5-08-03",
+        "lessonNumber": 3,
+        "title": "The Handloom & Pochampally Weaves",
+        "subtitle": "Warp, weft, ikat tie-dyeing, and natural plant pigments",
+        "storyNarrative": {
+          "characterName": "Weaver Uncle",
+          "dialogue": "In our Pochampally village, we tie and dye the silk threads in intricate geometric patterns before placing them on the pit loom. Clack-clack goes the shuttle!"
+        },
+        "concept": {
+          "heading": "Interlacing Warp and Weft",
+          "keyRule": "Warp (lengthwise threads) and Weft (crosswise threads) interlace on the loom to produce durable, patterned cloth."
+        },
+        "image": "https://kpigixuqpigjremowykx.supabase.co/storage/v1/object/public/curriculum-assets/grade-5/science/ch08/images/handloom_weaving_pochampally.jpg",
+        "blocks": [
+          {
+            "type": "story_narrative",
+            "title": "Story Scene: Weaver Uncle's Dialogue",
+            "content": {
+              "speaker": "Weaver Uncle",
+              "dialogue": "In our Pochampally village, we tie and dye the silk threads in intricate geometric patterns before placing them on the pit loom. Clack-clack goes the shuttle!"
+            }
+          },
+          {
+            "type": "concept",
+            "title": "Interlacing Warp and Weft",
+            "content": {
+              "heading": "Interlacing Warp and Weft",
+              "explanation": "Warp (lengthwise threads) and Weft (crosswise threads) interlace on the loom to produce durable, patterned cloth.",
+              "keyRule": "Warp (lengthwise threads) and Weft (crosswise threads) interlace on the loom to produce durable, patterned cloth."
+            }
+          },
+          {
+            "type": "image_diagram",
+            "title": "The Handloom & Pochampally Weaves",
+            "content": {
+              "fileName": "handloom_weaving_pochampally.jpg",
+              "publicUrl": "https://kpigixuqpigjremowykx.supabase.co/storage/v1/object/public/curriculum-assets/grade-5/science/ch08/images/handloom_weaving_pochampally.jpg",
+              "caption": "The Handloom & Pochampally Weaves"
+            }
+          }
+        ],
+        "questions": [
+          {
+            "id": "qst-sec-sci-5-08-03-01",
+            "prompt": "What are the two sets of interlocking threads on a loom called?",
+            "options": [
+              "Left and Right",
+              "Warp and Weft",
+              "Top and Bottom",
+              "Spin and Knot"
+            ],
+            "correctAnswer": "Warp and Weft",
+            "hint": "Lengthwise is warp, crosswise is weft."
+          }
+        ]
+      }
+    ]
+  }
+}

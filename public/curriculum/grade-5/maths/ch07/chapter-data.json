@@ -1,0 +1,225 @@
+{
+  "book": {
+    "id": "grade-5-mathematics",
+    "title": "Mathematics (Class 5)",
+    "gradeNumber": 5,
+    "gradeLabel": "Grade 5",
+    "subject": "Mathematics",
+    "curriculum": "NCERT",
+    "nationalEducationPolicy": "NEP 2020 Aligned (Preparatory Stage)",
+    "publisher": "National Council of Educational Research and Training, New Delhi, India",
+    "edition": "Reprint 2026-27",
+    "unit": {
+      "id": "unit-math-5-03",
+      "book_id": "grade-5-mathematics",
+      "unit_number": 3,
+      "title": "Shapes, Patterns and Space",
+      "about_unit": "Explores angles, turns, right angles, acute and obtuse angles, symmetrical patterns, tessellations, and directional navigation.",
+      "banner_image_url": "https://kpigixuqpigjremowykx.supabase.co/storage/v1/object/public/curriculum-assets/grade-5/maths/ch03/images/clock_hands_angles.png",
+      "facilitation_guide": [
+        {
+          "headline": "Embodied Geometry",
+          "text": "Use the statue game and yoga postures to feel angles as amount of turning."
+        },
+        {
+          "headline": "Angle Tester",
+          "text": "Construct cardboard angle testers to check right angles in the classroom environment."
+        }
+      ]
+    }
+  },
+  "chapter": {
+    "id": "ch-math-5-07",
+    "number": 7,
+    "title": "Weaving Mats",
+    "tagline": "Exploring tessellations, symmetry, and repeating geometric motifs in traditional woven crafts",
+    "overview": "Inspired by bamboo weavers and traditional floor mats, students investigate how geometric shapes tile together without leaving gaps or overlaps. They study translational, rotational, and reflective symmetry in textile borders and floor patterns.",
+    "sourcePdf": "public/Books/Maths/eemm107.pdf",
+    "totalPages": 12,
+    "characters": [
+      {
+        "name": "Traditional Weaver",
+        "role": "Artisan Guide",
+        "avatar": "\ud83e\uddd3"
+      },
+      {
+        "name": "Tara",
+        "role": "Young Designer",
+        "avatar": "\ud83d\udc67"
+      }
+    ],
+    "sections": [
+      {
+        "id": "sec-math-5-07-01",
+        "lessonNumber": 1,
+        "title": "Traditional Woven Basket & Mat Patterns",
+        "subtitle": "Discovering mathematics in indigenous craftsmanship",
+        "storyNarrative": {
+          "characterName": "Traditional Weaver",
+          "dialogue": "Look closely at this bamboo mat: strips go over two and under two in a steady rhythm, creating diagonal steps and diamonds!"
+        },
+        "concept": {
+          "heading": "Periodic Rhythms in Weaving",
+          "keyRule": "Systematic interlacing of warp and weft threads generates predictable mathematical patterns and symmetries."
+        },
+        "image": "https://kpigixuqpigjremowykx.supabase.co/storage/v1/object/public/curriculum-assets/grade-5/maths/ch07/images/woven_mat_patterns_banner.png",
+        "blocks": [
+          {
+            "type": "story_narrative",
+            "title": "Story Scene: Traditional Weaver's Dialogue",
+            "content": {
+              "speaker": "Traditional Weaver",
+              "dialogue": "Look closely at this bamboo mat: strips go over two and under two in a steady rhythm, creating diagonal steps and diamonds!"
+            }
+          },
+          {
+            "type": "concept",
+            "title": "Periodic Rhythms in Weaving",
+            "content": {
+              "heading": "Periodic Rhythms in Weaving",
+              "explanation": "Systematic interlacing of warp and weft threads generates predictable mathematical patterns and symmetries.",
+              "keyRule": "Systematic interlacing of warp and weft threads generates predictable mathematical patterns and symmetries."
+            }
+          },
+          {
+            "type": "image_diagram",
+            "title": "Traditional Woven Basket & Mat Patterns",
+            "content": {
+              "fileName": "woven_mat_patterns_banner.png",
+              "publicUrl": "https://kpigixuqpigjremowykx.supabase.co/storage/v1/object/public/curriculum-assets/grade-5/maths/ch07/images/woven_mat_patterns_banner.png",
+              "caption": "Traditional Woven Basket & Mat Patterns"
+            }
+          }
+        ],
+        "questions": [
+          {
+            "id": "qst-sec-math-5-07-01-01",
+            "prompt": "What creates a pattern in a woven mat?",
+            "options": [
+              "Random strips",
+              "Regular repeating interlacing rules",
+              "Only single color threads",
+              "No symmetry"
+            ],
+            "correctAnswer": "Regular repeating interlacing rules",
+            "hint": "Mathematics in crafts relies on repeatable rules."
+          }
+        ]
+      },
+      {
+        "id": "sec-math-5-07-02",
+        "lessonNumber": 2,
+        "title": "Floor Tessellations: Tiling Without Gaps",
+        "subtitle": "Which polygons fit together perfectly to tile a plane?",
+        "storyNarrative": {
+          "characterName": "Tara",
+          "dialogue": "Hexagons and squares tile together with zero gaps, but regular pentagons leave awkward gaps! Why do some shapes tile while others cannot?"
+        },
+        "concept": {
+          "heading": "Tessellation Angle Rule",
+          "keyRule": "For regular polygons to tessellate around a vertex, the sum of their interior angles meeting at that vertex must equal exactly 360\u00b0."
+        },
+        "image": "https://kpigixuqpigjremowykx.supabase.co/storage/v1/object/public/curriculum-assets/grade-5/maths/ch07/images/tessellation_tile_patterns.png",
+        "blocks": [
+          {
+            "type": "story_narrative",
+            "title": "Story Scene: Tara's Dialogue",
+            "content": {
+              "speaker": "Tara",
+              "dialogue": "Hexagons and squares tile together with zero gaps, but regular pentagons leave awkward gaps! Why do some shapes tile while others cannot?"
+            }
+          },
+          {
+            "type": "concept",
+            "title": "Tessellation Angle Rule",
+            "content": {
+              "heading": "Tessellation Angle Rule",
+              "explanation": "For regular polygons to tessellate around a vertex, the sum of their interior angles meeting at that vertex must equal exactly 360\u00b0.",
+              "keyRule": "For regular polygons to tessellate around a vertex, the sum of their interior angles meeting at that vertex must equal exactly 360\u00b0."
+            }
+          },
+          {
+            "type": "image_diagram",
+            "title": "Floor Tessellations: Tiling Without Gaps",
+            "content": {
+              "fileName": "tessellation_tile_patterns.png",
+              "publicUrl": "https://kpigixuqpigjremowykx.supabase.co/storage/v1/object/public/curriculum-assets/grade-5/maths/ch07/images/tessellation_tile_patterns.png",
+              "caption": "Floor Tessellations: Tiling Without Gaps"
+            }
+          }
+        ],
+        "questions": [
+          {
+            "id": "qst-sec-math-5-07-02-01",
+            "prompt": "Which shape can tile a floor completely without any gaps or overlaps?",
+            "options": [
+              "Regular Hexagon",
+              "Regular Pentagon",
+              "Regular Octagon alone",
+              "Circle"
+            ],
+            "correctAnswer": "Regular Hexagon",
+            "hint": "Three 120\u00b0 angles in hexagons sum to exactly 360\u00b0."
+          }
+        ]
+      },
+      {
+        "id": "sec-math-5-07-03",
+        "lessonNumber": 3,
+        "title": "Symmetry Grids & Repeating Motifs",
+        "subtitle": "Designing symmetrical borders on square grids",
+        "storyNarrative": {
+          "characterName": "Tara",
+          "dialogue": "If I draw a motif on the top left of my grid and reflect it across both vertical and horizontal center lines, a gorgeous royal mat emerges!"
+        },
+        "concept": {
+          "heading": "Two-Fold Reflectional Symmetry",
+          "keyRule": "Reflecting a motif across orthogonal axes produces 4-fold symmetric designs found in traditional rugs and rangolis."
+        },
+        "image": "https://kpigixuqpigjremowykx.supabase.co/storage/v1/object/public/curriculum-assets/grade-5/maths/ch07/images/symmetry_grid_mat_design.png",
+        "blocks": [
+          {
+            "type": "story_narrative",
+            "title": "Story Scene: Tara's Dialogue",
+            "content": {
+              "speaker": "Tara",
+              "dialogue": "If I draw a motif on the top left of my grid and reflect it across both vertical and horizontal center lines, a gorgeous royal mat emerges!"
+            }
+          },
+          {
+            "type": "concept",
+            "title": "Two-Fold Reflectional Symmetry",
+            "content": {
+              "heading": "Two-Fold Reflectional Symmetry",
+              "explanation": "Reflecting a motif across orthogonal axes produces 4-fold symmetric designs found in traditional rugs and rangolis.",
+              "keyRule": "Reflecting a motif across orthogonal axes produces 4-fold symmetric designs found in traditional rugs and rangolis."
+            }
+          },
+          {
+            "type": "image_diagram",
+            "title": "Symmetry Grids & Repeating Motifs",
+            "content": {
+              "fileName": "symmetry_grid_mat_design.png",
+              "publicUrl": "https://kpigixuqpigjremowykx.supabase.co/storage/v1/object/public/curriculum-assets/grade-5/maths/ch07/images/symmetry_grid_mat_design.png",
+              "caption": "Symmetry Grids & Repeating Motifs"
+            }
+          }
+        ],
+        "questions": [
+          {
+            "id": "qst-sec-math-5-07-03-01",
+            "prompt": "How many lines of symmetry does a square have?",
+            "options": [
+              "1",
+              "2",
+              "3",
+              "4"
+            ],
+            "correctAnswer": "4",
+            "hint": "2 straight through opposites edges, and 2 diagonals."
+          }
+        ]
+      }
+    ]
+  }
+}

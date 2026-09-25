@@ -1,0 +1,230 @@
+{
+  "book": {
+    "id": "grade-5-science-evs",
+    "title": "Our Wondrous World (Class 5 EVS)",
+    "gradeNumber": 5,
+    "gradeLabel": "Grade 5",
+    "subject": "Science EVS",
+    "curriculum": "NCERT",
+    "nationalEducationPolicy": "NEP 2020 Aligned (Preparatory Stage)",
+    "publisher": "National Council of Educational Research and Training, New Delhi, India",
+    "edition": "Reprint 2026-27",
+    "unit": {
+      "id": "unit-sci-5-03",
+      "book_id": "grade-5-science-evs",
+      "unit_number": 3,
+      "title": "Incredible India & Travel",
+      "about_unit": "Celebrates cultural, linguistic, and geographic diversity across India\u2014from the coastal tip of Kanyakumari to the high-altitude cold deserts of Ladakh.",
+      "banner_image_url": "https://kpigixuqpigjremowykx.supabase.co/storage/v1/object/public/curriculum-assets/grade-5/science/ch05/images/incredible_india_cultural_map.jpg",
+      "facilitation_guide": [
+        {
+          "headline": "Cultural Appreciation",
+          "text": "Explore harvest festivals and indigenous clothing styles across states."
+        },
+        {
+          "headline": "Extreme Shelters",
+          "text": "Examine how homes (Rebo tents, houseboats, mud dwellings) adapt to geography."
+        }
+      ]
+    }
+  },
+  "chapter": {
+    "id": "ch-sci-5-06",
+    "number": 6,
+    "title": "Some Unique Places",
+    "tagline": "Journeying to Kanyakumari's three-ocean confluence and Ladakh's high-altitude nomadic plateaus",
+    "overview": "Shanti plans an unforgettable journey with Appa and Amma starting at Kanyakumari\u2014the southernmost mainland tip where the Arabian Sea, Indian Ocean, and Bay of Bengal converge\u2014and traveling north to the high-altitude cold desert of Ladakh to meet the Changpa nomads.",
+    "sourcePdf": "public/Books/Science EVS/eeev106.pdf",
+    "totalPages": 18,
+    "characters": [
+      {
+        "name": "Shanti",
+        "role": "Travel Dreamer",
+        "avatar": "\ud83d\udc67"
+      },
+      {
+        "name": "Appa (Father)",
+        "role": "Expedition Leader",
+        "avatar": "\ud83d\udc68"
+      },
+      {
+        "name": "Amma (Mother)",
+        "role": "Cultural Guide",
+        "avatar": "\ud83d\udc69"
+      }
+    ],
+    "sections": [
+      {
+        "id": "sec-sci-5-06-01",
+        "lessonNumber": 1,
+        "title": "Shanti's Travel Dream: Starting from the Southern Tip",
+        "subtitle": "Planning a journey across India's extreme geographic markers",
+        "storyNarrative": {
+          "characterName": "Shanti",
+          "dialogue": "Appa, Amma, can we see our country's extremes this summer? From the sea waves at the very bottom of the map to the snowy mountain passes at the top!"
+        },
+        "concept": {
+          "heading": "Geographic Span of the Indian Subcontinent",
+          "keyRule": "India stretches ~3,214 km from Jammu & Kashmir/Ladakh in the north to Kanyakumari in the south."
+        },
+        "image": "https://kpigixuqpigjremowykx.supabase.co/storage/v1/object/public/curriculum-assets/grade-5/science/ch06/images/shanti_vacation_planning.jpg",
+        "blocks": [
+          {
+            "type": "story_narrative",
+            "title": "Story Scene: Shanti's Dialogue",
+            "content": {
+              "speaker": "Shanti",
+              "dialogue": "Appa, Amma, can we see our country's extremes this summer? From the sea waves at the very bottom of the map to the snowy mountain passes at the top!"
+            }
+          },
+          {
+            "type": "concept",
+            "title": "Geographic Span of the Indian Subcontinent",
+            "content": {
+              "heading": "Geographic Span of the Indian Subcontinent",
+              "explanation": "India stretches ~3,214 km from Jammu & Kashmir/Ladakh in the north to Kanyakumari in the south.",
+              "keyRule": "India stretches ~3,214 km from Jammu & Kashmir/Ladakh in the north to Kanyakumari in the south."
+            }
+          },
+          {
+            "type": "image_diagram",
+            "title": "Shanti's Travel Dream: Starting from the Southern Tip",
+            "content": {
+              "fileName": "shanti_vacation_planning.jpg",
+              "publicUrl": "https://kpigixuqpigjremowykx.supabase.co/storage/v1/object/public/curriculum-assets/grade-5/science/ch06/images/shanti_vacation_planning.jpg",
+              "caption": "Shanti's Travel Dream: Starting from the Southern Tip"
+            }
+          }
+        ],
+        "questions": [
+          {
+            "id": "qst-sec-sci-5-06-01-01",
+            "prompt": "What town marks the southernmost mainland tip of India?",
+            "options": [
+              "Kanyakumari",
+              "Rameshwaram",
+              "Goa",
+              "Kochi"
+            ],
+            "correctAnswer": "Kanyakumari",
+            "hint": "Located at the southern tip of Tamil Nadu."
+          }
+        ]
+      },
+      {
+        "id": "sec-sci-5-06-02",
+        "lessonNumber": 2,
+        "title": "Kanyakumari: Triveni Sangam of Three Waters",
+        "subtitle": "Where the Arabian Sea, Bay of Bengal, and Indian Ocean meet",
+        "storyNarrative": {
+          "characterName": "Amma (Mother)",
+          "dialogue": "Stand on the beach, Shanti! On the left is the Bay of Bengal, on the right the Arabian Sea, and straight ahead the endless Indian Ocean!"
+        },
+        "concept": {
+          "heading": "Oceanic Confluence (Sangam)",
+          "keyRule": "Kanyakumari is unique for its panoramic sunset and moonrise over the confluence of three distinct oceanic bodies."
+        },
+        "image": "https://kpigixuqpigjremowykx.supabase.co/storage/v1/object/public/curriculum-assets/grade-5/science/ch06/images/kanyakumari_triveni_sangam.jpg",
+        "blocks": [
+          {
+            "type": "story_narrative",
+            "title": "Story Scene: Amma (Mother)'s Dialogue",
+            "content": {
+              "speaker": "Amma (Mother)",
+              "dialogue": "Stand on the beach, Shanti! On the left is the Bay of Bengal, on the right the Arabian Sea, and straight ahead the endless Indian Ocean!"
+            }
+          },
+          {
+            "type": "concept",
+            "title": "Oceanic Confluence (Sangam)",
+            "content": {
+              "heading": "Oceanic Confluence (Sangam)",
+              "explanation": "Kanyakumari is unique for its panoramic sunset and moonrise over the confluence of three distinct oceanic bodies.",
+              "keyRule": "Kanyakumari is unique for its panoramic sunset and moonrise over the confluence of three distinct oceanic bodies."
+            }
+          },
+          {
+            "type": "image_diagram",
+            "title": "Kanyakumari: Triveni Sangam of Three Waters",
+            "content": {
+              "fileName": "kanyakumari_triveni_sangam.jpg",
+              "publicUrl": "https://kpigixuqpigjremowykx.supabase.co/storage/v1/object/public/curriculum-assets/grade-5/science/ch06/images/kanyakumari_triveni_sangam.jpg",
+              "caption": "Kanyakumari: Triveni Sangam of Three Waters"
+            }
+          }
+        ],
+        "questions": [
+          {
+            "id": "qst-sec-sci-5-06-02-01",
+            "prompt": "Which three bodies of water meet at Kanyakumari?",
+            "options": [
+              "Arabian Sea, Bay of Bengal, Indian Ocean",
+              "Pacific Ocean, Atlantic Ocean, Arctic Ocean",
+              "Ganga, Yamuna, Saraswati",
+              "Red Sea, Black Sea, Caspian Sea"
+            ],
+            "correctAnswer": "Arabian Sea, Bay of Bengal, Indian Ocean",
+            "hint": "The three major seas surrounding the Indian peninsula."
+          }
+        ]
+      },
+      {
+        "id": "sec-sci-5-06-03",
+        "lessonNumber": 3,
+        "title": "Ladakh: The High-Altitude Cold Desert & Nomads",
+        "subtitle": "Life at 4,000+ metres with Changpa nomads and Pashmina goats",
+        "storyNarrative": {
+          "characterName": "Appa (Father)",
+          "dialogue": "Here in Changthang, Ladakh, the air is thin, rain is scarce, and the Changpa tribe lives in yak-wool tents called 'Rebo', tending precious Pashmina goats!"
+        },
+        "concept": {
+          "heading": "Cold Desert Adaptations",
+          "keyRule": "High-altitude rain shadows receive negligible rainfall. Nomadic pastoralism with specialized cold-adapted livestock (yaks, pashmina goats) enables sustainable living."
+        },
+        "image": "https://kpigixuqpigjremowykx.supabase.co/storage/v1/object/public/curriculum-assets/grade-5/science/ch06/images/changpa_nomad_rebo_tents.jpg",
+        "blocks": [
+          {
+            "type": "story_narrative",
+            "title": "Story Scene: Appa (Father)'s Dialogue",
+            "content": {
+              "speaker": "Appa (Father)",
+              "dialogue": "Here in Changthang, Ladakh, the air is thin, rain is scarce, and the Changpa tribe lives in yak-wool tents called 'Rebo', tending precious Pashmina goats!"
+            }
+          },
+          {
+            "type": "concept",
+            "title": "Cold Desert Adaptations",
+            "content": {
+              "heading": "Cold Desert Adaptations",
+              "explanation": "High-altitude rain shadows receive negligible rainfall. Nomadic pastoralism with specialized cold-adapted livestock (yaks, pashmina goats) enables sustainable living.",
+              "keyRule": "High-altitude rain shadows receive negligible rainfall. Nomadic pastoralism with specialized cold-adapted livestock (yaks, pashmina goats) enables sustainable living."
+            }
+          },
+          {
+            "type": "image_diagram",
+            "title": "Ladakh: The High-Altitude Cold Desert & Nomads",
+            "content": {
+              "fileName": "changpa_nomad_rebo_tents.jpg",
+              "publicUrl": "https://kpigixuqpigjremowykx.supabase.co/storage/v1/object/public/curriculum-assets/grade-5/science/ch06/images/changpa_nomad_rebo_tents.jpg",
+              "caption": "Ladakh: The High-Altitude Cold Desert & Nomads"
+            }
+          }
+        ],
+        "questions": [
+          {
+            "id": "qst-sec-sci-5-06-03-01",
+            "prompt": "What special animal do the Changpa nomads rear to produce world-famous warm wool?",
+            "options": [
+              "Pashmina goats",
+              "Camels",
+              "Elephants",
+              "Silk moths"
+            ],
+            "correctAnswer": "Pashmina goats",
+            "hint": "Their ultra-fine undercoat produces warm Pashmina shawls."
+          }
+        ]
+      }
+    ]
+  }
+}

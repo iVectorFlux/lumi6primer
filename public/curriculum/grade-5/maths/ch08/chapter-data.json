@@ -1,0 +1,225 @@
+{
+  "book": {
+    "id": "grade-5-mathematics",
+    "title": "Mathematics (Class 5)",
+    "gradeNumber": 5,
+    "gradeLabel": "Grade 5",
+    "subject": "Mathematics",
+    "curriculum": "NCERT",
+    "nationalEducationPolicy": "NEP 2020 Aligned (Preparatory Stage)",
+    "publisher": "National Council of Educational Research and Training, New Delhi, India",
+    "edition": "Reprint 2026-27",
+    "unit": {
+      "id": "unit-math-5-04",
+      "book_id": "grade-5-mathematics",
+      "unit_number": 4,
+      "title": "Measurement, Scales and Time",
+      "about_unit": "Covers distance measurement (mm to km), weight (grams to kg), capacity (ml to L), perimeter, grid area, and timing with stopwatches.",
+      "banner_image_url": "https://kpigixuqpigjremowykx.supabase.co/storage/v1/object/public/curriculum-assets/grade-5/maths/ch05/images/measuring_units_comparison.png",
+      "facilitation_guide": [
+        {
+          "headline": "Estimation First",
+          "text": "Always prompt learners to estimate before measuring with rulers or balances."
+        },
+        {
+          "headline": "Spatial Grid Area",
+          "text": "Count whole and half square centimetres before introducing formulas."
+        }
+      ]
+    }
+  },
+  "chapter": {
+    "id": "ch-math-5-08",
+    "number": 8,
+    "title": "Check! Check! (Weight and Capacity)",
+    "tagline": "Verifying household weight estimates, balancing scales, and measuring liquid capacity",
+    "overview": "Anu inspects the recorded weights of furniture and groceries in her house, correcting absurd measurements (like an iron almirah marked 40 g instead of 40 kg!). Students explore pan balances, standard metric weights, and measuring liquid volumes with graduated cylinders.",
+    "sourcePdf": "public/Books/Maths/eemm108.pdf",
+    "totalPages": 15,
+    "characters": [
+      {
+        "name": "Anu",
+        "role": "Estimation Detective",
+        "avatar": "\ud83d\udc67"
+      },
+      {
+        "name": "Mother",
+        "role": "Household Manager",
+        "avatar": "\ud83d\udc69"
+      }
+    ],
+    "sections": [
+      {
+        "id": "sec-math-5-08-01",
+        "lessonNumber": 1,
+        "title": "Anu's Estimation Checklist: Grams vs. Kilograms",
+        "subtitle": "Developing realistic intuition for mass in everyday objects",
+        "storyNarrative": {
+          "characterName": "Anu",
+          "dialogue": "Look at this sheet! It says our heavy iron almirah weighs 40 grams! A packet of potato chips is 40 grams\u2014the almirah must be 40 kilograms!"
+        },
+        "concept": {
+          "heading": "Distinguishing Grams (g) and Kilograms (kg)",
+          "keyRule": "1 kg = 1,000 g. Light objects (spices, coins, stamps) are measured in grams; heavy objects (people, furniture, sacks of grain) in kilograms."
+        },
+        "image": "https://kpigixuqpigjremowykx.supabase.co/storage/v1/object/public/curriculum-assets/grade-5/maths/ch08/images/anu_weight_estimation_table.png",
+        "blocks": [
+          {
+            "type": "story_narrative",
+            "title": "Story Scene: Anu's Dialogue",
+            "content": {
+              "speaker": "Anu",
+              "dialogue": "Look at this sheet! It says our heavy iron almirah weighs 40 grams! A packet of potato chips is 40 grams\u2014the almirah must be 40 kilograms!"
+            }
+          },
+          {
+            "type": "concept",
+            "title": "Distinguishing Grams (g) and Kilograms (kg)",
+            "content": {
+              "heading": "Distinguishing Grams (g) and Kilograms (kg)",
+              "explanation": "1 kg = 1,000 g. Light objects (spices, coins, stamps) are measured in grams; heavy objects (people, furniture, sacks of grain) in kilograms.",
+              "keyRule": "1 kg = 1,000 g. Light objects (spices, coins, stamps) are measured in grams; heavy objects (people, furniture, sacks of grain) in kilograms."
+            }
+          },
+          {
+            "type": "image_diagram",
+            "title": "Anu's Estimation Checklist: Grams vs. Kilograms",
+            "content": {
+              "fileName": "anu_weight_estimation_table.png",
+              "publicUrl": "https://kpigixuqpigjremowykx.supabase.co/storage/v1/object/public/curriculum-assets/grade-5/maths/ch08/images/anu_weight_estimation_table.png",
+              "caption": "Anu's Estimation Checklist: Grams vs. Kilograms"
+            }
+          }
+        ],
+        "questions": [
+          {
+            "id": "qst-sec-math-5-08-01-01",
+            "prompt": "What is the most reasonable weight for a Grade 5 school bag?",
+            "options": [
+              "4 g",
+              "40 g",
+              "4 kg",
+              "400 kg"
+            ],
+            "correctAnswer": "4 kg",
+            "hint": "A few textbooks and a water bottle weigh around 3 to 5 kg."
+          }
+        ]
+      },
+      {
+        "id": "sec-math-5-08-02",
+        "lessonNumber": 2,
+        "title": "The Pan Balance: Balancing Weights",
+        "subtitle": "Equivalence and algebraic balancing with metric weights",
+        "storyNarrative": {
+          "characterName": "Mother",
+          "dialogue": "If we place 1 kg on the left pan, how many 250 g packets of butter must we place on the right pan to balance the beam?"
+        },
+        "concept": {
+          "heading": "Pan Balance Equilibrium",
+          "keyRule": "The balance beam rests horizontal when Left Mass = Right Mass (1,000 g = 4 \u00d7 250 g)."
+        },
+        "image": "https://kpigixuqpigjremowykx.supabase.co/storage/v1/object/public/curriculum-assets/grade-5/maths/ch08/images/balance_scale_comparisons.png",
+        "blocks": [
+          {
+            "type": "story_narrative",
+            "title": "Story Scene: Mother's Dialogue",
+            "content": {
+              "speaker": "Mother",
+              "dialogue": "If we place 1 kg on the left pan, how many 250 g packets of butter must we place on the right pan to balance the beam?"
+            }
+          },
+          {
+            "type": "concept",
+            "title": "Pan Balance Equilibrium",
+            "content": {
+              "heading": "Pan Balance Equilibrium",
+              "explanation": "The balance beam rests horizontal when Left Mass = Right Mass (1,000 g = 4 \u00d7 250 g).",
+              "keyRule": "The balance beam rests horizontal when Left Mass = Right Mass (1,000 g = 4 \u00d7 250 g)."
+            }
+          },
+          {
+            "type": "image_diagram",
+            "title": "The Pan Balance: Balancing Weights",
+            "content": {
+              "fileName": "balance_scale_comparisons.png",
+              "publicUrl": "https://kpigixuqpigjremowykx.supabase.co/storage/v1/object/public/curriculum-assets/grade-5/maths/ch08/images/balance_scale_comparisons.png",
+              "caption": "The Pan Balance: Balancing Weights"
+            }
+          }
+        ],
+        "questions": [
+          {
+            "id": "qst-sec-math-5-08-02-01",
+            "prompt": "How many 500 g weights are needed to equal 2 kg?",
+            "options": [
+              "2",
+              "4",
+              "6",
+              "8"
+            ],
+            "correctAnswer": "4",
+            "hint": "2 kg = 2,000 g; 2,000 \u00f7 500 = 4."
+          }
+        ]
+      },
+      {
+        "id": "sec-math-5-08-03",
+        "lessonNumber": 3,
+        "title": "Liquid Capacity: Millilitres and Litres",
+        "subtitle": "Measuring medicine spoons, juice cups, and water buckets",
+        "storyNarrative": {
+          "characterName": "Anu",
+          "dialogue": "My medicine syrup spoon holds 5 millilitres, but our bucket holds 15 litres! 1 litre holds 1,000 millilitres!"
+        },
+        "concept": {
+          "heading": "Metric Capacity Conversion",
+          "keyRule": "1 Litre (L) = 1,000 Millilitres (mL). Volume of liquids is quantified in litres and fractions thereof."
+        },
+        "image": "https://kpigixuqpigjremowykx.supabase.co/storage/v1/object/public/curriculum-assets/grade-5/maths/ch08/images/measuring_cups_capacity.png",
+        "blocks": [
+          {
+            "type": "story_narrative",
+            "title": "Story Scene: Anu's Dialogue",
+            "content": {
+              "speaker": "Anu",
+              "dialogue": "My medicine syrup spoon holds 5 millilitres, but our bucket holds 15 litres! 1 litre holds 1,000 millilitres!"
+            }
+          },
+          {
+            "type": "concept",
+            "title": "Metric Capacity Conversion",
+            "content": {
+              "heading": "Metric Capacity Conversion",
+              "explanation": "1 Litre (L) = 1,000 Millilitres (mL). Volume of liquids is quantified in litres and fractions thereof.",
+              "keyRule": "1 Litre (L) = 1,000 Millilitres (mL). Volume of liquids is quantified in litres and fractions thereof."
+            }
+          },
+          {
+            "type": "image_diagram",
+            "title": "Liquid Capacity: Millilitres and Litres",
+            "content": {
+              "fileName": "measuring_cups_capacity.png",
+              "publicUrl": "https://kpigixuqpigjremowykx.supabase.co/storage/v1/object/public/curriculum-assets/grade-5/maths/ch08/images/measuring_cups_capacity.png",
+              "caption": "Liquid Capacity: Millilitres and Litres"
+            }
+          }
+        ],
+        "questions": [
+          {
+            "id": "qst-sec-math-5-08-03-01",
+            "prompt": "How many 200 mL glasses of water are required to fill a 1-litre bottle?",
+            "options": [
+              "3",
+              "4",
+              "5",
+              "10"
+            ],
+            "correctAnswer": "5",
+            "hint": "1,000 mL \u00f7 200 mL = 5."
+          }
+        ]
+      }
+    ]
+  }
+}

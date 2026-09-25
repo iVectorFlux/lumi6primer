@@ -1,0 +1,1284 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Condensation lab — InteractEd</title>
+  
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    body {
+      background-color: #f8fafc;
+      color: #0f172a;
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 16px 20px 48px;
+    }
+
+    /* Top Navigation Mode Switcher */
+    .top-header {
+      width: 100%;
+      max-width: 1280px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 20px;
+    }
+
+    .view-switcher {
+      display: flex;
+      align-items: center;
+      background: #ffffff;
+      border: 1px solid #e2e8f0;
+      padding: 4px;
+      border-radius: 12px;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+      gap: 4px;
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+
+    .switch-btn {
+      background: none;
+      border: none;
+      color: #64748b;
+      padding: 7px 14px;
+      font-size: 12.5px;
+      font-weight: 600;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: all 0.15s ease;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .switch-btn:hover {
+      background: #f1f5f9;
+      color: #0f172a;
+    }
+
+    .switch-btn.active {
+      background: #0f172a;
+      color: #ffffff;
+    }
+
+    /* Showcase Layout */
+    .showcase-container {
+      width: 100%;
+      max-width: 1280px;
+      display: flex;
+      flex-direction: column;
+      gap: 28px;
+      align-items: center;
+    }
+
+    .showcase-grid-top {
+      width: 100%;
+      display: flex;
+      justify-content: center;
+      align-items: flex-start;
+      gap: 32px;
+      flex-wrap: wrap;
+    }
+
+    .view-section {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .section-title {
+      font-size: 13px;
+      font-weight: 600;
+      color: #64748b;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .section-badge {
+      background: #e2e8f0;
+      color: #334155;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 11px;
+      padding: 2px 6px;
+      border-radius: 4px;
+      font-weight: 500;
+    }
+
+    /* 1. Pill Mode — Standard In-Chat Capsule */
+    .chat-pill-card {
+      width: 100%;
+      max-width: 350px;
+      background: #ffffff;
+      border: 1px solid #e2e8f0;
+      border-radius: 18px;
+      padding: 8px 14px 8px 10px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+      cursor: pointer;
+      transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+      user-select: none;
+    }
+
+    .chat-pill-card:hover {
+      border-color: #2563eb;
+      transform: translateY(-2px);
+      box-shadow: 0 8px 24px rgba(37, 99, 235, 0.12);
+    }
+
+    .pill-icon-box {
+      width: 76px;
+      height: 52px;
+      border-radius: 12px;
+      background: #f8fafc;
+      border: 1px solid #f1f5f9;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      overflow: hidden;
+      position: relative;
+    }
+
+    .pill-icon-box canvas {
+      width: 100%;
+      height: 100%;
+      display: block;
+    }
+
+    .pill-content {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+      min-width: 0;
+    }
+
+    .pill-title {
+      font-size: 17px;
+      font-weight: 600;
+      color: #0f172a;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .pill-subtitle {
+      font-size: 11px;
+      color: #64748b;
+      font-family: 'JetBrains Mono', monospace;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .pill-expand-btn {
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      background: #f8fafc;
+      border: 1px solid #e2e8f0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #334155;
+      flex-shrink: 0;
+      transition: all 0.15s ease;
+    }
+
+    .chat-pill-card:hover .pill-expand-btn {
+      background: #2563eb;
+      color: #ffffff;
+      border-color: #2563eb;
+    }
+
+    /* 2. Mobile Phone Frame (375x540) */
+    .mobile-phone-frame {
+      width: 100%;
+      max-width: 375px;
+      height: 540px;
+      background: #ffffff;
+      border: 1px solid #e2e8f0;
+      border-radius: 26px;
+      box-shadow: 0 12px 32px rgba(0, 0, 0, 0.08);
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      position: relative;
+    }
+
+    .phone-stage {
+      height: 285px;
+      min-height: 285px;
+      width: 100%;
+      background: radial-gradient(circle at 50% 48%, #ffffff 0%, #f8fafc 55%, #edf2f7 100%);
+      position: relative;
+      border-bottom: 1px solid #f1f5f9;
+      touch-action: none;
+    }
+
+    .phone-stage canvas {
+      width: 100%;
+      height: 100%;
+      display: block;
+    }
+
+    .phone-controls {
+      height: 255px;
+      width: 100%;
+      background: #ffffff;
+      padding: 14px 18px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      overflow-y: hidden;
+    }
+
+    /* 3. Desktop Split Card (880x490) */
+    #sectionDesktop {
+      width: 100%;
+      max-width: 880px;
+    }
+
+    .desktop-card {
+      width: 100%;
+      max-width: 880px;
+      height: 490px;
+      background: #ffffff;
+      border: 1px solid #e2e8f0;
+      border-radius: 24px;
+      box-shadow: 0 8px 24px -4px rgba(0, 0, 0, 0.06);
+      display: grid;
+      grid-template-columns: 370px 1fr;
+      overflow: hidden;
+    }
+
+    .math-panel {
+      width: 370px;
+      padding: 24px;
+      background: #ffffff;
+      border-right: 1px solid #f1f5f9;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      overflow: hidden;
+    }
+
+    .stage-panel {
+      width: 100%;
+      height: 100%;
+      background: radial-gradient(circle at 50% 48%, #ffffff 0%, #f8fafc 55%, #edf2f7 100%);
+      position: relative;
+      overflow: hidden;
+      touch-action: none;
+    }
+
+    .stage-panel canvas {
+      width: 100%;
+      height: 100%;
+      display: block;
+    }
+
+    /* Floating Canvas Pill Badge */
+    .canvas-overlay-pill {
+      position: absolute;
+      top: 14px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: rgba(255, 255, 255, 0.92);
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+      border: 1px solid rgba(226, 232, 240, 0.9);
+      border-radius: 999px;
+      padding: 5px 14px;
+      font-size: 11.5px;
+      font-weight: 600;
+      color: #0f172a;
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.04);
+      pointer-events: none;
+      white-space: nowrap;
+      z-index: 10;
+    }
+
+    .status-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: #0284c7;
+      box-shadow: 0 0 6px rgba(2, 132, 199, 0.6);
+    }
+
+    /* Audience Switch */
+    .audience-switch {
+      display: inline-flex;
+      background: #f1f5f9;
+      padding: 3px;
+      border-radius: 9px;
+      gap: 3px;
+      margin-bottom: 8px;
+      align-self: flex-start;
+    }
+
+    .aud-btn {
+      background: none;
+      border: none;
+      font-size: 11px;
+      font-weight: 600;
+      color: #64748b;
+      padding: 3px 10px;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: all 0.15s ease;
+    }
+
+    .aud-btn.active {
+      background: #ffffff;
+      color: #0f172a;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+    }
+
+    /* Hero Concept */
+    .hero-concept {
+      margin-bottom: 6px;
+    }
+
+    .hero-title {
+      font-size: 18px;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+      color: #0f172a;
+      margin-bottom: 2px;
+    }
+
+    .hero-sub {
+      font-size: 12px;
+      color: #64748b;
+      line-height: 1.4;
+    }
+
+    .formula-display {
+      margin: 6px 0 8px;
+      font-size: 14px;
+      color: #0f172a;
+      display: none;
+    }
+
+    .formula-display.active {
+      display: block;
+    }
+
+    /* Dynamic Takeaway Card */
+    .takeaway-card {
+      background: #f8fafc;
+      border: 1px solid #e2e8f0;
+      border-left: 3.5px solid #0284c7;
+      border-radius: 12px;
+      padding: 10px 13px;
+      margin-bottom: 10px;
+      display: flex;
+      flex-direction: column;
+      gap: 3px;
+    }
+
+    .takeaway-badge {
+      font-size: 10.5px;
+      font-weight: 600;
+      color: #0284c7;
+      display: flex;
+      align-items: center;
+      gap: 5px;
+    }
+
+    .takeaway-text {
+      font-size: 12px;
+      line-height: 1.45;
+      color: #334155;
+    }
+
+    /* Controls Block */
+    .controls-block {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .control-label-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 12px;
+      font-weight: 600;
+      color: #334155;
+    }
+
+    .control-value {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 12.5px;
+      color: #0284c7;
+    }
+
+    .slider-track-wrap {
+      height: 36px;
+      display: flex;
+      align-items: center;
+      position: relative;
+    }
+
+    input[type="range"] {
+      -webkit-appearance: none;
+      appearance: none;
+      width: 100%;
+      height: 6px;
+      border-radius: 999px;
+      background: #e2e8f0;
+      outline: none;
+      touch-action: none;
+      cursor: pointer;
+    }
+
+    input[type="range"]::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      width: 22px;
+      height: 22px;
+      border-radius: 50%;
+      background: #0284c7;
+      border: 2.5px solid #ffffff;
+      box-shadow: 0 2px 6px rgba(2, 132, 199, 0.4);
+      transition: transform 0.1s ease;
+      cursor: grab;
+    }
+
+    input[type="range"]::-webkit-slider-thumb:active {
+      transform: scale(1.15);
+      cursor: grabbing;
+    }
+
+    input[type="range"]::-moz-range-thumb {
+      width: 22px;
+      height: 22px;
+      border-radius: 50%;
+      background: #0284c7;
+      border: 2.5px solid #ffffff;
+      box-shadow: 0 2px 6px rgba(2, 132, 199, 0.4);
+      cursor: grab;
+    }
+
+    .action-btn-row {
+      display: flex;
+      gap: 8px;
+    }
+
+    .action-btn {
+      flex: 1;
+      height: 34px;
+      background: #ffffff;
+      border: 1px solid #e2e8f0;
+      border-radius: 9px;
+      font-size: 12px;
+      font-weight: 600;
+      color: #334155;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      transition: all 0.15s ease;
+    }
+
+    .action-btn:hover {
+      background: #f1f5f9;
+      color: #0f172a;
+      border-color: #cbd5e1;
+    }
+
+    .action-btn.active {
+      background: #0284c7;
+      color: #ffffff;
+      border-color: #0284c7;
+    }
+
+    /* 4. Slide-Over Drawer */
+    .drawer-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(15, 23, 42, 0.4);
+      backdrop-filter: blur(4px);
+      -webkit-backdrop-filter: blur(4px);
+      z-index: 999;
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-end;
+      align-items: center;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.25s ease;
+    }
+
+    .drawer-overlay.active {
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    .drawer-content {
+      width: 100%;
+      max-width: 420px;
+      max-height: 90vh;
+      background: #ffffff;
+      border-radius: 26px 26px 0 0;
+      box-shadow: 0 -8px 32px rgba(0, 0, 0, 0.15);
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      transform: translateY(100%);
+      transition: transform 0.28s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    .drawer-overlay.active .drawer-content {
+      transform: translateY(0);
+    }
+
+    .drawer-handle-bar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 10px 18px 8px;
+      border-bottom: 1px solid #f1f5f9;
+    }
+
+    .drawer-notch {
+      width: 36px;
+      height: 4px;
+      border-radius: 999px;
+      background: #cbd5e1;
+    }
+
+    .drawer-close-btn {
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      background: #f1f5f9;
+      border: none;
+      color: #475569;
+      font-size: 13px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: all 0.15s ease;
+    }
+
+    .drawer-close-btn:hover {
+      background: #e2e8f0;
+      color: #0f172a;
+    }
+
+    .drawer-stage {
+      height: 285px;
+      width: 100%;
+      background: radial-gradient(circle at 50% 48%, #ffffff 0%, #f8fafc 55%, #edf2f7 100%);
+      position: relative;
+      border-bottom: 1px solid #f1f5f9;
+      touch-action: none;
+    }
+
+    .drawer-stage canvas {
+      width: 100%;
+      height: 100%;
+      display: block;
+    }
+
+    .drawer-controls {
+      padding: 14px 18px 20px;
+      background: #ffffff;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    /* MANDATORY Responsive Mobile Guard */
+    @media (max-width: 960px) {
+      body {
+        padding: 12px 14px 32px;
+      }
+      .desktop-card {
+        grid-template-columns: 1fr;
+        height: auto;
+        max-width: 100%;
+      }
+      .desktop-card .stage-panel {
+        height: 285px;
+        order: 1;
+      }
+      .desktop-card .math-panel {
+        order: 2;
+        border-right: none;
+        border-top: 1px solid #f1f5f9;
+        width: 100%;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Top Navigation & View Mode Switcher -->
+  <header class="top-header">
+    <nav class="view-switcher" aria-label="Simulation view switcher">
+      <button class="switch-btn active" id="btnViewAll" onclick="setViewMode('all')">
+        <span>All views</span>
+      </button>
+      <button class="switch-btn" id="btnViewPill" onclick="setViewMode('pill')">
+        <span>Pill mode</span>
+      </button>
+      <button class="switch-btn" id="btnViewPhone" onclick="setViewMode('phone')">
+        <span>Mobile screen</span>
+      </button>
+      <button class="switch-btn" id="btnViewDesktop" onclick="setViewMode('desktop')">
+        <span>Desktop card</span>
+      </button>
+    </nav>
+  </header>
+
+  <!-- Showcase Container -->
+  <main class="showcase-container">
+
+    <!-- Top Grid: Pill Mode + Mobile Frame -->
+    <div class="showcase-grid-top" id="topGrid">
+      
+      <!-- 1. Pill Mode -->
+      <section class="view-section" id="sectionPill">
+        <h2 class="section-title">
+          <span>In-chat capsule</span>
+          <span class="section-badge">Pill</span>
+        </h2>
+        
+        <div class="chat-pill-card" id="chatPill" onclick="openDrawer()" role="button" tabindex="0" aria-label="Open Condensation lab simulation drawer">
+          <div class="pill-icon-box">
+            <canvas id="pillCanvas" width="152" height="104"></canvas>
+          </div>
+          <div class="pill-content">
+            <div class="pill-title" id="pillTitle">Cold tumbler • 4°C</div>
+            <div class="pill-subtitle" id="pillSubtitle">Dew drops forming from air</div>
+          </div>
+          <button class="pill-expand-btn" aria-label="Expand simulation">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+              <polyline points="15 3 21 3 21 9"></polyline>
+              <polyline points="9 21 3 21 3 15"></polyline>
+              <line x1="21" y1="3" x2="14" y2="10"></line>
+              <line x1="3" y1="21" x2="10" y2="14"></line>
+            </svg>
+          </button>
+        </div>
+      </section>
+
+      <!-- 2. Mobile Phone Frame (375x540) -->
+      <section class="view-section" id="sectionPhone">
+        <h2 class="section-title">
+          <span>Mobile view</span>
+          <span class="section-badge">375 × 540</span>
+        </h2>
+
+        <div class="mobile-phone-frame">
+          <div class="phone-stage" id="phoneStage">
+            <div class="canvas-overlay-pill">
+              <span class="status-dot"></span>
+              <span id="phonePillText">Glass 4°C • Condensing</span>
+            </div>
+            <canvas id="phoneCanvas"></canvas>
+          </div>
+
+          <div class="phone-controls">
+            <div>
+              <div class="audience-switch">
+                <button class="aud-btn active" id="phoneAudJunior" onclick="setAudience('junior')">Junior</button>
+                <button class="aud-btn" id="phoneAudStem" onclick="setAudience('stem')">STEM</button>
+              </div>
+              <div class="hero-concept">
+                <h1 class="hero-title">Condensation lab</h1>
+                <p class="hero-sub" id="phoneHeroSub">Atmospheric water vapour to liquid drops</p>
+              </div>
+              <div class="formula-display" id="phoneFormula"></div>
+            </div>
+
+            <div class="takeaway-card">
+              <div class="takeaway-badge">
+                <span class="status-dot"></span>
+                <span>Live insight</span>
+              </div>
+              <p class="takeaway-text" id="phoneTakeawayText">Invisible water vapour in warm air touches the cold glass, cools down, and forms drops.</p>
+            </div>
+
+            <div class="controls-block">
+              <div class="control-label-row">
+                <span>Tumbler temperature</span>
+                <span class="control-value" id="phoneSliderVal">4°C (Ice cold)</span>
+              </div>
+              <div class="slider-track-wrap">
+                <input type="range" id="phoneSlider" min="0" max="32" value="4" oninput="onTempChange(this.value)">
+              </div>
+              <div class="action-btn-row">
+                <button class="action-btn" onclick="wipeGlass()">
+                  <span>🧽 Wipe glass dry</span>
+                </button>
+                <button class="action-btn" onclick="toggleIceCubes()">
+                  <span id="phoneIceToggleLabel">🧊 Add ice</span>
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+    </div>
+
+    <!-- 3. Desktop Mode (880x490 Split Card) -->
+    <section class="view-section" id="sectionDesktop">
+      <h2 class="section-title">
+        <span>Desktop split card</span>
+        <span class="section-badge">880 × 490</span>
+      </h2>
+
+      <div class="desktop-card">
+        <div class="math-panel">
+          <div>
+            <div class="audience-switch">
+              <button class="aud-btn active" id="deskAudJunior" onclick="setAudience('junior')">Junior</button>
+              <button class="aud-btn" id="deskAudStem" onclick="setAudience('stem')">STEM</button>
+            </div>
+            <div class="hero-concept">
+              <h1 class="hero-title">Condensation lab</h1>
+              <p class="hero-sub" id="deskHeroSub">Phase change: invisible vapour into glittering beads</p>
+            </div>
+            <div class="formula-display" id="deskFormula"></div>
+          </div>
+
+          <div class="takeaway-card">
+            <div class="takeaway-badge">
+              <span class="status-dot"></span>
+              <span>Live insight</span>
+            </div>
+            <p class="takeaway-text" id="deskTakeawayText">Droplets do not leak from inside the glass! They condense from the warm room air when it contacts cold metal.</p>
+          </div>
+
+          <div class="controls-block">
+            <div class="control-label-row">
+              <span>Tumbler temperature</span>
+              <span class="control-value" id="deskSliderVal">4°C (Ice cold)</span>
+            </div>
+            <div class="slider-track-wrap">
+              <input type="range" id="deskSlider" min="0" max="32" value="4" oninput="onTempChange(this.value)">
+            </div>
+            <div class="action-btn-row">
+              <button class="action-btn" onclick="wipeGlass()">
+                <span>🧽 Wipe glass dry</span>
+              </button>
+              <button class="action-btn" onclick="toggleIceCubes()">
+                <span id="deskIceToggleLabel">🧊 Add ice</span>
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <div class="stage-panel" id="deskStage">
+          <div class="canvas-overlay-pill">
+            <span class="status-dot"></span>
+            <span id="deskPillText">Glass 4°C • Condensing</span>
+          </div>
+          <canvas id="deskCanvas"></canvas>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- 4. Slide-Over Bottom Drawer -->
+  <div class="drawer-overlay" id="drawerOverlay" onclick="closeDrawer(event)">
+    <div class="drawer-content" onclick="event.stopPropagation()">
+      <div class="drawer-handle-bar">
+        <div style="width: 28px;"></div>
+        <div class="drawer-notch"></div>
+        <button class="drawer-close-btn" onclick="closeDrawer()" aria-label="Close drawer">✕</button>
+      </div>
+
+      <div class="drawer-stage" id="drawerStage">
+        <div class="canvas-overlay-pill">
+          <span class="status-dot"></span>
+          <span id="drawerPillText">Glass 4°C • Condensing</span>
+        </div>
+        <canvas id="drawerCanvas"></canvas>
+      </div>
+
+      <div class="drawer-controls">
+        <div class="audience-switch">
+          <button class="aud-btn active" id="drawerAudJunior" onclick="setAudience('junior')">Junior</button>
+          <button class="aud-btn" id="drawerAudStem" onclick="setAudience('stem')">STEM</button>
+        </div>
+        <div class="takeaway-card">
+          <div class="takeaway-badge">
+            <span class="status-dot"></span>
+            <span>Live insight</span>
+          </div>
+          <p class="takeaway-text" id="drawerTakeawayText">Droplets do not leak from inside! They condense from warm air molecules onto chilled steel.</p>
+        </div>
+        <div class="controls-block">
+          <div class="control-label-row">
+            <span>Tumbler temperature</span>
+            <span class="control-value" id="drawerSliderVal">4°C (Ice cold)</span>
+          </div>
+          <div class="slider-track-wrap">
+            <input type="range" id="drawerSlider" min="0" max="32" value="4" oninput="onTempChange(this.value)">
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // --- Simulation State ---
+    let state = {
+      glassTemp: 4, // 0 to 32 Celsius
+      roomTemp: 26,
+      humidity: 65, // %
+      hasIce: true,
+      wipeFlash: 0,
+      audience: 'junior'
+    };
+
+    // Droplets on outer tumbler wall
+    let droplets = [];
+    // Air vapour particles
+    let vapourParticles = [];
+
+    function initParticles() {
+      vapourParticles = [];
+      for (let i = 0; i < 40; i++) {
+        vapourParticles.push({
+          x: Math.random(),
+          y: Math.random(),
+          vx: (Math.random() - 0.5) * 0.003,
+          vy: (Math.random() - 0.5) * 0.003,
+          radius: 2 + Math.random() * 2,
+          opacity: 0.25 + Math.random() * 0.4
+        });
+      }
+
+      droplets = [];
+      generateDroplets();
+    }
+
+    function generateDroplets() {
+      droplets = [];
+      if (state.glassTemp < 15) {
+        const count = Math.round((15 - state.glassTemp) * 4);
+        for (let i = 0; i < count; i++) {
+          droplets.push({
+            side: Math.random() > 0.5 ? 1 : -1, // left or right of tumbler
+            yRel: 0.15 + Math.random() * 0.7,   // 0 (top) to 1 (bottom)
+            r: 1.5 + Math.random() * 3,
+            trail: Math.random() > 0.6 ? (8 + Math.random() * 20) : 0,
+            shine: 0.6 + Math.random() * 0.4
+          });
+        }
+      }
+    }
+
+    function wipeGlass() {
+      state.wipeFlash = 1.0;
+      droplets = [];
+      updateUI();
+    }
+
+    function toggleIceCubes() {
+      state.hasIce = !state.hasIce;
+      state.glassTemp = state.hasIce ? 2 : 24;
+      generateDroplets();
+      updateUI();
+    }
+
+    function onTempChange(val) {
+      state.glassTemp = parseInt(val, 10);
+      state.hasIce = state.glassTemp <= 5;
+      generateDroplets();
+      updateUI();
+    }
+
+    // --- DOM Elements ---
+    const pillCanvas = document.getElementById('pillCanvas');
+    const phoneCanvas = document.getElementById('phoneCanvas');
+    const deskCanvas = document.getElementById('deskCanvas');
+    const drawerCanvas = document.getElementById('drawerCanvas');
+
+    // --- Audience Switch ---
+    function setAudience(mode) {
+      state.audience = mode;
+      document.querySelectorAll('.aud-btn').forEach(btn => {
+        btn.classList.toggle('active', btn.id.toLowerCase().includes(mode));
+      });
+      updateUI();
+    }
+
+    // --- Update Text & KaTeX ---
+    function updateUI() {
+      const t = state.glassTemp;
+      const dewPoint = 14; // approx dew point for 26C @ 65% RH
+      const isCondensing = t <= dewPoint;
+
+      const tempLabel = t <= 4 ? `${t}°C (Ice cold)` : t <= 12 ? `${t}°C (Chilled)` : `${t}°C (Room temp)`;
+
+      ['phone', 'desk', 'drawer'].forEach(p => {
+        const slider = document.getElementById(`${p}Slider`);
+        const valSpan = document.getElementById(`${p}SliderVal`);
+        if (slider) slider.value = t;
+        if (valSpan) valSpan.textContent = tempLabel;
+      });
+
+      const iceLabel = state.hasIce ? '🧊 Remove ice' : '🧊 Add ice';
+      ['phone', 'desk'].forEach(p => {
+        const el = document.getElementById(`${p}IceToggleLabel`);
+        if (el) el.textContent = iceLabel;
+      });
+
+      // Stage Pill Badges
+      const statusText = isCondensing ? `Glass ${t}°C • Condensation active` : `Glass ${t}°C • Dry (no beads)`;
+      ['phone', 'desk', 'drawer'].forEach(p => {
+        const el = document.getElementById(`${p}PillText`);
+        if (el) el.textContent = statusText;
+      });
+
+      // Pill Mode
+      document.getElementById('pillTitle').textContent = `Cold tumbler • ${t}°C`;
+      document.getElementById('pillSubtitle').textContent = isCondensing ? 'Dew drops forming from air' : 'Dry surface • Above dew point';
+
+      // Live Takeaway
+      let takeaway = '';
+      if (state.audience === 'junior') {
+        if (isCondensing) {
+          takeaway = 'Look closely! Droplets form strictly on the outside from warm air touching cold steel. The glass is not leaking!';
+        } else {
+          takeaway = `At ${t}°C, the glass is warm. Water vapour molecules bounce right off without cooling down, so no droplets form.`;
+        }
+      } else {
+        if (isCondensing) {
+          takeaway = `T_glass (${t}°C) < T_dew (${dewPoint}°C): atmospheric vapour transfers latent heat (2260 J/g) upon contact, condensing into liquid.`;
+        } else {
+          takeaway = `T_glass (${t}°C) ≥ T_dew (${dewPoint}°C): partial pressure of ambient vapour is below saturation, preventing nucleation.`;
+        }
+      }
+
+      ['phone', 'desk', 'drawer'].forEach(p => {
+        const el = document.getElementById(`${p}TakeawayText`);
+        if (el) el.textContent = takeaway;
+      });
+
+      // KaTeX Formula (Only active in STEM mode)
+      const isStem = state.audience === 'stem';
+      const deskF = document.getElementById('deskFormula');
+      const phoneF = document.getElementById('phoneFormula');
+
+      [deskF, phoneF].forEach(f => {
+        if (!f) return;
+        f.classList.toggle('active', isStem);
+        if (isStem && window.katex) {
+          const formulaStr = `T_{\\text{dew}} \\approx T_{\\text{air}} - \\frac{100 - \\text{RH}}{5} = 26 - \\frac{35}{5} = 19^{\\circ}\\text{C} \\quad (T_{\\text{glass}} = ${t}^{\\circ}\\text{C})`;
+          katex.render(formulaStr, f, { throwOnError: false });
+        } else {
+          f.innerHTML = '';
+        }
+      });
+    }
+
+    // --- View Switcher ---
+    function setViewMode(mode) {
+      document.querySelectorAll('.switch-btn').forEach(btn => btn.classList.remove('active'));
+      const activeBtn = document.getElementById('btnView' + mode.charAt(0).toUpperCase() + mode.slice(1));
+      if (activeBtn) activeBtn.classList.add('active');
+
+      const topGrid = document.getElementById('topGrid');
+      const pillSec = document.getElementById('sectionPill');
+      const phoneSec = document.getElementById('sectionPhone');
+      const deskSec = document.getElementById('sectionDesktop');
+
+      if (mode === 'all') {
+        topGrid.style.display = 'flex';
+        pillSec.style.display = 'flex';
+        phoneSec.style.display = 'flex';
+        deskSec.style.display = 'block';
+      } else if (mode === 'pill') {
+        topGrid.style.display = 'flex';
+        pillSec.style.display = 'flex';
+        phoneSec.style.display = 'none';
+        deskSec.style.display = 'none';
+      } else if (mode === 'phone') {
+        topGrid.style.display = 'flex';
+        pillSec.style.display = 'none';
+        phoneSec.style.display = 'flex';
+        deskSec.style.display = 'none';
+      } else if (mode === 'desktop') {
+        topGrid.style.display = 'none';
+        deskSec.style.display = 'block';
+      }
+      setTimeout(resizeCanvases, 50);
+    }
+
+    // --- Drawer Controls ---
+    function openDrawer() {
+      document.getElementById('drawerOverlay').classList.add('active');
+      document.body.style.overflow = 'hidden';
+      setTimeout(resizeCanvases, 60);
+    }
+
+    function closeDrawer(e) {
+      if (e && e.target !== e.currentTarget && !e.target.classList.contains('drawer-close-btn')) return;
+      document.getElementById('drawerOverlay').classList.remove('active');
+      document.body.style.overflow = '';
+    }
+
+    // --- Canvas Resizing ---
+    function resizeCanvases() {
+      const list = [
+        { cv: pillCanvas, w: 76, h: 52 },
+        { cv: phoneCanvas, w: phoneCanvas.parentElement.clientWidth, h: phoneCanvas.parentElement.clientHeight },
+        { cv: deskCanvas, w: deskCanvas.parentElement.clientWidth, h: deskCanvas.parentElement.clientHeight },
+        { cv: drawerCanvas, w: drawerCanvas.parentElement.clientWidth, h: drawerCanvas.parentElement.clientHeight }
+      ];
+
+      const dpr = window.devicePixelRatio || 1;
+      list.forEach(({ cv, w, h }) => {
+        if (!cv || !w || !h) return;
+        if (cv.width !== Math.round(w * dpr) || cv.height !== Math.round(h * dpr)) {
+          cv.width = Math.round(w * dpr);
+          cv.height = Math.round(h * dpr);
+        }
+      });
+    }
+
+    window.addEventListener('resize', resizeCanvases);
+
+    // --- Render Tumbler Scene ---
+    function renderTumbler(canvas, isMini = false) {
+      if (!canvas) return;
+      const ctx = canvas.getContext('2d');
+      const dpr = window.devicePixelRatio || 1;
+      const w = canvas.width / dpr;
+      const h = canvas.height / dpr;
+
+      ctx.save();
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      ctx.clearRect(0, 0, w, h);
+
+      const cx = w / 2;
+      const cy = h / 2 + (isMini ? 2 : 12);
+
+      const tw = isMini ? 28 : Math.min(w * 0.32, 130);
+      const th = isMini ? 40 : Math.min(h * 0.62, 190);
+      const topW = tw;
+      const botW = tw * 0.76;
+
+      // 1. Table surface line
+      if (!isMini) {
+        ctx.strokeStyle = '#e2e8f0';
+        ctx.lineWidth = 1.5;
+        ctx.beginPath();
+        ctx.moveTo(cx - tw * 1.8, cy + th / 2);
+        ctx.lineTo(cx + tw * 1.8, cy + th / 2);
+        ctx.stroke();
+
+        // Shadow beneath tumbler
+        const shadowGrad = ctx.createRadialGradient(cx, cy + th / 2, 5, cx, cy + th / 2, tw * 0.85);
+        shadowGrad.addColorStop(0, 'rgba(15, 23, 42, 0.12)');
+        shadowGrad.addColorStop(1, 'rgba(15, 23, 42, 0)');
+        ctx.fillStyle = shadowGrad;
+        ctx.beginPath();
+        ctx.ellipse(cx, cy + th / 2 + 2, tw * 0.8, 8, 0, 0, Math.PI * 2);
+        ctx.fill();
+      }
+
+      // 2. Ambient Vapour particles floating in air
+      if (!isMini) {
+        ctx.fillStyle = 'rgba(56, 189, 248, 0.45)';
+        vapourParticles.forEach(p => {
+          const px = p.x * w;
+          const py = p.y * h;
+          // Don't draw inside tumbler body
+          if (Math.abs(px - cx) > tw * 0.6 || py < cy - th / 2 || py > cy + th / 2) {
+            ctx.beginPath();
+            ctx.arc(px, py, p.radius, 0, Math.PI * 2);
+            ctx.fill();
+          }
+        });
+      }
+
+      // 3. Tumbler Body (Stainless steel realistic gradient)
+      const tumblerGrad = ctx.createLinearGradient(cx - topW / 2, 0, cx + topW / 2, 0);
+      tumblerGrad.addColorStop(0, '#cbd5e1');
+      tumblerGrad.addColorStop(0.2, '#f8fafc');
+      tumblerGrad.addColorStop(0.45, '#94a3b8');
+      tumblerGrad.addColorStop(0.7, '#f1f5f9');
+      tumblerGrad.addColorStop(0.9, '#64748b');
+      tumblerGrad.addColorStop(1, '#475569');
+
+      ctx.fillStyle = tumblerGrad;
+      ctx.beginPath();
+      ctx.moveTo(cx - topW / 2, cy - th / 2);
+      ctx.lineTo(cx + topW / 2, cy - th / 2);
+      ctx.lineTo(cx + botW / 2, cy + th / 2);
+      ctx.lineTo(cx - botW / 2, cy + th / 2);
+      ctx.closePath();
+      ctx.fill();
+
+      // Stainless steel rim highlight
+      ctx.strokeStyle = '#94a3b8';
+      ctx.lineWidth = isMini ? 1 : 1.5;
+      ctx.stroke();
+
+      // Top ellipse (opening)
+      ctx.fillStyle = '#64748b';
+      ctx.beginPath();
+      ctx.ellipse(cx, cy - th / 2, topW / 2, isMini ? 4 : 8, 0, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Water level inside tumbler
+      ctx.fillStyle = '#38bdf8';
+      ctx.beginPath();
+      ctx.ellipse(cx, cy - th / 2 + (isMini ? 3 : 6), topW * 0.46, isMini ? 3 : 6, 0, 0, Math.PI * 2);
+      ctx.fill();
+
+      // 4. Ice cubes inside tumbler
+      if (state.hasIce) {
+        ctx.fillStyle = 'rgba(255, 255, 255, 0.85)';
+        ctx.strokeStyle = 'rgba(186, 230, 253, 0.9)';
+        ctx.lineWidth = 1;
+
+        const cubeSize = isMini ? 6 : 14;
+        [-1, 1].forEach((dir, idx) => {
+          const icx = cx + dir * (isMini ? 5 : 12);
+          const icy = cy - th / 2 + (isMini ? 5 : 10) + idx * 3;
+          ctx.beginPath();
+          ctx.rect(icx - cubeSize / 2, icy - cubeSize / 2, cubeSize, cubeSize);
+          ctx.fill();
+          ctx.stroke();
+        });
+      }
+
+      // 5. Frost / Chilled Sheen when cold
+      if (state.glassTemp <= 14) {
+        const frostAlpha = Math.min(0.45, (14 - state.glassTemp) * 0.035);
+        ctx.fillStyle = `rgba(224, 242, 254, ${frostAlpha})`;
+        ctx.beginPath();
+        ctx.moveTo(cx - topW / 2, cy - th / 2);
+        ctx.lineTo(cx + topW / 2, cy - th / 2);
+        ctx.lineTo(cx + botW / 2, cy + th / 2);
+        ctx.lineTo(cx - botW / 2, cy + th / 2);
+        ctx.closePath();
+        ctx.fill();
+      }
+
+      // 6. Condensation Droplets & Trickles on Tumbler Surface
+      if (state.glassTemp <= 14 && droplets.length > 0) {
+        droplets.forEach(d => {
+          const dy = cy - th / 2 + d.yRel * th;
+          const progress = d.yRel;
+          const curW = topW - (topW - botW) * progress;
+          const dx = cx + (d.side * (curW / 2 - 2));
+
+          // Droplet trickle trail
+          if (d.trail > 0 && !isMini) {
+            ctx.strokeStyle = 'rgba(56, 189, 248, 0.4)';
+            ctx.lineWidth = 1.2;
+            ctx.beginPath();
+            ctx.moveTo(dx, dy - d.trail);
+            ctx.lineTo(dx, dy);
+            ctx.stroke();
+          }
+
+          // Glittering liquid droplet bead
+          const dropR = isMini ? Math.max(1, d.r * 0.4) : d.r;
+          const beadGrad = ctx.createRadialGradient(dx - dropR * 0.3, dy - dropR * 0.3, dropR * 0.2, dx, dy, dropR);
+          beadGrad.addColorStop(0, '#ffffff');
+          beadGrad.addColorStop(0.6, '#38bdf8');
+          beadGrad.addColorStop(1, '#0284c7');
+
+          ctx.fillStyle = beadGrad;
+          ctx.beginPath();
+          ctx.arc(dx, dy, dropR, 0, Math.PI * 2);
+          ctx.fill();
+        });
+      }
+
+      // 7. Wipe flash effect
+      if (state.wipeFlash > 0) {
+        ctx.fillStyle = `rgba(255, 255, 255, ${state.wipeFlash * 0.7})`;
+        ctx.fillRect(cx - topW, cy - th / 2, topW * 2, th);
+        state.wipeFlash -= 0.05;
+      }
+
+      ctx.restore();
+    }
+
+    // --- Animation Loop ---
+    function animate() {
+      // Animate ambient vapour particles
+      vapourParticles.forEach(p => {
+        p.x += p.vx;
+        p.y += p.vy;
+        if (p.x < 0) p.x = 1;
+        if (p.x > 1) p.x = 0;
+        if (p.y < 0) p.y = 1;
+        if (p.y > 1) p.y = 0;
+      });
+
+      // Slowly reform droplets if cold after wiping
+      if (state.glassTemp <= 14 && droplets.length < (15 - state.glassTemp) * 4) {
+        if (Math.random() < 0.1) {
+          droplets.push({
+            side: Math.random() > 0.5 ? 1 : -1,
+            yRel: 0.15 + Math.random() * 0.7,
+            r: 1.5 + Math.random() * 3,
+            trail: Math.random() > 0.6 ? (8 + Math.random() * 20) : 0,
+            shine: 0.6 + Math.random() * 0.4
+          });
+        }
+      }
+
+      renderTumbler(pillCanvas, true);
+      renderTumbler(phoneCanvas);
+      renderTumbler(deskCanvas);
+      renderTumbler(drawerCanvas);
+
+      requestAnimationFrame(animate);
+    }
+
+    // --- Init ---
+    window.addEventListener('DOMContentLoaded', () => {
+      initParticles();
+      resizeCanvases();
+      updateUI();
+      animate();
+    });
+  </script>
+</body>
+</html>

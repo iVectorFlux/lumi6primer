@@ -1,0 +1,225 @@
+{
+  "book": {
+    "id": "grade-5-mathematics",
+    "title": "Mathematics (Class 5)",
+    "gradeNumber": 5,
+    "gradeLabel": "Grade 5",
+    "subject": "Mathematics",
+    "curriculum": "NCERT",
+    "nationalEducationPolicy": "NEP 2020 Aligned (Preparatory Stage)",
+    "publisher": "National Council of Educational Research and Training, New Delhi, India",
+    "edition": "Reprint 2026-27",
+    "unit": {
+      "id": "unit-math-5-04",
+      "book_id": "grade-5-mathematics",
+      "unit_number": 4,
+      "title": "Measurement, Scales and Time",
+      "about_unit": "Covers distance measurement (mm to km), weight (grams to kg), capacity (ml to L), perimeter, grid area, and timing with stopwatches.",
+      "banner_image_url": "https://kpigixuqpigjremowykx.supabase.co/storage/v1/object/public/curriculum-assets/grade-5/maths/ch05/images/measuring_units_comparison.png",
+      "facilitation_guide": [
+        {
+          "headline": "Estimation First",
+          "text": "Always prompt learners to estimate before measuring with rulers or balances."
+        },
+        {
+          "headline": "Spatial Grid Area",
+          "text": "Count whole and half square centimetres before introducing formulas."
+        }
+      ]
+    }
+  },
+  "chapter": {
+    "id": "ch-math-5-12",
+    "number": 12,
+    "title": "Racing Seconds",
+    "tagline": "Measuring seconds, tracking race times, reading clocks, and calculating event durations",
+    "overview": "Raghav times his morning yoga asanas and sprint races with a digital stopwatch. Students discover the second hand on analog clocks, learn how 60 seconds make 1 minute, compute time elapsed, and interpret 12-hour vs. 24-hour train schedules.",
+    "sourcePdf": "public/Books/Maths/eemm112.pdf",
+    "totalPages": 9,
+    "characters": [
+      {
+        "name": "Raghav",
+        "role": "Athletic Learner",
+        "avatar": "\ud83d\udc66"
+      },
+      {
+        "name": "PT Teacher",
+        "role": "Sports Coach",
+        "avatar": "\ud83d\udc68\u200d\ud83c\udfeb"
+      }
+    ],
+    "sections": [
+      {
+        "id": "sec-math-5-12-01",
+        "lessonNumber": 1,
+        "title": "Raghav's Morning Yoga: Reading Clock Times",
+        "subtitle": "Recording start and finish times for daily activities",
+        "storyNarrative": {
+          "characterName": "Raghav",
+          "dialogue": "I started my Pranayama at 6:15 AM and finished at 6:40 AM. How many minutes did I spend in mindfulness?"
+        },
+        "concept": {
+          "heading": "Elapsed Time Calculation",
+          "keyRule": "Duration = End Time - Start Time (6:40 AM - 6:15 AM = 25 minutes)."
+        },
+        "image": "https://kpigixuqpigjremowykx.supabase.co/storage/v1/object/public/curriculum-assets/grade-5/maths/ch12/images/raghav_yoga_morning_clock.png",
+        "blocks": [
+          {
+            "type": "story_narrative",
+            "title": "Story Scene: Raghav's Dialogue",
+            "content": {
+              "speaker": "Raghav",
+              "dialogue": "I started my Pranayama at 6:15 AM and finished at 6:40 AM. How many minutes did I spend in mindfulness?"
+            }
+          },
+          {
+            "type": "concept",
+            "title": "Elapsed Time Calculation",
+            "content": {
+              "heading": "Elapsed Time Calculation",
+              "explanation": "Duration = End Time - Start Time (6:40 AM - 6:15 AM = 25 minutes).",
+              "keyRule": "Duration = End Time - Start Time (6:40 AM - 6:15 AM = 25 minutes)."
+            }
+          },
+          {
+            "type": "image_diagram",
+            "title": "Raghav's Morning Yoga: Reading Clock Times",
+            "content": {
+              "fileName": "raghav_yoga_morning_clock.png",
+              "publicUrl": "https://kpigixuqpigjremowykx.supabase.co/storage/v1/object/public/curriculum-assets/grade-5/maths/ch12/images/raghav_yoga_morning_clock.png",
+              "caption": "Raghav's Morning Yoga: Reading Clock Times"
+            }
+          }
+        ],
+        "questions": [
+          {
+            "id": "qst-sec-math-5-12-01-01",
+            "prompt": "If Raghav practices yoga from 6:15 AM to 7:00 AM, how long did he practice?",
+            "options": [
+              "30 minutes",
+              "45 minutes",
+              "50 minutes",
+              "60 minutes"
+            ],
+            "correctAnswer": "45 minutes",
+            "hint": "6:15 to 7:00 is 45 minutes."
+          }
+        ]
+      },
+      {
+        "id": "sec-math-5-12-02",
+        "lessonNumber": 2,
+        "title": "The Stopwatch: Racing Seconds",
+        "subtitle": "Timing sprints and high-speed sports in seconds",
+        "storyNarrative": {
+          "characterName": "PT Teacher",
+          "dialogue": "Ready, set, GO! Click! Raghav completed the 100m sprint in 14.8 seconds! In competitive races, every tenth of a second counts!"
+        },
+        "concept": {
+          "heading": "Units of Time Subdivision",
+          "keyRule": "60 seconds = 1 minute; 60 minutes = 1 hour; 24 hours = 1 day."
+        },
+        "image": "https://kpigixuqpigjremowykx.supabase.co/storage/v1/object/public/curriculum-assets/grade-5/maths/ch12/images/stopwatch_racing_seconds.png",
+        "blocks": [
+          {
+            "type": "story_narrative",
+            "title": "Story Scene: PT Teacher's Dialogue",
+            "content": {
+              "speaker": "PT Teacher",
+              "dialogue": "Ready, set, GO! Click! Raghav completed the 100m sprint in 14.8 seconds! In competitive races, every tenth of a second counts!"
+            }
+          },
+          {
+            "type": "concept",
+            "title": "Units of Time Subdivision",
+            "content": {
+              "heading": "Units of Time Subdivision",
+              "explanation": "60 seconds = 1 minute; 60 minutes = 1 hour; 24 hours = 1 day.",
+              "keyRule": "60 seconds = 1 minute; 60 minutes = 1 hour; 24 hours = 1 day."
+            }
+          },
+          {
+            "type": "image_diagram",
+            "title": "The Stopwatch: Racing Seconds",
+            "content": {
+              "fileName": "stopwatch_racing_seconds.png",
+              "publicUrl": "https://kpigixuqpigjremowykx.supabase.co/storage/v1/object/public/curriculum-assets/grade-5/maths/ch12/images/stopwatch_racing_seconds.png",
+              "caption": "The Stopwatch: Racing Seconds"
+            }
+          }
+        ],
+        "questions": [
+          {
+            "id": "qst-sec-math-5-12-02-01",
+            "prompt": "How many seconds are there in 3 minutes?",
+            "options": [
+              "60 s",
+              "120 s",
+              "180 s",
+              "300 s"
+            ],
+            "correctAnswer": "180 s",
+            "hint": "3 \u00d7 60 = 180 seconds."
+          }
+        ]
+      },
+      {
+        "id": "sec-math-5-12-03",
+        "lessonNumber": 3,
+        "title": "Daily Timelines & 24-Hour Railway Clocks",
+        "subtitle": "Converting between 12-hour AM/PM and 24-hour military/railway time",
+        "storyNarrative": {
+          "characterName": "Raghav",
+          "dialogue": "Our train ticket says departure is at 17:30. In 12-hour time, that is 5:30 PM!"
+        },
+        "concept": {
+          "heading": "24-Hour Time Conversion",
+          "keyRule": "For PM hours past noon, add 12 to the hour (5:30 PM + 12:00 = 17:30). To convert 24h back to PM, subtract 12."
+        },
+        "image": "https://kpigixuqpigjremowykx.supabase.co/storage/v1/object/public/curriculum-assets/grade-5/maths/ch12/images/daily_routine_timeline.png",
+        "blocks": [
+          {
+            "type": "story_narrative",
+            "title": "Story Scene: Raghav's Dialogue",
+            "content": {
+              "speaker": "Raghav",
+              "dialogue": "Our train ticket says departure is at 17:30. In 12-hour time, that is 5:30 PM!"
+            }
+          },
+          {
+            "type": "concept",
+            "title": "24-Hour Time Conversion",
+            "content": {
+              "heading": "24-Hour Time Conversion",
+              "explanation": "For PM hours past noon, add 12 to the hour (5:30 PM + 12:00 = 17:30). To convert 24h back to PM, subtract 12.",
+              "keyRule": "For PM hours past noon, add 12 to the hour (5:30 PM + 12:00 = 17:30). To convert 24h back to PM, subtract 12."
+            }
+          },
+          {
+            "type": "image_diagram",
+            "title": "Daily Timelines & 24-Hour Railway Clocks",
+            "content": {
+              "fileName": "daily_routine_timeline.png",
+              "publicUrl": "https://kpigixuqpigjremowykx.supabase.co/storage/v1/object/public/curriculum-assets/grade-5/maths/ch12/images/daily_routine_timeline.png",
+              "caption": "Daily Timelines & 24-Hour Railway Clocks"
+            }
+          }
+        ],
+        "questions": [
+          {
+            "id": "qst-sec-math-5-12-03-01",
+            "prompt": "What is 8:15 PM in 24-hour railway time?",
+            "options": [
+              "08:15",
+              "18:15",
+              "20:15",
+              "22:15"
+            ],
+            "correctAnswer": "20:15",
+            "hint": "8 + 12 = 20."
+          }
+        ]
+      }
+    ]
+  }
+}

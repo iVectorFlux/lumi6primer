@@ -1,0 +1,220 @@
+# 📘 InteractEd Curriculum Platform • Full Stack Architecture & Integration Guide
+
+> **Document ID:** `CURRICULUM_INTEGRATION_ARCHITECTURE.md`  
+> **Target Audience:** Frontend Engineers, Backend Engineers, Educational Product Designers  
+> **Scope:** Relational Database Schema, Supabase Storage, REST Endpoints, Frontend UI Components, Socratic Scaffolding, Gamification & Child Safety Protocols.
+
+---
+
+## 1. Executive System Overview
+
+The **InteractEd Curriculum Platform** transforms standard K-12 textbooks (starting with NCERT Grade 5 Mathematics & Science/EVS) into an immersive, character-driven, 100x learning experience.
+
+Rather than rendering flat PDF pages or static text, the platform operates on a **9-table relational instructional design database**:
+1. **Curriculum Books** (`curriculum_books`): Top-level textbooks with NEP 2020 alignment.
+2. **Curriculum Units** (`curriculum_units`): Thematic units with teacher facilitation guides.
+3. **Curriculum Chapters** (`curriculum_chapters`): Story-driven chapters with pedagogical guide characters.
+4. **Curriculum Sections / Lessons** (`curriculum_sections`): Granular learning chunks (10–15 minute sessions).
+5. **Instructional Blocks** (`curriculum_blocks`): Modular building blocks (Dialogue scenes, textbook text, concepts, diagrams, activities).
+6. **Visual Media Assets** (`curriculum_media`): High-resolution diagrams, figures, and maps served via Supabase CDN.
+7. **Formative Questions & Socratic Scaffolding** (`curriculum_questions`): Questions with cognitive misconception diagnosis and 3-tier hint ladders.
+8. **Quest Mastery Badges & XP** (`curriculum_badges`): Chapter-specific gamification rewards and quests.
+9. **Tap-to-Learn Glossary** (`curriculum_glossary`): Interactive vocabulary popovers with phonetic audio and child-friendly definitions.
+
+---
+
+## 2. Complete Entity-Relationship Model (ERD)
+
+```mermaid
+erDiagram
+    CURRICULUM_BOOKS ||--o{ CURRICULUM_UNITS : "has"
+    CURRICULUM_BOOKS ||--o{ CURRICULUM_CHAPTERS : "contains"
+    CURRICULUM_UNITS ||--o{ CURRICULUM_CHAPTERS : "groups"
+    CURRICULUM_CHAPTERS ||--o{ CURRICULUM_SECTIONS : "divides into"
+    CURRICULUM_CHAPTERS ||--o{ CURRICULUM_MEDIA : "owns"
+    CURRICULUM_CHAPTERS ||--o{ CURRICULUM_BADGES : "awards"
+    CURRICULUM_CHAPTERS ||--o{ CURRICULUM_GLOSSARY : "defines"
+    CURRICULUM_SECTIONS ||--o{ CURRICULUM_BLOCKS : "comprises"
+    CURRICULUM_SECTIONS ||--o{ CURRICULUM_QUESTIONS : "assesses"
+    CURRICULUM_BLOCKS ||--o| CURRICULUM_MEDIA : "embeds"
+
+    CURRICULUM_BOOKS {
+        text id PK
+        text title
+        int grade_number
+        text subject
+        text curriculum
+        text nep_alignment
+    }
+
+    CURRICULUM_UNITS {
+        text id PK
+        text book_id FK
+        int unit_number
+        text title
+        text banner_image_url
+        jsonb facilitation_guide
+    }
+
+    CURRICULUM_CHAPTERS {
+        text id PK
+        text book_id FK
+        text unit_id FK
+        int chapter_number
+        text title
+        text tagline
+        text overview
+        text source_pdf
+        jsonb characters
+    }
+
+    CURRICULUM_SECTIONS {
+        text id PK
+        text chapter_id FK
+        int lesson_number
+        text title
+        text subtitle
+        int page_start
+        int page_end
+    }
+
+    CURRICULUM_BLOCKS {
+        text id PK
+        text section_id FK
+        text chapter_id FK
+        int order_index
+        text block_type
+        text title
+        jsonb content
+    }
+
+    CURRICULUM_MEDIA {
+        text id PK
+        text chapter_id FK
+        text block_id FK
+        text file_name
+        text storage_path
+        text public_cdn_url
+        text asset_type
+        text caption
+    }
+
+    CURRICULUM_QUESTIONS {
+        text id PK
+        text section_id FK
+        text chapter_id FK
+        text question_type
+        text prompt
+        jsonb options
+        jsonb correct_answer
+        jsonb misconceptions
+        jsonb hint_ladder
+        text bloom_level
+    }
+
+    CURRICULUM_BADGES {
+        text id PK
+        text chapter_id FK
+        text badge_name
+        text badge_icon
+        text quest_title
+        int xp_points
+        text unlock_condition
+    }
+
+    CURRICULUM_GLOSSARY {
+        text id PK
+        text chapter_id FK
+        text term
+        text phonetic
+        text child_friendly_definition
+        text fun_fact
+    }
+```
+
+---
+
+## 3. Database Table Dictionary & Payloads
+
+### 1. `curriculum_books`
+* **Purpose:** Stores the top-level textbook entity.
+* **Fields:** `id` (PK, e.g. `grade-5-mathematics`), `title`, `grade_number` (5), `subject`, `curriculum` ('NCERT'), `nep_alignment` ('NEP 2020 Aligned'), `publisher`, `edition`.
+
+### 2. `curriculum_units`
+* **Purpose:** Thematic groupings matching NCERT pedagogy.
+* **Fields:** `id` (PK, e.g. `unit-math-5-01`), `book_id` (FK), `unit_number`, `title`, `about_unit`, `banner_image_url`, `facilitation_guide` (JSON array of teacher notes).
+
+### 3. `curriculum_chapters`
+* **Purpose:** Individual chapters (e.g. *We the Travellers — I*, *Water — The Essence of Life*).
+* **Fields:** `id` (PK, e.g. `ch-math-5-01`), `book_id`, `unit_id`, `chapter_number`, `title`, `tagline`, `overview`, `source_pdf`, `characters` (JSON array of guide characters with avatar and role).
+
+### 4. `curriculum_sections`
+* **Purpose:** Sub-lessons or learning segments within a chapter.
+* **Fields:** `id` (PK, e.g. `sec-math-5-01-01`), `chapter_id` (FK), `lesson_number`, `title`, `subtitle`, `page_start`, `page_end`.
+
+### 5. `curriculum_blocks`
+* **Purpose:** Atomic, composable instructional cards rendered in sequence.
+* **Block Types:** `story_narrative`, `concept`, `textbook_core`, `activity`, `worked_example`, `image_diagram`.
+* **Payload Structure (`content` column):**
+```json
+{
+  "speaker": "Sanju",
+  "dialogue": "Look at the population sign! It has 5 digits!",
+  "heading": "Entering the Ten Thousands (10,000)",
+  "explanation": "Adding 1 to 9,999 gives 10,000...",
+  "safety_protocol": {
+    "safety_level": "Safe Observation / Adult Supervision Recommended",
+    "hazard_rating": "Zero Hazardous Materials",
+    "supervision_mandate": "Always perform observations with a parent or teacher. Never touch hot stoves, boiling water, sharp knives, or electrical sockets."
+  }
+}
+```
+
+### 6. `curriculum_media`
+* **Purpose:** Visual asset registry connecting Supabase Storage CDN URLs to chapters and blocks.
+* **Fields:** `id`, `chapter_id`, `block_id`, `file_name`, `storage_path`, `public_cdn_url`, `asset_type`, `caption`.
+* **Public CDN Pattern:** `https://<SUPABASE_PROJECT>.supabase.co/storage/v1/object/public/curriculum-assets/<storage_path>`
+
+### 7. `curriculum_questions` (Socratic Scaffolding Engine)
+* **Purpose:** Formative assessments with empathetic, cognitive diagnostic feedback.
+* **Key Columns:**
+  * `prompt`: The question text.
+  * `options`: JSON array of answer choices.
+  * `correct_answer`: The verified answer.
+  * `misconceptions` (JSONB): Diagnoses why a child picked each wrong answer.
+  * `hint_ladder` (JSONB): 3 progressive hints (Nudge ➔ Visual Clue ➔ Socratic Walkthrough).
+
+### 8. `curriculum_badges` (Gamification Engine)
+* **Purpose:** Quest rewards, achievement badges, and XP progression.
+* **Fields:** `id`, `chapter_id`, `badge_name`, `badge_icon` (emoji or SVG), `quest_title`, `xp_points` (e.g. 100–200 XP), `unlock_condition`, `rarity` ('Common', 'Rare', 'Epic', 'Legendary').
+
+### 9. `curriculum_glossary` (Tap-to-Learn Tooltips)
+* **Purpose:** Child-friendly vocabulary popovers for educational terms.
+* **Fields:** `id`, `chapter_id`, `term`, `phonetic`, `child_friendly_definition`, `fun_fact`.
+
+---
+
+## 4. Multi-Mode Responsive Interactive Simulations Wiring
+
+The platform integrates standalone, multi-mode responsive educational simulations (`public/curriculum interactive/*.html`) directly into every curriculum lesson through a **5-tier relational wiring system**:
+
+1. **Tier 1: Relational Block Wiring (`curriculum_blocks`)** — `block_type: 'interactive_simulation'` at Beat 3 of the 5-beat cycle.
+2. **Tier 2: Master Simulation Registry (`interactives` Table)** — In Supabase PostgreSQL with code, config, and pedagogical goals.
+3. **Tier 3: Cross-Curriculum Discovery (`lesson_interactives` Table)** — Search and taxonomy topics.
+4. **Tier 4: Local Database & Offline Replica (`curriculum_interactives`)** — SQLite mirror in `data/curriculum.db`.
+5. **Tier 5: Cloud Storage CDN Distribution** — Supabase Storage CDN bucket `curriculum-assets`.
+
+### 10 Live Chapter 1 Interactives Matrix
+
+| Subject | Lesson # | Section ID | Interactive ID & File | Interactive Title | Pedagogical Objective |
+| :--- | :--- | :--- | :--- | :--- | :--- |
+| **Maths** | 1 | `sec-math-5-01-01` | `interactive-math-5-ch01-les01.html` | **Railway Odometer Counter** | Roll unit wheels past 9,999 into 10,000 to reveal the new Ten Thousands (`TTh`) column. |
+| **Maths** | 2 | `sec-math-5-01-02` | `interactive-math-5-ch01-les02.html` | **Base-10 Place Value Organizer** | 5-column chart decomposing into standard and expanded notation across TTh, Th, H, T, O. |
+| **Maths** | 3 | `sec-math-5-01-03` | `interactive-math-5-ch01-les03.html` | **Virtual Token Exchange Bank** | Group 10 units of any denomination to exchange for 1 of the next higher unit. |
+| **Maths** | 4 | `sec-math-5-01-04` | `interactive-math-5-ch01-les04.html` | **Hungry Rabbit Rounding Lab** | Spatial proximity intuition and midpoint thresholds for rounding to nearest 10, 100, 1000. |
+| **Maths** | 5 | `sec-math-5-01-05` | `interactive-math-5-ch01-les05.html` | **Two-Pile Pebble Nim Game** | Combinatorial reasoning and symmetry-mirroring strategies in recreational mathematics. |
+| **Science** | 1 | `sec-sci-5-01-01` | `interactive-sci-5-ch01-les01.html` | **Global Blue Planet 3D Explorer** | 3D Earth globe showing planetary 71% water to 29% land distribution. |
+| **Science** | 2 | `sec-sci-5-01-02` | `interactive-sci-5-ch01-les02.html` | **Ice Tumbler Condensation Lab** | Cold metal surface condensing invisible air vapour into droplets; phase change observation. |
+| **Science** | 3 | `sec-sci-5-01-03` | `interactive-sci-5-ch01-les03.html` | **Thermodynamic Water Cycle Machine** | Closed hydrologic loop of solar evaporation, cloud condensation, rain, and river return. |
+| **Science** | 4 | `sec-sci-5-01-04` | `interactive-sci-5-ch01-les04.html` | **Soil Infiltration & Aquifer Tank** | Loam/sand percolation rates vs concrete surface runoff in urban groundwater recharge. |
+| **Science** | 5 | `sec-sci-5-01-05` | `interactive-sci-5-ch01-les05.html` | **River Basins & Wetland Map** | Tracing major Indian river courses to Bay of Bengal & Arabian Sea + wetland biodiversity. |

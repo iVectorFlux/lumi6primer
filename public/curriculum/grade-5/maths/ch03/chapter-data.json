@@ -1,0 +1,230 @@
+{
+  "book": {
+    "id": "grade-5-mathematics",
+    "title": "Mathematics (Class 5)",
+    "gradeNumber": 5,
+    "gradeLabel": "Grade 5",
+    "subject": "Mathematics",
+    "curriculum": "NCERT",
+    "nationalEducationPolicy": "NEP 2020 Aligned (Preparatory Stage)",
+    "publisher": "National Council of Educational Research and Training, New Delhi, India",
+    "edition": "Reprint 2026-27",
+    "unit": {
+      "id": "unit-math-5-03",
+      "book_id": "grade-5-mathematics",
+      "unit_number": 3,
+      "title": "Shapes, Patterns and Space",
+      "about_unit": "Explores angles, turns, right angles, acute and obtuse angles, symmetrical patterns, tessellations, and directional navigation.",
+      "banner_image_url": "https://kpigixuqpigjremowykx.supabase.co/storage/v1/object/public/curriculum-assets/grade-5/maths/ch03/images/clock_hands_angles.png",
+      "facilitation_guide": [
+        {
+          "headline": "Embodied Geometry",
+          "text": "Use the statue game and yoga postures to feel angles as amount of turning."
+        },
+        {
+          "headline": "Angle Tester",
+          "text": "Construct cardboard angle testers to check right angles in the classroom environment."
+        }
+      ]
+    }
+  },
+  "chapter": {
+    "id": "ch-math-5-03",
+    "number": 3,
+    "title": "Angles and Shapes",
+    "tagline": "Exploring turns, right angles, clock hands, and geometry in the physical body",
+    "overview": "Through the fun 'Statue' game, students rotate their bodies and discover that angles measure amount of turning. They build cardboard angle testers to verify right angles (90\u00b0), explore acute and obtuse angles on clock faces, and find angles in everyday yoga postures.",
+    "sourcePdf": "public/Books/Maths/eemm103.pdf",
+    "totalPages": 10,
+    "characters": [
+      {
+        "name": "Teacher",
+        "role": "Facilitator",
+        "avatar": "\ud83d\udc69\u200d\ud83c\udfeb"
+      },
+      {
+        "name": "Rohini",
+        "role": "Curious Student",
+        "avatar": "\ud83d\udc67"
+      },
+      {
+        "name": "Mohini",
+        "role": "Shape Explorer",
+        "avatar": "\ud83d\udc67"
+      }
+    ],
+    "sections": [
+      {
+        "id": "sec-math-5-03-01",
+        "lessonNumber": 1,
+        "title": "The Statue Game: Full, Half, and Quarter Turns",
+        "subtitle": "Experiencing angles as physical rotational turns",
+        "storyNarrative": {
+          "characterName": "Teacher",
+          "dialogue": "Rotate slowly... and STATUE! How far did you turn? A quarter turn faces you to your right; a half turn turns you all the way backward!"
+        },
+        "concept": {
+          "heading": "Angles as Rotational Amount",
+          "keyRule": "An angle measures the degree of turning between two intersecting lines or rays sharing a common vertex."
+        },
+        "image": "https://kpigixuqpigjremowykx.supabase.co/storage/v1/object/public/curriculum-assets/grade-5/maths/ch03/images/statue_game_rotations.png",
+        "blocks": [
+          {
+            "type": "story_narrative",
+            "title": "Story Scene: Teacher's Dialogue",
+            "content": {
+              "speaker": "Teacher",
+              "dialogue": "Rotate slowly... and STATUE! How far did you turn? A quarter turn faces you to your right; a half turn turns you all the way backward!"
+            }
+          },
+          {
+            "type": "concept",
+            "title": "Angles as Rotational Amount",
+            "content": {
+              "heading": "Angles as Rotational Amount",
+              "explanation": "An angle measures the degree of turning between two intersecting lines or rays sharing a common vertex.",
+              "keyRule": "An angle measures the degree of turning between two intersecting lines or rays sharing a common vertex."
+            }
+          },
+          {
+            "type": "image_diagram",
+            "title": "The Statue Game: Full, Half, and Quarter Turns",
+            "content": {
+              "fileName": "statue_game_rotations.png",
+              "publicUrl": "https://kpigixuqpigjremowykx.supabase.co/storage/v1/object/public/curriculum-assets/grade-5/maths/ch03/images/statue_game_rotations.png",
+              "caption": "The Statue Game: Full, Half, and Quarter Turns"
+            }
+          }
+        ],
+        "questions": [
+          {
+            "id": "qst-sec-math-5-03-01-01",
+            "prompt": "What kind of turn faces you in the completely opposite direction?",
+            "options": [
+              "Quarter turn",
+              "Half turn",
+              "Three-quarter turn",
+              "Full turn"
+            ],
+            "correctAnswer": "Half turn",
+            "hint": "A half turn rotates you 180 degrees."
+          }
+        ]
+      },
+      {
+        "id": "sec-math-5-03-02",
+        "lessonNumber": 2,
+        "title": "The Angle Tester & The Right Angle",
+        "subtitle": "Building a simple L-shaped cardboard tester to detect 90\u00b0 angles",
+        "storyNarrative": {
+          "characterName": "Rohini",
+          "dialogue": "Look at my two cardboard strips joined with a brass pin! When it forms an 'L' shape, it matches the corner of my book!"
+        },
+        "concept": {
+          "heading": "The Right Angle Standard",
+          "keyRule": "A right angle corresponds to a quarter turn (90\u00b0). Corners of books, doors, and window panes form right angles."
+        },
+        "image": "https://kpigixuqpigjremowykx.supabase.co/storage/v1/object/public/curriculum-assets/grade-5/maths/ch03/images/angle_tester_divider_tool.png",
+        "blocks": [
+          {
+            "type": "story_narrative",
+            "title": "Story Scene: Rohini's Dialogue",
+            "content": {
+              "speaker": "Rohini",
+              "dialogue": "Look at my two cardboard strips joined with a brass pin! When it forms an 'L' shape, it matches the corner of my book!"
+            }
+          },
+          {
+            "type": "concept",
+            "title": "The Right Angle Standard",
+            "content": {
+              "heading": "The Right Angle Standard",
+              "explanation": "A right angle corresponds to a quarter turn (90\u00b0). Corners of books, doors, and window panes form right angles.",
+              "keyRule": "A right angle corresponds to a quarter turn (90\u00b0). Corners of books, doors, and window panes form right angles."
+            }
+          },
+          {
+            "type": "image_diagram",
+            "title": "The Angle Tester & The Right Angle",
+            "content": {
+              "fileName": "angle_tester_divider_tool.png",
+              "publicUrl": "https://kpigixuqpigjremowykx.supabase.co/storage/v1/object/public/curriculum-assets/grade-5/maths/ch03/images/angle_tester_divider_tool.png",
+              "caption": "The Angle Tester & The Right Angle"
+            }
+          }
+        ],
+        "questions": [
+          {
+            "id": "qst-sec-math-5-03-02-01",
+            "prompt": "Which letter of the alphabet naturally contains a right angle?",
+            "options": [
+              "V",
+              "L",
+              "O",
+              "S"
+            ],
+            "correctAnswer": "L",
+            "hint": "The vertical and horizontal strokes meet at 90 degrees."
+          }
+        ]
+      },
+      {
+        "id": "sec-math-5-03-03",
+        "lessonNumber": 3,
+        "title": "Acute & Obtuse Angles on Clock Hands",
+        "subtitle": "Classifying angles smaller or greater than a right angle",
+        "storyNarrative": {
+          "characterName": "Mohini",
+          "dialogue": "At 3:00, the clock hands make a right angle! At 2:00, the angle is smaller (acute), and at 5:00, it opens wider (obtuse)!"
+        },
+        "concept": {
+          "heading": "Classification of Angles",
+          "keyRule": "Acute: less than 90\u00b0 (< right angle). Right: exactly 90\u00b0. Obtuse: between 90\u00b0 and 180\u00b0 (> right angle)."
+        },
+        "image": "https://kpigixuqpigjremowykx.supabase.co/storage/v1/object/public/curriculum-assets/grade-5/maths/ch03/images/clock_hands_angles.png",
+        "blocks": [
+          {
+            "type": "story_narrative",
+            "title": "Story Scene: Mohini's Dialogue",
+            "content": {
+              "speaker": "Mohini",
+              "dialogue": "At 3:00, the clock hands make a right angle! At 2:00, the angle is smaller (acute), and at 5:00, it opens wider (obtuse)!"
+            }
+          },
+          {
+            "type": "concept",
+            "title": "Classification of Angles",
+            "content": {
+              "heading": "Classification of Angles",
+              "explanation": "Acute: less than 90\u00b0 (< right angle). Right: exactly 90\u00b0. Obtuse: between 90\u00b0 and 180\u00b0 (> right angle).",
+              "keyRule": "Acute: less than 90\u00b0 (< right angle). Right: exactly 90\u00b0. Obtuse: between 90\u00b0 and 180\u00b0 (> right angle)."
+            }
+          },
+          {
+            "type": "image_diagram",
+            "title": "Acute & Obtuse Angles on Clock Hands",
+            "content": {
+              "fileName": "clock_hands_angles.png",
+              "publicUrl": "https://kpigixuqpigjremowykx.supabase.co/storage/v1/object/public/curriculum-assets/grade-5/maths/ch03/images/clock_hands_angles.png",
+              "caption": "Acute & Obtuse Angles on Clock Hands"
+            }
+          }
+        ],
+        "questions": [
+          {
+            "id": "qst-sec-math-5-03-03-01",
+            "prompt": "What type of angle do clock hands make at 9:00?",
+            "options": [
+              "Acute angle",
+              "Right angle",
+              "Obtuse angle",
+              "Straight angle"
+            ],
+            "correctAnswer": "Right angle",
+            "hint": "The minute hand is at 12 and the hour hand is at 9."
+          }
+        ]
+      }
+    ]
+  }
+}

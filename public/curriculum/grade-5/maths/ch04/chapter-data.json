@@ -1,0 +1,225 @@
+{
+  "book": {
+    "id": "grade-5-mathematics",
+    "title": "Mathematics (Class 5)",
+    "gradeNumber": 5,
+    "gradeLabel": "Grade 5",
+    "subject": "Mathematics",
+    "curriculum": "NCERT",
+    "nationalEducationPolicy": "NEP 2020 Aligned (Preparatory Stage)",
+    "publisher": "National Council of Educational Research and Training, New Delhi, India",
+    "edition": "Reprint 2026-27",
+    "unit": {
+      "id": "unit-math-5-01",
+      "book_id": "grade-5-mathematics",
+      "unit_number": 1,
+      "title": "Numbers and Operations Around Us",
+      "about_unit": "Explores how human travel, trade, measurement, and recording large quantities led to five-digit numbers (ten thousands), multi-digit multiplication, division arrays, and multiplicative reasoning.",
+      "banner_image_url": "https://kpigixuqpigjremowykx.supabase.co/storage/v1/object/public/curriculum-assets/grade-5/maths/ch01/images/sanju_mira_train_banner.png",
+      "facilitation_guide": [
+        {
+          "headline": "Real-World Contexts",
+          "text": "Connect numbers with train tickets, odometer readings, and village populations."
+        },
+        {
+          "headline": "Base-10 Manipulatives",
+          "text": "Emphasize grouping 10 of any unit into 1 of the next higher unit using visual tokens."
+        }
+      ]
+    }
+  },
+  "chapter": {
+    "id": "ch-math-5-04",
+    "number": 4,
+    "title": "We the Travellers \u2014 II",
+    "tagline": "Mastering number groups, equal sums, distance calculations, and magic hexagons",
+    "overview": "Continuing their travels, children analyze number groups to make their sums equal by swapping elements. They read road milestone maps to compute multi-leg journey distances, and solve magic hexagons using computational patterns.",
+    "sourcePdf": "public/Books/Maths/eemm104.pdf",
+    "totalPages": 15,
+    "characters": [
+      {
+        "name": "Sanju",
+        "role": "Travel Planner",
+        "avatar": "\ud83d\udc66"
+      },
+      {
+        "name": "Mira",
+        "role": "Route Analyst",
+        "avatar": "\ud83d\udc67"
+      }
+    ],
+    "sections": [
+      {
+        "id": "sec-math-5-04-01",
+        "lessonNumber": 1,
+        "title": "Equal Sum Groups: Interchanging Pairs",
+        "subtitle": "Balancing sum totals across two number sets",
+        "storyNarrative": {
+          "characterName": "Sanju",
+          "dialogue": "Group A sums to 54 and Group B sums to 46. If we swap one number from Group A with one from Group B, can we balance them both to 50?"
+        },
+        "concept": {
+          "heading": "Sum Balancing by Half-Difference",
+          "keyRule": "To balance two sets with difference D, exchange two numbers whose difference is exactly D / 2."
+        },
+        "image": "https://kpigixuqpigjremowykx.supabase.co/storage/v1/object/public/curriculum-assets/grade-5/maths/ch04/images/number_group_equal_sums.png",
+        "blocks": [
+          {
+            "type": "story_narrative",
+            "title": "Story Scene: Sanju's Dialogue",
+            "content": {
+              "speaker": "Sanju",
+              "dialogue": "Group A sums to 54 and Group B sums to 46. If we swap one number from Group A with one from Group B, can we balance them both to 50?"
+            }
+          },
+          {
+            "type": "concept",
+            "title": "Sum Balancing by Half-Difference",
+            "content": {
+              "heading": "Sum Balancing by Half-Difference",
+              "explanation": "To balance two sets with difference D, exchange two numbers whose difference is exactly D / 2.",
+              "keyRule": "To balance two sets with difference D, exchange two numbers whose difference is exactly D / 2."
+            }
+          },
+          {
+            "type": "image_diagram",
+            "title": "Equal Sum Groups: Interchanging Pairs",
+            "content": {
+              "fileName": "number_group_equal_sums.png",
+              "publicUrl": "https://kpigixuqpigjremowykx.supabase.co/storage/v1/object/public/curriculum-assets/grade-5/maths/ch04/images/number_group_equal_sums.png",
+              "caption": "Equal Sum Groups: Interchanging Pairs"
+            }
+          }
+        ],
+        "questions": [
+          {
+            "id": "qst-sec-math-5-04-01-01",
+            "prompt": "If Group 1 sum is 60 and Group 2 sum is 40, what should each group sum to when balanced?",
+            "options": [
+              "45",
+              "50",
+              "55",
+              "100"
+            ],
+            "correctAnswer": "50",
+            "hint": "Total is 100, divided equally into 2 groups."
+          }
+        ]
+      },
+      {
+        "id": "sec-math-5-04-02",
+        "lessonNumber": 2,
+        "title": "The Travel Milestone Map: Distance Calculations",
+        "subtitle": "Adding and subtracting multi-leg travel segments",
+        "storyNarrative": {
+          "characterName": "Mira",
+          "dialogue": "The highway milestone says Delhi is 185 km away and Jaipur is 260 km in the opposite direction. How far is Delhi from Jaipur?"
+        },
+        "concept": {
+          "heading": "Collinear Distance Addition",
+          "keyRule": "When travelling past a milestone between two cities, the total distance between the cities equals the sum of the two opposite distances."
+        },
+        "image": "https://kpigixuqpigjremowykx.supabase.co/storage/v1/object/public/curriculum-assets/grade-5/maths/ch04/images/travel_route_distance_map.png",
+        "blocks": [
+          {
+            "type": "story_narrative",
+            "title": "Story Scene: Mira's Dialogue",
+            "content": {
+              "speaker": "Mira",
+              "dialogue": "The highway milestone says Delhi is 185 km away and Jaipur is 260 km in the opposite direction. How far is Delhi from Jaipur?"
+            }
+          },
+          {
+            "type": "concept",
+            "title": "Collinear Distance Addition",
+            "content": {
+              "heading": "Collinear Distance Addition",
+              "explanation": "When travelling past a milestone between two cities, the total distance between the cities equals the sum of the two opposite distances.",
+              "keyRule": "When travelling past a milestone between two cities, the total distance between the cities equals the sum of the two opposite distances."
+            }
+          },
+          {
+            "type": "image_diagram",
+            "title": "The Travel Milestone Map: Distance Calculations",
+            "content": {
+              "fileName": "travel_route_distance_map.png",
+              "publicUrl": "https://kpigixuqpigjremowykx.supabase.co/storage/v1/object/public/curriculum-assets/grade-5/maths/ch04/images/travel_route_distance_map.png",
+              "caption": "The Travel Milestone Map: Distance Calculations"
+            }
+          }
+        ],
+        "questions": [
+          {
+            "id": "qst-sec-math-5-04-02-01",
+            "prompt": "A train travels 240 km before noon and 380 km after noon. What is the total distance covered?",
+            "options": [
+              "520 km",
+              "600 km",
+              "620 km",
+              "640 km"
+            ],
+            "correctAnswer": "620 km",
+            "hint": "240 + 380 = 620."
+          }
+        ]
+      },
+      {
+        "id": "sec-math-5-04-03",
+        "lessonNumber": 3,
+        "title": "Magic Hexagons: Computational Patterns",
+        "subtitle": "Discovering multiplicative and additive relationships in geometric layouts",
+        "storyNarrative": {
+          "characterName": "Sanju",
+          "dialogue": "In this magic hexagon, the number in the square between two circles is the product of the numbers in those circles!"
+        },
+        "concept": {
+          "heading": "Relational Constraint Solving",
+          "keyRule": "If circle A and circle B connect to square S, then S = A \u00d7 B. We can work backward: A = S \u00f7 B."
+        },
+        "image": "https://kpigixuqpigjremowykx.supabase.co/storage/v1/object/public/curriculum-assets/grade-5/maths/ch04/images/magic_hexagons_puzzle.png",
+        "blocks": [
+          {
+            "type": "story_narrative",
+            "title": "Story Scene: Sanju's Dialogue",
+            "content": {
+              "speaker": "Sanju",
+              "dialogue": "In this magic hexagon, the number in the square between two circles is the product of the numbers in those circles!"
+            }
+          },
+          {
+            "type": "concept",
+            "title": "Relational Constraint Solving",
+            "content": {
+              "heading": "Relational Constraint Solving",
+              "explanation": "If circle A and circle B connect to square S, then S = A \u00d7 B. We can work backward: A = S \u00f7 B.",
+              "keyRule": "If circle A and circle B connect to square S, then S = A \u00d7 B. We can work backward: A = S \u00f7 B."
+            }
+          },
+          {
+            "type": "image_diagram",
+            "title": "Magic Hexagons: Computational Patterns",
+            "content": {
+              "fileName": "magic_hexagons_puzzle.png",
+              "publicUrl": "https://kpigixuqpigjremowykx.supabase.co/storage/v1/object/public/curriculum-assets/grade-5/maths/ch04/images/magic_hexagons_puzzle.png",
+              "caption": "Magic Hexagons: Computational Patterns"
+            }
+          }
+        ],
+        "questions": [
+          {
+            "id": "qst-sec-math-5-04-03-01",
+            "prompt": "If a square shows 36 and one neighboring circle contains 6, what number must be in the other circle?",
+            "options": [
+              "4",
+              "6",
+              "8",
+              "9"
+            ],
+            "correctAnswer": "6",
+            "hint": "36 \u00f7 6 = 6."
+          }
+        ]
+      }
+    ]
+  }
+}

@@ -1,0 +1,225 @@
+{
+  "book": {
+    "id": "grade-5-mathematics",
+    "title": "Mathematics (Class 5)",
+    "gradeNumber": 5,
+    "gradeLabel": "Grade 5",
+    "subject": "Mathematics",
+    "curriculum": "NCERT",
+    "nationalEducationPolicy": "NEP 2020 Aligned (Preparatory Stage)",
+    "publisher": "National Council of Educational Research and Training, New Delhi, India",
+    "edition": "Reprint 2026-27",
+    "unit": {
+      "id": "unit-math-5-01",
+      "book_id": "grade-5-mathematics",
+      "unit_number": 1,
+      "title": "Numbers and Operations Around Us",
+      "about_unit": "Explores how human travel, trade, measurement, and recording large quantities led to five-digit numbers (ten thousands), multi-digit multiplication, division arrays, and multiplicative reasoning.",
+      "banner_image_url": "https://kpigixuqpigjremowykx.supabase.co/storage/v1/object/public/curriculum-assets/grade-5/maths/ch01/images/sanju_mira_train_banner.png",
+      "facilitation_guide": [
+        {
+          "headline": "Real-World Contexts",
+          "text": "Connect numbers with train tickets, odometer readings, and village populations."
+        },
+        {
+          "headline": "Base-10 Manipulatives",
+          "text": "Emphasize grouping 10 of any unit into 1 of the next higher unit using visual tokens."
+        }
+      ]
+    }
+  },
+  "chapter": {
+    "id": "ch-math-5-06",
+    "number": 6,
+    "title": "The Dairy Farm",
+    "tagline": "Unlocking multiplication arrays, factors, multiples, and algebraic shape puzzles",
+    "overview": "At the village dairy farm, Gopal packs pouches of milk and buttermilk in crate arrays. Children discover how rectangular packing layouts connect to factors and multiples, build factor trees, and solve shape algebra puzzles where geometric symbols hide secret numbers.",
+    "sourcePdf": "public/Books/Maths/eemm106.pdf",
+    "totalPages": 22,
+    "characters": [
+      {
+        "name": "Gopal",
+        "role": "Dairy Farmer",
+        "avatar": "\ud83d\udc68\u200d\ud83c\udf3e"
+      },
+      {
+        "name": "Ananya",
+        "role": "Pattern Finder",
+        "avatar": "\ud83d\udc67"
+      }
+    ],
+    "sections": [
+      {
+        "id": "sec-math-5-06-01",
+        "lessonNumber": 1,
+        "title": "The Dairy Mystery: Shape Equations",
+        "subtitle": "Deducing numbers between 1 and 24 hidden behind geometric shapes",
+        "storyNarrative": {
+          "characterName": "Gopal",
+          "dialogue": "Welcome to our dairy! Each shape represents a secret number. If Triangle + Triangle = Circle, and Circle \u00d7 Triangle = 16, what number is hiding in the Triangle?"
+        },
+        "concept": {
+          "heading": "Early Algebraic Reasoning",
+          "keyRule": "Using substitution and number sense to find unknown values satisfying simultaneous relations."
+        },
+        "image": "https://kpigixuqpigjremowykx.supabase.co/storage/v1/object/public/curriculum-assets/grade-5/maths/ch06/images/dairy_farm_shapes_puzzle.png",
+        "blocks": [
+          {
+            "type": "story_narrative",
+            "title": "Story Scene: Gopal's Dialogue",
+            "content": {
+              "speaker": "Gopal",
+              "dialogue": "Welcome to our dairy! Each shape represents a secret number. If Triangle + Triangle = Circle, and Circle \u00d7 Triangle = 16, what number is hiding in the Triangle?"
+            }
+          },
+          {
+            "type": "concept",
+            "title": "Early Algebraic Reasoning",
+            "content": {
+              "heading": "Early Algebraic Reasoning",
+              "explanation": "Using substitution and number sense to find unknown values satisfying simultaneous relations.",
+              "keyRule": "Using substitution and number sense to find unknown values satisfying simultaneous relations."
+            }
+          },
+          {
+            "type": "image_diagram",
+            "title": "The Dairy Mystery: Shape Equations",
+            "content": {
+              "fileName": "dairy_farm_shapes_puzzle.png",
+              "publicUrl": "https://kpigixuqpigjremowykx.supabase.co/storage/v1/object/public/curriculum-assets/grade-5/maths/ch06/images/dairy_farm_shapes_puzzle.png",
+              "caption": "The Dairy Mystery: Shape Equations"
+            }
+          }
+        ],
+        "questions": [
+          {
+            "id": "qst-sec-math-5-06-01-01",
+            "prompt": "If Square + Square + Square = 21, what is the value of one Square?",
+            "options": [
+              "3",
+              "7",
+              "9",
+              "12"
+            ],
+            "correctAnswer": "7",
+            "hint": "21 divided by 3 equal parts."
+          }
+        ]
+      },
+      {
+        "id": "sec-math-5-06-02",
+        "lessonNumber": 2,
+        "title": "Milk Pouch Packing Arrays",
+        "subtitle": "Finding all rectangular arrangements for a given quantity",
+        "storyNarrative": {
+          "characterName": "Ananya",
+          "dialogue": "We have 24 buttermilk pouches to pack. We can arrange them as 1 \u00d7 24, 2 \u00d7 12, 3 \u00d7 8, or 4 \u00d7 6!"
+        },
+        "concept": {
+          "heading": "Factor Pairs as Rectangular Dimensions",
+          "keyRule": "The factors of a number N are the exact row and column dimensions of all rectangles that can be formed using N unit squares."
+        },
+        "image": "https://kpigixuqpigjremowykx.supabase.co/storage/v1/object/public/curriculum-assets/grade-5/maths/ch06/images/milk_pouch_packing_arrays.png",
+        "blocks": [
+          {
+            "type": "story_narrative",
+            "title": "Story Scene: Ananya's Dialogue",
+            "content": {
+              "speaker": "Ananya",
+              "dialogue": "We have 24 buttermilk pouches to pack. We can arrange them as 1 \u00d7 24, 2 \u00d7 12, 3 \u00d7 8, or 4 \u00d7 6!"
+            }
+          },
+          {
+            "type": "concept",
+            "title": "Factor Pairs as Rectangular Dimensions",
+            "content": {
+              "heading": "Factor Pairs as Rectangular Dimensions",
+              "explanation": "The factors of a number N are the exact row and column dimensions of all rectangles that can be formed using N unit squares.",
+              "keyRule": "The factors of a number N are the exact row and column dimensions of all rectangles that can be formed using N unit squares."
+            }
+          },
+          {
+            "type": "image_diagram",
+            "title": "Milk Pouch Packing Arrays",
+            "content": {
+              "fileName": "milk_pouch_packing_arrays.png",
+              "publicUrl": "https://kpigixuqpigjremowykx.supabase.co/storage/v1/object/public/curriculum-assets/grade-5/maths/ch06/images/milk_pouch_packing_arrays.png",
+              "caption": "Milk Pouch Packing Arrays"
+            }
+          }
+        ],
+        "questions": [
+          {
+            "id": "qst-sec-math-5-06-02-01",
+            "prompt": "Which of the following is NOT a factor of 24?",
+            "options": [
+              "3",
+              "5",
+              "6",
+              "8"
+            ],
+            "correctAnswer": "5",
+            "hint": "24 cannot be divided evenly by 5."
+          }
+        ]
+      },
+      {
+        "id": "sec-math-5-06-03",
+        "lessonNumber": 3,
+        "title": "Factor Trees & Prime Factorization",
+        "subtitle": "Breaking composite numbers down into prime building blocks",
+        "storyNarrative": {
+          "characterName": "Gopal",
+          "dialogue": "Like branches on a tree, we can split 36 into 6 \u00d7 6, and each 6 into 2 \u00d7 3! No matter which branches you pick first, the leaf numbers are always the same!"
+        },
+        "concept": {
+          "heading": "Unique Factorization Property",
+          "keyRule": "Every composite number can be broken down into a unique set of prime factor building blocks."
+        },
+        "image": "https://kpigixuqpigjremowykx.supabase.co/storage/v1/object/public/curriculum-assets/grade-5/maths/ch06/images/factor_tree_diagram.png",
+        "blocks": [
+          {
+            "type": "story_narrative",
+            "title": "Story Scene: Gopal's Dialogue",
+            "content": {
+              "speaker": "Gopal",
+              "dialogue": "Like branches on a tree, we can split 36 into 6 \u00d7 6, and each 6 into 2 \u00d7 3! No matter which branches you pick first, the leaf numbers are always the same!"
+            }
+          },
+          {
+            "type": "concept",
+            "title": "Unique Factorization Property",
+            "content": {
+              "heading": "Unique Factorization Property",
+              "explanation": "Every composite number can be broken down into a unique set of prime factor building blocks.",
+              "keyRule": "Every composite number can be broken down into a unique set of prime factor building blocks."
+            }
+          },
+          {
+            "type": "image_diagram",
+            "title": "Factor Trees & Prime Factorization",
+            "content": {
+              "fileName": "factor_tree_diagram.png",
+              "publicUrl": "https://kpigixuqpigjremowykx.supabase.co/storage/v1/object/public/curriculum-assets/grade-5/maths/ch06/images/factor_tree_diagram.png",
+              "caption": "Factor Trees & Prime Factorization"
+            }
+          }
+        ],
+        "questions": [
+          {
+            "id": "qst-sec-math-5-06-03-01",
+            "prompt": "What are the prime factors of 12?",
+            "options": [
+              "2, 2, 3",
+              "2, 3, 3",
+              "3, 4",
+              "2, 6"
+            ],
+            "correctAnswer": "2, 2, 3",
+            "hint": "2 \u00d7 2 \u00d7 3 = 12, and 2 and 3 are prime."
+          }
+        ]
+      }
+    ]
+  }
+}

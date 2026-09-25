@@ -1,0 +1,282 @@
+{
+  "book": {
+    "id": "grade-5-science-evs",
+    "title": "Our Wondrous World (Class 5 EVS)",
+    "gradeNumber": 5,
+    "gradeLabel": "Grade 5",
+    "subject": "Science EVS",
+    "curriculum": "NCERT",
+    "nationalEducationPolicy": "NEP 2020 Aligned (Preparatory Stage)",
+    "publisher": "National Council of Educational Research and Training, New Delhi, India",
+    "edition": "Reprint 2026-27",
+    "unit": {
+      "id": "unit-sci-5-01",
+      "book_id": "grade-5-science-evs",
+      "unit_number": 1,
+      "title": "Nature as Home & Water",
+      "about_unit": "Explores the fundamental role of water in sustaining life, states of matter, the water cycle, groundwater seepage, and river ecosystems from origin to sea.",
+      "banner_image_url": "https://kpigixuqpigjremowykx.supabase.co/storage/v1/object/public/curriculum-assets/grade-5/science/ch01/images/complete_water_cycle_diagram.jpg",
+      "facilitation_guide": [
+        {
+          "headline": "Water Experiments",
+          "text": "Perform hands-on condensation experiments with ice and steel glasses."
+        },
+        {
+          "headline": "River Tracking",
+          "text": "Trace River Godavari on physical maps of India from Trimbakeshwar to the Bay of Bengal."
+        }
+      ]
+    }
+  },
+  "chapter": {
+    "id": "ch-sci-5-02",
+    "number": 2,
+    "title": "Journey of a River",
+    "tagline": "Following River Godavari from its mountain source at Trimbakeshwar to the sea",
+    "overview": "Told in the poetic first-person voice of River Godavari, students follow her journey from high in the Western Ghats down rocky waterfalls, through agricultural valleys, bustling towns, reservoirs, and final delta into the Bay of Bengal, exploring river ecology and pollution.",
+    "sourcePdf": "public/Books/Science EVS/eeev102.pdf",
+    "totalPages": 17,
+    "characters": [
+      {
+        "name": "River Godavari",
+        "role": "The Flowing Narrator",
+        "avatar": "\ud83c\udf0a"
+      },
+      {
+        "name": "Fisherman Kaka",
+        "role": "River Chronicler",
+        "avatar": "\ud83d\udea3"
+      }
+    ],
+    "sections": [
+      {
+        "id": "sec-sci-5-02-01",
+        "lessonNumber": 1,
+        "title": "Where I Begin: Origin in the Western Ghats",
+        "subtitle": "The birth of a river at Trimbakeshwar, Maharashtra",
+        "storyNarrative": {
+          "characterName": "River Godavari",
+          "dialogue": "I have no feet, but I travel far! My journey begins high up in the mist of the Western Ghats as pure, sparkling springs tumbling over basalt rocks."
+        },
+        "concept": {
+          "heading": "River Source (Headwaters)",
+          "keyRule": "Rivers typically originate in elevated mountainous areas from rain runoff, mountain springs, or melting glaciers."
+        },
+        "image": "https://kpigixuqpigjremowykx.supabase.co/storage/v1/object/public/curriculum-assets/grade-5/science/ch02/images/river_godavari_origin_western_ghats.jpg",
+        "blocks": [
+          {
+            "type": "story_narrative",
+            "title": "Story Scene: River Godavari's Dialogue",
+            "content": {
+              "speaker": "River Godavari",
+              "dialogue": "I have no feet, but I travel far! My journey begins high up in the mist of the Western Ghats as pure, sparkling springs tumbling over basalt rocks."
+            }
+          },
+          {
+            "type": "concept",
+            "title": "River Source (Headwaters)",
+            "content": {
+              "heading": "River Source (Headwaters)",
+              "explanation": "Rivers typically originate in elevated mountainous areas from rain runoff, mountain springs, or melting glaciers.",
+              "keyRule": "Rivers typically originate in elevated mountainous areas from rain runoff, mountain springs, or melting glaciers."
+            }
+          },
+          {
+            "type": "image_diagram",
+            "title": "Where I Begin: Origin in the Western Ghats",
+            "content": {
+              "fileName": "river_godavari_origin_western_ghats.jpg",
+              "publicUrl": "https://kpigixuqpigjremowykx.supabase.co/storage/v1/object/public/curriculum-assets/grade-5/science/ch02/images/river_godavari_origin_western_ghats.jpg",
+              "caption": "Where I Begin: Origin in the Western Ghats"
+            }
+          }
+        ],
+        "questions": [
+          {
+            "id": "qst-sec-sci-5-02-01-01",
+            "prompt": "Where does River Godavari originate?",
+            "options": [
+              "Trimbakeshwar in Western Ghats",
+              "Himalayan Gangotri Glacier",
+              "Thar Desert",
+              "Sundarbans Delta"
+            ],
+            "correctAnswer": "Trimbakeshwar in Western Ghats",
+            "hint": "Located near Nashik in Maharashtra."
+          }
+        ]
+      },
+      {
+        "id": "sec-sci-5-02-02",
+        "lessonNumber": 2,
+        "title": "River Ecosystem: Flora, Fauna, and Aquatic Life",
+        "subtitle": "Organisms that depend on clean, flowing freshwater",
+        "storyNarrative": {
+          "characterName": "Fisherman Kaka",
+          "dialogue": "Along the upper banks, kingfishers dive for silver fish, otters play in the reeds, and fresh river water quenches thirsty deer and cattle!"
+        },
+        "concept": {
+          "heading": "Freshwater Riparian Ecosystems",
+          "keyRule": "Flowing rivers provide dissolved oxygen, nutrients, and habitats supporting complex aquatic food webs."
+        },
+        "image": "https://kpigixuqpigjremowykx.supabase.co/storage/v1/object/public/curriculum-assets/grade-5/science/ch02/images/river_ecosystem_flora_fauna.jpg",
+        "blocks": [
+          {
+            "type": "story_narrative",
+            "title": "Story Scene: Fisherman Kaka's Dialogue",
+            "content": {
+              "speaker": "Fisherman Kaka",
+              "dialogue": "Along the upper banks, kingfishers dive for silver fish, otters play in the reeds, and fresh river water quenches thirsty deer and cattle!"
+            }
+          },
+          {
+            "type": "concept",
+            "title": "Freshwater Riparian Ecosystems",
+            "content": {
+              "heading": "Freshwater Riparian Ecosystems",
+              "explanation": "Flowing rivers provide dissolved oxygen, nutrients, and habitats supporting complex aquatic food webs.",
+              "keyRule": "Flowing rivers provide dissolved oxygen, nutrients, and habitats supporting complex aquatic food webs."
+            }
+          },
+          {
+            "type": "image_diagram",
+            "title": "River Ecosystem: Flora, Fauna, and Aquatic Life",
+            "content": {
+              "fileName": "river_ecosystem_flora_fauna.jpg",
+              "publicUrl": "https://kpigixuqpigjremowykx.supabase.co/storage/v1/object/public/curriculum-assets/grade-5/science/ch02/images/river_ecosystem_flora_fauna.jpg",
+              "caption": "River Ecosystem: Flora, Fauna, and Aquatic Life"
+            }
+          }
+        ],
+        "questions": [
+          {
+            "id": "qst-sec-sci-5-02-02-01",
+            "prompt": "What do aquatic animals like fish absorb from clean flowing river water to breathe?",
+            "options": [
+              "Dissolved carbon dioxide",
+              "Dissolved oxygen",
+              "Chlorophyll",
+              "Mud particles"
+            ],
+            "correctAnswer": "Dissolved oxygen",
+            "hint": "Gills extract dissolved O2."
+          }
+        ]
+      },
+      {
+        "id": "sec-sci-5-02-03",
+        "lessonNumber": 3,
+        "title": "Human Settlements, Farms & Pollution",
+        "subtitle": "The impact of sewage, industrial effluents, and dams",
+        "storyNarrative": {
+          "characterName": "River Godavari",
+          "dialogue": "As I reach large cities, dirty drainage pipes pour dark sewage and plastic into my clean waters. I grow tired and murky\u2014human friends, please protect me!"
+        },
+        "concept": {
+          "heading": "Anthropogenic River Degradation",
+          "keyRule": "Untreated domestic sewage and agricultural pesticide runoff deplete dissolved oxygen, leading to eutrophication and toxic conditions."
+        },
+        "image": "https://kpigixuqpigjremowykx.supabase.co/storage/v1/object/public/curriculum-assets/grade-5/science/ch02/images/human_settlements_along_river.jpg",
+        "blocks": [
+          {
+            "type": "story_narrative",
+            "title": "Story Scene: River Godavari's Dialogue",
+            "content": {
+              "speaker": "River Godavari",
+              "dialogue": "As I reach large cities, dirty drainage pipes pour dark sewage and plastic into my clean waters. I grow tired and murky\u2014human friends, please protect me!"
+            }
+          },
+          {
+            "type": "concept",
+            "title": "Anthropogenic River Degradation",
+            "content": {
+              "heading": "Anthropogenic River Degradation",
+              "explanation": "Untreated domestic sewage and agricultural pesticide runoff deplete dissolved oxygen, leading to eutrophication and toxic conditions.",
+              "keyRule": "Untreated domestic sewage and agricultural pesticide runoff deplete dissolved oxygen, leading to eutrophication and toxic conditions."
+            }
+          },
+          {
+            "type": "image_diagram",
+            "title": "Human Settlements, Farms & Pollution",
+            "content": {
+              "fileName": "human_settlements_along_river.jpg",
+              "publicUrl": "https://kpigixuqpigjremowykx.supabase.co/storage/v1/object/public/curriculum-assets/grade-5/science/ch02/images/human_settlements_along_river.jpg",
+              "caption": "Human Settlements, Farms & Pollution"
+            }
+          }
+        ],
+        "questions": [
+          {
+            "id": "qst-sec-sci-5-02-03-01",
+            "prompt": "What is the best way cities can prevent river pollution?",
+            "options": [
+              "Dump waste only at night",
+              "Treat all sewage in treatment plants before releasing",
+              "Build higher walls around the river",
+              "Add soap to clean the water"
+            ],
+            "correctAnswer": "Treat all sewage in treatment plants before releasing",
+            "hint": "Sewage Treatment Plants (STPs) remove contaminants."
+          }
+        ]
+      },
+      {
+        "id": "sec-sci-5-02-04",
+        "lessonNumber": 4,
+        "title": "The Delta & Merging with the Ocean",
+        "subtitle": "Sediment deposition and the transition to marine water",
+        "storyNarrative": {
+          "characterName": "River Godavari",
+          "dialogue": "Near the coast, my flow splits into hundreds of gentle distributary streams, spreading rich silt over the fertile delta before I embrace the sea!"
+        },
+        "concept": {
+          "heading": "Delta Formation and Estuaries",
+          "keyRule": "Where a river meets the sea, its speed slows, depositing fertile silt to form fan-shaped deltas rich in agriculture and mangroves."
+        },
+        "image": "https://kpigixuqpigjremowykx.supabase.co/storage/v1/object/public/curriculum-assets/grade-5/science/ch02/images/delta_and_sea_entry.jpg",
+        "blocks": [
+          {
+            "type": "story_narrative",
+            "title": "Story Scene: River Godavari's Dialogue",
+            "content": {
+              "speaker": "River Godavari",
+              "dialogue": "Near the coast, my flow splits into hundreds of gentle distributary streams, spreading rich silt over the fertile delta before I embrace the sea!"
+            }
+          },
+          {
+            "type": "concept",
+            "title": "Delta Formation and Estuaries",
+            "content": {
+              "heading": "Delta Formation and Estuaries",
+              "explanation": "Where a river meets the sea, its speed slows, depositing fertile silt to form fan-shaped deltas rich in agriculture and mangroves.",
+              "keyRule": "Where a river meets the sea, its speed slows, depositing fertile silt to form fan-shaped deltas rich in agriculture and mangroves."
+            }
+          },
+          {
+            "type": "image_diagram",
+            "title": "The Delta & Merging with the Ocean",
+            "content": {
+              "fileName": "delta_and_sea_entry.jpg",
+              "publicUrl": "https://kpigixuqpigjremowykx.supabase.co/storage/v1/object/public/curriculum-assets/grade-5/science/ch02/images/delta_and_sea_entry.jpg",
+              "caption": "The Delta & Merging with the Ocean"
+            }
+          }
+        ],
+        "questions": [
+          {
+            "id": "qst-sec-sci-5-02-04-01",
+            "prompt": "Into which body of water does River Godavari empty at the end of its journey?",
+            "options": [
+              "Arabian Sea",
+              "Bay of Bengal",
+              "Indian Ocean at Kanyakumari",
+              "Dal Lake"
+            ],
+            "correctAnswer": "Bay of Bengal",
+            "hint": "Godavari flows eastward across the Deccan plateau into the Bay of Bengal."
+          }
+        ]
+      }
+    ]
+  }
+}

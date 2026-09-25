@@ -1,0 +1,287 @@
+{
+  "book": {
+    "id": "grade-5-science-evs",
+    "title": "Our Wondrous World (Class 5 EVS)",
+    "gradeNumber": 5,
+    "gradeLabel": "Grade 5",
+    "subject": "Science EVS",
+    "curriculum": "NCERT",
+    "nationalEducationPolicy": "NEP 2020 Aligned (Preparatory Stage)",
+    "publisher": "National Council of Educational Research and Training, New Delhi, India",
+    "edition": "Reprint 2026-27",
+    "unit": {
+      "id": "unit-sci-5-02",
+      "book_id": "grade-5-science-evs",
+      "unit_number": 2,
+      "title": "Food, Nutrition and School Life",
+      "about_unit": "Investigates balanced diets, human digestive systems, traditional crops/millets, waste segregation, composting, and creating green school ecosystems.",
+      "banner_image_url": "https://kpigixuqpigjremowykx.supabase.co/storage/v1/object/public/curriculum-assets/grade-5/science/ch03/images/balanced_diet_thali_nutrition.jpg",
+      "facilitation_guide": [
+        {
+          "headline": "Nutritional Rainbow",
+          "text": "Analyze daily meal thalis for protein, energy, vitamins, and roughage."
+        },
+        {
+          "headline": "Compost Audits",
+          "text": "Set up practical wet and dry waste segregation bins in school."
+        }
+      ]
+    }
+  },
+  "chapter": {
+    "id": "ch-sci-5-03",
+    "number": 3,
+    "title": "Food and Health",
+    "tagline": "Discovering balanced nutrition, the digestive system, seasonal farming, and traditional preservation",
+    "overview": "Dr. Anita joins family grandparents to discuss the wisdom of the traditional Indian thali. Students learn about the major nutrient groups (carbohydrates, proteins, fats, vitamins, minerals, roughage), explore how food moves through the digestive tract, and celebrate seasonal millets.",
+    "sourcePdf": "public/Books/Science EVS/eeev103.pdf",
+    "totalPages": 17,
+    "characters": [
+      {
+        "name": "Dr. Anita",
+        "role": "Nutrition Physician",
+        "avatar": "\ud83d\udc69\u200d\u2695\ufe0f"
+      },
+      {
+        "name": "Dadi (Grandmother)",
+        "role": "Traditional Food Expert",
+        "avatar": "\ud83d\udc75"
+      },
+      {
+        "name": "Rohan",
+        "role": "Curious Foodie",
+        "avatar": "\ud83d\udc66"
+      }
+    ],
+    "sections": [
+      {
+        "id": "sec-sci-5-03-01",
+        "lessonNumber": 1,
+        "title": "The Balanced Thali: Nutrients Our Body Needs",
+        "subtitle": "Carbohydrates, proteins, fats, vitamins, and minerals",
+        "storyNarrative": {
+          "characterName": "Dr. Anita",
+          "dialogue": "Look at this traditional thali: roti and rice give us energy (carbs); dal gives protein to grow muscles; green sabzi gives vitamins and minerals to fight illnesses!"
+        },
+        "concept": {
+          "heading": "Components of a Balanced Diet",
+          "keyRule": "A balanced diet provides all essential nutrients in the correct proportions along with dietary roughage and clean water."
+        },
+        "image": "https://kpigixuqpigjremowykx.supabase.co/storage/v1/object/public/curriculum-assets/grade-5/science/ch03/images/balanced_diet_thali_nutrition.jpg",
+        "blocks": [
+          {
+            "type": "story_narrative",
+            "title": "Story Scene: Dr. Anita's Dialogue",
+            "content": {
+              "speaker": "Dr. Anita",
+              "dialogue": "Look at this traditional thali: roti and rice give us energy (carbs); dal gives protein to grow muscles; green sabzi gives vitamins and minerals to fight illnesses!"
+            }
+          },
+          {
+            "type": "concept",
+            "title": "Components of a Balanced Diet",
+            "content": {
+              "heading": "Components of a Balanced Diet",
+              "explanation": "A balanced diet provides all essential nutrients in the correct proportions along with dietary roughage and clean water.",
+              "keyRule": "A balanced diet provides all essential nutrients in the correct proportions along with dietary roughage and clean water."
+            }
+          },
+          {
+            "type": "image_diagram",
+            "title": "The Balanced Thali: Nutrients Our Body Needs",
+            "content": {
+              "fileName": "balanced_diet_thali_nutrition.jpg",
+              "publicUrl": "https://kpigixuqpigjremowykx.supabase.co/storage/v1/object/public/curriculum-assets/grade-5/science/ch03/images/balanced_diet_thali_nutrition.jpg",
+              "caption": "The Balanced Thali: Nutrients Our Body Needs"
+            }
+          }
+        ],
+        "questions": [
+          {
+            "id": "qst-sec-sci-5-03-01-01",
+            "prompt": "Which food group is primarily responsible for bodybuilding and tissue repair?",
+            "options": [
+              "Carbohydrates",
+              "Proteins (like lentils and pulses)",
+              "Sugars",
+              "Fats alone"
+            ],
+            "correctAnswer": "Proteins (like lentils and pulses)",
+            "hint": "Proteins are the building blocks of the body."
+          }
+        ]
+      },
+      {
+        "id": "sec-sci-5-03-02",
+        "lessonNumber": 2,
+        "title": "From Tasting to Digesting",
+        "subtitle": "How teeth, saliva, stomach acid, and intestines absorb nutrients",
+        "storyNarrative": {
+          "characterName": "Rohan",
+          "dialogue": "When I chew dry roti for a long time, it starts tasting sweet! Dadi says my saliva is already breaking down the food!"
+        },
+        "concept": {
+          "heading": "Salivary Digestion & Gastrointestinal Absorption",
+          "keyRule": "Salivary amylase begins breaking starches into simple sugars. The stomach and small intestine further break down and absorb nutrients into blood."
+        },
+        "image": "https://kpigixuqpigjremowykx.supabase.co/storage/v1/object/public/curriculum-assets/grade-5/science/ch03/images/digestive_system_tract.jpg",
+        "blocks": [
+          {
+            "type": "story_narrative",
+            "title": "Story Scene: Rohan's Dialogue",
+            "content": {
+              "speaker": "Rohan",
+              "dialogue": "When I chew dry roti for a long time, it starts tasting sweet! Dadi says my saliva is already breaking down the food!"
+            }
+          },
+          {
+            "type": "concept",
+            "title": "Salivary Digestion & Gastrointestinal Absorption",
+            "content": {
+              "heading": "Salivary Digestion & Gastrointestinal Absorption",
+              "explanation": "Salivary amylase begins breaking starches into simple sugars. The stomach and small intestine further break down and absorb nutrients into blood.",
+              "keyRule": "Salivary amylase begins breaking starches into simple sugars. The stomach and small intestine further break down and absorb nutrients into blood."
+            }
+          },
+          {
+            "type": "image_diagram",
+            "title": "From Tasting to Digesting",
+            "content": {
+              "fileName": "digestive_system_tract.jpg",
+              "publicUrl": "https://kpigixuqpigjremowykx.supabase.co/storage/v1/object/public/curriculum-assets/grade-5/science/ch03/images/digestive_system_tract.jpg",
+              "caption": "From Tasting to Digesting"
+            }
+          }
+        ],
+        "questions": [
+          {
+            "id": "qst-sec-sci-5-03-02-01",
+            "prompt": "Where does the process of human digestion begin?",
+            "options": [
+              "In the stomach",
+              "In the mouth",
+              "In the small intestine",
+              "In the liver"
+            ],
+            "correctAnswer": "In the mouth",
+            "hint": "Teeth chew and saliva enzymes begin digestion in the mouth."
+          }
+        ]
+      },
+      {
+        "id": "sec-sci-5-03-03",
+        "lessonNumber": 3,
+        "title": "Seasonal Agriculture: Millets and Grains",
+        "subtitle": "Why eating seasonal crops and ancient millets promotes climate and human health",
+        "storyNarrative": {
+          "characterName": "Dadi (Grandmother)",
+          "dialogue": "In winter we eat Bajra (pearl millet) and sesame; in summer we drink chilled sattu! Traditional millets require very little water and enrich our soil!"
+        },
+        "concept": {
+          "heading": "Nutri-Cereals (Millets) and Seasonality",
+          "keyRule": "Millets (Ragi, Jowar, Bajra) are drought-resistant, iron-rich, high in fibre, and suited to local seasonal climates."
+        },
+        "image": "https://kpigixuqpigjremowykx.supabase.co/storage/v1/object/public/curriculum-assets/grade-5/science/ch03/images/seasonal_vegetables_and_millets.jpg",
+        "blocks": [
+          {
+            "type": "story_narrative",
+            "title": "Story Scene: Dadi (Grandmother)'s Dialogue",
+            "content": {
+              "speaker": "Dadi (Grandmother)",
+              "dialogue": "In winter we eat Bajra (pearl millet) and sesame; in summer we drink chilled sattu! Traditional millets require very little water and enrich our soil!"
+            }
+          },
+          {
+            "type": "concept",
+            "title": "Nutri-Cereals (Millets) and Seasonality",
+            "content": {
+              "heading": "Nutri-Cereals (Millets) and Seasonality",
+              "explanation": "Millets (Ragi, Jowar, Bajra) are drought-resistant, iron-rich, high in fibre, and suited to local seasonal climates.",
+              "keyRule": "Millets (Ragi, Jowar, Bajra) are drought-resistant, iron-rich, high in fibre, and suited to local seasonal climates."
+            }
+          },
+          {
+            "type": "image_diagram",
+            "title": "Seasonal Agriculture: Millets and Grains",
+            "content": {
+              "fileName": "seasonal_vegetables_and_millets.jpg",
+              "publicUrl": "https://kpigixuqpigjremowykx.supabase.co/storage/v1/object/public/curriculum-assets/grade-5/science/ch03/images/seasonal_vegetables_and_millets.jpg",
+              "caption": "Seasonal Agriculture: Millets and Grains"
+            }
+          }
+        ],
+        "questions": [
+          {
+            "id": "qst-sec-sci-5-03-03-01",
+            "prompt": "Why are millets like Ragi and Jowar considered climate-resilient superfoods?",
+            "options": [
+              "They need massive amounts of pesticide",
+              "They grow with very little water and are packed with minerals",
+              "They only grow in winter greenhouses",
+              "They contain no fibre"
+            ],
+            "correctAnswer": "They grow with very little water and are packed with minerals",
+            "hint": "Millets thrive in dry conditions and have high nutritional density."
+          }
+        ]
+      },
+      {
+        "id": "sec-sci-5-03-04",
+        "lessonNumber": 4,
+        "title": "Traditional Food Preservation Techniques",
+        "subtitle": "Pickling, sun-drying, salting, and preventing spoilage",
+        "storyNarrative": {
+          "characterName": "Dadi (Grandmother)",
+          "dialogue": "When raw mangoes are abundant in summer, we slice them, rub with salt and turmeric, sun-dry them, and store in mustard oil to last all year!"
+        },
+        "concept": {
+          "heading": "Inhibiting Microbial Growth",
+          "keyRule": "Removing moisture (sun-drying) or creating high osmotic/acidic barriers (salt, sugar, vinegar, oil) prevents fungal and bacterial rot."
+        },
+        "image": "https://kpigixuqpigjremowykx.supabase.co/storage/v1/object/public/curriculum-assets/grade-5/science/ch03/images/traditional_food_preservation.jpg",
+        "blocks": [
+          {
+            "type": "story_narrative",
+            "title": "Story Scene: Dadi (Grandmother)'s Dialogue",
+            "content": {
+              "speaker": "Dadi (Grandmother)",
+              "dialogue": "When raw mangoes are abundant in summer, we slice them, rub with salt and turmeric, sun-dry them, and store in mustard oil to last all year!"
+            }
+          },
+          {
+            "type": "concept",
+            "title": "Inhibiting Microbial Growth",
+            "content": {
+              "heading": "Inhibiting Microbial Growth",
+              "explanation": "Removing moisture (sun-drying) or creating high osmotic/acidic barriers (salt, sugar, vinegar, oil) prevents fungal and bacterial rot.",
+              "keyRule": "Removing moisture (sun-drying) or creating high osmotic/acidic barriers (salt, sugar, vinegar, oil) prevents fungal and bacterial rot."
+            }
+          },
+          {
+            "type": "image_diagram",
+            "title": "Traditional Food Preservation Techniques",
+            "content": {
+              "fileName": "traditional_food_preservation.jpg",
+              "publicUrl": "https://kpigixuqpigjremowykx.supabase.co/storage/v1/object/public/curriculum-assets/grade-5/science/ch03/images/traditional_food_preservation.jpg",
+              "caption": "Traditional Food Preservation Techniques"
+            }
+          }
+        ],
+        "questions": [
+          {
+            "id": "qst-sec-sci-5-03-04-01",
+            "prompt": "How does sun-drying preserve vegetables and fruits for long periods?",
+            "options": [
+              "It removes moisture needed by bacteria and fungi to grow",
+              "It adds extra water",
+              "It freezes the enzymes",
+              "It makes them turn into sugar"
+            ],
+            "correctAnswer": "It removes moisture needed by bacteria and fungi to grow",
+            "hint": "Microorganisms cannot survive without moisture."
+          }
+        ]
+      }
+    ]
+  }
+}

@@ -22,6 +22,8 @@ local/*
 public/plugins/private/
 tools/mobile/android/
 tools/mobile/ios/
+*.db
+data/*.db
 
 # Local / IDE
 .cursor/

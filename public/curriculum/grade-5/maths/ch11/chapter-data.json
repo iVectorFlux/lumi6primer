@@ -1,0 +1,230 @@
+{
+  "book": {
+    "id": "grade-5-mathematics",
+    "title": "Mathematics (Class 5)",
+    "gradeNumber": 5,
+    "gradeLabel": "Grade 5",
+    "subject": "Mathematics",
+    "curriculum": "NCERT",
+    "nationalEducationPolicy": "NEP 2020 Aligned (Preparatory Stage)",
+    "publisher": "National Council of Educational Research and Training, New Delhi, India",
+    "edition": "Reprint 2026-27",
+    "unit": {
+      "id": "unit-math-5-04",
+      "book_id": "grade-5-mathematics",
+      "unit_number": 4,
+      "title": "Measurement, Scales and Time",
+      "about_unit": "Covers distance measurement (mm to km), weight (grams to kg), capacity (ml to L), perimeter, grid area, and timing with stopwatches.",
+      "banner_image_url": "https://kpigixuqpigjremowykx.supabase.co/storage/v1/object/public/curriculum-assets/grade-5/maths/ch05/images/measuring_units_comparison.png",
+      "facilitation_guide": [
+        {
+          "headline": "Estimation First",
+          "text": "Always prompt learners to estimate before measuring with rulers or balances."
+        },
+        {
+          "headline": "Spatial Grid Area",
+          "text": "Count whole and half square centimetres before introducing formulas."
+        }
+      ]
+    }
+  },
+  "chapter": {
+    "id": "ch-math-5-11",
+    "number": 11,
+    "title": "Grandmother\u2019s Quilt",
+    "tagline": "Measuring perimeter with border lace and calculating area with square grids",
+    "overview": "Preetha and Adrit's grandmother weaves a quilt from upcycled fabric patches. She decorates the border with lace, leading children to investigate perimeter (total boundary length). By overlaying 1 cm square grids, they discover area and shapes with equal area but different boundaries.",
+    "sourcePdf": "public/Books/Maths/eemm111.pdf",
+    "totalPages": 13,
+    "characters": [
+      {
+        "name": "Grandmother",
+        "role": "Master Quilter",
+        "avatar": "\ud83d\udc75"
+      },
+      {
+        "name": "Preetha",
+        "role": "Border Measurer",
+        "avatar": "\ud83d\udc67"
+      },
+      {
+        "name": "Adrit",
+        "role": "Grid Explorer",
+        "avatar": "\ud83d\udc66"
+      }
+    ],
+    "sections": [
+      {
+        "id": "sec-math-5-11-01",
+        "lessonNumber": 1,
+        "title": "Decorating the Quilt Border: Perimeter",
+        "subtitle": "Calculating the total distance around a closed 2D shape",
+        "storyNarrative": {
+          "characterName": "Grandmother",
+          "dialogue": "My quilt is 2 metres long and 1.5 metres wide. How many metres of golden lace must we buy to stitch around all four sides?"
+        },
+        "concept": {
+          "heading": "Perimeter of a Rectangle",
+          "keyRule": "Perimeter = Length + Width + Length + Width = 2 \u00d7 (Length + Width). For 2m by 1.5m: 2 \u00d7 (2 + 1.5) = 7 metres."
+        },
+        "image": "https://kpigixuqpigjremowykx.supabase.co/storage/v1/object/public/curriculum-assets/grade-5/maths/ch11/images/grandmother_quilt_border.png",
+        "blocks": [
+          {
+            "type": "story_narrative",
+            "title": "Story Scene: Grandmother's Dialogue",
+            "content": {
+              "speaker": "Grandmother",
+              "dialogue": "My quilt is 2 metres long and 1.5 metres wide. How many metres of golden lace must we buy to stitch around all four sides?"
+            }
+          },
+          {
+            "type": "concept",
+            "title": "Perimeter of a Rectangle",
+            "content": {
+              "heading": "Perimeter of a Rectangle",
+              "explanation": "Perimeter = Length + Width + Length + Width = 2 \u00d7 (Length + Width). For 2m by 1.5m: 2 \u00d7 (2 + 1.5) = 7 metres.",
+              "keyRule": "Perimeter = Length + Width + Length + Width = 2 \u00d7 (Length + Width). For 2m by 1.5m: 2 \u00d7 (2 + 1.5) = 7 metres."
+            }
+          },
+          {
+            "type": "image_diagram",
+            "title": "Decorating the Quilt Border: Perimeter",
+            "content": {
+              "fileName": "grandmother_quilt_border.png",
+              "publicUrl": "https://kpigixuqpigjremowykx.supabase.co/storage/v1/object/public/curriculum-assets/grade-5/maths/ch11/images/grandmother_quilt_border.png",
+              "caption": "Decorating the Quilt Border: Perimeter"
+            }
+          }
+        ],
+        "questions": [
+          {
+            "id": "qst-sec-math-5-11-01-01",
+            "prompt": "What is the perimeter of a square with side length 5 cm?",
+            "options": [
+              "10 cm",
+              "15 cm",
+              "20 cm",
+              "25 cm"
+            ],
+            "correctAnswer": "20 cm",
+            "hint": "A square has 4 equal sides: 4 \u00d7 5 cm."
+          }
+        ]
+      },
+      {
+        "id": "sec-math-5-11-02",
+        "lessonNumber": 2,
+        "title": "Grid Area: Counting 1 cm\u00b2 Squares",
+        "subtitle": "Measuring the surface enclosed within a boundary",
+        "storyNarrative": {
+          "characterName": "Preetha",
+          "dialogue": "Adrit, place the transparent 1 cm square grid on top! If a patch covers 12 full unit squares, its area is 12 square centimetres!"
+        },
+        "concept": {
+          "heading": "Area by Unit Square Counting",
+          "keyRule": "Area is the amount of surface inside a 2D boundary, quantified in square units (cm\u00b2, m\u00b2)."
+        },
+        "image": "https://kpigixuqpigjremowykx.supabase.co/storage/v1/object/public/curriculum-assets/grade-5/maths/ch11/images/square_grid_area_measurement.png",
+        "blocks": [
+          {
+            "type": "story_narrative",
+            "title": "Story Scene: Preetha's Dialogue",
+            "content": {
+              "speaker": "Preetha",
+              "dialogue": "Adrit, place the transparent 1 cm square grid on top! If a patch covers 12 full unit squares, its area is 12 square centimetres!"
+            }
+          },
+          {
+            "type": "concept",
+            "title": "Area by Unit Square Counting",
+            "content": {
+              "heading": "Area by Unit Square Counting",
+              "explanation": "Area is the amount of surface inside a 2D boundary, quantified in square units (cm\u00b2, m\u00b2).",
+              "keyRule": "Area is the amount of surface inside a 2D boundary, quantified in square units (cm\u00b2, m\u00b2)."
+            }
+          },
+          {
+            "type": "image_diagram",
+            "title": "Grid Area: Counting 1 cm\u00b2 Squares",
+            "content": {
+              "fileName": "square_grid_area_measurement.png",
+              "publicUrl": "https://kpigixuqpigjremowykx.supabase.co/storage/v1/object/public/curriculum-assets/grade-5/maths/ch11/images/square_grid_area_measurement.png",
+              "caption": "Grid Area: Counting 1 cm\u00b2 Squares"
+            }
+          }
+        ],
+        "questions": [
+          {
+            "id": "qst-sec-math-5-11-02-01",
+            "prompt": "A rectangle is 4 cm long and 3 cm wide. What is its area?",
+            "options": [
+              "7 cm\u00b2",
+              "12 cm\u00b2",
+              "14 cm\u00b2",
+              "24 cm\u00b2"
+            ],
+            "correctAnswer": "12 cm\u00b2",
+            "hint": "Area of rectangle = Length \u00d7 Width = 4 \u00d7 3."
+          }
+        ]
+      },
+      {
+        "id": "sec-math-5-11-03",
+        "lessonNumber": 3,
+        "title": "Different Shapes, Same Area",
+        "subtitle": "Comparing shapes with identical area but different perimeters",
+        "storyNarrative": {
+          "characterName": "Adrit",
+          "dialogue": "Look! A long 1 \u00d7 12 rectangle and a 3 \u00d7 4 rectangle both have an area of 12 cm\u00b2, but the long one needs 26 cm of lace while the other needs only 14 cm!"
+        },
+        "concept": {
+          "heading": "Isoperimetric Independence",
+          "keyRule": "Shapes with the exact same area can have dramatically different perimeters."
+        },
+        "image": "https://kpigixuqpigjremowykx.supabase.co/storage/v1/object/public/curriculum-assets/grade-5/maths/ch11/images/different_shapes_same_area.png",
+        "blocks": [
+          {
+            "type": "story_narrative",
+            "title": "Story Scene: Adrit's Dialogue",
+            "content": {
+              "speaker": "Adrit",
+              "dialogue": "Look! A long 1 \u00d7 12 rectangle and a 3 \u00d7 4 rectangle both have an area of 12 cm\u00b2, but the long one needs 26 cm of lace while the other needs only 14 cm!"
+            }
+          },
+          {
+            "type": "concept",
+            "title": "Isoperimetric Independence",
+            "content": {
+              "heading": "Isoperimetric Independence",
+              "explanation": "Shapes with the exact same area can have dramatically different perimeters.",
+              "keyRule": "Shapes with the exact same area can have dramatically different perimeters."
+            }
+          },
+          {
+            "type": "image_diagram",
+            "title": "Different Shapes, Same Area",
+            "content": {
+              "fileName": "different_shapes_same_area.png",
+              "publicUrl": "https://kpigixuqpigjremowykx.supabase.co/storage/v1/object/public/curriculum-assets/grade-5/maths/ch11/images/different_shapes_same_area.png",
+              "caption": "Different Shapes, Same Area"
+            }
+          }
+        ],
+        "questions": [
+          {
+            "id": "qst-sec-math-5-11-03-01",
+            "prompt": "Can two different shapes have the exact same area but different perimeters?",
+            "options": [
+              "Yes, always possible",
+              "No, impossible",
+              "Only if they are circles",
+              "Only if perimeter is zero"
+            ],
+            "correctAnswer": "Yes, always possible",
+            "hint": "Elongated shapes have much longer boundaries for the same area."
+          }
+        ]
+      }
+    ]
+  }
+}
