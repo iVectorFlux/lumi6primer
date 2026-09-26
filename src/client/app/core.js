@@ -65,6 +65,7 @@
     selectionToolbar = document.querySelector("#selectionToolbar"),
     selectionTypesetButton = document.querySelector("#selectionTypesetBtn"),
     selectionVisualizeButton = document.querySelector("#selectionVisualizeBtn"),
+    selectionSendBackButton = document.querySelector("#selectionSendBackBtn"),
     selectionDeleteButton = document.querySelector("#selectionDeleteBtn"),
     selectionCancelButton = document.querySelector("#selectionCancelBtn"),
     imagePickerButton = document.querySelector("#imagePickerBtn"),

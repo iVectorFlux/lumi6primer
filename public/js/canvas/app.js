@@ -66,6 +66,7 @@
     selectionToolbar = document.querySelector("#selectionToolbar"),
     selectionTypesetButton = document.querySelector("#selectionTypesetBtn"),
     selectionVisualizeButton = document.querySelector("#selectionVisualizeBtn"),
+    selectionSendBackButton = document.querySelector("#selectionSendBackBtn"),
     selectionDeleteButton = document.querySelector("#selectionDeleteBtn"),
     selectionCancelButton = document.querySelector("#selectionCancelBtn"),
     imagePickerButton = document.querySelector("#imagePickerBtn"),
@@ -4513,6 +4514,7 @@ User writes "Show air quality for Tokyo", names a place, and points to an empty 
     inkCtx.clip();
     forTiles(visible.x, visible.y, visible.w, visible.h, (canvas, tx, ty) => inkCtx.drawImage(canvas, tx * TILE, ty * TILE), false);
     drawSharpOverlays(inkCtx, visible);
+    drawTextBoxesToContext(inkCtx, visible);
     inkCtx.restore();
   }
   function updateCoordinates() {
@@ -4553,7 +4555,6 @@ User writes "Show air quality for Tokyo", names a place, and points to an empty 
       ctx.stroke();
     }
     drawImagesToContext(ctx, { x:l, y:t, w:rr - l, h:b - t });
-    drawTextBoxesToContext(ctx, { x:l, y:t, w:rr - l, h:b - t });
     ctx.restore();
     ctx.strokeStyle = state.paint.border;
     ctx.lineWidth = 2 / state.scale;
@@ -5307,26 +5308,6 @@ User writes "Show air quality for Tokyo", names a place, and points to an empty 
     editor.y = Math.max(0, Math.min(SIZE - logicalHeight, editor.y));
   }
   function keepTextEditorVisible(editor) {
-    const viewport = textEditorViewportSize(),
-      inset = 12,
-      scale = Math.max(0.03, state.scale),
-      point = textEditorScreenPoint(editor),
-      widthCss = Math.max(TEXT_EDITOR_MIN_WIDTH, editor.widthCss),
-      heightCss = Math.max(TEXT_EDITOR_MIN_HEIGHT, editor.heightCss),
-      maxLeft = Math.max(inset, viewport.width - widthCss - inset),
-      maxTop = Math.max(inset, viewport.height - heightCss - inset),
-      canvasLeft = state.panX,
-      canvasTop = state.panY,
-      canvasRight = state.panX + SIZE * scale - widthCss,
-      canvasBottom = state.panY + SIZE * scale - heightCss,
-      minLeft = Math.max(inset, canvasLeft),
-      minTop = Math.max(inset, canvasTop),
-      boundedMaxLeft = Math.min(maxLeft, canvasRight),
-      boundedMaxTop = Math.min(maxTop, canvasBottom),
-      left = boundedMaxLeft >= minLeft ? Math.min(boundedMaxLeft, Math.max(minLeft, point.left)) : Math.min(maxLeft, Math.max(inset, point.left)),
-      top = boundedMaxTop >= minTop ? Math.min(boundedMaxTop, Math.max(minTop, point.top)) : Math.min(maxTop, Math.max(inset, point.top));
-    if (Math.abs(left - point.left) > 0.5) editor.x = (left - state.panX) / scale;
-    if (Math.abs(top - point.top) > 0.5) editor.y = (top - state.panY) / scale;
     keepTextEditorInsideCanvas(editor);
   }
   function panToRevealTextEditor(editor) {
@@ -5345,7 +5326,6 @@ User writes "Show air quality for Tokyo", names a place, and points to an empty 
     state.panY += dy;
     updateCoordinates();
     requestRender();
-    keepTextEditorVisible(editor);
   }
   function positionTextEditors() {
     const visible = state.textEditors.size > 0;
@@ -5353,19 +5333,39 @@ User writes "Show air quality for Tokyo", names a place, and points to an empty 
     textInputHint.hidden = true;
     for (const editor of state.textEditors.values()) {
       keepTextEditorInsideCanvas(editor);
-      keepTextEditorVisible(editor);
       const point = textEditorScreenPoint(editor),
         active = editor.id === state.activeTextEditorId,
         declaration = editor.styleRule?.["style"];
+      const leftPx = `${Math.round(point.left)}px`,
+        topPx = `${Math.round(point.top)}px`,
+        widthPx = `${Math.round(editor.widthCss)}px`,
+        heightPx = `${Math.round(editor.heightCss)}px`,
+        zStr = String(editor.zIndex || 1),
+        fontSize = `${editor.fontCss}px`,
+        fontColor = editor.color || state.inkColor,
+        fontFamily = state.aiFont || TEXT_EDITOR_FONT_FAMILY;
+      // Direct inline style guarantees positioning regardless of stylesheet state
+      editor.element.style.left = leftPx;
+      editor.element.style.top = topPx;
+      editor.element.style.width = widthPx;
+      editor.element.style.height = heightPx;
+      editor.element.style.zIndex = zStr;
+      editor.element.style.setProperty("--text-editor-font-size", fontSize);
+      editor.element.style.setProperty("--text-editor-ink", fontColor);
+      editor.element.style.setProperty("--text-editor-font-family", fontFamily);
+      if (editor.previewLogicalWidth) editor.element.style.setProperty("--text-editor-preview-width", `${editor.previewLogicalWidth}px`);
+      else editor.element.style.removeProperty("--text-editor-preview-width");
+      if (editor.previewLogicalHeight) editor.element.style.setProperty("--text-editor-preview-height", `${editor.previewLogicalHeight}px`);
+      else editor.element.style.removeProperty("--text-editor-preview-height");
       if (declaration) {
-        declaration.left = `${Math.round(point.left)}px`;
-        declaration.top = `${Math.round(point.top)}px`;
-        declaration.width = `${Math.round(editor.widthCss)}px`;
-        declaration.height = `${Math.round(editor.heightCss)}px`;
-        declaration.zIndex = String(editor.zIndex || 1);
-        declaration.setProperty("--text-editor-font-size", `${editor.fontCss}px`);
-        declaration.setProperty("--text-editor-ink", editor.color || state.inkColor);
-        declaration.setProperty("--text-editor-font-family", state.aiFont || TEXT_EDITOR_FONT_FAMILY);
+        declaration.left = leftPx;
+        declaration.top = topPx;
+        declaration.width = widthPx;
+        declaration.height = heightPx;
+        declaration.zIndex = zStr;
+        declaration.setProperty("--text-editor-font-size", fontSize);
+        declaration.setProperty("--text-editor-ink", fontColor);
+        declaration.setProperty("--text-editor-font-family", fontFamily);
         if (editor.previewLogicalWidth) declaration.setProperty("--text-editor-preview-width", `${editor.previewLogicalWidth}px`);
         else declaration.removeProperty("--text-editor-preview-width");
         if (editor.previewLogicalHeight) declaration.setProperty("--text-editor-preview-height", `${editor.previewLogicalHeight}px`);
@@ -5377,7 +5377,7 @@ User writes "Show air quality for Tokyo", names a place, and points to an empty 
   }
   function textEditorStyleSheet() {
     if (state.textEditorStyleSheet) return state.textEditorStyleSheet;
-    state.textEditorStyleSheet = [...document.styleSheets].find((sheet) => /(?:^|\/)style\.css(?:\?|$)/.test(sheet.href || "")) || null;
+    state.textEditorStyleSheet = [...document.styleSheets].find((sheet) => /(?:^|\/)(?:app|style)\.css(?:\?|$)/.test(sheet.href || "")) || null;
     return state.textEditorStyleSheet;
   }
   function addTextEditorStyleRule(editor) {
@@ -5892,6 +5892,26 @@ User writes "Show air quality for Tokyo", names a place, and points to an empty 
     };
     state.panGesture = null;
   }
+  function clampPan() {
+    const r = view.getBoundingClientRect(),
+      canvasW = SIZE * state.scale,
+      canvasH = SIZE * state.scale,
+      margin = Math.min(240, Math.min(r.width, r.height) * 0.3);
+    if (canvasW <= r.width) {
+      state.panX = (r.width - canvasW) / 2;
+    } else {
+      const minX = r.width - canvasW - margin,
+        maxX = margin;
+      state.panX = Math.min(maxX, Math.max(minX, state.panX));
+    }
+    if (canvasH <= r.height) {
+      state.panY = (r.height - canvasH) / 2;
+    } else {
+      const minY = r.height - canvasH - margin,
+        maxY = margin;
+      state.panY = Math.min(maxY, Math.max(minY, state.panY));
+    }
+  }
   function updateTouchGesture() {
     const g = state.touchGesture;
     if (!g) return false;
@@ -5903,12 +5923,13 @@ User writes "Show air quality for Tokyo", names a place, and points to an empty 
       },
       distance = Math.max(1, Math.hypot(points[0].x - points[1].x, points[0].y - points[1].y)),
       r = view.getBoundingClientRect(),
-      next = Math.max(0.03, Math.min(2, (g.scale * distance) / g.distance)),
+      next = Math.max(0.35, Math.min(2.5, (g.scale * distance) / g.distance)),
       anchorX = (g.center.x - r.left - g.panX) / g.scale,
       anchorY = (g.center.y - r.top - g.panY) / g.scale;
     state.scale = next;
     state.panX = center.x - r.left - anchorX * next;
     state.panY = center.y - r.top - anchorY * next;
+    clampPan();
     updateCoordinates();
     setNavigating(true);
     render();
@@ -5917,18 +5938,20 @@ User writes "Show air quality for Tokyo", names a place, and points to an empty 
   function moveCanvas(dx, dy) {
     state.panX += dx;
     state.panY += dy;
+    clampPan();
     updateCoordinates();
     requestRender();
   }
   function zoomCanvasAt(clientX, clientY, deltaY) {
     const rect = view.getBoundingClientRect(),
       factor = deltaY < 0 ? 1.12 : 0.89,
-      next = Math.max(0.03, Math.min(2, state.scale * factor)),
+      next = Math.max(0.35, Math.min(2.5, state.scale * factor)),
       px = clientX - rect.left,
       py = clientY - rect.top;
     state.panX = px - ((px - state.panX) * next) / state.scale;
     state.panY = py - ((py - state.panY) * next) / state.scale;
     state.scale = next;
+    clampPan();
     updateCoordinates();
     requestRender();
     wheelNavigating();
@@ -7403,21 +7426,29 @@ User writes "Show air quality for Tokyo", names a place, and points to an empty 
       w: hitPad * 2,
       h: hitPad * 2,
     });
+    // If not hit directly on the stroke, try a wider probe (useful for hollow shapes like circles or rectangles)
+    if (!bounds) {
+      bounds = inkBoundsInRegion({
+        x: point.x - hitPad * 2.5,
+        y: point.y - hitPad * 2.5,
+        w: hitPad * 5,
+        h: hitPad * 5,
+      });
+    }
     if (!bounds) return false;
-    const gap = 7 / scale,
-      maxGrow = 56 / scale,
+    const gap = Math.max(10, 16 / scale),
+      maxGrow = Math.max(2500, 5000 / scale),
       origin = { ...bounds };
-    for (let i = 0; i < 10; i += 1) {
+    for (let i = 0; i < 45; i += 1) {
       const next = inkBoundsInRegion(padInkBox(bounds, gap));
       if (!next || boxesAlmostEqual(next, bounds)) break;
-      if (
-        next.x < origin.x - maxGrow
-        || next.y < origin.y - maxGrow
-        || next.x + next.w > origin.x + origin.w + maxGrow
-        || next.y + next.h > origin.y + origin.h + maxGrow
-      ) break;
       bounds = next;
+      if (
+        bounds.w >= maxGrow
+        || bounds.h >= maxGrow
+      ) break;
     }
+    bounds = padInkBox(bounds, Math.max(3, 4 / scale));
     rememberInkBox(bounds);
     return captureBoxSelection(bounds, {
       quiet: true,
@@ -7602,7 +7633,8 @@ User writes "Show air quality for Tokyo", names a place, and points to an empty 
     if (!silent) setStatusKey("selectionCancelled");
     return true;
   }
-  function commitSelection() {
+  function commitSelection(options = null) {
+    const sendBackwards = Boolean(options?.sendBackwards);
     const selection = state.selection;
     if (!selection) return false;
     if (selectionAIBusy(selection)) return false;
@@ -7612,7 +7644,7 @@ User writes "Show air quality for Tokyo", names a place, and points to an empty 
       render();
       return false;
     }
-    if (!selectionHasChanges(selection)) {
+    if (!selectionHasChanges(selection) && !sendBackwards) {
       cancelSelection(true);
       setStatusKey("selectionCommitted");
       return false;
@@ -7631,7 +7663,10 @@ User writes "Show air quality for Tokyo", names a place, and points to an empty 
         item.h = target.h;
         item.fontSize = Math.max(1, item.fontSize * Math.min(scaleX, scaleY));
         item.maxWidth = Math.max(item.fontSize * 3, item.maxWidth * scaleX);
-        if (!state.textBoxes.some((existing) => existing.id === item.id)) state.textBoxes.push(item);
+        if (!state.textBoxes.some((existing) => existing.id === item.id)) {
+          if (sendBackwards) state.textBoxes.unshift(item);
+          else state.textBoxes.push(item);
+        }
         continue;
       }
       if (fragment.boardImage && !selection.color) {
@@ -7642,16 +7677,19 @@ User writes "Show air quality for Tokyo", names a place, and points to an empty 
         item.y = target.y;
         item.w = target.w;
         item.h = target.h;
-        if (!state.images.some((existing) => existing.id === item.id)) state.images.push(item);
+        if (!state.images.some((existing) => existing.id === item.id)) {
+          if (sendBackwards) state.images.unshift(item);
+          else state.images.push(item);
+        }
         continue;
       }
-      blitSized(fragment.renderImage || fragment.image, target.x, target.y, target.w, target.h);
+      blitSized(fragment.renderImage || fragment.image, target.x, target.y, target.w, target.h, sendBackwards);
     }
     state.userRevision++;
     save();
     resetCanvasCursor();
     render();
-    setStatusKey("selectionCommitted");
+    setStatusKey(sendBackwards ? "selectionSentBack" : "selectionCommitted");
     return true;
   }
   function applySelectionColor(color) {
@@ -7706,6 +7744,10 @@ User writes "Show air quality for Tokyo", names a place, and points to an empty 
       selectionVisualizeButton.disabled = Boolean(state.visualizingSelection);
       selectionVisualizeButton.setAttribute("aria-busy", String(Boolean(state.visualizingSelection)));
       selectionVisualizeButton.textContent = t(state.visualizingSelection ? "selectionVisualizing" : "selectionVisualize");
+    }
+    if (selectionSendBackButton) {
+      selectionSendBackButton.hidden = draftReady;
+      selectionSendBackButton.disabled = false;
     }
     if (selectionDeleteButton) {
       selectionDeleteButton.hidden = draftReady;
@@ -9274,7 +9316,7 @@ User writes "Show air quality for Tokyo", names a place, and points to an empty 
   function blitStretched(im, x, y, scaleX, scaleY) {
     blitSized(im, x, y, im.width * scaleX, im.height * scaleY);
   }
-  function blitSized(im, x, y, w, h) {
+  function blitSized(im, x, y, w, h, backwards = false) {
     const x0 = Math.max(0, Math.floor(x / TILE)),
       y0 = Math.max(0, Math.floor(y / TILE)),
       x1 = Math.min(Math.ceil(SIZE / TILE) - 1, Math.ceil((x + w) / TILE) - 1),
@@ -9282,8 +9324,16 @@ User writes "Show air quality for Tokyo", names a place, and points to an empty 
     for (let ty = y0; ty <= y1; ty++)
       for (let tx = x0; tx <= x1; tx++) {
         recordBefore(tx, ty);
-        const t = tile(tx, ty);
-        t.getContext("2d").drawImage(im, x - tx * TILE, y - ty * TILE, w, h);
+        const t = tile(tx, ty),
+          ctx = t.getContext("2d");
+        if (backwards) {
+          ctx.save();
+          ctx.globalCompositeOperation = "destination-over";
+          ctx.drawImage(im, x - tx * TILE, y - ty * TILE, w, h);
+          ctx.restore();
+        } else {
+          ctx.drawImage(im, x - tx * TILE, y - ty * TILE, w, h);
+        }
         const local = intersection({ x: x - tx * TILE, y: y - ty * TILE, w, h }, { x: 0, y: 0, w: TILE, h: TILE });
         if (local) extendInkBounds(key(tx, ty), local);
       }
@@ -11281,7 +11331,7 @@ User writes "Show air quality for Tokyo", names a place, and points to an empty 
     penTrayEl.addEventListener("click", (e) => e.stopPropagation());
     penTrayEl.addEventListener("touchstart", (e) => e.stopPropagation(), { passive: true });
   }
-  [selectionTypesetButton, selectionDeleteButton, selectionCancelButton].filter(Boolean).forEach((button) => {
+  [selectionTypesetButton, selectionVisualizeButton, selectionSendBackButton, selectionDeleteButton, selectionCancelButton].filter(Boolean).forEach((button) => {
     button.addEventListener("pointerdown", (event) => event.stopPropagation());
     button.addEventListener("click", (event) => event.stopPropagation());
   });
@@ -11424,6 +11474,7 @@ User writes "Show air quality for Tokyo", names a place, and points to an empty 
     selectionToolbar.addEventListener("pointerdown", (event) => event.stopPropagation());
     selectionToolbar.addEventListener("pointerup", (event) => event.stopPropagation());
   }
+  if (selectionSendBackButton) selectionSendBackButton.onclick = () => commitSelection({ sendBackwards: true });
   if (selectionDeleteButton) selectionDeleteButton.onclick = deleteSelection;
   if (selectionCancelButton) selectionCancelButton.onclick = () => {
     if (selectionHasTypesetDraft()) rejectPending();
@@ -11672,7 +11723,7 @@ User writes "Show air quality for Tokyo", names a place, and points to an empty 
     state.userRevision++;
     let bounds = null;
     for (const points of polylines) {
-      for (let i = 1; i < points.length; i += 1) stroke(points[i - 1], points[i], false, size, true);
+      for (let i = 1; i < points.length; i += 1) stroke(points[i - 1], points[i], false, size, false);
       for (const point of points) bounds = SELECT.unionBox(bounds, { x: point.x, y: point.y, w: 1, h: 1 });
     }
     if (bounds) rememberInkBox(bounds);

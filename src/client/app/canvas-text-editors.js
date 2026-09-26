@@ -56,26 +56,6 @@
     editor.y = Math.max(0, Math.min(SIZE - logicalHeight, editor.y));
   }
   function keepTextEditorVisible(editor) {
-    const viewport = textEditorViewportSize(),
-      inset = 12,
-      scale = Math.max(0.03, state.scale),
-      point = textEditorScreenPoint(editor),
-      widthCss = Math.max(TEXT_EDITOR_MIN_WIDTH, editor.widthCss),
-      heightCss = Math.max(TEXT_EDITOR_MIN_HEIGHT, editor.heightCss),
-      maxLeft = Math.max(inset, viewport.width - widthCss - inset),
-      maxTop = Math.max(inset, viewport.height - heightCss - inset),
-      canvasLeft = state.panX,
-      canvasTop = state.panY,
-      canvasRight = state.panX + SIZE * scale - widthCss,
-      canvasBottom = state.panY + SIZE * scale - heightCss,
-      minLeft = Math.max(inset, canvasLeft),
-      minTop = Math.max(inset, canvasTop),
-      boundedMaxLeft = Math.min(maxLeft, canvasRight),
-      boundedMaxTop = Math.min(maxTop, canvasBottom),
-      left = boundedMaxLeft >= minLeft ? Math.min(boundedMaxLeft, Math.max(minLeft, point.left)) : Math.min(maxLeft, Math.max(inset, point.left)),
-      top = boundedMaxTop >= minTop ? Math.min(boundedMaxTop, Math.max(minTop, point.top)) : Math.min(maxTop, Math.max(inset, point.top));
-    if (Math.abs(left - point.left) > 0.5) editor.x = (left - state.panX) / scale;
-    if (Math.abs(top - point.top) > 0.5) editor.y = (top - state.panY) / scale;
     keepTextEditorInsideCanvas(editor);
   }
   function panToRevealTextEditor(editor) {
@@ -94,7 +74,6 @@
     state.panY += dy;
     updateCoordinates();
     requestRender();
-    keepTextEditorVisible(editor);
   }
   function positionTextEditors() {
     const visible = state.textEditors.size > 0;
@@ -102,19 +81,39 @@
     textInputHint.hidden = true;
     for (const editor of state.textEditors.values()) {
       keepTextEditorInsideCanvas(editor);
-      keepTextEditorVisible(editor);
       const point = textEditorScreenPoint(editor),
         active = editor.id === state.activeTextEditorId,
         declaration = editor.styleRule?.["style"];
+      const leftPx = `${Math.round(point.left)}px`,
+        topPx = `${Math.round(point.top)}px`,
+        widthPx = `${Math.round(editor.widthCss)}px`,
+        heightPx = `${Math.round(editor.heightCss)}px`,
+        zStr = String(editor.zIndex || 1),
+        fontSize = `${editor.fontCss}px`,
+        fontColor = editor.color || state.inkColor,
+        fontFamily = state.aiFont || TEXT_EDITOR_FONT_FAMILY;
+      // Direct inline style guarantees positioning regardless of stylesheet state
+      editor.element.style.left = leftPx;
+      editor.element.style.top = topPx;
+      editor.element.style.width = widthPx;
+      editor.element.style.height = heightPx;
+      editor.element.style.zIndex = zStr;
+      editor.element.style.setProperty("--text-editor-font-size", fontSize);
+      editor.element.style.setProperty("--text-editor-ink", fontColor);
+      editor.element.style.setProperty("--text-editor-font-family", fontFamily);
+      if (editor.previewLogicalWidth) editor.element.style.setProperty("--text-editor-preview-width", `${editor.previewLogicalWidth}px`);
+      else editor.element.style.removeProperty("--text-editor-preview-width");
+      if (editor.previewLogicalHeight) editor.element.style.setProperty("--text-editor-preview-height", `${editor.previewLogicalHeight}px`);
+      else editor.element.style.removeProperty("--text-editor-preview-height");
       if (declaration) {
-        declaration.left = `${Math.round(point.left)}px`;
-        declaration.top = `${Math.round(point.top)}px`;
-        declaration.width = `${Math.round(editor.widthCss)}px`;
-        declaration.height = `${Math.round(editor.heightCss)}px`;
-        declaration.zIndex = String(editor.zIndex || 1);
-        declaration.setProperty("--text-editor-font-size", `${editor.fontCss}px`);
-        declaration.setProperty("--text-editor-ink", editor.color || state.inkColor);
-        declaration.setProperty("--text-editor-font-family", state.aiFont || TEXT_EDITOR_FONT_FAMILY);
+        declaration.left = leftPx;
+        declaration.top = topPx;
+        declaration.width = widthPx;
+        declaration.height = heightPx;
+        declaration.zIndex = zStr;
+        declaration.setProperty("--text-editor-font-size", fontSize);
+        declaration.setProperty("--text-editor-ink", fontColor);
+        declaration.setProperty("--text-editor-font-family", fontFamily);
         if (editor.previewLogicalWidth) declaration.setProperty("--text-editor-preview-width", `${editor.previewLogicalWidth}px`);
         else declaration.removeProperty("--text-editor-preview-width");
         if (editor.previewLogicalHeight) declaration.setProperty("--text-editor-preview-height", `${editor.previewLogicalHeight}px`);
@@ -126,7 +125,7 @@
   }
   function textEditorStyleSheet() {
     if (state.textEditorStyleSheet) return state.textEditorStyleSheet;
-    state.textEditorStyleSheet = [...document.styleSheets].find((sheet) => /(?:^|\/)style\.css(?:\?|$)/.test(sheet.href || "")) || null;
+    state.textEditorStyleSheet = [...document.styleSheets].find((sheet) => /(?:^|\/)(?:app|style)\.css(?:\?|$)/.test(sheet.href || "")) || null;
     return state.textEditorStyleSheet;
   }
   function addTextEditorStyleRule(editor) {
@@ -641,6 +640,26 @@
     };
     state.panGesture = null;
   }
+  function clampPan() {
+    const r = view.getBoundingClientRect(),
+      canvasW = SIZE * state.scale,
+      canvasH = SIZE * state.scale,
+      margin = Math.min(240, Math.min(r.width, r.height) * 0.3);
+    if (canvasW <= r.width) {
+      state.panX = (r.width - canvasW) / 2;
+    } else {
+      const minX = r.width - canvasW - margin,
+        maxX = margin;
+      state.panX = Math.min(maxX, Math.max(minX, state.panX));
+    }
+    if (canvasH <= r.height) {
+      state.panY = (r.height - canvasH) / 2;
+    } else {
+      const minY = r.height - canvasH - margin,
+        maxY = margin;
+      state.panY = Math.min(maxY, Math.max(minY, state.panY));
+    }
+  }
   function updateTouchGesture() {
     const g = state.touchGesture;
     if (!g) return false;
@@ -652,12 +671,13 @@
       },
       distance = Math.max(1, Math.hypot(points[0].x - points[1].x, points[0].y - points[1].y)),
       r = view.getBoundingClientRect(),
-      next = Math.max(0.03, Math.min(2, (g.scale * distance) / g.distance)),
+      next = Math.max(0.35, Math.min(2.5, (g.scale * distance) / g.distance)),
       anchorX = (g.center.x - r.left - g.panX) / g.scale,
       anchorY = (g.center.y - r.top - g.panY) / g.scale;
     state.scale = next;
     state.panX = center.x - r.left - anchorX * next;
     state.panY = center.y - r.top - anchorY * next;
+    clampPan();
     updateCoordinates();
     setNavigating(true);
     render();
@@ -666,18 +686,20 @@
   function moveCanvas(dx, dy) {
     state.panX += dx;
     state.panY += dy;
+    clampPan();
     updateCoordinates();
     requestRender();
   }
   function zoomCanvasAt(clientX, clientY, deltaY) {
     const rect = view.getBoundingClientRect(),
       factor = deltaY < 0 ? 1.12 : 0.89,
-      next = Math.max(0.03, Math.min(2, state.scale * factor)),
+      next = Math.max(0.35, Math.min(2.5, state.scale * factor)),
       px = clientX - rect.left,
       py = clientY - rect.top;
     state.panX = px - ((px - state.panX) * next) / state.scale;
     state.panY = py - ((py - state.panY) * next) / state.scale;
     state.scale = next;
+    clampPan();
     updateCoordinates();
     requestRender();
     wheelNavigating();

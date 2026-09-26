@@ -1412,21 +1412,29 @@
       w: hitPad * 2,
       h: hitPad * 2,
     });
+    // If not hit directly on the stroke, try a wider probe (useful for hollow shapes like circles or rectangles)
+    if (!bounds) {
+      bounds = inkBoundsInRegion({
+        x: point.x - hitPad * 2.5,
+        y: point.y - hitPad * 2.5,
+        w: hitPad * 5,
+        h: hitPad * 5,
+      });
+    }
     if (!bounds) return false;
-    const gap = 7 / scale,
-      maxGrow = 56 / scale,
+    const gap = Math.max(10, 16 / scale),
+      maxGrow = Math.max(2500, 5000 / scale),
       origin = { ...bounds };
-    for (let i = 0; i < 10; i += 1) {
+    for (let i = 0; i < 45; i += 1) {
       const next = inkBoundsInRegion(padInkBox(bounds, gap));
       if (!next || boxesAlmostEqual(next, bounds)) break;
-      if (
-        next.x < origin.x - maxGrow
-        || next.y < origin.y - maxGrow
-        || next.x + next.w > origin.x + origin.w + maxGrow
-        || next.y + next.h > origin.y + origin.h + maxGrow
-      ) break;
       bounds = next;
+      if (
+        bounds.w >= maxGrow
+        || bounds.h >= maxGrow
+      ) break;
     }
+    bounds = padInkBox(bounds, Math.max(3, 4 / scale));
     rememberInkBox(bounds);
     return captureBoxSelection(bounds, {
       quiet: true,
@@ -1611,7 +1619,8 @@
     if (!silent) setStatusKey("selectionCancelled");
     return true;
   }
-  function commitSelection() {
+  function commitSelection(options = null) {
+    const sendBackwards = Boolean(options?.sendBackwards);
     const selection = state.selection;
     if (!selection) return false;
     if (selectionAIBusy(selection)) return false;
@@ -1621,7 +1630,7 @@
       render();
       return false;
     }
-    if (!selectionHasChanges(selection)) {
+    if (!selectionHasChanges(selection) && !sendBackwards) {
       cancelSelection(true);
       setStatusKey("selectionCommitted");
       return false;
@@ -1640,7 +1649,10 @@
         item.h = target.h;
         item.fontSize = Math.max(1, item.fontSize * Math.min(scaleX, scaleY));
         item.maxWidth = Math.max(item.fontSize * 3, item.maxWidth * scaleX);
-        if (!state.textBoxes.some((existing) => existing.id === item.id)) state.textBoxes.push(item);
+        if (!state.textBoxes.some((existing) => existing.id === item.id)) {
+          if (sendBackwards) state.textBoxes.unshift(item);
+          else state.textBoxes.push(item);
+        }
         continue;
       }
       if (fragment.boardImage && !selection.color) {
@@ -1651,16 +1663,19 @@
         item.y = target.y;
         item.w = target.w;
         item.h = target.h;
-        if (!state.images.some((existing) => existing.id === item.id)) state.images.push(item);
+        if (!state.images.some((existing) => existing.id === item.id)) {
+          if (sendBackwards) state.images.unshift(item);
+          else state.images.push(item);
+        }
         continue;
       }
-      blitSized(fragment.renderImage || fragment.image, target.x, target.y, target.w, target.h);
+      blitSized(fragment.renderImage || fragment.image, target.x, target.y, target.w, target.h, sendBackwards);
     }
     state.userRevision++;
     save();
     resetCanvasCursor();
     render();
-    setStatusKey("selectionCommitted");
+    setStatusKey(sendBackwards ? "selectionSentBack" : "selectionCommitted");
     return true;
   }
   function applySelectionColor(color) {
@@ -1715,6 +1730,10 @@
       selectionVisualizeButton.disabled = Boolean(state.visualizingSelection);
       selectionVisualizeButton.setAttribute("aria-busy", String(Boolean(state.visualizingSelection)));
       selectionVisualizeButton.textContent = t(state.visualizingSelection ? "selectionVisualizing" : "selectionVisualize");
+    }
+    if (selectionSendBackButton) {
+      selectionSendBackButton.hidden = draftReady;
+      selectionSendBackButton.disabled = false;
     }
     if (selectionDeleteButton) {
       selectionDeleteButton.hidden = draftReady;

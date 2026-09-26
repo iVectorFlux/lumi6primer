@@ -291,7 +291,7 @@
   function blitStretched(im, x, y, scaleX, scaleY) {
     blitSized(im, x, y, im.width * scaleX, im.height * scaleY);
   }
-  function blitSized(im, x, y, w, h) {
+  function blitSized(im, x, y, w, h, backwards = false) {
     const x0 = Math.max(0, Math.floor(x / TILE)),
       y0 = Math.max(0, Math.floor(y / TILE)),
       x1 = Math.min(Math.ceil(SIZE / TILE) - 1, Math.ceil((x + w) / TILE) - 1),
@@ -299,8 +299,16 @@
     for (let ty = y0; ty <= y1; ty++)
       for (let tx = x0; tx <= x1; tx++) {
         recordBefore(tx, ty);
-        const t = tile(tx, ty);
-        t.getContext("2d").drawImage(im, x - tx * TILE, y - ty * TILE, w, h);
+        const t = tile(tx, ty),
+          ctx = t.getContext("2d");
+        if (backwards) {
+          ctx.save();
+          ctx.globalCompositeOperation = "destination-over";
+          ctx.drawImage(im, x - tx * TILE, y - ty * TILE, w, h);
+          ctx.restore();
+        } else {
+          ctx.drawImage(im, x - tx * TILE, y - ty * TILE, w, h);
+        }
         const local = intersection({ x: x - tx * TILE, y: y - ty * TILE, w, h }, { x: 0, y: 0, w: TILE, h: TILE });
         if (local) extendInkBounds(key(tx, ty), local);
       }

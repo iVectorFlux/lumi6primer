@@ -504,7 +504,7 @@
     penTrayEl.addEventListener("click", (e) => e.stopPropagation());
     penTrayEl.addEventListener("touchstart", (e) => e.stopPropagation(), { passive: true });
   }
-  [selectionTypesetButton, selectionDeleteButton, selectionCancelButton].filter(Boolean).forEach((button) => {
+  [selectionTypesetButton, selectionVisualizeButton, selectionSendBackButton, selectionDeleteButton, selectionCancelButton].filter(Boolean).forEach((button) => {
     button.addEventListener("pointerdown", (event) => event.stopPropagation());
     button.addEventListener("click", (event) => event.stopPropagation());
   });
@@ -647,6 +647,7 @@
     selectionToolbar.addEventListener("pointerdown", (event) => event.stopPropagation());
     selectionToolbar.addEventListener("pointerup", (event) => event.stopPropagation());
   }
+  if (selectionSendBackButton) selectionSendBackButton.onclick = () => commitSelection({ sendBackwards: true });
   if (selectionDeleteButton) selectionDeleteButton.onclick = deleteSelection;
   if (selectionCancelButton) selectionCancelButton.onclick = () => {
     if (selectionHasTypesetDraft()) rejectPending();
@@ -895,7 +896,7 @@
     state.userRevision++;
     let bounds = null;
     for (const points of polylines) {
-      for (let i = 1; i < points.length; i += 1) stroke(points[i - 1], points[i], false, size, true);
+      for (let i = 1; i < points.length; i += 1) stroke(points[i - 1], points[i], false, size, false);
       for (const point of points) bounds = SELECT.unionBox(bounds, { x: point.x, y: point.y, w: 1, h: 1 });
     }
     if (bounds) rememberInkBox(bounds);

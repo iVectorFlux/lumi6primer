@@ -59,10 +59,6 @@
           <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/><line x1="9" y1="9" x2="15" y2="9"/><line x1="9" y1="13" x2="13" y2="13"/></svg>
           <span>Chat</span>
         </button>
-        <a class="nav-item" id="modeCurriculumBtn" href="/curriculum.html" style="text-decoration: none; color: inherit;">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
-          <span>Curriculum</span>
-        </a>
       </nav>
 
       <div class="sidebar-recents" id="sidebarRecents" aria-label="Recent boards">
@@ -295,6 +291,7 @@
                 <span class="selection-toolbar-actions">
                   <button id="selectionTypesetBtn" class="selection-toolbar-button primary" type="button" aria-label="Typeset selection" title="Turn handwriting into clean typed text or math">Typeset</button>
                   <button id="selectionVisualizeBtn" class="selection-toolbar-button" type="button" aria-label="Visualize selection" title="Make a picture of what you wrote or drew">Visualize</button>
+                  <button id="selectionSendBackBtn" class="selection-toolbar-button" type="button" aria-label="Send backwards" title="Send behind other drawings and text">Send Back</button>
                   <button id="selectionDeleteBtn" class="selection-toolbar-button danger" type="button" aria-label="Delete selection" title="Delete selection">Delete</button>
                   <button id="selectionCancelBtn" class="selection-toolbar-button" type="button" aria-label="Cancel selection" title="Cancel selection">Cancel</button>
                 </span>
@@ -344,14 +341,8 @@
             <button type="button" data-shape="arrow" aria-label="Arrow" title="Arrow">
               <svg viewBox="0 0 24 24"><path d="M4 12h14M14 6l6 6-6 6"/></svg>
             </button>
-            <button type="button" data-shape="double-arrow" aria-label="Double arrow" title="Double arrow">
-              <svg viewBox="0 0 24 24"><path d="M7 6 1 12l6 6M17 6l6 6-6 6M3 12h18"/></svg>
-            </button>
             <button type="button" data-shape="rect" class="active" aria-label="Rectangle" title="Rectangle">
               <svg viewBox="0 0 24 24"><rect x="4" y="6" width="16" height="12" rx="1"/></svg>
-            </button>
-            <button type="button" data-shape="roundrect" aria-label="Rounded rectangle" title="Rounded rectangle">
-              <svg viewBox="0 0 24 24"><rect x="4" y="6" width="16" height="12" rx="5"/></svg>
             </button>
             <button type="button" data-shape="ellipse" aria-label="Circle" title="Circle">
               <svg viewBox="0 0 24 24"><ellipse cx="12" cy="12" rx="8" ry="6"/></svg>
@@ -359,56 +350,8 @@
             <button type="button" data-shape="triangle" aria-label="Triangle" title="Triangle">
               <svg viewBox="0 0 24 24"><path d="M12 4 21 19H3Z"/></svg>
             </button>
-            <button type="button" data-shape="diamond" aria-label="Diamond" title="Diamond">
-              <svg viewBox="0 0 24 24"><path d="M12 3 21 12 12 21 3 12Z"/></svg>
-            </button>
-            <button type="button" data-shape="pentagon" aria-label="Pentagon" title="Pentagon">
-              <svg viewBox="0 0 24 24"><path d="M12 3 21 10l-3.5 11h-11L3 10Z"/></svg>
-            </button>
-            <button type="button" data-shape="hexagon" aria-label="Hexagon" title="Hexagon">
-              <svg viewBox="0 0 24 24"><path d="M7 4h10l5 8-5 8H7L2 12Z"/></svg>
-            </button>
             <button type="button" data-shape="star" aria-label="Star" title="Star">
               <svg viewBox="0 0 24 24"><path d="M12 3 14.8 9.2 21.5 10l-4.7 4.6L18 21l-6-3.2L6 21l1.2-6.4L2.5 10l6.7-.8Z"/></svg>
-            </button>
-            <button type="button" data-shape="plus" aria-label="Plus" title="Plus">
-              <svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>
-            </button>
-            <button type="button" data-shape="minus" aria-label="Minus" title="Minus">
-              <svg viewBox="0 0 24 24"><path d="M5 12h14"/></svg>
-            </button>
-            <button type="button" data-shape="cross" aria-label="Cross" title="Cross">
-              <svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6 6 18"/></svg>
-            </button>
-            <button type="button" data-shape="heart" aria-label="Heart" title="Heart">
-              <svg viewBox="0 0 24 24"><path d="M12 20s-7-4.5-7-10a4 4 0 0 1 7-2 4 4 0 0 1 7 2c0 5.5-7 10-7 10Z"/></svg>
-            </button>
-            <button type="button" data-shape="cloud" aria-label="Cloud" title="Cloud">
-              <svg viewBox="0 0 24 24"><path d="M7 18h10a4 4 0 0 0 1-7.9A6 6 0 0 0 7.2 9 4 4 0 0 0 7 18Z"/></svg>
-            </button>
-            <button type="button" data-shape="lightning" aria-label="Lightning" title="Lightning">
-              <svg viewBox="0 0 24 24"><path d="M13 2 6 13h6l-1 9 8-12h-6Z"/></svg>
-            </button>
-            <button type="button" data-shape="speech" aria-label="Speech bubble" title="Speech bubble">
-              <svg viewBox="0 0 24 24"><path d="M5 5h14v10H9l-4 4V5Z"/></svg>
-            </button>
-            <button type="button" data-shape="chevron" aria-label="Chevron" title="Chevron">
-              <svg viewBox="0 0 24 24"><path d="m6 6 8 6-8 6"/></svg>
-            </button>
-            <button type="button" data-shape="parallelogram" aria-label="Parallelogram" title="Parallelogram">
-              <svg viewBox="0 0 24 24"><path d="M7 6h14L17 18H3Z"/></svg>
-            </button>
-            <button type="button" data-shape="trapezoid" aria-label="Trapezoid" title="Trapezoid">
-              <svg viewBox="0 0 24 24"><path d="M7 6h10l4 12H3Z"/></svg>
-            </button>
-            <button type="button" data-shape="brace" aria-label="Brace" title="Brace">
-              <svg viewBox="0 0 24 24"><path d="M15 4c-4 0-4 4-8 4 4 0 4 4 8 4s4 4 8 4c-4 0-4 4-8 4"/></svg>
-            </button>
-            <button type="button" data-shape="house" aria-label="House" title="House">
-              <svg viewBox="0 0 24 24"><path d="m3 11 9-8 9 8"/><path d="M6 10v10h12V10"/></svg>
-            </button>
-            <button type="button" data-shape="person" aria-label="Person" title="Person">
-              <svg viewBox="0 0 24 24"><circle cx="12" cy="7" r="3"/><path d="M6 21v-2a6 6 0 0 1 12 0v2"/></svg>
             </button>
           </div>
         </div>

@@ -39,6 +39,7 @@
     inkCtx.clip();
     forTiles(visible.x, visible.y, visible.w, visible.h, (canvas, tx, ty) => inkCtx.drawImage(canvas, tx * TILE, ty * TILE), false);
     drawSharpOverlays(inkCtx, visible);
+    drawTextBoxesToContext(inkCtx, visible);
     inkCtx.restore();
   }
   function updateCoordinates() {
@@ -79,7 +80,6 @@
       ctx.stroke();
     }
     drawImagesToContext(ctx, { x:l, y:t, w:rr - l, h:b - t });
-    drawTextBoxesToContext(ctx, { x:l, y:t, w:rr - l, h:b - t });
     ctx.restore();
     ctx.strokeStyle = state.paint.border;
     ctx.lineWidth = 2 / state.scale;

@@ -8,9 +8,6 @@ const os = require("os");
 const net = require("net");
 const { URL } = require("url");
 const { anthropicEffortParameters, anthropicResponseMaxTokens, normalizedApiEffort, openAiTokenLimit, resolveApiConfig } = require("./api-config.js");
-const { callCodexCli } = require("../providers/codex-cli.js");
-const { callClaudeCli } = require("../providers/claude-cli.js");
-const { callKimiCli } = require("../providers/kimi-cli.js");
 const { NORMALIZE_TYPESET_POLICY } = require("./typeset.js");
 const PLUGIN_FORMAT = { parse: () => ({ id: "", document: "", styles: "" }) };
 const DRAW = require("../../public/js/canvas/draw.js");
@@ -152,40 +149,11 @@ const requestTraceValue = optionalBoolean(process.env.LUMI6_REQUEST_TRACE),
   requestTraceLimitValue = requestTraceLimitText ? Number(requestTraceLimitText) : 100,
   requestTraceLimitValid = Number.isInteger(requestTraceLimitValue) && requestTraceLimitValue >= 1 && requestTraceLimitValue <= 1000,
   REQUEST_TRACE_LIMIT = requestTraceLimitValid ? requestTraceLimitValue : 100;
-const timeoutText = firstNonEmpty(
-    process.env.AI_TIMEOUT_SECONDS,
-    AI_PROVIDER === "kimi-cli" ? process.env.KIMI_CLI_TIMEOUT_SECONDS : "",
-    AI_PROVIDER === "codex-cli" ? process.env.CODEX_CLI_TIMEOUT_SECONDS : "",
-    AI_PROVIDER === "claude-cli" ? process.env.CLAUDE_CLI_TIMEOUT_SECONDS : "",
-  ),
+const timeoutText = process.env.AI_TIMEOUT_SECONDS,
   timeoutValue = timeoutText ? Number(timeoutText) : DEFAULT_MODEL_TIMEOUT_MS / 1000,
   timeoutValid = Number.isInteger(timeoutValue) && timeoutValue >= 10 && timeoutValue <= 600,
   MODEL_TIMEOUT_MS = timeoutValid ? timeoutValue * 1000 : DEFAULT_MODEL_TIMEOUT_MS;
-const CODEX_CLI = {
-  executable: process.env.CODEX_CLI_PATH?.trim() || "codex",
-  model: process.env.CODEX_CLI_MODEL?.trim() || null,
-  effort: AI_EFFORT,
-  timeoutMs:MODEL_TIMEOUT_MS,
-};
-const CLAUDE_CLI = {
-  executable: process.env.CLAUDE_CLI_PATH?.trim() || "claude",
-  model: process.env.CLAUDE_CLI_MODEL?.trim() || null,
-  effort: AI_EFFORT,
-  timeoutMs:MODEL_TIMEOUT_MS,
-};
-const KIMI_CLI = {
-  executable:process.env.KIMI_CLI_PATH?.trim() || "kimi",
-  model:process.env.KIMI_CLI_MODEL?.trim() || null,
-  effort:AI_EFFORT,
-  timeoutMs:MODEL_TIMEOUT_MS,
-};
-const LOCAL_CLI = AI_PROVIDER === "kimi-cli"
-  ? { ...KIMI_CLI, label:"Kimi CLI", doctor:"kimi" }
-  : AI_PROVIDER === "codex-cli"
-    ? { ...CODEX_CLI, label:"Codex CLI", doctor:"codex" }
-    : AI_PROVIDER === "claude-cli"
-      ? { ...CLAUDE_CLI, label:"Claude CLI", doctor:"claude" }
-      : null;
+const LOCAL_CLI = null;
 const AI_REQUEST_TIMEOUT_MS = MODEL_TIMEOUT_MS * 2 + 20000;
 const AI_SESSION_COOKIE_PREFIX = "lumi6_ai_session";
 const AI_SESSION_TOKEN = crypto.randomBytes(32).toString("base64url");
@@ -212,13 +180,7 @@ function firstNonEmpty(...values) {
 }
 
 function normalizeAiProvider(value) {
-  const provider = String(value || "").trim().toLowerCase();
-  if (!provider) return null;
-  if (provider === "api") return "api";
-  if (["kimi", "kimi-cli"].includes(provider)) return "kimi-cli";
-  if (["codex", "codex-cli"].includes(provider)) return "codex-cli";
-  if (["claude", "claude-cli"].includes(provider)) return "claude-cli";
-  return null;
+  return "api";
 }
 
 function normalizeAiImageFormat(value) {
@@ -233,19 +195,19 @@ function normalizeUiEffort(value) {
 }
 
 function configuredUiEffort() {
-  const configured = AI_PROVIDER === "api" ? API_EFFORT : AI_EFFORT,
+  const configured = API_EFFORT,
     normalized = normalizeUiEffort(configured);
   return normalized && normalized !== "config" ? normalized : "config";
 }
 
 function providerEffort(uiEffort) {
   const selected = normalizeUiEffort(uiEffort),
-    configured = AI_PROVIDER === "api" ? API_EFFORT : AI_EFFORT,
+    configured = API_EFFORT,
     effort = !selected || selected === "config" ? configured : selected;
   if (!effort) return null;
   if (selected === "config") return effort;
   if(effort!=="max")return effort;
-  return AI_PROVIDER==="codex-cli"||AI_PROVIDER==="api"&&API?.format==="openai"?"xhigh":"max";
+  return API?.format==="openai"?"xhigh":"max";
 }
 
 function optionalBoolean(value) {
@@ -257,7 +219,7 @@ function optionalBoolean(value) {
 }
 
 function providerConfigurationError() {
-  if (!AI_PROVIDER) return "AI_PROVIDER must be api, kimi-cli, codex-cli, or claude-cli.";
+  if (!AI_PROVIDER || AI_PROVIDER !== "api") return "AI_PROVIDER must be api.";
   if (AI_PROVIDER === "api" && (!API || !MODEL)) return "Server must configure a valid AI_API_URL base URL and AI_API_MODEL. AI_API_FORMAT, when set, must be openai or anthropic.";
   if (AI_PROVIDER === "api" && !API_KEY) return "Server is missing AI_API_KEY.";
   if (!AI_IMAGE_FORMAT) return "LUMI6_AI_IMAGE_FORMAT must be webp or png when set.";
@@ -1122,39 +1084,6 @@ function traceSafeValue(value, atlasImage, atlasBase64, atlasFile) {
 function tracedOutboundRequest(modelInput, atlasImage, retryInstruction="", effort = configuredUiEffort()) {
   const text=modelRequestText(modelInput,retryInstruction);
   const image=imageDataUrlParts(atlasImage),literalTypeset=modelInput?.userAction==="normalize",animationEnabled=modelInput?.animationEnabled===true,pluginsEnabled=Array.isArray(modelInput?.enabledPlugins)&&modelInput.enabledPlugins.length>0;
-  if (AI_PROVIDER === "kimi-cli") return {
-    provider:"kimi-cli",
-    executable:KIMI_CLI.executable,
-    model:KIMI_CLI.model||"configured-default",
-    effort,
-    prompt:kimiModelPrompt(text,literalTypeset,animationEnabled,pluginsEnabled),
-    image:image?.file||null,
-    imageMimeType:image?.mimeType||null,
-    imageBytes:image?.bytes||null,
-  };
-  if (AI_PROVIDER === "codex-cli") return {
-    provider:"codex-cli",
-    executable:CODEX_CLI.executable,
-    model:CODEX_CLI.model||"configured-default",
-    effort,
-    prompt:codexModelPrompt(text,literalTypeset,animationEnabled,pluginsEnabled),
-    image:image?.file||null,
-    imageMimeType:image?.mimeType||null,
-    imageBytes:image?.bytes||null,
-  };
-  if (AI_PROVIDER === "claude-cli") return {
-    provider:"claude-cli",
-    executable:CLAUDE_CLI.executable,
-    model:CLAUDE_CLI.model||"configured-default",
-    effort,
-    systemPrompt:localCliSystemPrompt(literalTypeset,animationEnabled,pluginsEnabled),
-    prompt:localCliRequestPrompt(text),
-    inputFormat:"stream-json",
-    tools:[],
-    image:image?.file||null,
-    imageMimeType:image?.mimeType||null,
-    imageBytes:image?.bytes||null,
-  };
   const request=providerRequest("<redacted>",MODEL,text,atlasImage,effort,literalTypeset,animationEnabled,pluginsEnabled),
     headers=Object.fromEntries(Object.entries(request.headers).map(([name,value])=>[name,/authorization|api-key/i.test(name)?"<redacted>":value])),
     atlasBase64=image.base64,
@@ -1277,29 +1206,6 @@ async function callModel(modelInput, atlasImage, retryInstruction="", effort, ex
   try {
     const text = modelRequestText(modelInput,retryInstruction), literalTypeset = modelInput?.userAction === "normalize", animationEnabled = modelInput?.animationEnabled === true,
       pluginsEnabled = Array.isArray(modelInput?.enabledPlugins) && modelInput.enabledPlugins.length > 0;
-    if (LOCAL_CLI) {
-      try {
-        const content = AI_PROVIDER === "kimi-cli"
-          ? await callKimiCli({ ...KIMI_CLI, effort, prompt:kimiModelPrompt(text,literalTypeset,animationEnabled,pluginsEnabled), atlasImage, signal:controller.signal })
-          : AI_PROVIDER === "codex-cli"
-            ? await callCodexCli({ ...CODEX_CLI, effort, prompt:codexModelPrompt(text,literalTypeset,animationEnabled,pluginsEnabled), atlasImage, signal:controller.signal })
-            : await callClaudeCli({ ...CLAUDE_CLI, effort, systemPrompt:localCliSystemPrompt(literalTypeset,animationEnabled,pluginsEnabled), prompt:localCliRequestPrompt(text), atlasImage, signal:controller.signal });
-        try {
-          let result;
-          try { result = parsedModelResponse(content); }
-          catch (e) {
-            if (modelInput?.persona === "teacher") result = { commands: [] };
-            else throw e;
-          }
-          return {content,result,status:200,provider:AI_PROVIDER,model:LOCAL_CLI.model||"configured-default",effort,upstream:null};
-        }
-        catch(error){error.upstream={status:200,rawContent:content};throw error}
-      } catch (error) {
-        if (DEBUG_ARTIFACTS && error.diagnostic) log({type:`${AI_PROVIDER}-error`,error:"process-failed",diagnosticBytes:Buffer.byteLength(error.diagnostic)});
-        if (error.cleanupDiagnostic) log({type:`${AI_PROVIDER}-cleanup-error`,error:"cleanup-failed"});
-        throw error;
-      }
-    }
     const requestStartedAt=new Date().toISOString(),requestStarted=Date.now();
     let networkPhase="preparing-request",responseHeadersAt=null,responseTransport=null;
     try {
@@ -1651,9 +1557,6 @@ function pluginBundleFromModel(content, currentStyles="") {
   throw validationError || new Error("Plugin output does not contain a valid bundle");
 }
 async function requestPluginAuthoringModel(prompt, effort, signal) {
-  if (AI_PROVIDER === "kimi-cli") return callKimiCli({ ...KIMI_CLI, effort, prompt:`${PLUGIN_AUTHORING_SYSTEM}\n\n${prompt}`, signal });
-  if (AI_PROVIDER === "codex-cli") return callCodexCli({ ...CODEX_CLI, effort, prompt:`${PLUGIN_AUTHORING_SYSTEM}\n\n${prompt}`, signal });
-  if (AI_PROVIDER === "claude-cli") return callClaudeCli({ ...CLAUDE_CLI, effort, systemPrompt:PLUGIN_AUTHORING_SYSTEM, prompt, signal });
   const response = await fetch(API.endpoint, { signal, method:"POST", redirect:"error", ...pluginAuthoringProviderRequest(API_KEY,MODEL,prompt,effort) }),
     responseText = await response.text();
   if (!response.ok) {
@@ -2129,7 +2032,7 @@ const server = http.createServer(async (req, res) => {
   if (!file.startsWith(PUBLIC + path.sep) || !fs.existsSync(file) || fs.statSync(file).isDirectory()) return send(res, 404, "Not found", "text/plain");
   const host = requestHost(req),
     loopbackFrameSources = isLoopbackHostname(host?.hostname) ? ` http://localhost:${host.port || "80"} http://127.0.0.1:${host.port || "80"}` : "",
-    headers = { "Content-Type": MIME[path.extname(file)] || "application/octet-stream", "Cache-Control":"no-store", "Content-Security-Policy":`default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' blob: data: https://github.com https://*.githubusercontent.com https://*.supabase.co; connect-src 'self' https://*.supabase.co wss://*.supabase.co https://cdn.jsdelivr.net; frame-src 'self'${loopbackFrameSources}; object-src 'none'; base-uri 'none'; frame-ancestors 'none'`, "Referrer-Policy":"no-referrer", "X-Content-Type-Options":"nosniff" };
+    headers = { "Content-Type": MIME[path.extname(file)] || "application/octet-stream", "Cache-Control":"no-store", "Content-Security-Policy":`default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdn.jsdelivr.net; font-src 'self' https://fonts.gstatic.com; img-src 'self' blob: data: https://github.com https://*.githubusercontent.com https://*.supabase.co https://*.public.blob.vercel-storage.com; connect-src 'self' https://*.supabase.co wss://*.supabase.co https://cdn.jsdelivr.net; frame-src 'self'${loopbackFrameSources}; object-src 'none'; base-uri 'none'; frame-ancestors 'self'`, "Referrer-Policy":"no-referrer", "X-Content-Type-Options":"nosniff" };
   if ((requested === "/index.html" || url.pathname === "/dashboard") && trustedLocalPage && (fromThisComputer || localAccessMode === "open" || hasAiSession(req))) headers["Set-Cookie"] = aiSessionCookie(req);
   res.writeHead(200, headers);
   if (req.method === "HEAD") return res.end();
