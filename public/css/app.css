@@ -6257,3 +6257,765 @@ iframe.talk-lesson-pill {
   0%, 100% { transform: scale(1); }
   50% { transform: scale(0.9); }
 }
+/* ═══ BOOKS MODE WORKSPACE STYLING (NCERT Grade 5 Explorer) ═══ */
+
+.books-mode-workspace {
+  position: relative !important;
+  inset: auto !important;
+  flex: 1 1 auto !important;
+  min-height: 0 !important;
+  z-index: 1 !important;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  font-family: var(--sys-font) !important;
+  background: radial-gradient(circle at 50% 0%, rgba(99, 102, 241, 0.04) 0%, transparent 60%), #f8fafc !important;
+  color: #0f172a;
+}
+
+.books-mode-workspace[hidden] {
+  display: none !important;
+}
+
+/* Hide board & canvas widgets when Books mode is active */
+body.mode-books-active #aiMergedBadge,
+body.mode-books-active [data-action="undo"],
+body.mode-books-active [data-action="redo"],
+body.mode-books-active .bottom-toolbar,
+body.mode-books-active .pen-tray,
+body.mode-books-active .sketch-topbar-tools,
+body.mode-books-active .quick-actions-bar,
+body.mode-books-active .layer-switcher,
+body.mode-books-active .floating-zoom-control,
+body.mode-books-active .zoom-controls,
+body.mode-books-active .pen-preview-badge,
+body.mode-books-active .share-btn,
+body.mode-books-active .topbar-edit-actions,
+body.mode-books-active #canvasFileActions,
+body.mode-books-active #status {
+  display: none !important;
+}
+
+/* Ensure mode switcher is visible in books mode */
+body.mode-books-active .mode-switch {
+  display: inline-flex !important;
+}
+
+/* Nav item active states */
+#modeBooksBtn.active {
+  background: rgba(99, 102, 241, 0.12) !important;
+  color: #4f46e5 !important;
+  font-weight: 600 !important;
+}
+
+#topbarModeBooksBtn.active {
+  background: var(--surface) !important;
+  color: var(--label) !important;
+  box-shadow: 0 0.5px 1px rgba(0, 0, 0, 0.12) !important;
+}
+
+/* Scroll Area */
+.books-scroll-area {
+  flex: 1 1 auto !important;
+  min-height: 0 !important;
+  overflow-x: hidden !important;
+  overflow-y: auto !important;
+  -webkit-overflow-scrolling: touch;
+  padding: 32px 32px 80px !important;
+  background: transparent !important;
+}
+
+.books-container {
+  max-width: 980px !important;
+  width: 100%;
+  margin: 0 auto !important;
+  animation: booksFadeIn 0.22s ease-out;
+}
+
+@keyframes booksFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* ─── BREADCRUMBS & HEADERS ─── */
+
+.books-breadcrumb-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 20px;
+}
+
+.books-breadcrumb-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  color: #475569;
+  font-size: 13.5px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.16s ease;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.03);
+}
+
+.books-breadcrumb-btn:hover {
+  background: #f1f5f9;
+  color: #0f172a;
+  border-color: #cbd5e1;
+  transform: translateX(-1px);
+}
+
+.books-breadcrumb-btn svg {
+  width: 16px;
+  height: 16px;
+  stroke-width: 2.2;
+}
+
+.books-view-header {
+  margin-bottom: 28px;
+}
+
+.books-view-kicker {
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #6366f1;
+  margin-bottom: 6px;
+}
+
+.books-view-title {
+  font-size: 28px;
+  font-weight: 700;
+  color: #0f172a;
+  letter-spacing: -0.02em;
+  margin: 0 0 6px 0;
+  line-height: 1.25;
+}
+
+.books-view-subtitle {
+  font-size: 15px;
+  color: #64748b;
+  margin: 0;
+  line-height: 1.5;
+}
+
+/* ─── SUBJECTS OVERVIEW VIEW ─── */
+
+.books-subjects-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 20px;
+  margin-top: 12px;
+}
+
+.books-subject-card {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 20px;
+  padding: 28px;
+  cursor: pointer;
+  transition: all 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04), 0 1px 2px rgba(0, 0, 0, 0.02);
+  position: relative;
+  overflow: hidden;
+}
+
+.books-subject-card::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 4px;
+  background: transparent;
+  transition: background 0.2s ease;
+}
+
+.books-subject-card[data-subject="mathematics"]:hover::before {
+  background: #6366f1;
+}
+
+.books-subject-card[data-subject="science"]:hover::before {
+  background: #10b981;
+}
+
+.books-subject-card[data-subject="mathematics"]:hover {
+  transform: translateY(-3px);
+  border-color: #c7d2fe;
+  box-shadow: 0 12px 24px -4px rgba(99, 102, 241, 0.12), 0 4px 8px -2px rgba(0, 0, 0, 0.04);
+}
+
+.books-subject-card[data-subject="science"]:hover {
+  transform: translateY(-3px);
+  border-color: #a7f3d0;
+  box-shadow: 0 12px 24px -4px rgba(16, 185, 129, 0.12), 0 4px 8px -2px rgba(0, 0, 0, 0.04);
+}
+
+.books-card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 20px;
+}
+
+.books-subject-icon-box {
+  width: 48px;
+  height: 48px;
+  border-radius: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform 0.2s ease;
+}
+
+.books-subject-card:hover .books-subject-icon-box {
+  transform: scale(1.05);
+}
+
+.books-subject-icon-box.math {
+  background: #eef2ff;
+  color: #4f46e5;
+}
+
+.books-subject-icon-box.science {
+  background: #ecfdf5;
+  color: #059669;
+}
+
+.books-subject-icon-box svg {
+  width: 24px;
+  height: 24px;
+  stroke-width: 2;
+}
+
+.books-badge-pill {
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 10px;
+  border-radius: 9999px;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+}
+
+.books-badge-pill.math {
+  background: #e0e7ff;
+  color: #4338ca;
+}
+
+.books-badge-pill.science {
+  background: #d1fae5;
+  color: #065f46;
+}
+
+.books-subject-body {
+  margin-bottom: 24px;
+}
+
+.books-subject-title {
+  font-size: 22px;
+  font-weight: 700;
+  color: #0f172a;
+  letter-spacing: -0.015em;
+  margin: 0 0 6px 0;
+}
+
+.books-subject-meta {
+  font-size: 13.5px;
+  font-weight: 500;
+  color: #64748b;
+  margin-bottom: 10px;
+}
+
+.books-subject-desc {
+  font-size: 14px;
+  color: #475569;
+  line-height: 1.5;
+  margin: 0;
+}
+
+.books-card-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-top: 16px;
+  border-top: 1px solid #f1f5f9;
+}
+
+.books-card-action-text {
+  font-size: 13.5px;
+  font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  transition: gap 0.16s ease;
+}
+
+.books-subject-card[data-subject="mathematics"] .books-card-action-text {
+  color: #4f46e5;
+}
+
+.books-subject-card[data-subject="science"] .books-card-action-text {
+  color: #059669;
+}
+
+.books-subject-card:hover .books-card-action-text {
+  gap: 9px;
+}
+
+.books-card-action-text svg {
+  width: 16px;
+  height: 16px;
+}
+
+/* ─── CHAPTER LIST VIEW ─── */
+
+.books-chapter-view-header {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 24px;
+  padding-bottom: 20px;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.books-chapter-view-header .books-subject-icon-box {
+  width: 52px;
+  height: 52px;
+  border-radius: 14px;
+}
+
+.books-chapter-view-header .books-subject-icon-box svg {
+  width: 26px;
+  height: 26px;
+}
+
+.books-chapter-header-text h2 {
+  font-size: 24px;
+  font-weight: 700;
+  color: #0f172a;
+  letter-spacing: -0.015em;
+  margin: 0 0 6px 0;
+}
+
+.books-chapter-header-meta {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 13.5px;
+  color: #64748b;
+}
+
+.books-chapters-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 14px;
+}
+
+.books-chapter-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 16px;
+  padding: 16px 20px;
+  cursor: pointer;
+  transition: all 0.18s cubic-bezier(0.16, 1, 0.3, 1);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.02);
+  user-select: none;
+}
+
+.books-chapter-card:hover {
+  transform: translateY(-2px);
+  border-color: #cbd5e1;
+  box-shadow: 0 6px 16px -2px rgba(0, 0, 0, 0.06);
+}
+
+.books-chapter-card.unlocked[data-theme="math"]:hover {
+  border-color: #c7d2fe;
+}
+
+.books-chapter-card.unlocked[data-theme="science"]:hover {
+  border-color: #a7f3d0;
+}
+
+.books-chapter-card.locked {
+  background: #fafafa;
+  opacity: 0.85;
+}
+
+.books-chapter-card.locked:hover {
+  background: #ffffff;
+  opacity: 1;
+}
+
+.books-chapter-card-left {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  min-width: 0;
+}
+
+.books-chapter-index-badge {
+  width: 36px;
+  height: 36px;
+  min-width: 36px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+  font-weight: 700;
+  transition: transform 0.16s ease;
+}
+
+.books-chapter-card:hover .books-chapter-index-badge {
+  transform: scale(1.06);
+}
+
+/* Badge variants */
+.books-chapter-index-badge.active-math {
+  background: #6366f1;
+  color: #ffffff;
+  box-shadow: 0 2px 6px rgba(99, 102, 241, 0.28);
+}
+
+.books-chapter-index-badge.active-science {
+  background: #10b981;
+  color: #ffffff;
+  box-shadow: 0 2px 6px rgba(16, 185, 129, 0.28);
+}
+
+.books-chapter-index-badge.tint-math {
+  background: #e0e7ff;
+  color: #4338ca;
+}
+
+.books-chapter-index-badge.tint-science {
+  background: #d1fae5;
+  color: #065f46;
+}
+
+.books-chapter-index-badge.locked-badge {
+  background: #f1f5f9;
+  color: #94a3b8;
+}
+
+.books-chapter-index-badge svg {
+  width: 16px;
+  height: 16px;
+}
+
+.books-chapter-card-info {
+  min-width: 0;
+}
+
+.books-chapter-card-title {
+  font-size: 15px;
+  font-weight: 600;
+  color: #1e293b;
+  margin: 0 0 3px 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  letter-spacing: -0.01em;
+}
+
+.books-chapter-card.locked .books-chapter-card-title {
+  color: #475569;
+}
+
+.books-chapter-card-lessons {
+  font-size: 13px;
+  color: #64748b;
+  margin: 0;
+}
+
+.books-chapter-card-right {
+  display: flex;
+  align-items: center;
+  color: #94a3b8;
+  margin-left: 12px;
+  transition: transform 0.16s ease, color 0.16s ease;
+}
+
+.books-chapter-card:hover .books-chapter-card-right {
+  transform: translateX(2px);
+}
+
+.books-chapter-card[data-theme="math"]:hover .books-chapter-card-right {
+  color: #4f46e5;
+}
+
+.books-chapter-card[data-theme="science"]:hover .books-chapter-card-right {
+  color: #059669;
+}
+
+.books-chapter-card-right svg {
+  width: 18px;
+  height: 18px;
+  stroke-width: 2.2;
+}
+
+/* ─── CHAPTER DETAIL & LESSONS VIEW ─── */
+
+.books-lesson-view-header {
+  margin-bottom: 24px;
+  padding-bottom: 20px;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.books-lesson-header-top {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 6px;
+}
+
+.books-chapter-number-pill {
+  width: 32px;
+  height: 32px;
+  border-radius: 9px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.books-chapter-number-pill.math {
+  background: #e0e7ff;
+  color: #4338ca;
+}
+
+.books-chapter-number-pill.science {
+  background: #d1fae5;
+  color: #065f46;
+}
+
+.books-lesson-header-top h2 {
+  font-size: 24px;
+  font-weight: 700;
+  color: #0f172a;
+  letter-spacing: -0.015em;
+  margin: 0;
+}
+
+.books-lesson-header-meta {
+  font-size: 13.5px;
+  color: #64748b;
+  margin-left: 44px;
+}
+
+.books-lessons-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  max-width: 760px;
+}
+
+.books-lesson-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 16px;
+  padding: 18px 22px;
+  transition: all 0.18s ease;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.02);
+}
+
+.books-lesson-card:hover {
+  border-color: #cbd5e1;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.05);
+}
+
+.books-lesson-card-left {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  min-width: 0;
+}
+
+.books-lesson-index-badge {
+  width: 36px;
+  height: 36px;
+  min-width: 36px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.books-lesson-index-badge.active-math {
+  background: #6366f1;
+  color: #ffffff;
+}
+
+.books-lesson-index-badge.active-science {
+  background: #10b981;
+  color: #ffffff;
+}
+
+.books-lesson-index-badge.soft-badge {
+  background: #f1f5f9;
+  color: #64748b;
+}
+
+.books-lesson-index-badge.locked-badge {
+  background: #f1f5f9;
+  color: #94a3b8;
+}
+
+.books-lesson-index-badge svg {
+  width: 16px;
+  height: 16px;
+}
+
+.books-lesson-info {
+  min-width: 0;
+}
+
+.books-lesson-title {
+  font-size: 16px;
+  font-weight: 600;
+  color: #0f172a;
+  margin: 0 0 4px 0;
+  letter-spacing: -0.01em;
+}
+
+.books-lesson-meta {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  color: #64748b;
+}
+
+.books-meta-dot {
+  font-size: 14px;
+  color: #94a3b8;
+}
+
+.books-progress-dots {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.books-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 9999px;
+  background: #e2e8f0;
+}
+
+.books-dot.filled-math {
+  background: #6366f1;
+}
+
+.books-dot.filled-science {
+  background: #10b981;
+}
+
+.books-lesson-card-right {
+  margin-left: 16px;
+  flex-shrink: 0;
+}
+
+.books-start-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 8px 18px;
+  border: 0;
+  border-radius: 10px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.16s cubic-bezier(0.16, 1, 0.3, 1);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
+}
+
+.books-start-btn.math {
+  background: #6366f1;
+  color: #ffffff;
+  box-shadow: 0 2px 8px rgba(99, 102, 241, 0.32);
+}
+
+.books-start-btn.math:hover {
+  background: #4f46e5;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 14px rgba(99, 102, 241, 0.42);
+}
+
+.books-start-btn.science {
+  background: #10b981;
+  color: #ffffff;
+  box-shadow: 0 2px 8px rgba(16, 185, 129, 0.32);
+}
+
+.books-start-btn.science:hover {
+  background: #059669;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 14px rgba(16, 185, 129, 0.42);
+}
+
+.books-start-btn.secondary {
+  background: #f1f5f9;
+  color: #475569;
+  box-shadow: none;
+  border: 1px solid #e2e8f0;
+}
+
+.books-start-btn.secondary:hover {
+  background: #e2e8f0;
+  color: #0f172a;
+}
+
+.books-start-btn svg {
+  width: 13px;
+  height: 13px;
+  fill: currentColor;
+  stroke: none;
+}
+
+/* ─── RESPONSIVE ─── */
+
+@media (max-width: 768px) {
+  .books-scroll-area {
+    padding: 20px 16px 80px !important;
+  }
+  .books-subjects-grid {
+    grid-template-columns: 1fr;
+    gap: 16px;
+  }
+  .books-chapters-grid {
+    grid-template-columns: 1fr;
+    gap: 10px;
+  }
+  .books-view-title {
+    font-size: 24px;
+  }
+  .books-lesson-card {
+    padding: 14px 16px;
+  }
+}
