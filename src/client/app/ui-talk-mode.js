@@ -325,7 +325,6 @@
   function normalizeAppMode(mode) {
     if (mode === "talk" || mode === "chat") return "talk";
     if (mode === "draw" || mode === "board") return "draw";
-    if (mode === "books" || mode === "book") return "books";
     return "talk";
   }
 
@@ -335,17 +334,14 @@
     currentAppViewMode = next;
     const drawBtns = document.querySelectorAll("#modeDrawBtn, #topbarModeDrawBtn");
     const talkBtns = document.querySelectorAll("#modeTalkBtn, #topbarModeTalkBtn");
-    const booksBtns = document.querySelectorAll("#modeBooksBtn, #topbarModeBooksBtn");
     const canvasWorkspace = document.querySelector(".canvas-workspace");
     const talkWorkspace = document.querySelector("#talkModeWorkspace");
-    const booksWorkspace = document.querySelector("#booksModeWorkspace");
     const docTitle = document.querySelector("#docTitleHeading");
     const hideBoard = currentAppViewMode !== "draw";
 
     document.body.classList.toggle("mode-talk-active", currentAppViewMode === "talk");
     document.body.classList.remove("mode-sim-active");
     document.body.classList.toggle("mode-draw-active", currentAppViewMode === "draw");
-    document.body.classList.toggle("mode-books-active", currentAppViewMode === "books");
 
     drawBtns.forEach(btn => {
       btn.classList.toggle("active", currentAppViewMode === "draw");
@@ -355,21 +351,11 @@
       btn.classList.toggle("active", currentAppViewMode === "talk");
       btn.setAttribute("aria-pressed", String(currentAppViewMode === "talk"));
     });
-    booksBtns.forEach(btn => {
-      btn.classList.toggle("active", currentAppViewMode === "books");
-      btn.setAttribute("aria-pressed", String(currentAppViewMode === "books"));
-    });
 
     if (docTitle) {
-      if (currentAppViewMode === "talk") {
-        docTitle.textContent = "Chat";
-      } else if (currentAppViewMode === "books") {
-        docTitle.textContent = (window.primerBooks && typeof window.primerBooks.getTitle === "function")
-          ? window.primerBooks.getTitle()
-          : "Books";
-      } else {
-        docTitle.textContent = "Whiteboard";
-      }
+      docTitle.textContent = currentAppViewMode === "talk"
+        ? "Chat"
+        : "Whiteboard";
     }
 
     if (canvasWorkspace) {
@@ -380,18 +366,12 @@
       talkWorkspace.hidden = currentAppViewMode !== "talk";
       talkWorkspace.style.display = currentAppViewMode === "talk" ? "flex" : "none";
     }
-    if (booksWorkspace) {
-      booksWorkspace.hidden = currentAppViewMode !== "books";
-      booksWorkspace.style.display = currentAppViewMode === "books" ? "flex" : "none";
-    }
 
     if (updateUrl && window.history?.replaceState) {
       try {
         const url = new URL(window.location.href);
         if (currentAppViewMode === "talk") {
           url.searchParams.set("mode", "chat");
-        } else if (currentAppViewMode === "books") {
-          url.searchParams.set("mode", "books");
         } else {
           url.searchParams.delete("mode");
         }
@@ -421,11 +401,6 @@
         window.primerVoice.warmupMic();
       }
       syncTalkModeFeed({ scroll: true });
-    } else if (currentAppViewMode === "books") {
-      closeTalkPlayground();
-      if (window.primerBooks && typeof window.primerBooks.onActivate === "function") {
-        window.primerBooks.onActivate();
-      }
     } else {
       closeTalkPlayground();
       render();
@@ -1007,10 +982,8 @@
 
   bindModeBtn("#modeDrawBtn", "draw");
   bindModeBtn("#modeTalkBtn", "talk");
-  bindModeBtn("#modeBooksBtn", "books");
   bindModeBtn("#topbarModeDrawBtn", "draw");
   bindModeBtn("#topbarModeTalkBtn", "talk");
-  bindModeBtn("#topbarModeBooksBtn", "books");
 
   const talkMic = document.querySelector("#talkModeMicBtn");
   if (talkMic && window.primerVoice && typeof window.primerVoice.bindMicTriggers === "function") {
@@ -1150,7 +1123,7 @@
     const urlParams = new URLSearchParams(window.location.search);
     const hash = String(window.location.hash || "").toLowerCase();
     const requested = String(urlParams.get("mode") || hash.replace("#", "") || "").toLowerCase();
-    const initialMode = requested === "draw" || requested === "board" ? "draw" : (requested === "books" || requested === "book" ? "books" : "talk");
+    const initialMode = requested === "draw" || requested === "board" ? "draw" : "talk";
     setAppViewMode(initialMode, false);
   } catch {
     setAppViewMode("talk", false);

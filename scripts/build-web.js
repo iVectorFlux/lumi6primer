@@ -14,8 +14,7 @@ const CSS_SOURCES = [
   "src/web/css/auth.css",
   "src/web/css/onboard.css",
   "src/web/css/mobile.css",
-  "src/web/css/shell.css",
-  "src/web/css/books.css"
+  "src/web/css/shell.css"
 ];
 
 function joinFiles(files, banner) {

@@ -59,10 +59,6 @@
           <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/><line x1="9" y1="9" x2="15" y2="9"/><line x1="9" y1="13" x2="13" y2="13"/></svg>
           <span>Chat</span>
         </button>
-        <button class="nav-item" id="modeBooksBtn" type="button" aria-pressed="false" data-mode="books">
-          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
-          <span>Books</span>
-        </button>
       </nav>
 
       <div class="sidebar-recents" id="sidebarRecents" aria-label="Recent boards">
@@ -186,7 +182,6 @@
           <div class="mode-switch" role="tablist" aria-label="Mode">
             <button id="topbarModeDrawBtn" class="mode-switch-btn" type="button" aria-pressed="false" data-mode="draw">Board</button>
             <button id="topbarModeTalkBtn" class="mode-switch-btn active" type="button" aria-pressed="true" data-mode="talk">Chat</button>
-            <button id="topbarModeBooksBtn" class="mode-switch-btn" type="button" aria-pressed="false" data-mode="books">Books</button>
           </div>
           <!-- File Actions -->
           <span class="topbar-actions" id="canvasFileActions">
@@ -417,15 +412,6 @@
             </form>
           </div>
         </footer>
-      </div>
-
-      <!-- ═══ BOOKS MODE WORKSPACE (NCERT Grade 5 Explorer) ═══ -->
-      <div id="booksModeWorkspace" class="books-mode-workspace" hidden>
-        <div class="books-scroll-area" id="booksScrollArea">
-          <div class="books-container" id="booksContainer">
-            <!-- Dynamically rendered by ui-books-mode.js -->
-          </div>
-        </div>
       </div>
 
     </div><!-- /center-area -->
