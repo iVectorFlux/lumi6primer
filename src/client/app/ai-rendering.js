@@ -91,7 +91,7 @@
     return { lines, widths: lines.map((value) => Math.max(1, context.measureText(value).width)) };
   }
   function mixedTextFont(segment, fontSize, family) {
-    const fontFamily = segment.code ? "ui-monospace, SFMono-Regular, Consolas, monospace" : family,
+    const fontFamily = segment.code ? "ui-monospace, SFMono-Regular, Consolas, monospace" : (family || "'Plus Jakarta Sans', 'Inter', -apple-system, sans-serif"),
       fontStyle = segment.italic ? "italic" : "normal",
       fontWeight = segment.bold ? "700" : "400";
     return `${fontStyle} ${fontWeight} ${fontSize}px ${fontFamily}`;
@@ -116,12 +116,27 @@
   async function mixedTextImage(text, fontSize, color, maxWidth = 900, lineHeight = 1.35, family = state.aiFont, pixelRatio = sharpRenderRatio()) {
     if (!MIXED_TEXT?.parse) return textImage(text, fontSize, color, maxWidth, lineHeight, family, TEXT_INPUT_MAX_LENGTH, pixelRatio);
     const parsed = MIXED_TEXT.parse(text.slice(0, TEXT_INPUT_MAX_LENGTH)),
-      resolvedFamily = family || "ui-rounded, system-ui, sans-serif",
+      resolvedFamily = family || "'Plus Jakarta Sans', 'Inter', -apple-system, sans-serif",
       widthLimit = Math.max(fontSize * 3, Math.min(SIZE, maxWidth)),
       probe = offscreen(1, 1).getContext("2d"),
       formulaCache = new Map(),
       preparedLines = [];
     let formulaCount = 0;
+    for (const line of parsed.lines) {
+      const lineFontSize = Math.max(1, fontSize * (line.fontScale || 1));
+      for (const segment of line.segments) {
+        if (segment.type === "math" && formulaCount < 64 && segment.tex.length <= MIXED_FORMULA_MAX_LENGTH) {
+          formulaCount++;
+          const cacheKey = `${lineFontSize}\n${color}\n${segment.tex}`;
+          if (!formulaCache.has(cacheKey)) {
+            formulaCache.set(cacheKey, mathJaxImage(segment.tex, lineFontSize, color, pixelRatio));
+          }
+        }
+      }
+    }
+    if (formulaCache.size) await Promise.all(formulaCache.values());
+
+    formulaCount = 0;
     for (const line of parsed.lines) {
       const lineFontSize = Math.max(1, fontSize * (line.fontScale || 1)),
         segments = [];
@@ -132,9 +147,8 @@
         }
         formulaCount++;
         const cacheKey = `${lineFontSize}\n${color}\n${segment.tex}`;
-        if (!formulaCache.has(cacheKey)) formulaCache.set(cacheKey, mathJaxImage(segment.tex, lineFontSize, color, pixelRatio));
         const formula = await formulaCache.get(cacheKey);
-        if (formula.image) segments.push({ type: "math", image: formula.image, raw: segment.raw });
+        if (formula && formula.image) segments.push({ type: "math", image: formula.image, raw: segment.raw });
         else segments.push({ ...segment, type: "text", text: segment.raw });
       }
       preparedLines.push({ ...line, lineFontSize, segments });
@@ -170,25 +184,67 @@
       }
       finishRow();
     }
-    const padding = Math.max(2, fontSize * 0.12),
+    const paddingX = Math.max(28, Math.round(fontSize * 1.25)),
+      paddingY = Math.max(26, Math.round(fontSize * 1.15)),
       contentWidth = Math.max(1, ...rows.map((row) => row.width)),
-      naturalWidth = Math.ceil(Math.min(widthLimit, contentWidth) + padding * 2),
-      naturalHeight = Math.ceil(rows.reduce((sum, row) => sum + row.height, 0) + padding * 2),
+      naturalWidth = Math.ceil(Math.min(widthLimit, Math.max(340, contentWidth + paddingX * 2))),
+      naturalHeight = Math.ceil(rows.reduce((sum, row) => sum + row.height, 0) + paddingY * 2),
       rasterScale = rasterScaleFor(naturalWidth, naturalHeight, pixelRatio),
       rasterWidth = Math.max(1, Math.ceil(naturalWidth * rasterScale)),
       rasterHeight = Math.max(1, Math.ceil(naturalHeight * rasterScale)),
       image = offscreen(rasterWidth, rasterHeight),
       context = image.getContext("2d");
     context.setTransform(rasterScale, 0, 0, rasterScale, 0, 0);
-    context.fillStyle = color || "#2563eb";
+
+    // Draw Premium Whiteboard Card Container
+    const radius = 16;
+    context.save();
+    context.shadowColor = "rgba(15, 23, 42, 0.09)";
+    context.shadowBlur = 18;
+    context.shadowOffsetY = 6;
+    context.fillStyle = "#ffffff";
+    context.beginPath();
+    if (typeof context.roundRect === "function") {
+      context.roundRect(2, 2, naturalWidth - 4, naturalHeight - 4, radius);
+    } else {
+      context.rect(2, 2, naturalWidth - 4, naturalHeight - 4);
+    }
+    context.fill();
+    context.restore();
+
+    context.save();
+    context.strokeStyle = "#e2e8f0";
+    context.lineWidth = 1.5;
+    context.beginPath();
+    if (typeof context.roundRect === "function") {
+      context.roundRect(2, 2, naturalWidth - 4, naturalHeight - 4, radius);
+    } else {
+      context.rect(2, 2, naturalWidth - 4, naturalHeight - 4);
+    }
+    context.stroke();
+    context.restore();
+
+    // Vibrant accent stripe on left border
+    context.save();
+    context.fillStyle = "#4f46e5";
+    context.beginPath();
+    if (typeof context.roundRect === "function") {
+      context.roundRect(2, 16, 4, Math.max(12, naturalHeight - 32), 2);
+    } else {
+      context.rect(2, 16, 4, Math.max(12, naturalHeight - 32));
+    }
+    context.fill();
+    context.restore();
+
     context.textBaseline = "top";
-    let y = padding;
+    let y = paddingY;
     for (const row of rows) {
       for (const item of row.items) {
-        const x = padding + item.x;
+        const x = paddingX + item.x;
         if (item.type === "math") context.drawImage(item.image, x, y + (row.height - item.height) / 2, item.width, item.height);
         else {
           context.font = item.font;
+          context.fillStyle = item.bold ? "#0f172a" : "#334155";
           context.fillText(item.text, x, y + (row.height - item.fontSize) / 2);
         }
       }

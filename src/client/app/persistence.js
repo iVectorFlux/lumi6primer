@@ -1010,7 +1010,10 @@
   }
   function logicalWidth(cssWidth) {
     const maximum = state.mode === "eraser" ? 1600 : 320;
-    return Math.max(1, Math.min(maximum, cssWidth / Math.max(0.03, state.scale)));
+    const baseScale = 0.25;
+    const factor = Math.pow(baseScale / Math.max(0.04, state.scale), 0.4);
+    const baseWidth = (cssWidth / baseScale);
+    return Math.max(1, Math.min(maximum, baseWidth * factor));
   }
   function drawPreview(s, context = ctx) {
     const ctx = context;
@@ -1405,7 +1408,7 @@
   }
   function selectInkClusterAtPoint(point) {
     const scale = Math.max(state.scale, 0.05),
-      hitPad = 14 / scale;
+      hitPad = Math.max(12, Math.min(32, 18 / scale));
     let bounds = inkBoundsInRegion({
       x: point.x - hitPad,
       y: point.y - hitPad,
@@ -1422,10 +1425,10 @@
       });
     }
     if (!bounds) return false;
-    const gap = Math.max(10, 16 / scale),
-      maxGrow = Math.max(2500, 5000 / scale),
+    const gap = 24,
+      maxGrow = 1600,
       origin = { ...bounds };
-    for (let i = 0; i < 45; i += 1) {
+    for (let i = 0; i < 35; i += 1) {
       const next = inkBoundsInRegion(padInkBox(bounds, gap));
       if (!next || boxesAlmostEqual(next, bounds)) break;
       bounds = next;
@@ -1434,7 +1437,7 @@
         || bounds.h >= maxGrow
       ) break;
     }
-    bounds = padInkBox(bounds, Math.max(3, 4 / scale));
+    bounds = padInkBox(bounds, 12);
     rememberInkBox(bounds);
     return captureBoxSelection(bounds, {
       quiet: true,
@@ -1609,11 +1612,12 @@
     const pending = state.pending,
       selectionRequest = state.activeAI?.selection === selection,
       pendingSelection = pending?.selection === selection || (pending?.isolatedSelection && selectionRequest);
-    if (pendingSelection) rejectPending();
+    if (pendingSelection) acceptPending({ restoreMode: false });
     if (selectionAIBusy(selection) || selectionRequest) supersedeActiveAI("selection-cancelled");
     if (selection.phase === "active" && !selection.acceptedDraft) restoreSelectionSource(selection);
     state.selection = null;
     state.selectionGesture = null;
+    if (window.clearSelectionFocus) window.clearSelectionFocus();
     resetCanvasCursor();
     render();
     if (!silent) setStatusKey("selectionCancelled");
@@ -1706,6 +1710,7 @@
     if (!selectionOverlayLayer || !selectionToolbar) return;
     const selection = state.selection,
       typesetting = selectionIsTypesetting(selection),
+      aiBusy = Boolean(selection?.aiRequest),
       draftReady = selectionHasTypesetDraft(selection),
       active = selection?.phase === "active" && !typesetting;
     selectionOverlayLayer.hidden = !active;
@@ -1718,28 +1723,43 @@
       box = pendingBox || selection.box,
       toolbarStyle = runtimeElementStyle(selectionToolbar, "selection-toolbar");
     selectionToolbar.hidden = false;
-    selectionToolbar.setAttribute("aria-busy", "false");
+    selectionToolbar.setAttribute("aria-busy", String(aiBusy));
+    if (selectionFocusButton) {
+      selectionFocusButton.hidden = draftReady;
+      selectionFocusButton.disabled = aiBusy;
+      selectionFocusButton.textContent = window.isSelectionFocused ? "Reset View" : t("selectionFocus");
+      selectionFocusButton.title = window.isSelectionFocused ? "Return to previous canvas zoom" : "Zoom in to focus on selection";
+    }
+    if (selectionExplainButton) {
+      const explaining = aiBusy && selection?.aiRequest?.action === "explain";
+      selectionExplainButton.hidden = draftReady;
+      selectionExplainButton.disabled = aiBusy || Boolean(state.visualizingSelection);
+      selectionExplainButton.setAttribute("aria-busy", String(explaining));
+      selectionExplainButton.textContent = explaining ? t("selectionExplaining") : t("selectionExplain");
+    }
     if (selectionTypesetButton) {
+      const typesettingNow = selectionIsTypesetting(selection);
       selectionTypesetButton.hidden = false;
-      selectionTypesetButton.disabled = false;
-      selectionTypesetButton.setAttribute("aria-busy", "false");
-      selectionTypesetButton.textContent = t(draftReady ? "selectionKeep" : "selectionTypeset");
-    }
-    if (selectionVisualizeButton) {
-      selectionVisualizeButton.hidden = draftReady;
-      selectionVisualizeButton.disabled = Boolean(state.visualizingSelection);
-      selectionVisualizeButton.setAttribute("aria-busy", String(Boolean(state.visualizingSelection)));
-      selectionVisualizeButton.textContent = t(state.visualizingSelection ? "selectionVisualizing" : "selectionVisualize");
-    }
-    if (selectionSendBackButton) {
-      selectionSendBackButton.hidden = draftReady;
-      selectionSendBackButton.disabled = false;
+      selectionTypesetButton.disabled = aiBusy || Boolean(state.visualizingSelection);
+      selectionTypesetButton.setAttribute("aria-busy", String(typesettingNow));
+      selectionTypesetButton.textContent = t(draftReady ? "selectionKeep" : (typesettingNow ? "selectionTypesetting" : "selectionTypeset"));
     }
     if (selectionDeleteButton) {
       selectionDeleteButton.hidden = draftReady;
-      selectionDeleteButton.disabled = false;
+      selectionDeleteButton.disabled = aiBusy;
+      selectionDeleteButton.textContent = t("selectionDelete");
     }
-    if (selectionCancelButton) selectionCancelButton.textContent = t(draftReady ? "selectionDiscard" : "selectionCancel");
+    if (selectionCancelButton) {
+      selectionCancelButton.hidden = !draftReady;
+      selectionCancelButton.disabled = aiBusy;
+      selectionCancelButton.textContent = t("selectionDiscard");
+    }
+    if (selectionVisualizeButton) {
+      selectionVisualizeButton.hidden = true;
+    }
+    if (selectionSendBackButton) {
+      selectionSendBackButton.hidden = true;
+    }
     const width = selectionToolbar.offsetWidth || 280,
       height = selectionToolbar.offsetHeight || 36,
       left = box.x * state.scale + state.panX,

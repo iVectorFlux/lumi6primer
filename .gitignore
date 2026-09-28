@@ -35,3 +35,11 @@ data/*.db
 .vercel/
 .aws-sam/
 dist/
+
+# Curriculum & Books assets (pending future release)
+public/curriculum/
+public/curriculum interactive/
+public/content/
+public/Books/
+data/curriculum*
+

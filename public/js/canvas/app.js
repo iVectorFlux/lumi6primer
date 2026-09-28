@@ -64,6 +64,8 @@
     aiRadial = document.querySelector("#aiRadial"),
     selectionOverlayLayer = document.querySelector("#selectionOverlayLayer"),
     selectionToolbar = document.querySelector("#selectionToolbar"),
+    selectionFocusButton = document.querySelector("#selectionFocusBtn"),
+    selectionExplainButton = document.querySelector("#selectionExplainBtn"),
     selectionTypesetButton = document.querySelector("#selectionTypesetBtn"),
     selectionVisualizeButton = document.querySelector("#selectionVisualizeBtn"),
     selectionSendBackButton = document.querySelector("#selectionSendBackBtn"),
@@ -129,14 +131,14 @@
     TEXT_EDITOR_DEFAULT_HEIGHT = 96,
     TEXT_EDITOR_MIN_WIDTH = 160,
     TEXT_EDITOR_MIN_HEIGHT = 72,
-    TEXT_EDITOR_FONT_CSS = 32,
+    TEXT_EDITOR_FONT_CSS = 24,
     TEXT_EDITOR_PREVIEW_INTERVAL_MS = 80,
     TEXT_EDITOR_FONT_FAMILY = '"Patrick Hand", "Segoe Print", "Comic Sans MS", cursive',
     TEXT_INPUT_GUARD_MS = 500,
-    TEXT_INPUT_MAX_LENGTH = 2000,
+    TEXT_INPUT_MAX_LENGTH = 3000,
     MAX_VISIBLE_TEXT_BOXES = 50,
     MIXED_FORMULA_MAX_LENGTH = 512,
-    AI_TEXT_MAX_LENGTH = 1000,
+    AI_TEXT_MAX_LENGTH = 3000,
     COPY_FEEDBACK_MS = 1600,
     NAVIGATION_HINT_VISIBLE_MS = 10000,
     ANIMATION_CONTROLS_VISIBLE_MS = 10000;
@@ -335,7 +337,7 @@ User writes "Show air quality for Tokyo", names a place, and points to an empty 
       tourStudioThemeTitle: "Try the new Studio theme",
       tourStudioThemeBody: "Open Theme to switch the canvas's visual style and the AI's response emphasis. The new Studio theme uses a clean, focused interface and favors concise, well-structured, practical answers. You can switch themes at any time.",
       tourLassoTitle: "Work with exactly the content you select",
-      tourLassoBody: "With a mouse or stylus, draw a closed loop around handwriting. Drag the selected region to move it; use the right edge, bottom edge, or lower-right corner to resize it. The selection toolbar can typeset handwriting, delete it, or cancel. Selection-scoped AI requests do not reference the rest of the canvas.",
+      tourLassoBody: "With a mouse or stylus, draw a closed loop around handwriting. Drag the selected region to move it; use the right edge, bottom edge, or lower-right corner to resize it. The selection toolbar lets you explain handwriting with Lumi, make it neat, or erase it. Selection-scoped AI requests do not reference the rest of the canvas.",
       tourTextTitle: "Add editable text and formulas",
       tourTextBody: "Choose Text, then click the canvas to create an input box. Markdown and likely LaTeX are formatted automatically; Preview shows the exact placement before confirmation. Confirm with the check button or Ctrl/Cmd + Enter.",
       tourImageTitle: "Add images and photos",
@@ -484,15 +486,18 @@ User writes "Show air quality for Tokyo", names a place, and points to an empty 
       selectionRecolored: "Selection color changed locally",
       selectionTools: "Selection tools",
       selectionScopeNotice: "AI answers use only this selected region",
-      selectionTypeset: "Typeset",
+      selectionFocus: "Focus",
+      selectionExplain: "Explain",
+      selectionExplaining: "Explaining...",
+      selectionTypeset: "Make Neat",
       selectionVisualize: "Visualize",
       selectionVisualizing: "Visualizing...",
       selectionVisualizeFailed: "Could not make a picture from that selection",
-      selectionDelete: "Delete",
+      selectionDelete: "Erase",
       selectionCancel: "Cancel",
       selectionKeep: "Keep",
       selectionDiscard: "Discard",
-      selectionTypesetting: "Typesetting selection...",
+      selectionTypesetting: "Making neat...",
       selectionDeleted: "Selected region deleted",
       pendingConfirm: "Confirm or discard the current AI draft first",
       merged: "AI merged",
@@ -2517,23 +2522,25 @@ User writes "Show air quality for Tokyo", names a place, and points to an empty 
   }
   function openRadialMenu() {
     clearTimeout(state.radialCloseTimer);
+    if (!aiRadial || !embodiment) return;
     embodiment.classList.add("menu-open");
-    aiOrb.setAttribute("aria-expanded", "true");
+    aiOrb?.setAttribute("aria-expanded", "true");
     aiRadial.setAttribute("aria-hidden", "false");
     document.querySelectorAll(".radial-action").forEach((button) => button.setAttribute("tabindex", "0"));
   }
   function closeRadialMenu(force = false) {
     if (state.radialGesture && !force) return;
     state.radialGesture = null;
-    embodiment.classList.remove("menu-open");
-    aiOrb.setAttribute("aria-expanded", "false");
-    aiRadial.setAttribute("aria-hidden", "true");
+    embodiment?.classList.remove("menu-open");
+    aiOrb?.setAttribute("aria-expanded", "false");
+    if (aiRadial) aiRadial.setAttribute("aria-hidden", "true");
     document.querySelectorAll(".radial-action").forEach((button) => {
       button.classList.remove("is-highlighted");
       button.setAttribute("tabindex", "-1");
     });
   }
   function chooseRadialAction(clientX, clientY) {
+    if (!aiOrb || !aiRadial) return null;
     const orbRect = aiOrb.getBoundingClientRect(),
       origin = { x: orbRect.left + orbRect.width / 2, y: orbRect.top + orbRect.height / 2 },
       pointerDistance = Math.hypot(clientX - origin.x, clientY - origin.y);
@@ -5266,40 +5273,29 @@ User writes "Show air quality for Tokyo", names a place, and points to an empty 
       heightCss = startHeight,
       fontCss = startFontCss,
       x = gesture.startX,
-      y = gesture.startY,
-      autoHeight = false;
+      y = gesture.startY;
     const clampW = (value) => Math.max(minWidth, Math.min(maxWidth, value));
     const clampH = (value) => Math.max(minHeight, Math.min(maxHeight, value));
     const applyWest = (width) => { x = gesture.startX + (startWidth - width) / scale; };
     const applyNorth = (height) => { y = gesture.startY + (startHeight - height) / scale; };
     if (hit === "e" || hit === "width") {
       widthCss = clampW(startWidth + dx);
-      autoHeight = true;
     } else if (hit === "w") {
       widthCss = clampW(startWidth - dx);
       applyWest(widthCss);
-      autoHeight = true;
     } else if (hit === "s" || hit === "height") {
       heightCss = clampH(startHeight + dy);
-      fontCss = Math.max(16, Math.min(120, startFontCss * (heightCss / Math.max(1, startHeight))));
     } else if (hit === "n") {
       heightCss = clampH(startHeight - dy);
-      fontCss = Math.max(16, Math.min(120, startFontCss * (heightCss / Math.max(1, startHeight))));
       applyNorth(heightCss);
     } else {
       const sx = hit.includes("w") ? -1 : 1;
-      const sy = hit.includes("n") ? -1 : 1;
-      const requested = Math.max((startWidth + sx * dx) / Math.max(1, startWidth), (startHeight + sy * dy) / Math.max(1, startHeight));
-      const minimumScale = Math.max(minWidth / startWidth, minHeight / startHeight, 16 / startFontCss);
-      const maximumScale = Math.max(minimumScale, Math.min(maxWidth / startWidth, maxHeight / startHeight, 120 / startFontCss));
-      const factor = Math.max(minimumScale, Math.min(maximumScale, requested));
-      widthCss = startWidth * factor;
-      heightCss = startHeight * factor;
-      fontCss = startFontCss * factor;
+      widthCss = clampW(startWidth + sx * dx);
       if (hit.includes("w")) applyWest(widthCss);
-      if (hit.includes("n")) applyNorth(heightCss);
+      const factor = widthCss / Math.max(1, startWidth);
+      fontCss = Math.max(16, Math.min(48, Math.round(startFontCss * factor)));
     }
-    return { widthCss, heightCss, fontCss, x, y, autoHeight };
+    return { widthCss, heightCss, fontCss, x, y, autoHeight: true };
   }
   function keepTextEditorInsideCanvas(editor) {
     const logicalWidth = editor.widthCss / Math.max(0.03, state.scale),
@@ -5539,12 +5535,13 @@ User writes "Show air quality for Tokyo", names a place, and points to an empty 
   }
   function scheduleTextEditorPreview(editor, delay = TEXT_EDITOR_PREVIEW_INTERVAL_MS) {
     if (!editor?.mixedMode || editor.committing || editor.cancelled) return;
-    if (delay > 0 && editor.previewTimer) return;
+    const effectiveDelay = delay > 0 ? Math.max(300, delay) : 0;
+    if (effectiveDelay > 0 && editor.previewTimer) return;
     clearTimeout(editor.previewTimer);
     editor.previewTimer = setTimeout(() => {
       editor.previewTimer = 0;
       void renderTextEditorPreview(editor);
-    }, Math.max(0, delay));
+    }, effectiveDelay);
   }
   function updateTextEditorMixedMode(editor) {
     const button = editor?.mixedModeButton;
@@ -5704,6 +5701,27 @@ User writes "Show air quality for Tokyo", names a place, and points to an empty 
     setStatusKey("ready");
     if (!state.textEditors.size && state.auto && state.autoEligible) schedule(Math.max(1000, state.autoDelayMs));
   }
+  function deleteTextEditor(editor) {
+    if (!editor || editor.committing) return;
+    if (editor.sourceTextBoxId) {
+      recordTextBoxesBefore();
+      const idx = state.textBoxes.findIndex((item) => item.id === editor.sourceTextBoxId);
+      if (idx >= 0) {
+        const removed = state.textBoxes.splice(idx, 1)[0];
+        mergeDirtyBox(removed);
+        state.userRevision++;
+        save();
+      }
+      state.selectedTextBoxId = null;
+    }
+    editor.cancelled = true;
+    removeTextEditor(editor);
+    blockCanvasInput(TEXT_INPUT_GUARD_MS);
+    if (editor.returnMode) restoreTextEditorMode(editor);
+    else setCanvasMode("pen");
+    render();
+    setStatusKey("ready");
+  }
   function createTextEditor(point, options = null) {
     options ||= {};
     if (!options.sourceTextBoxId && state.textEditors.size) {
@@ -5763,8 +5781,62 @@ User writes "Show air quality for Tokyo", names a place, and points to an empty 
     textarea.placeholder = t("textPlaceholder");
     textarea.setAttribute("aria-label", t("text"));
     textarea.value = typeof options.text === "string" ? options.text.slice(0, TEXT_INPUT_MAX_LENGTH) : "";
+    const headerBar = document.createElement("div");
+    headerBar.className = "text-editor-mini-bar";
+    const sizes = [
+      { label: "S", size: 16 },
+      { label: "M", size: 24 },
+      { label: "L", size: 32 },
+      { label: "XL", size: 44 },
+    ];
+    sizes.forEach((s) => {
+      const btn = document.createElement("button");
+      btn.type = "button";
+      btn.className = `text-editor-preset-btn ${editor.fontCss === s.size ? "active" : ""}`;
+      btn.textContent = s.label;
+      btn.title = `Font size ${s.size}px`;
+      btn.addEventListener("pointerdown", (e) => e.stopPropagation());
+      btn.addEventListener("click", (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        editor.fontCss = s.size;
+        headerBar.querySelectorAll(".text-editor-preset-btn").forEach((b) => b.classList.remove("active"));
+        btn.classList.add("active");
+        fitTextEditorToContent(editor);
+        positionTextEditors();
+      });
+      headerBar.append(btn);
+    });
+
+    const eraseBtn = document.createElement("button");
+    eraseBtn.type = "button";
+    eraseBtn.className = "text-editor-erase-btn";
+    eraseBtn.textContent = "Erase";
+    eraseBtn.title = "Delete this text card";
+    eraseBtn.addEventListener("pointerdown", (e) => e.stopPropagation());
+    eraseBtn.addEventListener("click", (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      deleteTextEditor(editor);
+    });
+    headerBar.append(eraseBtn);
+
+    const doneBtn = document.createElement("button");
+    doneBtn.type = "button";
+    doneBtn.className = "text-editor-done-btn";
+    doneBtn.textContent = "Done";
+    doneBtn.title = "Confirm text";
+    doneBtn.addEventListener("pointerdown", (e) => e.stopPropagation());
+    doneBtn.addEventListener("click", (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      void confirmTextEditor(editor);
+    });
+    headerBar.append(doneBtn);
+
+    root.append(headerBar);
     root.append(textarea);
-    for (const kind of ["n", "ne", "e", "se", "s", "sw", "w", "nw"]) {
+    for (const kind of ["ne", "se", "sw", "nw", "e", "w"]) {
       const handle = document.createElement("span");
       handle.className = `text-editor-handle ${kind}`;
       handle.dataset.textHandle = kind;
@@ -5912,6 +5984,9 @@ User writes "Show air quality for Tokyo", names a place, and points to an empty 
       state.panY = Math.min(maxY, Math.max(minY, state.panY));
     }
   }
+  const MIN_CANVAS_SCALE = 0.05;
+  const MAX_CANVAS_SCALE = 3.0;
+
   function updateTouchGesture() {
     const g = state.touchGesture;
     if (!g) return false;
@@ -5923,7 +5998,7 @@ User writes "Show air quality for Tokyo", names a place, and points to an empty 
       },
       distance = Math.max(1, Math.hypot(points[0].x - points[1].x, points[0].y - points[1].y)),
       r = view.getBoundingClientRect(),
-      next = Math.max(0.35, Math.min(2.5, (g.scale * distance) / g.distance)),
+      next = Math.max(MIN_CANVAS_SCALE, Math.min(MAX_CANVAS_SCALE, (g.scale * distance) / g.distance)),
       anchorX = (g.center.x - r.left - g.panX) / g.scale,
       anchorY = (g.center.y - r.top - g.panY) / g.scale;
     state.scale = next;
@@ -5945,7 +6020,7 @@ User writes "Show air quality for Tokyo", names a place, and points to an empty 
   function zoomCanvasAt(clientX, clientY, deltaY) {
     const rect = view.getBoundingClientRect(),
       factor = deltaY < 0 ? 1.12 : 0.89,
-      next = Math.max(0.35, Math.min(2.5, state.scale * factor)),
+      next = Math.max(MIN_CANVAS_SCALE, Math.min(MAX_CANVAS_SCALE, state.scale * factor)),
       px = clientX - rect.left,
       py = clientY - rect.top;
     state.panX = px - ((px - state.panX) * next) / state.scale;
@@ -5956,6 +6031,110 @@ User writes "Show air quality for Tokyo", names a place, and points to an empty 
     requestRender();
     wheelNavigating();
   }
+
+  function frameBounds(box, { duration = 280, padding = 80 } = {}) {
+    if (!box || box.w <= 0 || box.h <= 0) return;
+    const r = view.getBoundingClientRect();
+    const availableW = Math.max(120, r.width - padding * 2);
+    const availableH = Math.max(120, r.height - padding * 2);
+    const targetScale = Math.max(MIN_CANVAS_SCALE, Math.min(1.4, Math.min(availableW / box.w, availableH / box.h)));
+    const centerX = box.x + box.w / 2;
+    const centerY = box.y + box.h / 2;
+    const targetPanX = (r.width / 2) - centerX * targetScale;
+    const targetPanY = (r.height / 2) - centerY * targetScale;
+
+    const startScale = state.scale;
+    const startPanX = state.panX;
+    const startPanY = state.panY;
+    const startTime = performance.now();
+
+    function step(now) {
+      const elapsed = now - startTime;
+      const progress = Math.min(1, elapsed / duration);
+      const ease = 1 - Math.pow(1 - progress, 3);
+      state.scale = startScale + (targetScale - startScale) * ease;
+      state.panX = startPanX + (targetPanX - startPanX) * ease;
+      state.panY = startPanY + (targetPanY - startPanY) * ease;
+      clampPan();
+      updateCoordinates();
+      requestRender();
+      if (progress < 1) {
+        requestAnimationFrame(step);
+      }
+    }
+    requestAnimationFrame(step);
+  }
+
+  let cachedPreviousView = null;
+
+  function clearSelectionFocus() {
+    cachedPreviousView = null;
+    window.isSelectionFocused = false;
+  }
+
+  function focusSelection() {
+    const selection = state.selection;
+    if (cachedPreviousView) {
+      const { scale, panX, panY } = cachedPreviousView;
+      cachedPreviousView = null;
+      window.isSelectionFocused = false;
+      animateToView(scale, panX, panY);
+      if (typeof updateSelectionToolbar === "function") updateSelectionToolbar();
+      return;
+    }
+    if (selection?.box) {
+      cachedPreviousView = { scale: state.scale, panX: state.panX, panY: state.panY };
+      window.isSelectionFocused = true;
+      frameBounds(selection.box);
+      if (typeof updateSelectionToolbar === "function") updateSelectionToolbar();
+    }
+  }
+
+  function animateToView(targetScale, targetPanX, targetPanY, { duration = 280 } = {}) {
+    const startScale = state.scale;
+    const startPanX = state.panX;
+    const startPanY = state.panY;
+    const startTime = performance.now();
+
+    function step(now) {
+      const elapsed = now - startTime;
+      const progress = Math.min(1, elapsed / duration);
+      const ease = 1 - Math.pow(1 - progress, 3);
+      state.scale = startScale + (targetScale - startScale) * ease;
+      state.panX = startPanX + (targetPanX - startPanX) * ease;
+      state.panY = startPanY + (targetPanY - startPanY) * ease;
+      clampPan();
+      updateCoordinates();
+      requestRender();
+      if (progress < 1) {
+        requestAnimationFrame(step);
+      }
+    }
+    requestAnimationFrame(step);
+  }
+
+  function frameContent() {
+    const box = state.selection?.box || state.lastUserBox || state.dirty;
+    if (box) {
+      frameBounds(box);
+    } else {
+      const r = view.getBoundingClientRect();
+      state.scale = 0.1;
+      state.panX = (r.width - SIZE * state.scale) / 2;
+      state.panY = (r.height - SIZE * state.scale) / 2;
+      clampPan();
+      updateCoordinates();
+      requestRender();
+    }
+  }
+
+  window.frameBounds = frameBounds;
+  window.focusSelection = focusSelection;
+  window.clearSelectionFocus = clearSelectionFocus;
+  window.frameContent = frameContent;
+  window.zoomCanvasAt = zoomCanvasAt;
+  window.animateToView = animateToView;
+  window.deleteTextEditor = deleteTextEditor;
   function valid(p) {
     return p.x >= 0 && p.x <= SIZE && p.y >= 0 && p.y <= SIZE;
   }
@@ -7024,7 +7203,10 @@ User writes "Show air quality for Tokyo", names a place, and points to an empty 
   }
   function logicalWidth(cssWidth) {
     const maximum = state.mode === "eraser" ? 1600 : 320;
-    return Math.max(1, Math.min(maximum, cssWidth / Math.max(0.03, state.scale)));
+    const baseScale = 0.25;
+    const factor = Math.pow(baseScale / Math.max(0.04, state.scale), 0.4);
+    const baseWidth = (cssWidth / baseScale);
+    return Math.max(1, Math.min(maximum, baseWidth * factor));
   }
   function drawPreview(s, context = ctx) {
     const ctx = context;
@@ -7419,7 +7601,7 @@ User writes "Show air quality for Tokyo", names a place, and points to an empty 
   }
   function selectInkClusterAtPoint(point) {
     const scale = Math.max(state.scale, 0.05),
-      hitPad = 14 / scale;
+      hitPad = Math.max(12, Math.min(32, 18 / scale));
     let bounds = inkBoundsInRegion({
       x: point.x - hitPad,
       y: point.y - hitPad,
@@ -7436,10 +7618,10 @@ User writes "Show air quality for Tokyo", names a place, and points to an empty 
       });
     }
     if (!bounds) return false;
-    const gap = Math.max(10, 16 / scale),
-      maxGrow = Math.max(2500, 5000 / scale),
+    const gap = 24,
+      maxGrow = 1600,
       origin = { ...bounds };
-    for (let i = 0; i < 45; i += 1) {
+    for (let i = 0; i < 35; i += 1) {
       const next = inkBoundsInRegion(padInkBox(bounds, gap));
       if (!next || boxesAlmostEqual(next, bounds)) break;
       bounds = next;
@@ -7448,7 +7630,7 @@ User writes "Show air quality for Tokyo", names a place, and points to an empty 
         || bounds.h >= maxGrow
       ) break;
     }
-    bounds = padInkBox(bounds, Math.max(3, 4 / scale));
+    bounds = padInkBox(bounds, 12);
     rememberInkBox(bounds);
     return captureBoxSelection(bounds, {
       quiet: true,
@@ -7623,11 +7805,12 @@ User writes "Show air quality for Tokyo", names a place, and points to an empty 
     const pending = state.pending,
       selectionRequest = state.activeAI?.selection === selection,
       pendingSelection = pending?.selection === selection || (pending?.isolatedSelection && selectionRequest);
-    if (pendingSelection) rejectPending();
+    if (pendingSelection) acceptPending({ restoreMode: false });
     if (selectionAIBusy(selection) || selectionRequest) supersedeActiveAI("selection-cancelled");
     if (selection.phase === "active" && !selection.acceptedDraft) restoreSelectionSource(selection);
     state.selection = null;
     state.selectionGesture = null;
+    if (window.clearSelectionFocus) window.clearSelectionFocus();
     resetCanvasCursor();
     render();
     if (!silent) setStatusKey("selectionCancelled");
@@ -7720,6 +7903,7 @@ User writes "Show air quality for Tokyo", names a place, and points to an empty 
     if (!selectionOverlayLayer || !selectionToolbar) return;
     const selection = state.selection,
       typesetting = selectionIsTypesetting(selection),
+      aiBusy = Boolean(selection?.aiRequest),
       draftReady = selectionHasTypesetDraft(selection),
       active = selection?.phase === "active" && !typesetting;
     selectionOverlayLayer.hidden = !active;
@@ -7732,28 +7916,43 @@ User writes "Show air quality for Tokyo", names a place, and points to an empty 
       box = pendingBox || selection.box,
       toolbarStyle = runtimeElementStyle(selectionToolbar, "selection-toolbar");
     selectionToolbar.hidden = false;
-    selectionToolbar.setAttribute("aria-busy", "false");
+    selectionToolbar.setAttribute("aria-busy", String(aiBusy));
+    if (selectionFocusButton) {
+      selectionFocusButton.hidden = draftReady;
+      selectionFocusButton.disabled = aiBusy;
+      selectionFocusButton.textContent = window.isSelectionFocused ? "Reset View" : t("selectionFocus");
+      selectionFocusButton.title = window.isSelectionFocused ? "Return to previous canvas zoom" : "Zoom in to focus on selection";
+    }
+    if (selectionExplainButton) {
+      const explaining = aiBusy && selection?.aiRequest?.action === "explain";
+      selectionExplainButton.hidden = draftReady;
+      selectionExplainButton.disabled = aiBusy || Boolean(state.visualizingSelection);
+      selectionExplainButton.setAttribute("aria-busy", String(explaining));
+      selectionExplainButton.textContent = explaining ? t("selectionExplaining") : t("selectionExplain");
+    }
     if (selectionTypesetButton) {
+      const typesettingNow = selectionIsTypesetting(selection);
       selectionTypesetButton.hidden = false;
-      selectionTypesetButton.disabled = false;
-      selectionTypesetButton.setAttribute("aria-busy", "false");
-      selectionTypesetButton.textContent = t(draftReady ? "selectionKeep" : "selectionTypeset");
-    }
-    if (selectionVisualizeButton) {
-      selectionVisualizeButton.hidden = draftReady;
-      selectionVisualizeButton.disabled = Boolean(state.visualizingSelection);
-      selectionVisualizeButton.setAttribute("aria-busy", String(Boolean(state.visualizingSelection)));
-      selectionVisualizeButton.textContent = t(state.visualizingSelection ? "selectionVisualizing" : "selectionVisualize");
-    }
-    if (selectionSendBackButton) {
-      selectionSendBackButton.hidden = draftReady;
-      selectionSendBackButton.disabled = false;
+      selectionTypesetButton.disabled = aiBusy || Boolean(state.visualizingSelection);
+      selectionTypesetButton.setAttribute("aria-busy", String(typesettingNow));
+      selectionTypesetButton.textContent = t(draftReady ? "selectionKeep" : (typesettingNow ? "selectionTypesetting" : "selectionTypeset"));
     }
     if (selectionDeleteButton) {
       selectionDeleteButton.hidden = draftReady;
-      selectionDeleteButton.disabled = false;
+      selectionDeleteButton.disabled = aiBusy;
+      selectionDeleteButton.textContent = t("selectionDelete");
     }
-    if (selectionCancelButton) selectionCancelButton.textContent = t(draftReady ? "selectionDiscard" : "selectionCancel");
+    if (selectionCancelButton) {
+      selectionCancelButton.hidden = !draftReady;
+      selectionCancelButton.disabled = aiBusy;
+      selectionCancelButton.textContent = t("selectionDiscard");
+    }
+    if (selectionVisualizeButton) {
+      selectionVisualizeButton.hidden = true;
+    }
+    if (selectionSendBackButton) {
+      selectionSendBackButton.hidden = true;
+    }
     const width = selectionToolbar.offsetWidth || 280,
       height = selectionToolbar.offsetHeight || 36,
       left = box.x * state.scale + state.panX,
@@ -8249,8 +8448,8 @@ User writes "Show air quality for Tokyo", names a place, and points to an empty 
       if (action === "normalize")
         for (let index = commands.length - 1; index >= 0; index--)
           if (!["write_text", "draw_formula", "plot_function"].includes(commands[index].tool)) commands.splice(index, 1);
-      if (isolatedSelection && action === "normalize") {
-        const relocated = relocateIsolatedTypesetCommands(commands, requestOptions.selection || run.selection);
+      if (isolatedSelection) {
+        const relocated = relocateIsolatedTypesetCommands(commands, requestOptions.selection || run.selection, action);
         commands.splice(0, commands.length, ...relocated);
       }
       debug("ai-response", {
@@ -8658,11 +8857,16 @@ User writes "Show air quality for Tokyo", names a place, and points to an empty 
   function portraitCanvasView() {
     return Boolean(view && view.clientHeight > view.clientWidth * 1.05);
   }
-  function relocateIsolatedTypesetCommands(commands, selection) {
+  function responsiveCardMaxWidth() {
+    const viewportWidth = view?.clientWidth || window.innerWidth || 1024;
+    const canvasViewportW = viewportWidth / Math.max(0.05, state.scale);
+    return Math.min(640, Math.max(320, canvasViewportW * 0.78));
+  }
+  function relocateIsolatedTypesetCommands(commands, selection, action = "") {
     if (!selection?.box || !Array.isArray(commands) || !commands.length) return commands;
     const source = selection.box,
       gap = Math.max(28, 18 / Math.max(0.03, state.scale)),
-      below = portraitCanvasView() || window.matchMedia("(max-width: 900px)").matches;
+      below = action === "explain" || portraitCanvasView() || window.matchMedia("(max-width: 900px)").matches;
     let y = source.y + source.h + gap,
       x = source.x + source.w + gap;
     return commands.map((command) => {
@@ -8673,7 +8877,7 @@ User writes "Show air quality for Tokyo", names a place, and points to an empty 
         height = next.tool === "draw_formula"
           ? (next.fontSize || 48) * 1.8
           : next.tool === "write_text"
-            ? (next.fontSize || 32) * (next.lineHeight || 1.35) * lines
+            ? (next.fontSize || 24) * (next.lineHeight || 1.35) * lines
             : Number(next.h) || 200;
       if (below) {
         next.x = Math.max(0, Math.min(SIZE - Math.min(width, SIZE), source.x));
@@ -8766,13 +8970,13 @@ User writes "Show air quality for Tokyo", names a place, and points to an empty 
           if (typeof c.text !== "string" || !c.text.trim()) return null;
           if (!n(c.x)) c.x = 600;
           if (!n(c.y)) c.y = 600;
-          if (!Number.isFinite(c.maxWidth)) c.maxWidth = 2600;
           c.text = c.text.slice(0, AI_TEXT_MAX_LENGTH);
-          c.fontSize = matchedTextFontSize(c.fontSize, c.text);
-          c.maxWidth = Math.max(c.fontSize, Math.min(SIZE - c.x, c.maxWidth));
+          c.fontSize = Math.max(20, Math.min(28, +c.fontSize || 24));
+          const maxAllowed = responsiveCardMaxWidth();
+          const targetWidth = Number.isFinite(c.maxWidth) && c.maxWidth > 100 ? c.maxWidth : 560;
+          c.maxWidth = Math.max(300, Math.min(targetWidth, maxAllowed, SIZE - c.x));
           c.lineHeight = Math.max(1, Math.min(2.2, +c.lineHeight || 1.35));
           c.color = c.color || aiColor;
-          if (c.maxWidth < c.fontSize) c.maxWidth = c.fontSize * 10;
           c.y = Math.min(c.y, Math.max(0, SIZE - c.fontSize * c.lineHeight * 2));
         }
         if (c.tool === "draw_formula") {
@@ -8922,7 +9126,7 @@ User writes "Show air quality for Tokyo", names a place, and points to an empty 
           y = c.y,
           pendingCommand = c;
         if (c.tool === "write_text") {
-          image = textImage(c.text, c.fontSize, c.color, c.maxWidth, c.lineHeight, state.aiFont, AI_TEXT_MAX_LENGTH, sharpRenderRatio());
+          image = await mixedTextImage(c.text, c.fontSize, c.color, c.maxWidth, c.lineHeight, state.aiFont, sharpRenderRatio());
         } else if (c.tool === "draw_formula") {
           image = await formulaImage(c.latex, c.fontSize, c.color);
         } else if (c.tool === "plot_function") {
@@ -8965,7 +9169,7 @@ User writes "Show air quality for Tokyo", names a place, and points to an empty 
       x = c.x,
       y = c.y,
       pendingCommand = c;
-    if (c.tool === "write_text") image = textImage(c.text, c.fontSize, c.color, c.maxWidth, c.lineHeight, state.aiFont, AI_TEXT_MAX_LENGTH, sharpRenderRatio());
+    if (c.tool === "write_text") image = await mixedTextImage(c.text, c.fontSize, c.color, c.maxWidth, c.lineHeight, state.aiFont, sharpRenderRatio());
     else if (c.tool === "draw_formula") image = await formulaImage(c.latex, c.fontSize, c.color);
     else if (c.tool === "plot_function") image = plot(c);
     else if (c.tool === "animate_scene") {
@@ -9116,7 +9320,7 @@ User writes "Show air quality for Tokyo", names a place, and points to an empty 
     return { lines, widths: lines.map((value) => Math.max(1, context.measureText(value).width)) };
   }
   function mixedTextFont(segment, fontSize, family) {
-    const fontFamily = segment.code ? "ui-monospace, SFMono-Regular, Consolas, monospace" : family,
+    const fontFamily = segment.code ? "ui-monospace, SFMono-Regular, Consolas, monospace" : (family || "'Plus Jakarta Sans', 'Inter', -apple-system, sans-serif"),
       fontStyle = segment.italic ? "italic" : "normal",
       fontWeight = segment.bold ? "700" : "400";
     return `${fontStyle} ${fontWeight} ${fontSize}px ${fontFamily}`;
@@ -9141,12 +9345,27 @@ User writes "Show air quality for Tokyo", names a place, and points to an empty 
   async function mixedTextImage(text, fontSize, color, maxWidth = 900, lineHeight = 1.35, family = state.aiFont, pixelRatio = sharpRenderRatio()) {
     if (!MIXED_TEXT?.parse) return textImage(text, fontSize, color, maxWidth, lineHeight, family, TEXT_INPUT_MAX_LENGTH, pixelRatio);
     const parsed = MIXED_TEXT.parse(text.slice(0, TEXT_INPUT_MAX_LENGTH)),
-      resolvedFamily = family || "ui-rounded, system-ui, sans-serif",
+      resolvedFamily = family || "'Plus Jakarta Sans', 'Inter', -apple-system, sans-serif",
       widthLimit = Math.max(fontSize * 3, Math.min(SIZE, maxWidth)),
       probe = offscreen(1, 1).getContext("2d"),
       formulaCache = new Map(),
       preparedLines = [];
     let formulaCount = 0;
+    for (const line of parsed.lines) {
+      const lineFontSize = Math.max(1, fontSize * (line.fontScale || 1));
+      for (const segment of line.segments) {
+        if (segment.type === "math" && formulaCount < 64 && segment.tex.length <= MIXED_FORMULA_MAX_LENGTH) {
+          formulaCount++;
+          const cacheKey = `${lineFontSize}\n${color}\n${segment.tex}`;
+          if (!formulaCache.has(cacheKey)) {
+            formulaCache.set(cacheKey, mathJaxImage(segment.tex, lineFontSize, color, pixelRatio));
+          }
+        }
+      }
+    }
+    if (formulaCache.size) await Promise.all(formulaCache.values());
+
+    formulaCount = 0;
     for (const line of parsed.lines) {
       const lineFontSize = Math.max(1, fontSize * (line.fontScale || 1)),
         segments = [];
@@ -9157,9 +9376,8 @@ User writes "Show air quality for Tokyo", names a place, and points to an empty 
         }
         formulaCount++;
         const cacheKey = `${lineFontSize}\n${color}\n${segment.tex}`;
-        if (!formulaCache.has(cacheKey)) formulaCache.set(cacheKey, mathJaxImage(segment.tex, lineFontSize, color, pixelRatio));
         const formula = await formulaCache.get(cacheKey);
-        if (formula.image) segments.push({ type: "math", image: formula.image, raw: segment.raw });
+        if (formula && formula.image) segments.push({ type: "math", image: formula.image, raw: segment.raw });
         else segments.push({ ...segment, type: "text", text: segment.raw });
       }
       preparedLines.push({ ...line, lineFontSize, segments });
@@ -9195,25 +9413,67 @@ User writes "Show air quality for Tokyo", names a place, and points to an empty 
       }
       finishRow();
     }
-    const padding = Math.max(2, fontSize * 0.12),
+    const paddingX = Math.max(28, Math.round(fontSize * 1.25)),
+      paddingY = Math.max(26, Math.round(fontSize * 1.15)),
       contentWidth = Math.max(1, ...rows.map((row) => row.width)),
-      naturalWidth = Math.ceil(Math.min(widthLimit, contentWidth) + padding * 2),
-      naturalHeight = Math.ceil(rows.reduce((sum, row) => sum + row.height, 0) + padding * 2),
+      naturalWidth = Math.ceil(Math.min(widthLimit, Math.max(340, contentWidth + paddingX * 2))),
+      naturalHeight = Math.ceil(rows.reduce((sum, row) => sum + row.height, 0) + paddingY * 2),
       rasterScale = rasterScaleFor(naturalWidth, naturalHeight, pixelRatio),
       rasterWidth = Math.max(1, Math.ceil(naturalWidth * rasterScale)),
       rasterHeight = Math.max(1, Math.ceil(naturalHeight * rasterScale)),
       image = offscreen(rasterWidth, rasterHeight),
       context = image.getContext("2d");
     context.setTransform(rasterScale, 0, 0, rasterScale, 0, 0);
-    context.fillStyle = color || "#2563eb";
+
+    // Draw Premium Whiteboard Card Container
+    const radius = 16;
+    context.save();
+    context.shadowColor = "rgba(15, 23, 42, 0.09)";
+    context.shadowBlur = 18;
+    context.shadowOffsetY = 6;
+    context.fillStyle = "#ffffff";
+    context.beginPath();
+    if (typeof context.roundRect === "function") {
+      context.roundRect(2, 2, naturalWidth - 4, naturalHeight - 4, radius);
+    } else {
+      context.rect(2, 2, naturalWidth - 4, naturalHeight - 4);
+    }
+    context.fill();
+    context.restore();
+
+    context.save();
+    context.strokeStyle = "#e2e8f0";
+    context.lineWidth = 1.5;
+    context.beginPath();
+    if (typeof context.roundRect === "function") {
+      context.roundRect(2, 2, naturalWidth - 4, naturalHeight - 4, radius);
+    } else {
+      context.rect(2, 2, naturalWidth - 4, naturalHeight - 4);
+    }
+    context.stroke();
+    context.restore();
+
+    // Vibrant accent stripe on left border
+    context.save();
+    context.fillStyle = "#4f46e5";
+    context.beginPath();
+    if (typeof context.roundRect === "function") {
+      context.roundRect(2, 16, 4, Math.max(12, naturalHeight - 32), 2);
+    } else {
+      context.rect(2, 16, 4, Math.max(12, naturalHeight - 32));
+    }
+    context.fill();
+    context.restore();
+
     context.textBaseline = "top";
-    let y = padding;
+    let y = paddingY;
     for (const row of rows) {
       for (const item of row.items) {
-        const x = padding + item.x;
+        const x = paddingX + item.x;
         if (item.type === "math") context.drawImage(item.image, x, y + (row.height - item.height) / 2, item.width, item.height);
         else {
           context.font = item.font;
+          context.fillStyle = item.bold ? "#0f172a" : "#334155";
           context.fillText(item.text, x, y + (row.height - item.fontSize) / 2);
         }
       }
@@ -9367,11 +9627,13 @@ User writes "Show air quality for Tokyo", names a place, and points to an empty 
   }
   function draftBounds(p) {
     if (p.items) return batchBounds(p);
+    const w = (p.image?.logicalWidth || p.image?.width || (p.textCommand ? p.layoutWidth : 300)) * p.scaleX;
+    const h = (p.image?.logicalHeight || p.image?.height || (p.textCommand ? p.layoutHeight : 100)) * p.scaleY;
     return {
       x: p.x,
       y: p.y,
-      w: (p.textCommand ? p.layoutWidth : p.image.logicalWidth || p.image.width) * p.scaleX,
-      h: (p.textCommand ? p.layoutHeight : p.image.logicalHeight || p.image.height) * p.scaleY,
+      w,
+      h,
     };
   }
   function pendingItemBounds(item) {
@@ -9826,6 +10088,18 @@ User writes "Show air quality for Tokyo", names a place, and points to an empty 
       return;
     }
     const acceptedCount = p.items ? (p.acceptedItems || 0) + p.items.length : 1;
+    if (p.isolatedSelection && p.selection) {
+      if (p.action === "normalize") {
+        dismissSelectionKeepInkRemoved(p.selection);
+      } else {
+        restoreSelectionSource(p.selection);
+        if (state.selection === p.selection) {
+          state.selection = null;
+          state.selectionGesture = null;
+        }
+        updateSelectionToolbar();
+      }
+    }
     if (p.items) {
       commitPendingBatch(p);
       consumePendingInput(p);
@@ -9846,9 +10120,7 @@ User writes "Show air quality for Tokyo", names a place, and points to an empty 
     const historyEntry = save();
     recordPendingHistory(historyEntry, pendingBefore, capturePendingHistoryState());
     render();
-    setStatusKey("merged");
     resolvePending(p, p.items ? { acceptedCount } : true);
-    if (p.isolatedSelection) dismissSelectionKeepInkRemoved(p.selection);
     if (restoreMode) finishAIDraftHandMode();
   }
   function acceptPendingItem(index) {
@@ -9922,7 +10194,7 @@ User writes "Show air quality for Tokyo", names a place, and points to an empty 
     setStatusKey(accepted ? "merged" : "draftRejected");
     resolvePending(p, p.acceptedItems ? { acceptedCount: p.acceptedItems } : false);
     if (p.isolatedSelection && p.selection) {
-      if (accepted) dismissSelectionKeepInkRemoved(p.selection);
+      if (accepted && p.action === "normalize") dismissSelectionKeepInkRemoved(p.selection);
       else {
         restoreSelectionSource(p.selection);
         if (state.selection === p.selection) {
@@ -10019,6 +10291,7 @@ User writes "Show air quality for Tokyo", names a place, and points to an empty 
       addedAnimationIndex = additions.findIndex((item) => item.animationScene);
     p.items.push(...additions);
     if (addedAnimationIndex >= 0) p.selectedIndex = firstAddedIndex + addedAnimationIndex;
+    if (!p.action && (state.activeAI?.action || meta?.action)) p.action = state.activeAI?.action || meta?.action;
     if (!p.selection && state.activeAI?.isolatedSelection) p.selection = state.activeAI.selection || null;
     if (state.activeAI?.isolatedSelection) p.isolatedSelection = true;
     p.latestUserRevision = state.userRevision;
@@ -10050,7 +10323,7 @@ User writes "Show air quality for Tokyo", names a place, and points to an empty 
       }
       const rows = image.revealRows || [image.logicalWidth || image.width],
         distance = rows.reduce((sum, width) => sum + width, 0),
-        duration = Math.max(900, Math.min(6200, distance * 0.7));
+        duration = textCommand ? 350 : Math.max(600, Math.min(2200, distance * 0.4));
       state.pending = {
         command: { ...command },
         image,
@@ -10068,6 +10341,7 @@ User writes "Show air quality for Tokyo", names a place, and points to an empty 
         revealProgress: animationScene ? 1 : 0,
         revision,
         meta,
+        action: state.activeAI?.action || meta?.action || null,
         isolatedSelection: Boolean(state.activeAI?.isolatedSelection),
         selection: state.activeAI?.isolatedSelection ? state.activeAI.selection || null : null,
         resolves: [resolve],
@@ -10108,6 +10382,7 @@ User writes "Show air quality for Tokyo", names a place, and points to an empty 
         revealProgress: 1,
         revision,
         meta,
+        action: state.activeAI?.action || meta?.action || null,
         isolatedSelection: Boolean(state.activeAI?.isolatedSelection),
         selection: state.activeAI?.isolatedSelection ? state.activeAI.selection || null : null,
         latestBox: state.activeAI?.isolatedSelection ? null : state.activeAI?.dirtySnapshot || state.lastUserBox,
@@ -11331,7 +11606,7 @@ User writes "Show air quality for Tokyo", names a place, and points to an empty 
     penTrayEl.addEventListener("click", (e) => e.stopPropagation());
     penTrayEl.addEventListener("touchstart", (e) => e.stopPropagation(), { passive: true });
   }
-  [selectionTypesetButton, selectionVisualizeButton, selectionSendBackButton, selectionDeleteButton, selectionCancelButton].filter(Boolean).forEach((button) => {
+  [selectionFocusButton, selectionExplainButton, selectionTypesetButton, selectionVisualizeButton, selectionSendBackButton, selectionDeleteButton, selectionCancelButton].filter(Boolean).forEach((button) => {
     button.addEventListener("pointerdown", (event) => event.stopPropagation());
     button.addEventListener("click", (event) => event.stopPropagation());
   });
@@ -11465,6 +11740,12 @@ User writes "Show air quality for Tokyo", names a place, and points to an empty 
     event.preventDefault();
     void importClipboardPayload(clipboardPayloadFromDataTransfer(event.clipboardData));
   });
+  if (selectionFocusButton) selectionFocusButton.onclick = () => {
+    focusSelection();
+  };
+  if (selectionExplainButton) selectionExplainButton.onclick = () => {
+    invokeAIAction("explain");
+  };
   if (selectionTypesetButton) selectionTypesetButton.onclick = () => {
     if (selectionHasTypesetDraft()) acceptPending();
     else normalizeSelectionForAI();
@@ -11486,6 +11767,42 @@ User writes "Show air quality for Tokyo", names a place, and points to an empty 
   animationDelete.onclick = deleteSelectedAnimation;
   animationControls.addEventListener("click", (event) => event.stopPropagation());
   animationControls.addEventListener("pointerdown", (event) => event.stopPropagation());
+
+  const zoomInBtn = document.querySelector("#zoomInBtn");
+  const zoomOutBtn = document.querySelector("#zoomOutBtn");
+  const fitCanvasBtn = document.querySelector("#fitCanvasBtn");
+
+  if (zoomInBtn) {
+    zoomInBtn.addEventListener("click", (e) => {
+      e.preventDefault();
+      const rect = view.getBoundingClientRect();
+      zoomCanvasAt(rect.left + rect.width / 2, rect.top + rect.height / 2, -100);
+    });
+  }
+  if (zoomOutBtn) {
+    zoomOutBtn.addEventListener("click", (e) => {
+      e.preventDefault();
+      const rect = view.getBoundingClientRect();
+      zoomCanvasAt(rect.left + rect.width / 2, rect.top + rect.height / 2, 100);
+    });
+  }
+  if (fitCanvasBtn) {
+    fitCanvasBtn.addEventListener("click", (e) => {
+      e.preventDefault();
+      frameContent();
+    });
+  }
+  if (coords) {
+    coords.style.cursor = "pointer";
+    coords.title = "Click to reset zoom to 100%";
+    coords.addEventListener("click", (e) => {
+      e.preventDefault();
+      state.scale = 1.0;
+      clampPan();
+      updateCoordinates();
+      requestRender();
+    });
+  }
 
   const penSizeInput = document.querySelector("#penSize");
   const sketchSizeRail = document.querySelector("#sketchSizeRail");
@@ -12114,87 +12431,11 @@ User writes "Show air quality for Tokyo", names a place, and points to an empty 
         } else invokeAIAction(a);
       }),
   );
-  embodiment.addEventListener("pointerenter", (e) => {
-    if (e.pointerType === "mouse" || e.pointerType === "pen") openRadialMenu();
-  });
-  embodiment.addEventListener("pointerleave", (e) => {
-    if (e.pointerType !== "mouse" && e.pointerType !== "pen") return;
-    if (!state.radialGesture) {
-      state.radialCloseTimer = setTimeout(closeRadialMenu, 2000);
-    }
-  });
-  aiOrb.addEventListener("pointerdown", (e) => {
-    e.preventDefault();
-    e.stopPropagation();
-    const wasOpen = embodiment.classList.contains("menu-open");
-    if (!wasOpen) openRadialMenu();
-    state.radialGesture = { id: e.pointerId, moved: false, selected: null, wasOpen };
-    try {
-      aiOrb.setPointerCapture(e.pointerId);
-    } catch {}
-  });
-  aiOrb.addEventListener("pointermove", (e) => {
-    const gesture = state.radialGesture;
-    if (!gesture || gesture.id !== e.pointerId) return;
-    e.preventDefault();
-    e.stopPropagation();
-    const r = aiOrb.getBoundingClientRect(),
-      distance = Math.hypot(e.clientX - (r.left + r.width / 2), e.clientY - (r.top + r.height / 2));
-    if (distance > 12) gesture.moved = true;
-    gesture.selected = gesture.moved ? chooseRadialAction(e.clientX, e.clientY) : null;
-  });
-  function finishRadialGesture(e) {
-    const gesture = state.radialGesture;
-    if (!gesture || gesture.id !== e.pointerId) return;
-    e.preventDefault();
-    e.stopPropagation();
-    const selected = gesture.selected;
-    state.radialGesture = null;
-    state.radialSuppressClickUntil = performance.now() + 450;
-    if (selected) {
-      invokeAIAction(selected.dataset.aiAction);
-      closeRadialMenu(true);
-      return;
-    }
-    if (gesture.wasOpen && !gesture.moved) {
-      closeRadialMenu(true);
-      return;
-    }
-    if (gesture.moved) closeRadialMenu(true);
-  }
-  aiOrb.addEventListener("pointerup", finishRadialGesture);
-  aiOrb.addEventListener("pointercancel", (e) => {
-    if (state.radialGesture?.id !== e.pointerId) return;
-    state.radialGesture = null;
-    state.radialSuppressClickUntil = performance.now() + 450;
-    closeRadialMenu(true);
-  });
   aiOrb.addEventListener("click", (e) => {
     e.preventDefault();
     e.stopPropagation();
-    if (performance.now() < state.radialSuppressClickUntil) return;
-    if (embodiment.classList.contains("menu-open")) closeRadialMenu(true);
-    else openRadialMenu();
-  });
-  document.querySelectorAll(".radial-action").forEach((button) => {
-    button.addEventListener("pointerenter", (e) => {
-      if (e.pointerType !== "mouse" && e.pointerType !== "pen") return;
-      clearTimeout(state.radialCloseTimer);
-      openRadialMenu();
-    });
-    button.addEventListener("pointerleave", (e) => {
-      if ((e.pointerType !== "mouse" && e.pointerType !== "pen") || state.radialGesture) return;
-      state.radialCloseTimer = setTimeout(closeRadialMenu, 2000);
-    });
-    button.addEventListener("pointerdown", (e) => {
-      e.stopPropagation();
-    });
-    button.addEventListener("click", (e) => {
-      e.preventDefault();
-      e.stopPropagation();
-      invokeAIAction(button.dataset.aiAction);
-      closeRadialMenu();
-    });
+    // On the board, clicking the AI orb explains the active selection or explains the board
+    invokeAIAction("explain");
   });
   tourBackButton.addEventListener("click", previousFeatureTourStep);
   tourNextButton.addEventListener("click", nextFeatureTourStep);
@@ -12275,6 +12516,11 @@ User writes "Show air quality for Tokyo", names a place, and points to an empty 
     }
     if (e.key === "Enter" && state.selection?.phase === "active" && !/^(INPUT|SELECT|TEXTAREA|BUTTON)$/.test(e.target.tagName)) {
       commitSelection();
+      return;
+    }
+    if ((e.key === "f" || e.key === "F") && !e.ctrlKey && !e.metaKey && !e.altKey && !/^(INPUT|SELECT|TEXTAREA|BUTTON)$/.test(e.target.tagName)) {
+      if (state.selection?.box) focusSelection();
+      else frameContent();
       return;
     }
     if (e.key === "Escape" && !document.querySelector("#autoDelayPopover").hidden) {
@@ -13250,9 +13496,7 @@ User writes "Show air quality for Tokyo", names a place, and points to an empty 
     });
 
     if (docTitle) {
-      docTitle.textContent = currentAppViewMode === "talk"
-        ? "Chat"
-        : "Whiteboard";
+      docTitle.textContent = currentAppViewMode === "talk" ? "Chat" : "Whiteboard";
     }
 
     if (canvasWorkspace) {

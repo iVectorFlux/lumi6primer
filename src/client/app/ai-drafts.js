@@ -12,11 +12,13 @@
   }
   function draftBounds(p) {
     if (p.items) return batchBounds(p);
+    const w = (p.image?.logicalWidth || p.image?.width || (p.textCommand ? p.layoutWidth : 300)) * p.scaleX;
+    const h = (p.image?.logicalHeight || p.image?.height || (p.textCommand ? p.layoutHeight : 100)) * p.scaleY;
     return {
       x: p.x,
       y: p.y,
-      w: (p.textCommand ? p.layoutWidth : p.image.logicalWidth || p.image.width) * p.scaleX,
-      h: (p.textCommand ? p.layoutHeight : p.image.logicalHeight || p.image.height) * p.scaleY,
+      w,
+      h,
     };
   }
   function pendingItemBounds(item) {
@@ -471,6 +473,18 @@
       return;
     }
     const acceptedCount = p.items ? (p.acceptedItems || 0) + p.items.length : 1;
+    if (p.isolatedSelection && p.selection) {
+      if (p.action === "normalize") {
+        dismissSelectionKeepInkRemoved(p.selection);
+      } else {
+        restoreSelectionSource(p.selection);
+        if (state.selection === p.selection) {
+          state.selection = null;
+          state.selectionGesture = null;
+        }
+        updateSelectionToolbar();
+      }
+    }
     if (p.items) {
       commitPendingBatch(p);
       consumePendingInput(p);
@@ -491,9 +505,7 @@
     const historyEntry = save();
     recordPendingHistory(historyEntry, pendingBefore, capturePendingHistoryState());
     render();
-    setStatusKey("merged");
     resolvePending(p, p.items ? { acceptedCount } : true);
-    if (p.isolatedSelection) dismissSelectionKeepInkRemoved(p.selection);
     if (restoreMode) finishAIDraftHandMode();
   }
   function acceptPendingItem(index) {
@@ -567,7 +579,7 @@
     setStatusKey(accepted ? "merged" : "draftRejected");
     resolvePending(p, p.acceptedItems ? { acceptedCount: p.acceptedItems } : false);
     if (p.isolatedSelection && p.selection) {
-      if (accepted) dismissSelectionKeepInkRemoved(p.selection);
+      if (accepted && p.action === "normalize") dismissSelectionKeepInkRemoved(p.selection);
       else {
         restoreSelectionSource(p.selection);
         if (state.selection === p.selection) {
@@ -664,6 +676,7 @@
       addedAnimationIndex = additions.findIndex((item) => item.animationScene);
     p.items.push(...additions);
     if (addedAnimationIndex >= 0) p.selectedIndex = firstAddedIndex + addedAnimationIndex;
+    if (!p.action && (state.activeAI?.action || meta?.action)) p.action = state.activeAI?.action || meta?.action;
     if (!p.selection && state.activeAI?.isolatedSelection) p.selection = state.activeAI.selection || null;
     if (state.activeAI?.isolatedSelection) p.isolatedSelection = true;
     p.latestUserRevision = state.userRevision;
@@ -695,7 +708,7 @@
       }
       const rows = image.revealRows || [image.logicalWidth || image.width],
         distance = rows.reduce((sum, width) => sum + width, 0),
-        duration = Math.max(900, Math.min(6200, distance * 0.7));
+        duration = textCommand ? 350 : Math.max(600, Math.min(2200, distance * 0.4));
       state.pending = {
         command: { ...command },
         image,
@@ -713,6 +726,7 @@
         revealProgress: animationScene ? 1 : 0,
         revision,
         meta,
+        action: state.activeAI?.action || meta?.action || null,
         isolatedSelection: Boolean(state.activeAI?.isolatedSelection),
         selection: state.activeAI?.isolatedSelection ? state.activeAI.selection || null : null,
         resolves: [resolve],
@@ -753,6 +767,7 @@
         revealProgress: 1,
         revision,
         meta,
+        action: state.activeAI?.action || meta?.action || null,
         isolatedSelection: Boolean(state.activeAI?.isolatedSelection),
         selection: state.activeAI?.isolatedSelection ? state.activeAI.selection || null : null,
         latestBox: state.activeAI?.isolatedSelection ? null : state.activeAI?.dirtySnapshot || state.lastUserBox,

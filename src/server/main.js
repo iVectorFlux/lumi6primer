@@ -9,6 +9,7 @@ const net = require("net");
 const { URL } = require("url");
 const { anthropicEffortParameters, anthropicResponseMaxTokens, normalizedApiEffort, openAiTokenLimit, resolveApiConfig } = require("./api-config.js");
 const { NORMALIZE_TYPESET_POLICY } = require("./typeset.js");
+const { EXPLAIN_SOCRATIC_POLICY } = require("./explain-policy.js");
 const PLUGIN_FORMAT = { parse: () => ({ id: "", document: "", styles: "" }) };
 const DRAW = require("../../public/js/canvas/draw.js");
 const primerRoutes = require("../primer/routes.js");
@@ -231,7 +232,7 @@ function providerConfigurationError() {
   return null;
 }
 
-function providerRequest(key, model, text, atlasImage = null, effort = API_EFFORT, literalTypeset = false, animationEnabled = false, pluginsEnabled = false, omitReasoningEffort = false) {
+function providerRequest(key, model, text, atlasImage = null, effort = API_EFFORT, literalTypeset = false, animationEnabled = false, pluginsEnabled = false, omitReasoningEffort = false, isExplain = false) {
   if (!API) {
     throw new Error("Server AI_API_URL or AI_PROVIDER is not configured.");
   }
@@ -280,7 +281,7 @@ function providerRequest(key, model, text, atlasImage = null, effort = API_EFFOR
       : userText;
     const effortParameters = anthropicEffortParameters(effort, Boolean(atlasImage) && !teacherMode),
       maxTokens = atlasImage && !teacherMode ? anthropicResponseMaxTokens(effort) : 4096,
-      system = systemContent || (atlasImage ? anthropicSystemPrompt(effort, literalTypeset, animationEnabled, pluginsEnabled) : null);
+      system = systemContent || (atlasImage ? anthropicSystemPrompt(effort, literalTypeset, animationEnabled, pluginsEnabled, isExplain) : null);
     return {
       headers: { "Content-Type": "application/json", "x-api-key": key, "anthropic-version": "2023-06-01" },
       body: JSON.stringify({ model, max_tokens:maxTokens, ...effortParameters, ...(system ? { system } : {}), messages: [{ role: "user", content }] }),
@@ -288,7 +289,7 @@ function providerRequest(key, model, text, atlasImage = null, effort = API_EFFOR
   }
 
   const messages = atlasImage
-    ? [{ role: "system", content: teacherMode ? systemContent : activeSystemPrompt(literalTypeset, animationEnabled, pluginsEnabled) }, { role: "user", content: [{ type: "text", text: teacherMode ? userText : text }, { type: "image_url", image_url: { url: atlasImage, detail: "high" } }] }]
+    ? [{ role: "system", content: teacherMode ? systemContent : activeSystemPrompt(literalTypeset, animationEnabled, pluginsEnabled, isExplain) }, { role: "user", content: [{ type: "text", text: teacherMode ? userText : text }, { type: "image_url", image_url: { url: atlasImage, detail: "high" } }] }]
     : systemContent
     ? [{ role: "system", content: systemContent }, { role: "user", content: userText }]
     : [{ role: "user", content: text }];
@@ -320,7 +321,7 @@ function providerResponseText(raw) {
   return Array.isArray(content) ? content.map((part) => part?.text || "").join("\n") : content || "";
 }
 
-const SYSTEM_PROMPT = `You are the drawing brain for a general interactive handwritten visual Q&A board, not only a math board. Keep the entire final JSON response compact and within approximately ${MODEL_FINAL_JSON_TARGET_TOKENS} tokens, including every command. Recognize and reason about handwritten natural-language questions (English), mathematics, diagrams, charts, sketches, and mixed content. When content is a question, greeting, conversational message, or request, actively respond; do NOT return intent none simply because it is not mathematics. Inspect actual image pixels carefully. For auto, give a useful but short response when enough information exists. A manual action is a style preference, not permission to ignore content. Never draw system status, recognition failure, retry, or debugging messages. For an actual problem, hint gives a concise clue; continue continues the user's work; explain explains it; plot creates a relevant graph; answer answers directly. Treat the canvas as an existing document to extend, not content to reproduce. Add only the missing continuation, answer, annotation, or new visual element; never rewrite, trace, or redraw text, equations, labels, strokes, diagrams, or plots that are already present unless the user explicitly asks you to repeat or replace them. For example, if the user has written \`3+2=\`, place only \`5\` immediately after the equals sign, not \`3+2=5\`. Use write_text for ordinary knowledge and conversation; draw_formula for math notation; draw or plot_function only when a visual helps. Keep each write_text response at no more than about 200 tokens and 800 characters.
+const SYSTEM_PROMPT = `You are the drawing brain for a general interactive handwritten visual Q&A board, not only a math board. Keep the entire final JSON response compact and within approximately ${MODEL_FINAL_JSON_TARGET_TOKENS} tokens, including every command. Recognize and reason about handwritten natural-language questions (English), mathematics, diagrams, charts, sketches, and mixed content. When content is a question, greeting, conversational message, or request, actively respond; do NOT return intent none simply because it is not mathematics. Inspect actual image pixels carefully. For auto, give a useful but short response when enough information exists. A manual action is a style preference, not permission to ignore content. Never draw system status, recognition failure, retry, or debugging messages. For an actual problem, hint gives a concise clue; continue continues the user's work; explain explains it; plot creates a relevant graph; answer answers directly. Treat the canvas as an existing document to extend, not content to reproduce. Add only the missing continuation, answer, annotation, or new visual element; never rewrite, trace, or redraw text, equations, labels, strokes, diagrams, or plots that are already present unless the user explicitly asks you to repeat or replace them. For example, if the user has written \`3+2=\`, place only \`5\` immediately after the equals sign, not \`3+2=5\`. Use write_text for ordinary knowledge, conversation, and structured explanations; draw_formula for standalone large mathematical notation; draw or plot_function only when a visual helps. When write_text contains math, variables, units, or equations, ALWAYS enclose them in inline LaTeX math delimiters ($...$, e.g. $F = m \\cdot a$, $x^2 + y^2 = r^2$, $\\frac{a}{b}$) without spaces right inside the dollar signs so the canvas renders them crisply. For explain, format the response into clear, structured numbered steps or step cards with paragraph breaks (\\n\\n) and bold titles. Keep each write_text response at no more than about 450 tokens and 1800 characters.
 
 The attached image is a clean white-background rendering of confirmed canvas content around the newest input. It may come from outside the user's current viewport. sourceRect is the image's full-resolution global canvas rectangle and imageScale maps global units to image pixels: imageX=(globalX-sourceRect.x)*imageScale and imageY=(globalY-sourceRect.y)*imageScale. latestInput.imageRect is the AUTHORITATIVE attention region for this request. First transcribe the newest user ink in that region and put only that transcription in observedText. Older content may overlap the rectangle, so use the current hotspot trajectory and visible stroke continuity to distinguish the newest writing. Pixels outside that rectangle are older context or confirmed AI output. Do not combine outside text into observedText unless the latest input visually refers to it. hotspotGrid.hotspots contains only the current unconsumed user-writing segment, ordered oldest to newest; use it only to refine reading order inside latestInput.imageRect. Confirmed AI output can appear in the image but is not part of the user hotspot trajectory. When focusInset is present, its imageRect is a magnified duplicate of the latest handwriting, not additional content. Use that inset as the primary transcription view, then cross-check the original latestInput.imageRect for spatial context.
 
@@ -366,16 +367,16 @@ function systemPromptBase(animationEnabled = false, pluginsEnabled = false) {
   return sections.join("\n\n");
 }
 
-function activeSystemPrompt(literalTypeset = false, animationEnabled = false, pluginsEnabled = false) {
+function activeSystemPrompt(literalTypeset = false, animationEnabled = false, pluginsEnabled = false, isExplain = false) {
   const base = systemPromptBase(animationEnabled, pluginsEnabled);
-  return [base, literalTypeset ? NORMALIZE_TYPESET_POLICY : "", MANDATORY_VISIBLE_RESPONSE_PROMPT, JSON_RESPONSE_SCHEMA_PROMPT].filter(Boolean).join("\n\n");
+  return [base, literalTypeset ? NORMALIZE_TYPESET_POLICY : "", isExplain ? EXPLAIN_SOCRATIC_POLICY : "", MANDATORY_VISIBLE_RESPONSE_PROMPT, JSON_RESPONSE_SCHEMA_PROMPT].filter(Boolean).join("\n\n");
 }
 
-function anthropicSystemPrompt(effort, literalTypeset = false, animationEnabled = false, pluginsEnabled = false) {
+function anthropicSystemPrompt(effort, literalTypeset = false, animationEnabled = false, pluginsEnabled = false, isExplain = false) {
   const maxEffort = String(effort || "").trim().toLowerCase() === "max",
     prompt = systemPromptBase(animationEnabled, pluginsEnabled),
     base = maxEffort ? `${prompt}\n\nReason efficiently and avoid unnecessary exploration. Keep internal reasoning concise, aiming for no more than roughly ${ANTHROPIC_MAX_EFFORT_THINKING_TARGET_TOKENS} tokens. Reserve sufficient output budget for one complete valid JSON response. If reasoning becomes lengthy, stop exploring and return the best valid JSON immediately.` : prompt;
-  return [base, literalTypeset ? NORMALIZE_TYPESET_POLICY : "", MANDATORY_VISIBLE_RESPONSE_PROMPT, JSON_RESPONSE_SCHEMA_PROMPT].filter(Boolean).join("\n\n");
+  return [base, literalTypeset ? NORMALIZE_TYPESET_POLICY : "", isExplain ? EXPLAIN_SOCRATIC_POLICY : "", MANDATORY_VISIBLE_RESPONSE_PROMPT, JSON_RESPONSE_SCHEMA_PROMPT].filter(Boolean).join("\n\n");
 }
 
 const THEME_PERSONAS = {
@@ -1062,18 +1063,18 @@ function modelRequestText(modelInput, retryInstruction="") {
   return retryInstruction ? `${JSON.stringify(modelInput)}\n\n${retryInstruction}` : JSON.stringify(modelInput);
 }
 const LOCAL_CLI_IMAGE_POLICY = "Operate only as an image-analysis model for Lumi6. Do not inspect files, run commands, or modify the temporary workspace. Analyze the attached canvas image and return only the requested JSON object as your final response.";
-function localCliSystemPrompt(literalTypeset = false, animationEnabled = false, pluginsEnabled = false) {
+function localCliSystemPrompt(literalTypeset = false, animationEnabled = false, pluginsEnabled = false, isExplain = false) {
   const base = `${systemPromptBase(animationEnabled, pluginsEnabled)}\n\n${LOCAL_CLI_IMAGE_POLICY}`;
-  return [base, literalTypeset ? NORMALIZE_TYPESET_POLICY : "", MANDATORY_VISIBLE_RESPONSE_PROMPT, JSON_RESPONSE_SCHEMA_PROMPT].filter(Boolean).join("\n\n");
+  return [base, literalTypeset ? NORMALIZE_TYPESET_POLICY : "", isExplain ? EXPLAIN_SOCRATIC_POLICY : "", MANDATORY_VISIBLE_RESPONSE_PROMPT, JSON_RESPONSE_SCHEMA_PROMPT].filter(Boolean).join("\n\n");
 }
 function localCliRequestPrompt(text) {
   return `Request metadata:\n${text}`;
 }
-function codexModelPrompt(text, literalTypeset = false, animationEnabled = false, pluginsEnabled = false) {
-  return `${localCliSystemPrompt(literalTypeset, animationEnabled, pluginsEnabled)}\n\n${localCliRequestPrompt(text)}`;
+function codexModelPrompt(text, literalTypeset = false, animationEnabled = false, pluginsEnabled = false, isExplain = false) {
+  return `${localCliSystemPrompt(literalTypeset, animationEnabled, pluginsEnabled, isExplain)}\n\n${localCliRequestPrompt(text)}`;
 }
-function kimiModelPrompt(text, literalTypeset = false, animationEnabled = false, pluginsEnabled = false) {
-  return `${localCliSystemPrompt(literalTypeset, animationEnabled, pluginsEnabled)}\n\n${localCliRequestPrompt(text)}`;
+function kimiModelPrompt(text, literalTypeset = false, animationEnabled = false, pluginsEnabled = false, isExplain = false) {
+  return `${localCliSystemPrompt(literalTypeset, animationEnabled, pluginsEnabled, isExplain)}\n\n${localCliRequestPrompt(text)}`;
 }
 function traceSafeValue(value, atlasImage, atlasBase64, atlasFile) {
   if (value === atlasImage || value === atlasBase64) return `<saved as ${atlasFile}>`;
@@ -1083,8 +1084,8 @@ function traceSafeValue(value, atlasImage, atlasBase64, atlasFile) {
 }
 function tracedOutboundRequest(modelInput, atlasImage, retryInstruction="", effort = configuredUiEffort()) {
   const text=modelRequestText(modelInput,retryInstruction);
-  const image=imageDataUrlParts(atlasImage),literalTypeset=modelInput?.userAction==="normalize",animationEnabled=modelInput?.animationEnabled===true,pluginsEnabled=Array.isArray(modelInput?.enabledPlugins)&&modelInput.enabledPlugins.length>0;
-  const request=providerRequest("<redacted>",MODEL,text,atlasImage,effort,literalTypeset,animationEnabled,pluginsEnabled),
+  const image=imageDataUrlParts(atlasImage),literalTypeset=modelInput?.userAction==="normalize",isExplain=modelInput?.userAction==="explain",animationEnabled=modelInput?.animationEnabled===true,pluginsEnabled=Array.isArray(modelInput?.enabledPlugins)&&modelInput.enabledPlugins.length>0;
+  const request=providerRequest("<redacted>",MODEL,text,atlasImage,effort,literalTypeset,animationEnabled,pluginsEnabled,false,isExplain),
     headers=Object.fromEntries(Object.entries(request.headers).map(([name,value])=>[name,/authorization|api-key/i.test(name)?"<redacted>":value])),
     atlasBase64=image.base64,
     body=traceSafeValue(JSON.parse(request.body),atlasImage,atlasBase64,image.file);
@@ -1204,12 +1205,12 @@ async function callModel(modelInput, atlasImage, retryInstruction="", effort, ex
   if (externalSignal?.aborted) controller.abort();
   else externalSignal?.addEventListener("abort", abortFromClient, { once: true });
   try {
-    const text = modelRequestText(modelInput,retryInstruction), literalTypeset = modelInput?.userAction === "normalize", animationEnabled = modelInput?.animationEnabled === true,
+    const text = modelRequestText(modelInput,retryInstruction), literalTypeset = modelInput?.userAction === "normalize", isExplain = modelInput?.userAction === "explain", animationEnabled = modelInput?.animationEnabled === true,
       pluginsEnabled = Array.isArray(modelInput?.enabledPlugins) && modelInput.enabledPlugins.length > 0;
     const requestStartedAt=new Date().toISOString(),requestStarted=Date.now();
     let networkPhase="preparing-request",responseHeadersAt=null,responseTransport=null;
     try {
-      let requestOptions = providerRequest(API_KEY, MODEL, text, atlasImage, effort, literalTypeset, animationEnabled, pluginsEnabled);
+      let requestOptions = providerRequest(API_KEY, MODEL, text, atlasImage, effort, literalTypeset, animationEnabled, pluginsEnabled, false, isExplain);
       networkPhase = "awaiting-response-headers";
       let response = await fetch(API.endpoint, { signal: controller.signal, method: "POST", redirect: "error", ...requestOptions });
       responseHeadersAt = new Date().toISOString();
@@ -1218,7 +1219,7 @@ async function callModel(modelInput, atlasImage, retryInstruction="", effort, ex
         networkPhase = "reading-error-response-body";
         const responseText = await response.text();
         if (responseText.includes("reasoning_effort")) {
-          requestOptions = providerRequest(API_KEY, MODEL, text, atlasImage, effort, literalTypeset, animationEnabled, pluginsEnabled, true);
+          requestOptions = providerRequest(API_KEY, MODEL, text, atlasImage, effort, literalTypeset, animationEnabled, pluginsEnabled, true, isExplain);
           response = await fetch(API.endpoint, { signal: controller.signal, method: "POST", redirect: "error", ...requestOptions });
         }
         if (!response.ok) {
@@ -1899,7 +1900,7 @@ const server = http.createServer(async (req, res) => {
           auto:"respond naturally to the newest meaningful handwriting or spatial editing gesture",
           hint:"for an actual problem offer a clue; for conversation respond naturally",
           continue:"continue the newest user content",
-          explain:"explain the newest content or the content referenced by a box and arrow",
+          explain:"explain the newest content or the content referenced by a box and arrow using structured Socratic step cards with inline LaTeX math ($...$)",
           plot:"produce at least one renderable visual command; use plot_function for y=f(x), otherwise draw for a diagram",
           answer:"directly answer the newest question or spatial request",
           normalize:"make a faithful, clean, copyable Typeset reproduction of only the selected visible source under normalizePolicy",
@@ -1926,6 +1927,7 @@ const server = http.createServer(async (req, res) => {
         typedInput:payload.typedInput||null,
         selectionContext:payload.selectionContext||null,
         normalizePolicy:payload.userAction==="normalize"?NORMALIZE_TYPESET_POLICY:null,
+        explainPolicy:payload.userAction==="explain"?EXPLAIN_SOCRATIC_POLICY:null,
         focusInset:payload.focusInset||null,
         hotspotGrid:payload.hotspotGrid,
         note:payload.widgetEdit

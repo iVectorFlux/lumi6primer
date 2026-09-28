@@ -353,9 +353,7 @@
     });
 
     if (docTitle) {
-      docTitle.textContent = currentAppViewMode === "talk"
-        ? "Chat"
-        : "Whiteboard";
+      docTitle.textContent = currentAppViewMode === "talk" ? "Chat" : "Whiteboard";
     }
 
     if (canvasWorkspace) {

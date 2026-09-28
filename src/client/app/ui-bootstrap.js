@@ -504,7 +504,7 @@
     penTrayEl.addEventListener("click", (e) => e.stopPropagation());
     penTrayEl.addEventListener("touchstart", (e) => e.stopPropagation(), { passive: true });
   }
-  [selectionTypesetButton, selectionVisualizeButton, selectionSendBackButton, selectionDeleteButton, selectionCancelButton].filter(Boolean).forEach((button) => {
+  [selectionFocusButton, selectionExplainButton, selectionTypesetButton, selectionVisualizeButton, selectionSendBackButton, selectionDeleteButton, selectionCancelButton].filter(Boolean).forEach((button) => {
     button.addEventListener("pointerdown", (event) => event.stopPropagation());
     button.addEventListener("click", (event) => event.stopPropagation());
   });
@@ -638,6 +638,12 @@
     event.preventDefault();
     void importClipboardPayload(clipboardPayloadFromDataTransfer(event.clipboardData));
   });
+  if (selectionFocusButton) selectionFocusButton.onclick = () => {
+    focusSelection();
+  };
+  if (selectionExplainButton) selectionExplainButton.onclick = () => {
+    invokeAIAction("explain");
+  };
   if (selectionTypesetButton) selectionTypesetButton.onclick = () => {
     if (selectionHasTypesetDraft()) acceptPending();
     else normalizeSelectionForAI();
@@ -659,6 +665,42 @@
   animationDelete.onclick = deleteSelectedAnimation;
   animationControls.addEventListener("click", (event) => event.stopPropagation());
   animationControls.addEventListener("pointerdown", (event) => event.stopPropagation());
+
+  const zoomInBtn = document.querySelector("#zoomInBtn");
+  const zoomOutBtn = document.querySelector("#zoomOutBtn");
+  const fitCanvasBtn = document.querySelector("#fitCanvasBtn");
+
+  if (zoomInBtn) {
+    zoomInBtn.addEventListener("click", (e) => {
+      e.preventDefault();
+      const rect = view.getBoundingClientRect();
+      zoomCanvasAt(rect.left + rect.width / 2, rect.top + rect.height / 2, -100);
+    });
+  }
+  if (zoomOutBtn) {
+    zoomOutBtn.addEventListener("click", (e) => {
+      e.preventDefault();
+      const rect = view.getBoundingClientRect();
+      zoomCanvasAt(rect.left + rect.width / 2, rect.top + rect.height / 2, 100);
+    });
+  }
+  if (fitCanvasBtn) {
+    fitCanvasBtn.addEventListener("click", (e) => {
+      e.preventDefault();
+      frameContent();
+    });
+  }
+  if (coords) {
+    coords.style.cursor = "pointer";
+    coords.title = "Click to reset zoom to 100%";
+    coords.addEventListener("click", (e) => {
+      e.preventDefault();
+      state.scale = 1.0;
+      clampPan();
+      updateCoordinates();
+      requestRender();
+    });
+  }
 
   const penSizeInput = document.querySelector("#penSize");
   const sketchSizeRail = document.querySelector("#sketchSizeRail");
@@ -1287,87 +1329,11 @@
         } else invokeAIAction(a);
       }),
   );
-  embodiment.addEventListener("pointerenter", (e) => {
-    if (e.pointerType === "mouse" || e.pointerType === "pen") openRadialMenu();
-  });
-  embodiment.addEventListener("pointerleave", (e) => {
-    if (e.pointerType !== "mouse" && e.pointerType !== "pen") return;
-    if (!state.radialGesture) {
-      state.radialCloseTimer = setTimeout(closeRadialMenu, 2000);
-    }
-  });
-  aiOrb.addEventListener("pointerdown", (e) => {
-    e.preventDefault();
-    e.stopPropagation();
-    const wasOpen = embodiment.classList.contains("menu-open");
-    if (!wasOpen) openRadialMenu();
-    state.radialGesture = { id: e.pointerId, moved: false, selected: null, wasOpen };
-    try {
-      aiOrb.setPointerCapture(e.pointerId);
-    } catch {}
-  });
-  aiOrb.addEventListener("pointermove", (e) => {
-    const gesture = state.radialGesture;
-    if (!gesture || gesture.id !== e.pointerId) return;
-    e.preventDefault();
-    e.stopPropagation();
-    const r = aiOrb.getBoundingClientRect(),
-      distance = Math.hypot(e.clientX - (r.left + r.width / 2), e.clientY - (r.top + r.height / 2));
-    if (distance > 12) gesture.moved = true;
-    gesture.selected = gesture.moved ? chooseRadialAction(e.clientX, e.clientY) : null;
-  });
-  function finishRadialGesture(e) {
-    const gesture = state.radialGesture;
-    if (!gesture || gesture.id !== e.pointerId) return;
-    e.preventDefault();
-    e.stopPropagation();
-    const selected = gesture.selected;
-    state.radialGesture = null;
-    state.radialSuppressClickUntil = performance.now() + 450;
-    if (selected) {
-      invokeAIAction(selected.dataset.aiAction);
-      closeRadialMenu(true);
-      return;
-    }
-    if (gesture.wasOpen && !gesture.moved) {
-      closeRadialMenu(true);
-      return;
-    }
-    if (gesture.moved) closeRadialMenu(true);
-  }
-  aiOrb.addEventListener("pointerup", finishRadialGesture);
-  aiOrb.addEventListener("pointercancel", (e) => {
-    if (state.radialGesture?.id !== e.pointerId) return;
-    state.radialGesture = null;
-    state.radialSuppressClickUntil = performance.now() + 450;
-    closeRadialMenu(true);
-  });
   aiOrb.addEventListener("click", (e) => {
     e.preventDefault();
     e.stopPropagation();
-    if (performance.now() < state.radialSuppressClickUntil) return;
-    if (embodiment.classList.contains("menu-open")) closeRadialMenu(true);
-    else openRadialMenu();
-  });
-  document.querySelectorAll(".radial-action").forEach((button) => {
-    button.addEventListener("pointerenter", (e) => {
-      if (e.pointerType !== "mouse" && e.pointerType !== "pen") return;
-      clearTimeout(state.radialCloseTimer);
-      openRadialMenu();
-    });
-    button.addEventListener("pointerleave", (e) => {
-      if ((e.pointerType !== "mouse" && e.pointerType !== "pen") || state.radialGesture) return;
-      state.radialCloseTimer = setTimeout(closeRadialMenu, 2000);
-    });
-    button.addEventListener("pointerdown", (e) => {
-      e.stopPropagation();
-    });
-    button.addEventListener("click", (e) => {
-      e.preventDefault();
-      e.stopPropagation();
-      invokeAIAction(button.dataset.aiAction);
-      closeRadialMenu();
-    });
+    // On the board, clicking the AI orb explains the active selection or explains the board
+    invokeAIAction("explain");
   });
   tourBackButton.addEventListener("click", previousFeatureTourStep);
   tourNextButton.addEventListener("click", nextFeatureTourStep);
@@ -1448,6 +1414,11 @@
     }
     if (e.key === "Enter" && state.selection?.phase === "active" && !/^(INPUT|SELECT|TEXTAREA|BUTTON)$/.test(e.target.tagName)) {
       commitSelection();
+      return;
+    }
+    if ((e.key === "f" || e.key === "F") && !e.ctrlKey && !e.metaKey && !e.altKey && !/^(INPUT|SELECT|TEXTAREA|BUTTON)$/.test(e.target.tagName)) {
+      if (state.selection?.box) focusSelection();
+      else frameContent();
       return;
     }
     if (e.key === "Escape" && !document.querySelector("#autoDelayPopover").hidden) {

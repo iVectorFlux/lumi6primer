@@ -989,23 +989,25 @@
   }
   function openRadialMenu() {
     clearTimeout(state.radialCloseTimer);
+    if (!aiRadial || !embodiment) return;
     embodiment.classList.add("menu-open");
-    aiOrb.setAttribute("aria-expanded", "true");
+    aiOrb?.setAttribute("aria-expanded", "true");
     aiRadial.setAttribute("aria-hidden", "false");
     document.querySelectorAll(".radial-action").forEach((button) => button.setAttribute("tabindex", "0"));
   }
   function closeRadialMenu(force = false) {
     if (state.radialGesture && !force) return;
     state.radialGesture = null;
-    embodiment.classList.remove("menu-open");
-    aiOrb.setAttribute("aria-expanded", "false");
-    aiRadial.setAttribute("aria-hidden", "true");
+    embodiment?.classList.remove("menu-open");
+    aiOrb?.setAttribute("aria-expanded", "false");
+    if (aiRadial) aiRadial.setAttribute("aria-hidden", "true");
     document.querySelectorAll(".radial-action").forEach((button) => {
       button.classList.remove("is-highlighted");
       button.setAttribute("tabindex", "-1");
     });
   }
   function chooseRadialAction(clientX, clientY) {
+    if (!aiOrb || !aiRadial) return null;
     const orbRect = aiOrb.getBoundingClientRect(),
       origin = { x: orbRect.left + orbRect.width / 2, y: orbRect.top + orbRect.height / 2 },
       pointerDistance = Math.hypot(clientX - origin.x, clientY - origin.y);

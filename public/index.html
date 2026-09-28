@@ -11,6 +11,9 @@
   <link rel="icon" href="favicon.ico" sizes="any">
   <link rel="icon" type="image/png" href="lumi6-mark.png">
   <link rel="apple-touch-icon" href="lumi6-mark.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="css/app.css?v=20260920c">
   <script src="js/lib/mathjax-config.js"></script>
   <script
@@ -287,13 +290,12 @@
             </div>
             <div id="selectionOverlayLayer" class="selection-overlay-layer" hidden>
               <div id="selectionToolbar" class="selection-context-toolbar" role="toolbar" aria-label="Selection tools">
-                <span id="selectionScopeNotice" class="selection-scope-notice">AI answers use only this selection</span>
                 <span class="selection-toolbar-actions">
-                  <button id="selectionTypesetBtn" class="selection-toolbar-button primary" type="button" aria-label="Typeset selection" title="Turn handwriting into clean typed text or math">Typeset</button>
-                  <button id="selectionVisualizeBtn" class="selection-toolbar-button" type="button" aria-label="Visualize selection" title="Make a picture of what you wrote or drew">Visualize</button>
-                  <button id="selectionSendBackBtn" class="selection-toolbar-button" type="button" aria-label="Send backwards" title="Send behind other drawings and text">Send Back</button>
-                  <button id="selectionDeleteBtn" class="selection-toolbar-button danger" type="button" aria-label="Delete selection" title="Delete selection">Delete</button>
-                  <button id="selectionCancelBtn" class="selection-toolbar-button" type="button" aria-label="Cancel selection" title="Cancel selection">Cancel</button>
+                  <button id="selectionFocusBtn" class="selection-toolbar-button focus" type="button" aria-label="Focus selection" title="Center and zoom to this selection">Focus</button>
+                  <button id="selectionExplainBtn" class="selection-toolbar-button explain" type="button" aria-label="Explain selection" title="Ask Lumi to explain this selection">Explain</button>
+                  <button id="selectionTypesetBtn" class="selection-toolbar-button primary neat" type="button" aria-label="Make neat" title="Turn handwriting into clean, neat text or math">Make Neat</button>
+                  <button id="selectionDeleteBtn" class="selection-toolbar-button danger erase" type="button" aria-label="Erase selection" title="Erase selection">Erase</button>
+                  <button id="selectionCancelBtn" class="selection-toolbar-button discard" type="button" aria-label="Discard draft" title="Discard draft" hidden>Discard</button>
                 </span>
               </div>
             </div>
@@ -301,17 +303,10 @@
             <div id="textInputHint" class="text-input-hint" hidden><kbd>Ctrl/Cmd</kbd> + <kbd>Enter</kbd> <span>to confirm</span></div>
 
             <!-- AI ORB (centered on canvas) -->
-            <div id="aiEmbodiment" class="ai-embodiment" data-theme="studio" role="group" aria-label="AI knowledge guide" aria-busy="false">
-              <button id="aiOrb" class="ai-orb" type="button" aria-label="Talk with the teacher" aria-haspopup="menu" aria-expanded="false">
+            <div id="aiEmbodiment" class="ai-embodiment" data-theme="studio" role="group" aria-label="Lumi AI companion" aria-busy="false">
+              <button id="aiOrb" class="ai-orb" type="button" aria-label="Talk with Lumi">
                 <span id="drawVoiceOrb" class="draw-voice-orb" aria-hidden="true"></span>
               </button>
-              <div id="aiRadial" class="ai-radial" role="menu" aria-label="AI actions" aria-hidden="true">
-                <button type="button" role="menuitem" class="radial-action radial-answer" data-ai-action="answer" aria-label="Answer">Answer</button>
-                <button type="button" role="menuitem" class="radial-action radial-hint" data-ai-action="hint" aria-label="Hint">Hint</button>
-                <button type="button" role="menuitem" class="radial-action radial-continue" data-ai-action="continue" aria-label="Continue">Continue</button>
-                <button type="button" role="menuitem" class="radial-action radial-explain" data-ai-action="explain" aria-label="Explain">Explain</button>
-                <button type="button" role="menuitem" class="radial-action radial-plot" data-ai-action="plot" aria-label="Plot">Plot</button>
-              </div>
             </div>
 
             <div id="primerGraphicLoader" class="primer-graphic-loader" hidden>

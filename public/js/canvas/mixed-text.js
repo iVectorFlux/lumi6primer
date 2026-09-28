@@ -220,7 +220,7 @@
       fontScale = 1,
       prefix = null;
     const heading = /^(?: {0,3})(#{1,3})[\t ]+(.*)$/.exec(raw),
-      bullet = /^(?: {0,3})[-+*][\t ]+(.*)$/.exec(raw),
+      bullet = /^(?: {0,3})[-+*•][\t ]+(.*)$/.exec(raw),
       ordered = /^(?: {0,3})(\d{1,3})[.)][\t ]+(.*)$/.exec(raw),
       quote = /^(?: {0,3})>[\t ]?(.*)$/.exec(raw);
     if (heading) {

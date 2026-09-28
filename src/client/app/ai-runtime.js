@@ -213,8 +213,8 @@
       if (action === "normalize")
         for (let index = commands.length - 1; index >= 0; index--)
           if (!["write_text", "draw_formula", "plot_function"].includes(commands[index].tool)) commands.splice(index, 1);
-      if (isolatedSelection && action === "normalize") {
-        const relocated = relocateIsolatedTypesetCommands(commands, requestOptions.selection || run.selection);
+      if (isolatedSelection) {
+        const relocated = relocateIsolatedTypesetCommands(commands, requestOptions.selection || run.selection, action);
         commands.splice(0, commands.length, ...relocated);
       }
       debug("ai-response", {
@@ -622,11 +622,16 @@
   function portraitCanvasView() {
     return Boolean(view && view.clientHeight > view.clientWidth * 1.05);
   }
-  function relocateIsolatedTypesetCommands(commands, selection) {
+  function responsiveCardMaxWidth() {
+    const viewportWidth = view?.clientWidth || window.innerWidth || 1024;
+    const canvasViewportW = viewportWidth / Math.max(0.05, state.scale);
+    return Math.min(640, Math.max(320, canvasViewportW * 0.78));
+  }
+  function relocateIsolatedTypesetCommands(commands, selection, action = "") {
     if (!selection?.box || !Array.isArray(commands) || !commands.length) return commands;
     const source = selection.box,
       gap = Math.max(28, 18 / Math.max(0.03, state.scale)),
-      below = portraitCanvasView() || window.matchMedia("(max-width: 900px)").matches;
+      below = action === "explain" || portraitCanvasView() || window.matchMedia("(max-width: 900px)").matches;
     let y = source.y + source.h + gap,
       x = source.x + source.w + gap;
     return commands.map((command) => {
@@ -637,7 +642,7 @@
         height = next.tool === "draw_formula"
           ? (next.fontSize || 48) * 1.8
           : next.tool === "write_text"
-            ? (next.fontSize || 32) * (next.lineHeight || 1.35) * lines
+            ? (next.fontSize || 24) * (next.lineHeight || 1.35) * lines
             : Number(next.h) || 200;
       if (below) {
         next.x = Math.max(0, Math.min(SIZE - Math.min(width, SIZE), source.x));
@@ -730,13 +735,13 @@
           if (typeof c.text !== "string" || !c.text.trim()) return null;
           if (!n(c.x)) c.x = 600;
           if (!n(c.y)) c.y = 600;
-          if (!Number.isFinite(c.maxWidth)) c.maxWidth = 2600;
           c.text = c.text.slice(0, AI_TEXT_MAX_LENGTH);
-          c.fontSize = matchedTextFontSize(c.fontSize, c.text);
-          c.maxWidth = Math.max(c.fontSize, Math.min(SIZE - c.x, c.maxWidth));
+          c.fontSize = Math.max(20, Math.min(28, +c.fontSize || 24));
+          const maxAllowed = responsiveCardMaxWidth();
+          const targetWidth = Number.isFinite(c.maxWidth) && c.maxWidth > 100 ? c.maxWidth : 560;
+          c.maxWidth = Math.max(300, Math.min(targetWidth, maxAllowed, SIZE - c.x));
           c.lineHeight = Math.max(1, Math.min(2.2, +c.lineHeight || 1.35));
           c.color = c.color || aiColor;
-          if (c.maxWidth < c.fontSize) c.maxWidth = c.fontSize * 10;
           c.y = Math.min(c.y, Math.max(0, SIZE - c.fontSize * c.lineHeight * 2));
         }
         if (c.tool === "draw_formula") {
@@ -886,7 +891,7 @@
           y = c.y,
           pendingCommand = c;
         if (c.tool === "write_text") {
-          image = textImage(c.text, c.fontSize, c.color, c.maxWidth, c.lineHeight, state.aiFont, AI_TEXT_MAX_LENGTH, sharpRenderRatio());
+          image = await mixedTextImage(c.text, c.fontSize, c.color, c.maxWidth, c.lineHeight, state.aiFont, sharpRenderRatio());
         } else if (c.tool === "draw_formula") {
           image = await formulaImage(c.latex, c.fontSize, c.color);
         } else if (c.tool === "plot_function") {
@@ -929,7 +934,7 @@
       x = c.x,
       y = c.y,
       pendingCommand = c;
-    if (c.tool === "write_text") image = textImage(c.text, c.fontSize, c.color, c.maxWidth, c.lineHeight, state.aiFont, AI_TEXT_MAX_LENGTH, sharpRenderRatio());
+    if (c.tool === "write_text") image = await mixedTextImage(c.text, c.fontSize, c.color, c.maxWidth, c.lineHeight, state.aiFont, sharpRenderRatio());
     else if (c.tool === "draw_formula") image = await formulaImage(c.latex, c.fontSize, c.color);
     else if (c.tool === "plot_function") image = plot(c);
     else if (c.tool === "animate_scene") {

@@ -14,40 +14,29 @@
       heightCss = startHeight,
       fontCss = startFontCss,
       x = gesture.startX,
-      y = gesture.startY,
-      autoHeight = false;
+      y = gesture.startY;
     const clampW = (value) => Math.max(minWidth, Math.min(maxWidth, value));
     const clampH = (value) => Math.max(minHeight, Math.min(maxHeight, value));
     const applyWest = (width) => { x = gesture.startX + (startWidth - width) / scale; };
     const applyNorth = (height) => { y = gesture.startY + (startHeight - height) / scale; };
     if (hit === "e" || hit === "width") {
       widthCss = clampW(startWidth + dx);
-      autoHeight = true;
     } else if (hit === "w") {
       widthCss = clampW(startWidth - dx);
       applyWest(widthCss);
-      autoHeight = true;
     } else if (hit === "s" || hit === "height") {
       heightCss = clampH(startHeight + dy);
-      fontCss = Math.max(16, Math.min(120, startFontCss * (heightCss / Math.max(1, startHeight))));
     } else if (hit === "n") {
       heightCss = clampH(startHeight - dy);
-      fontCss = Math.max(16, Math.min(120, startFontCss * (heightCss / Math.max(1, startHeight))));
       applyNorth(heightCss);
     } else {
       const sx = hit.includes("w") ? -1 : 1;
-      const sy = hit.includes("n") ? -1 : 1;
-      const requested = Math.max((startWidth + sx * dx) / Math.max(1, startWidth), (startHeight + sy * dy) / Math.max(1, startHeight));
-      const minimumScale = Math.max(minWidth / startWidth, minHeight / startHeight, 16 / startFontCss);
-      const maximumScale = Math.max(minimumScale, Math.min(maxWidth / startWidth, maxHeight / startHeight, 120 / startFontCss));
-      const factor = Math.max(minimumScale, Math.min(maximumScale, requested));
-      widthCss = startWidth * factor;
-      heightCss = startHeight * factor;
-      fontCss = startFontCss * factor;
+      widthCss = clampW(startWidth + sx * dx);
       if (hit.includes("w")) applyWest(widthCss);
-      if (hit.includes("n")) applyNorth(heightCss);
+      const factor = widthCss / Math.max(1, startWidth);
+      fontCss = Math.max(16, Math.min(48, Math.round(startFontCss * factor)));
     }
-    return { widthCss, heightCss, fontCss, x, y, autoHeight };
+    return { widthCss, heightCss, fontCss, x, y, autoHeight: true };
   }
   function keepTextEditorInsideCanvas(editor) {
     const logicalWidth = editor.widthCss / Math.max(0.03, state.scale),
@@ -287,12 +276,13 @@
   }
   function scheduleTextEditorPreview(editor, delay = TEXT_EDITOR_PREVIEW_INTERVAL_MS) {
     if (!editor?.mixedMode || editor.committing || editor.cancelled) return;
-    if (delay > 0 && editor.previewTimer) return;
+    const effectiveDelay = delay > 0 ? Math.max(300, delay) : 0;
+    if (effectiveDelay > 0 && editor.previewTimer) return;
     clearTimeout(editor.previewTimer);
     editor.previewTimer = setTimeout(() => {
       editor.previewTimer = 0;
       void renderTextEditorPreview(editor);
-    }, Math.max(0, delay));
+    }, effectiveDelay);
   }
   function updateTextEditorMixedMode(editor) {
     const button = editor?.mixedModeButton;
@@ -452,6 +442,27 @@
     setStatusKey("ready");
     if (!state.textEditors.size && state.auto && state.autoEligible) schedule(Math.max(1000, state.autoDelayMs));
   }
+  function deleteTextEditor(editor) {
+    if (!editor || editor.committing) return;
+    if (editor.sourceTextBoxId) {
+      recordTextBoxesBefore();
+      const idx = state.textBoxes.findIndex((item) => item.id === editor.sourceTextBoxId);
+      if (idx >= 0) {
+        const removed = state.textBoxes.splice(idx, 1)[0];
+        mergeDirtyBox(removed);
+        state.userRevision++;
+        save();
+      }
+      state.selectedTextBoxId = null;
+    }
+    editor.cancelled = true;
+    removeTextEditor(editor);
+    blockCanvasInput(TEXT_INPUT_GUARD_MS);
+    if (editor.returnMode) restoreTextEditorMode(editor);
+    else setCanvasMode("pen");
+    render();
+    setStatusKey("ready");
+  }
   function createTextEditor(point, options = null) {
     options ||= {};
     if (!options.sourceTextBoxId && state.textEditors.size) {
@@ -511,8 +522,62 @@
     textarea.placeholder = t("textPlaceholder");
     textarea.setAttribute("aria-label", t("text"));
     textarea.value = typeof options.text === "string" ? options.text.slice(0, TEXT_INPUT_MAX_LENGTH) : "";
+    const headerBar = document.createElement("div");
+    headerBar.className = "text-editor-mini-bar";
+    const sizes = [
+      { label: "S", size: 16 },
+      { label: "M", size: 24 },
+      { label: "L", size: 32 },
+      { label: "XL", size: 44 },
+    ];
+    sizes.forEach((s) => {
+      const btn = document.createElement("button");
+      btn.type = "button";
+      btn.className = `text-editor-preset-btn ${editor.fontCss === s.size ? "active" : ""}`;
+      btn.textContent = s.label;
+      btn.title = `Font size ${s.size}px`;
+      btn.addEventListener("pointerdown", (e) => e.stopPropagation());
+      btn.addEventListener("click", (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        editor.fontCss = s.size;
+        headerBar.querySelectorAll(".text-editor-preset-btn").forEach((b) => b.classList.remove("active"));
+        btn.classList.add("active");
+        fitTextEditorToContent(editor);
+        positionTextEditors();
+      });
+      headerBar.append(btn);
+    });
+
+    const eraseBtn = document.createElement("button");
+    eraseBtn.type = "button";
+    eraseBtn.className = "text-editor-erase-btn";
+    eraseBtn.textContent = "Erase";
+    eraseBtn.title = "Delete this text card";
+    eraseBtn.addEventListener("pointerdown", (e) => e.stopPropagation());
+    eraseBtn.addEventListener("click", (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      deleteTextEditor(editor);
+    });
+    headerBar.append(eraseBtn);
+
+    const doneBtn = document.createElement("button");
+    doneBtn.type = "button";
+    doneBtn.className = "text-editor-done-btn";
+    doneBtn.textContent = "Done";
+    doneBtn.title = "Confirm text";
+    doneBtn.addEventListener("pointerdown", (e) => e.stopPropagation());
+    doneBtn.addEventListener("click", (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      void confirmTextEditor(editor);
+    });
+    headerBar.append(doneBtn);
+
+    root.append(headerBar);
     root.append(textarea);
-    for (const kind of ["n", "ne", "e", "se", "s", "sw", "w", "nw"]) {
+    for (const kind of ["ne", "se", "sw", "nw", "e", "w"]) {
       const handle = document.createElement("span");
       handle.className = `text-editor-handle ${kind}`;
       handle.dataset.textHandle = kind;
@@ -660,6 +725,9 @@
       state.panY = Math.min(maxY, Math.max(minY, state.panY));
     }
   }
+  const MIN_CANVAS_SCALE = 0.05;
+  const MAX_CANVAS_SCALE = 3.0;
+
   function updateTouchGesture() {
     const g = state.touchGesture;
     if (!g) return false;
@@ -671,7 +739,7 @@
       },
       distance = Math.max(1, Math.hypot(points[0].x - points[1].x, points[0].y - points[1].y)),
       r = view.getBoundingClientRect(),
-      next = Math.max(0.35, Math.min(2.5, (g.scale * distance) / g.distance)),
+      next = Math.max(MIN_CANVAS_SCALE, Math.min(MAX_CANVAS_SCALE, (g.scale * distance) / g.distance)),
       anchorX = (g.center.x - r.left - g.panX) / g.scale,
       anchorY = (g.center.y - r.top - g.panY) / g.scale;
     state.scale = next;
@@ -693,7 +761,7 @@
   function zoomCanvasAt(clientX, clientY, deltaY) {
     const rect = view.getBoundingClientRect(),
       factor = deltaY < 0 ? 1.12 : 0.89,
-      next = Math.max(0.35, Math.min(2.5, state.scale * factor)),
+      next = Math.max(MIN_CANVAS_SCALE, Math.min(MAX_CANVAS_SCALE, state.scale * factor)),
       px = clientX - rect.left,
       py = clientY - rect.top;
     state.panX = px - ((px - state.panX) * next) / state.scale;
@@ -704,6 +772,110 @@
     requestRender();
     wheelNavigating();
   }
+
+  function frameBounds(box, { duration = 280, padding = 80 } = {}) {
+    if (!box || box.w <= 0 || box.h <= 0) return;
+    const r = view.getBoundingClientRect();
+    const availableW = Math.max(120, r.width - padding * 2);
+    const availableH = Math.max(120, r.height - padding * 2);
+    const targetScale = Math.max(MIN_CANVAS_SCALE, Math.min(1.4, Math.min(availableW / box.w, availableH / box.h)));
+    const centerX = box.x + box.w / 2;
+    const centerY = box.y + box.h / 2;
+    const targetPanX = (r.width / 2) - centerX * targetScale;
+    const targetPanY = (r.height / 2) - centerY * targetScale;
+
+    const startScale = state.scale;
+    const startPanX = state.panX;
+    const startPanY = state.panY;
+    const startTime = performance.now();
+
+    function step(now) {
+      const elapsed = now - startTime;
+      const progress = Math.min(1, elapsed / duration);
+      const ease = 1 - Math.pow(1 - progress, 3);
+      state.scale = startScale + (targetScale - startScale) * ease;
+      state.panX = startPanX + (targetPanX - startPanX) * ease;
+      state.panY = startPanY + (targetPanY - startPanY) * ease;
+      clampPan();
+      updateCoordinates();
+      requestRender();
+      if (progress < 1) {
+        requestAnimationFrame(step);
+      }
+    }
+    requestAnimationFrame(step);
+  }
+
+  let cachedPreviousView = null;
+
+  function clearSelectionFocus() {
+    cachedPreviousView = null;
+    window.isSelectionFocused = false;
+  }
+
+  function focusSelection() {
+    const selection = state.selection;
+    if (cachedPreviousView) {
+      const { scale, panX, panY } = cachedPreviousView;
+      cachedPreviousView = null;
+      window.isSelectionFocused = false;
+      animateToView(scale, panX, panY);
+      if (typeof updateSelectionToolbar === "function") updateSelectionToolbar();
+      return;
+    }
+    if (selection?.box) {
+      cachedPreviousView = { scale: state.scale, panX: state.panX, panY: state.panY };
+      window.isSelectionFocused = true;
+      frameBounds(selection.box);
+      if (typeof updateSelectionToolbar === "function") updateSelectionToolbar();
+    }
+  }
+
+  function animateToView(targetScale, targetPanX, targetPanY, { duration = 280 } = {}) {
+    const startScale = state.scale;
+    const startPanX = state.panX;
+    const startPanY = state.panY;
+    const startTime = performance.now();
+
+    function step(now) {
+      const elapsed = now - startTime;
+      const progress = Math.min(1, elapsed / duration);
+      const ease = 1 - Math.pow(1 - progress, 3);
+      state.scale = startScale + (targetScale - startScale) * ease;
+      state.panX = startPanX + (targetPanX - startPanX) * ease;
+      state.panY = startPanY + (targetPanY - startPanY) * ease;
+      clampPan();
+      updateCoordinates();
+      requestRender();
+      if (progress < 1) {
+        requestAnimationFrame(step);
+      }
+    }
+    requestAnimationFrame(step);
+  }
+
+  function frameContent() {
+    const box = state.selection?.box || state.lastUserBox || state.dirty;
+    if (box) {
+      frameBounds(box);
+    } else {
+      const r = view.getBoundingClientRect();
+      state.scale = 0.1;
+      state.panX = (r.width - SIZE * state.scale) / 2;
+      state.panY = (r.height - SIZE * state.scale) / 2;
+      clampPan();
+      updateCoordinates();
+      requestRender();
+    }
+  }
+
+  window.frameBounds = frameBounds;
+  window.focusSelection = focusSelection;
+  window.clearSelectionFocus = clearSelectionFocus;
+  window.frameContent = frameContent;
+  window.zoomCanvasAt = zoomCanvasAt;
+  window.animateToView = animateToView;
+  window.deleteTextEditor = deleteTextEditor;
   function valid(p) {
     return p.x >= 0 && p.x <= SIZE && p.y >= 0 && p.y <= SIZE;
   }

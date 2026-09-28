@@ -725,3 +725,52 @@ button,
 .mobile-chat-btn {
   display: none;
 }
+
+/* Touch and Tablet ergonomics for Canvas Selection & Text Editing */
+@media (pointer: coarse) {
+  .text-editor-handle {
+    width: 14px;
+    height: 14px;
+  }
+  .text-editor-handle.ne { top: -7px; right: -7px; }
+  .text-editor-handle.nw { top: -7px; left: -7px; }
+  .text-editor-handle.se { bottom: -7px; right: -7px; }
+  .text-editor-handle.sw { bottom: -7px; left: -7px; }
+  .text-editor-handle.e { right: -7px; margin-top: -7px; }
+  .text-editor-handle.w { left: -7px; margin-top: -7px; }
+
+  .text-editor-preset-btn {
+    min-height: 28px;
+    padding: 4px 10px;
+    font-size: 12px;
+  }
+
+  .text-editor-done-btn {
+    min-height: 28px;
+    padding: 4px 12px;
+    font-size: 12px;
+  }
+
+  .selection-toolbar-button {
+    min-height: 34px;
+    padding: 6px 13px;
+    font-size: 0.82rem;
+  }
+}
+
+@media (max-width: 640px) {
+  .selection-context-toolbar {
+    max-width: calc(100vw - 16px);
+    padding: 4px 8px;
+  }
+  .selection-toolbar-actions {
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 4px;
+  }
+  .selection-toolbar-button {
+    min-height: 28px;
+    padding: 4px 9px;
+    font-size: 0.74rem;
+  }
+}
