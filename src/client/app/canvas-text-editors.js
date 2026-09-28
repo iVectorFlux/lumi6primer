@@ -334,10 +334,12 @@
   function fitTextEditorToContent(editor) {
     const textarea = editor?.textarea;
     if (!textarea) return;
-    textarea.style.height = "0px";
+    textarea.style.height = "auto";
     const line = Math.ceil((editor.fontCss || TEXT_EDITOR_FONT_CSS) * 1.35);
-    editor.heightCss = Math.max(TEXT_EDITOR_MIN_HEIGHT, line + 28, Math.ceil(textarea.scrollHeight) + 28);
-    textarea.style.height = "100%";
+    const scrollH = textarea.scrollHeight;
+    editor.heightCss = Math.max(TEXT_EDITOR_MIN_HEIGHT, scrollH + 34);
+    textarea.style.height = `${Math.max(line, scrollH)}px`;
+    positionTextEditors();
   }
 
   async function confirmTextEditor(editor) {
@@ -524,30 +526,14 @@
     textarea.value = typeof options.text === "string" ? options.text.slice(0, TEXT_INPUT_MAX_LENGTH) : "";
     const headerBar = document.createElement("div");
     headerBar.className = "text-editor-mini-bar";
-    const sizes = [
-      { label: "S", size: 16 },
-      { label: "M", size: 24 },
-      { label: "L", size: 32 },
-      { label: "XL", size: 44 },
-    ];
-    sizes.forEach((s) => {
-      const btn = document.createElement("button");
-      btn.type = "button";
-      btn.className = `text-editor-preset-btn ${editor.fontCss === s.size ? "active" : ""}`;
-      btn.textContent = s.label;
-      btn.title = `Font size ${s.size}px`;
-      btn.addEventListener("pointerdown", (e) => e.stopPropagation());
-      btn.addEventListener("click", (e) => {
-        e.preventDefault();
-        e.stopPropagation();
-        editor.fontCss = s.size;
-        headerBar.querySelectorAll(".text-editor-preset-btn").forEach((b) => b.classList.remove("active"));
-        btn.classList.add("active");
-        fitTextEditorToContent(editor);
-        positionTextEditors();
-      });
-      headerBar.append(btn);
-    });
+
+    const titleSpan = document.createElement("span");
+    titleSpan.className = "text-editor-title";
+    titleSpan.innerHTML = '<svg viewBox="0 0 20 20" width="12" height="12" fill="currentColor" aria-hidden="true"><path d="M3 4a1 1 0 011-1h12a1 1 0 110 2H11v11a1 1 0 11-2 0V5H4a1 1 0 01-1-1z"/></svg><span>Text</span>';
+    headerBar.append(titleSpan);
+
+    const actionsDiv = document.createElement("div");
+    actionsDiv.className = "text-editor-actions";
 
     const eraseBtn = document.createElement("button");
     eraseBtn.type = "button";
@@ -560,20 +546,21 @@
       e.stopPropagation();
       deleteTextEditor(editor);
     });
-    headerBar.append(eraseBtn);
+    actionsDiv.append(eraseBtn);
 
     const doneBtn = document.createElement("button");
     doneBtn.type = "button";
     doneBtn.className = "text-editor-done-btn";
-    doneBtn.textContent = "Done";
-    doneBtn.title = "Confirm text";
+    doneBtn.innerHTML = '<svg viewBox="0 0 20 20" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="4 11 8 15 16 6"/></svg><span>Done</span>';
+    doneBtn.title = "Done (Confirm)";
     doneBtn.addEventListener("pointerdown", (e) => e.stopPropagation());
     doneBtn.addEventListener("click", (e) => {
       e.preventDefault();
       e.stopPropagation();
       void confirmTextEditor(editor);
     });
-    headerBar.append(doneBtn);
+    actionsDiv.append(doneBtn);
+    headerBar.append(actionsDiv);
 
     root.append(headerBar);
     root.append(textarea);

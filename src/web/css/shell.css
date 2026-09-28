@@ -35,6 +35,15 @@ a:focus-visible {
   outline-offset: 2px;
 }
 
+.text-editor textarea:focus,
+.text-editor textarea:focus-visible,
+.text-editor-input:focus,
+.text-editor-input:focus-visible {
+  outline: none !important;
+  outline-offset: 0 !important;
+  box-shadow: none !important;
+}
+
 /* SF-style chrome icons: stroke, never a black fill blob */
 .app-shell svg,
 .app-topbar svg,

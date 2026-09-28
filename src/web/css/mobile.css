@@ -739,7 +739,7 @@ button,
   .text-editor-handle.e { right: -7px; margin-top: -7px; }
   .text-editor-handle.w { left: -7px; margin-top: -7px; }
 
-  .text-editor-preset-btn {
+  .text-editor-erase-btn {
     min-height: 28px;
     padding: 4px 10px;
     font-size: 12px;
