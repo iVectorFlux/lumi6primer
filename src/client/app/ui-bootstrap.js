@@ -505,7 +505,7 @@
     penTrayEl.addEventListener("click", (e) => e.stopPropagation());
     penTrayEl.addEventListener("touchstart", (e) => e.stopPropagation(), { passive: true });
   }
-  [selectionFocusButton, selectionExplainButton, selectionTypesetButton, selectionVisualizeButton, selectionSendBackButton, selectionDeleteButton, selectionCancelButton].filter(Boolean).forEach((button) => {
+  [selectionPrevCardButton, selectionNextCardButton, selectionFocusButton, selectionExplainButton, selectionTypesetButton, selectionVisualizeButton, selectionSendBackButton, selectionDeleteButton, selectionCancelButton].filter(Boolean).forEach((button) => {
     button.addEventListener("pointerdown", (event) => event.stopPropagation());
     button.addEventListener("click", (event) => event.stopPropagation());
   });
@@ -639,6 +639,12 @@
     event.preventDefault();
     void importClipboardPayload(clipboardPayloadFromDataTransfer(event.clipboardData));
   });
+  if (selectionPrevCardButton) selectionPrevCardButton.onclick = () => {
+    if (typeof navigateCards === "function") navigateCards(-1);
+  };
+  if (selectionNextCardButton) selectionNextCardButton.onclick = () => {
+    if (typeof navigateCards === "function") navigateCards(1);
+  };
   if (selectionFocusButton) selectionFocusButton.onclick = () => {
     focusSelection();
   };

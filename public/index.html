@@ -291,6 +291,9 @@
             <div id="selectionOverlayLayer" class="selection-overlay-layer" hidden>
               <div id="selectionToolbar" class="selection-context-toolbar" role="toolbar" aria-label="Selection tools">
                 <span class="selection-toolbar-actions">
+                  <button id="selectionPrevCardBtn" class="selection-toolbar-button card-nav" type="button" aria-label="Previous card" title="Go to previous card" hidden>‹</button>
+                  <span id="selectionCardCounter" class="selection-card-counter" hidden>1/1</span>
+                  <button id="selectionNextCardBtn" class="selection-toolbar-button card-nav" type="button" aria-label="Next card" title="Go to next card" hidden>›</button>
                   <button id="selectionFocusBtn" class="selection-toolbar-button focus" type="button" aria-label="Focus selection" title="Center and zoom to this selection">Focus</button>
                   <button id="selectionExplainBtn" class="selection-toolbar-button explain" type="button" aria-label="Explain selection" title="Ask Lumi to explain this selection">Explain</button>
                   <button id="selectionAskBtn" class="selection-toolbar-button ask" type="button" aria-label="Ask Lumi about this" title="Ask Lumi a specific question about this selection">Ask</button>
@@ -776,7 +779,7 @@
       if (vp) vp.dispatchEvent(new WheelEvent('wheel', { deltaY: -120, ctrlKey: true, bubbles: true }));
     });
     document.getElementById('fitCanvasBtn')?.addEventListener('click', () => {
-      document.getElementById('fullscreenBtn')?.click();
+      if (typeof window.frameContent === "function") window.frameContent();
     });
     (function () {
       if (localStorage.getItem("primer-sidebar-v") !== "2") {

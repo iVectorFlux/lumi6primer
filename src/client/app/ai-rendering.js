@@ -157,19 +157,37 @@
       }
       preparedLines.push({ ...line, lineFontSize, segments });
     }
+    let currentSection = "default";
+    for (const line of preparedLines) {
+      const rawText = (line.raw || "").trim();
+      const rawLower = rawText.toLowerCase();
+      const isHeader = line.kind === "heading" || /^#{1,3}\s/.test(rawText) || /^\*\*(problem|question|goal|objective|solution|step|final answer|answer|result)/i.test(rawText);
+      if (isHeader) {
+        if (/problem|question|goal|objective/i.test(rawLower)) {
+          currentSection = "problem";
+        } else if (/solution|step|method|derivation|explanation/i.test(rawLower)) {
+          currentSection = "solution";
+        } else if (/final\s*answer|answer|result|conclusion/i.test(rawLower)) {
+          currentSection = "answer";
+        }
+      }
+      line.section = currentSection;
+      line.isHeader = isHeader;
+    }
+
     const paddingX = Math.max(28, Math.round(fontSize * 1.25)),
       paddingY = Math.max(26, Math.round(fontSize * 1.15)),
       contentWidthLimit = Math.max(fontSize * 2, widthLimit - paddingX * 2);
     const rows = [];
     for (const line of preparedLines) {
       const defaultHeight = line.lineFontSize * lineHeight;
-      let row = { items: [], width: 0, height: defaultHeight };
+      let row = { items: [], width: 0, height: defaultHeight, section: line.section, isHeader: line.isHeader };
       const finishRow = () => {
         if (row.items.length === 1 && row.items[0].type === "math" && row.items[0].isDisplay) {
           row.height = Math.max(row.height, row.items[0].height + 20);
         }
         rows.push(row);
-        row = { items: [], width: 0, height: defaultHeight };
+        row = { items: [], width: 0, height: defaultHeight, section: line.section, isHeader: line.isHeader };
       };
       const addItem = (item) => {
         if (row.items.length && row.width + item.width > contentWidthLimit) finishRow();
@@ -244,6 +262,43 @@
     context.fill();
     context.restore();
 
+    // Prominent Final Answer Highlight Plate (Box) if present
+    let answerStartY = null, answerEndY = null;
+    let trackY = paddingY;
+    for (const row of rows) {
+      if (row.section === "answer") {
+        if (answerStartY === null) answerStartY = trackY;
+        answerEndY = trackY + row.height;
+      }
+      trackY += row.height;
+    }
+
+    if (answerStartY !== null && answerEndY !== null) {
+      const platePadX = 14;
+      const platePadY = 8;
+      const plateX = paddingX - platePadX;
+      const plateY = answerStartY - platePadY;
+      const plateW = naturalWidth - (paddingX - platePadX) * 2;
+      const plateH = (answerEndY - answerStartY) + platePadY * 2;
+
+      context.save();
+      context.fillStyle = "rgba(240, 253, 244, 0.90)";
+      context.strokeStyle = "rgba(52, 211, 153, 0.55)";
+      context.lineWidth = 1.4;
+      context.shadowColor = "rgba(16, 185, 129, 0.16)";
+      context.shadowBlur = 12;
+      context.shadowOffsetY = 2;
+      context.beginPath();
+      if (typeof context.roundRect === "function") {
+        context.roundRect(plateX, plateY, plateW, plateH, 12);
+      } else {
+        context.rect(plateX, plateY, plateW, plateH);
+      }
+      context.fill();
+      context.stroke();
+      context.restore();
+    }
+
     context.textBaseline = "top";
     let y = paddingY;
     for (const row of rows) {
@@ -253,6 +308,7 @@
         const x = paddingX + offsetX + item.x;
         if (item.type === "math") {
           const formulaY = y + (row.height - item.height) / 2;
+          const isAnswerMath = row.section === "answer";
           if (isDisplayFormula) {
             // Elegant frosted pill plate with luminous accent glow behind key display equations
             const pillPadX = 20, pillPadY = 10;
@@ -262,10 +318,10 @@
             const pillY = Math.round(formulaY - pillPadY);
 
             context.save();
-            context.fillStyle = "rgba(248, 250, 252, 0.94)";
-            context.strokeStyle = "rgba(226, 232, 240, 0.95)";
-            context.lineWidth = 1.2;
-            context.shadowColor = "rgba(99, 102, 241, 0.16)";
+            context.fillStyle = isAnswerMath ? "rgba(255, 255, 255, 0.96)" : "rgba(248, 250, 252, 0.94)";
+            context.strokeStyle = isAnswerMath ? "rgba(52, 211, 153, 0.7)" : "rgba(226, 232, 240, 0.95)";
+            context.lineWidth = 1.3;
+            context.shadowColor = isAnswerMath ? "rgba(16, 185, 129, 0.22)" : "rgba(99, 102, 241, 0.16)";
             context.shadowBlur = 12;
             context.shadowOffsetY = 2;
             context.beginPath();
@@ -280,21 +336,31 @@
 
             // Formula with glowing presence
             context.save();
-            context.shadowColor = "rgba(37, 99, 235, 0.28)";
+            context.shadowColor = isAnswerMath ? "rgba(16, 185, 129, 0.35)" : "rgba(37, 99, 235, 0.28)";
             context.shadowBlur = 8;
             context.drawImage(item.image, x, formulaY, item.width, item.height);
             context.restore();
           } else {
             // Inline math with crisp subtle glow
             context.save();
-            context.shadowColor = "rgba(37, 99, 235, 0.18)";
+            context.shadowColor = isAnswerMath ? "rgba(16, 185, 129, 0.25)" : "rgba(37, 99, 235, 0.18)";
             context.shadowBlur = 4;
             context.drawImage(item.image, x, formulaY, item.width, item.height);
             context.restore();
           }
         } else {
           context.font = item.font;
-          context.fillStyle = item.bold ? "#0f172a" : "#334155";
+          if (row.section === "answer" && row.isHeader) {
+            context.fillStyle = "#047857";
+          } else if (row.section === "problem" && row.isHeader) {
+            context.fillStyle = "#1d4ed8";
+          } else if (row.section === "solution" && row.isHeader) {
+            context.fillStyle = "#4338ca";
+          } else if (/^\d+\.\s/.test(item.text)) {
+            context.fillStyle = "#4f46e5";
+          } else {
+            context.fillStyle = item.bold ? "#0f172a" : "#334155";
+          }
           context.fillText(item.text, x, y + (row.height - item.fontSize) / 2);
         }
       }

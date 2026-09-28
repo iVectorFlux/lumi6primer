@@ -337,8 +337,10 @@
     textarea.style.height = "auto";
     const line = Math.ceil((editor.fontCss || TEXT_EDITOR_FONT_CSS) * 1.35);
     const scrollH = textarea.scrollHeight;
-    editor.heightCss = Math.max(TEXT_EDITOR_MIN_HEIGHT, scrollH + 34);
-    textarea.style.height = `${Math.max(line, scrollH)}px`;
+    const minCardH = Math.max(TEXT_EDITOR_MIN_HEIGHT, 100);
+    const requiredAreaH = Math.max(56, scrollH);
+    editor.heightCss = Math.max(minCardH, requiredAreaH + 44);
+    textarea.style.height = `${requiredAreaH}px`;
     positionTextEditors();
   }
 
@@ -760,12 +762,48 @@
     wheelNavigating();
   }
 
-  function frameBounds(box, { duration = 280, padding = 80 } = {}) {
+  function getAllContentBounds() {
+    let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+    let found = false;
+    for (const card of state.textBoxes || []) {
+      if (typeof card.x === "number" && typeof card.y === "number") {
+        minX = Math.min(minX, card.x);
+        minY = Math.min(minY, card.y);
+        maxX = Math.max(maxX, card.x + (card.w || 300));
+        maxY = Math.max(maxY, card.y + (card.h || 150));
+        found = true;
+      }
+    }
+    for (const img of state.images || []) {
+      if (typeof img.x === "number" && typeof img.y === "number") {
+        minX = Math.min(minX, img.x);
+        minY = Math.min(minY, img.y);
+        maxX = Math.max(maxX, img.x + (img.w || 200));
+        maxY = Math.max(maxY, img.y + (img.h || 200));
+        found = true;
+      }
+    }
+    if (state.inkBounds && state.inkBounds.size > 0) {
+      for (const b of state.inkBounds.values()) {
+        if (b && typeof b.minX === "number") {
+          minX = Math.min(minX, b.minX);
+          minY = Math.min(minY, b.minY);
+          maxX = Math.max(maxX, b.maxX);
+          maxY = Math.max(maxY, b.maxY);
+          found = true;
+        }
+      }
+    }
+    if (!found) return null;
+    return { x: minX, y: minY, w: Math.max(20, maxX - minX), h: Math.max(20, maxY - minY) };
+  }
+
+  function frameBounds(box, { duration = 280, padding = 80, maxScale = 1.25 } = {}) {
     if (!box || box.w <= 0 || box.h <= 0) return;
     const r = view.getBoundingClientRect();
     const availableW = Math.max(120, r.width - padding * 2);
     const availableH = Math.max(120, r.height - padding * 2);
-    const targetScale = Math.max(MIN_CANVAS_SCALE, Math.min(1.4, Math.min(availableW / box.w, availableH / box.h)));
+    const targetScale = Math.max(MIN_CANVAS_SCALE, Math.min(maxScale, Math.min(availableW / box.w, availableH / box.h)));
     const centerX = box.x + box.w / 2;
     const centerY = box.y + box.h / 2;
     const targetPanX = (r.width / 2) - centerX * targetScale;
@@ -802,18 +840,23 @@
 
   function focusSelection() {
     const selection = state.selection;
-    if (cachedPreviousView) {
-      const { scale, panX, panY } = cachedPreviousView;
-      cachedPreviousView = null;
+    if (window.isSelectionFocused) {
       window.isSelectionFocused = false;
-      animateToView(scale, panX, panY);
+      const allBounds = getAllContentBounds();
+      if (allBounds) {
+        frameBounds(allBounds, { padding: 90, maxScale: 1.0 });
+      } else if (cachedPreviousView) {
+        const { scale, panX, panY } = cachedPreviousView;
+        animateToView(scale, panX, panY);
+      }
+      cachedPreviousView = null;
       if (typeof updateSelectionToolbar === "function") updateSelectionToolbar();
       return;
     }
     if (selection?.box) {
       cachedPreviousView = { scale: state.scale, panX: state.panX, panY: state.panY };
       window.isSelectionFocused = true;
-      frameBounds(selection.box);
+      frameBounds(selection.box, { padding: 80, maxScale: 1.25 });
       if (typeof updateSelectionToolbar === "function") updateSelectionToolbar();
     }
   }
@@ -842,20 +885,52 @@
   }
 
   function frameContent() {
-    const box = state.selection?.box || state.lastUserBox || state.dirty;
-    if (box) {
-      frameBounds(box);
+    const allBounds = getAllContentBounds() || state.selection?.box || state.lastUserBox || state.dirty;
+    if (allBounds && allBounds.w > 0 && allBounds.h > 0) {
+      frameBounds(allBounds, { padding: 90, maxScale: 1.0 });
     } else {
       const r = view.getBoundingClientRect();
-      state.scale = 0.1;
-      state.panX = (r.width - SIZE * state.scale) / 2;
-      state.panY = (r.height - SIZE * state.scale) / 2;
-      clampPan();
-      updateCoordinates();
-      requestRender();
+      animateToView(1.0, 0, 0);
     }
   }
 
+  function selectCardById(id) {
+    const card = (state.textBoxes || []).find((c) => c.id === id);
+    if (!card) return;
+    state.selectedTextBoxId = card.id;
+    state.selection = {
+      phase: "active",
+      originalBox: { x: card.x, y: card.y, w: card.w, h: card.h },
+      box: { x: card.x, y: card.y, w: card.w, h: card.h },
+      liftedTextBoxes: [card],
+      fragments: [],
+      beforeTiles: new Map(),
+      color: null,
+    };
+    if (typeof updateSelectionToolbar === "function") updateSelectionToolbar();
+    requestRender();
+  }
+
+  function navigateCards(direction = 1) {
+    const cards = state.textBoxes || [];
+    if (!cards.length) return;
+    const currentId = state.selectedTextBoxId || (state.selection?.liftedTextBoxes?.[0]?.id);
+    let currentIndex = cards.findIndex((c) => c.id === currentId);
+    if (currentIndex < 0) {
+      currentIndex = direction > 0 ? -1 : cards.length;
+    }
+    let nextIndex = currentIndex + direction;
+    if (nextIndex >= cards.length) nextIndex = 0;
+    if (nextIndex < 0) nextIndex = cards.length - 1;
+    const targetCard = cards[nextIndex];
+    if (!targetCard) return;
+
+    selectCardById(targetCard.id);
+    window.isSelectionFocused = true;
+    frameBounds({ x: targetCard.x, y: targetCard.y, w: targetCard.w, h: targetCard.h }, { padding: 90, maxScale: 1.25 });
+  }
+
+  window.getAllContentBounds = getAllContentBounds;
   window.frameBounds = frameBounds;
   window.focusSelection = focusSelection;
   window.clearSelectionFocus = clearSelectionFocus;
@@ -863,6 +938,8 @@
   window.zoomCanvasAt = zoomCanvasAt;
   window.animateToView = animateToView;
   window.deleteTextEditor = deleteTextEditor;
+  window.selectCardById = selectCardById;
+  window.navigateCards = navigateCards;
   function valid(p) {
     return p.x >= 0 && p.x <= SIZE && p.y >= 0 && p.y <= SIZE;
   }

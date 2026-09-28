@@ -64,6 +64,9 @@
     aiRadial = document.querySelector("#aiRadial"),
     selectionOverlayLayer = document.querySelector("#selectionOverlayLayer"),
     selectionToolbar = document.querySelector("#selectionToolbar"),
+    selectionPrevCardButton = document.querySelector("#selectionPrevCardBtn"),
+    selectionCardCounter = document.querySelector("#selectionCardCounter"),
+    selectionNextCardButton = document.querySelector("#selectionNextCardBtn"),
     selectionFocusButton = document.querySelector("#selectionFocusBtn"),
     selectionExplainButton = document.querySelector("#selectionExplainBtn"),
     selectionAskButton = document.querySelector("#selectionAskBtn"),
@@ -133,10 +136,10 @@
   const SUMMON = window.LUMI6_SUMMON || {};
   const EFFORT_LEVELS = ["none", "low", "medium", "high", "max"],
     EFFORT_OPTIONS = ["config", ...EFFORT_LEVELS],
-    TEXT_EDITOR_DEFAULT_WIDTH = 340,
-    TEXT_EDITOR_DEFAULT_HEIGHT = 76,
-    TEXT_EDITOR_MIN_WIDTH = 200,
-    TEXT_EDITOR_MIN_HEIGHT = 56,
+    TEXT_EDITOR_DEFAULT_WIDTH = 420,
+    TEXT_EDITOR_DEFAULT_HEIGHT = 120,
+    TEXT_EDITOR_MIN_WIDTH = 260,
+    TEXT_EDITOR_MIN_HEIGHT = 100,
     TEXT_EDITOR_FONT_CSS = 24,
     TEXT_EDITOR_PREVIEW_INTERVAL_MS = 80,
     TEXT_EDITOR_FONT_FAMILY = '"Patrick Hand", "Segoe Print", "Comic Sans MS", cursive',
@@ -4492,133 +4495,133 @@ User writes "Show air quality for Tokyo", names a place, and points to an empty 
     {
       slug: "forces-motion-v2",
       title: "Forces & Motion: Newton's 2nd Law",
-      pillText: "⚡ Explore Forces & Motion Simulation",
+      pillText: "Explore Forces & Motion",
       keywords: ["f=ma", "f = ma", "fnet", "f_net", "force", "acceleration", "newton", "net force", "mass", "motion", "speedometer", "crate"]
     },
     {
       slug: "force-friction-v2",
       title: "Friction & Normal Force",
-      pillText: "⚡ Explore Friction Simulation",
+      pillText: "Explore Friction & Normal Force",
       keywords: ["friction", "frictional", "coefficient of friction", "normal force", "rough surface", "inclined plane"]
     },
     {
       slug: "gravity-v2",
       title: "Gravity & Planetary Orbits",
-      pillText: "⚡ Explore Gravity & Orbits Simulation",
+      pillText: "Explore Gravity & Planetary Orbits",
       keywords: ["gravity", "gravitation", "gravitational", "orbit", "planetary", "celestial", "escape velocity"]
     },
     {
       slug: "simple-pendulum",
       title: "Simple Pendulum",
-      pillText: "⚡ Explore Pendulum Simulation",
+      pillText: "Explore Simple Pendulum",
       keywords: ["pendulum", "oscillation", "period of pendulum", "bob", "harmonic motion"]
     },
     {
       slug: "circuits-v2",
       title: "Electric Circuit Builder",
-      pillText: "⚡ Explore Circuit Simulation",
+      pillText: "Explore Electric Circuit Builder",
       keywords: ["circuit", "current", "voltage", "battery", "resistor", "switch", "parallel", "series"]
     },
     {
       slug: "ohms-law",
       title: "Ohm's Law: V = IR",
-      pillText: "⚡ Explore Ohm's Law Simulation",
+      pillText: "Explore Ohm's Law: V = IR",
       keywords: ["ohm", "v=ir", "v = ir", "resistance", "amperage", "resistors"]
     },
     {
       slug: "wave-v2",
       title: "Wave Properties & Frequency",
-      pillText: "⚡ Explore Wave Simulation",
+      pillText: "Explore Wave Properties",
       keywords: ["wave", "wavelength", "frequency", "amplitude", "crest", "trough", "transverse"]
     },
     {
       slug: "sound-pitch",
       title: "Sound & Pitch",
-      pillText: "⚡ Explore Sound Pitch Simulation",
+      pillText: "Explore Sound & Pitch",
       keywords: ["sound", "pitch", "acoustic", "vibration", "hertz"]
     },
     {
       slug: "photosynthesis",
       title: "Photosynthesis Mechanism",
-      pillText: "⚡ Explore Photosynthesis Simulation",
+      pillText: "Explore Photosynthesis",
       keywords: ["photosynthesis", "chloroplast", "chlorophyll", "calvin cycle", "light reaction", "glucose"]
     },
     {
       slug: "pythagoras-v2",
       title: "Pythagorean Theorem",
-      pillText: "⚡ Explore Pythagoras Simulation",
+      pillText: "Explore Pythagorean Theorem",
       keywords: ["pythagor", "hypotenuse", "right triangle", "a^2 + b^2 = c^2", "a²+b²=c²"]
     },
     {
       slug: "density-float",
       title: "Density & Buoyancy",
-      pillText: "⚡ Explore Density & Buoyancy Simulation",
+      pillText: "Explore Density & Buoyancy",
       keywords: ["density", "buoyancy", "archimedes", "float", "sink", "volume and mass"]
     },
     {
       slug: "states-of-matter-v2",
       title: "States of Matter",
-      pillText: "⚡ Explore States of Matter Simulation",
+      pillText: "Explore States of Matter",
       keywords: ["states of matter", "solid, liquid", "solid liquid gas", "phase change", "condensation"]
     },
     {
       slug: "atomic-structure",
       title: "Atomic Structure",
-      pillText: "⚡ Explore Atomic Structure Simulation",
+      pillText: "Explore Atomic Structure",
       keywords: ["atom", "atomic structure", "electron", "proton", "neutron", "nucleus", "orbital"]
     },
     {
       slug: "dna-pairing",
       title: "DNA Base Pairing",
-      pillText: "⚡ Explore DNA Pairing Simulation",
+      pillText: "Explore DNA Base Pairing",
       keywords: ["dna", "double helix", "nucleotide", "adenine", "thymine", "cytosine", "guanine"]
     },
     {
       slug: "light-reflection-refraction",
       title: "Reflection & Refraction",
-      pillText: "⚡ Explore Optics Simulation",
+      pillText: "Explore Reflection & Refraction",
       keywords: ["refraction", "reflection", "snell", "index of refraction", "prism", "lens"]
     },
     {
       slug: "prism-v2",
       title: "Prism & Light Dispersion",
-      pillText: "⚡ Explore Prism Simulation",
+      pillText: "Explore Prism & Dispersion",
       keywords: ["prism", "dispersion", "spectrum", "rainbow", "wavelength"]
     },
     {
       slug: "lever-seesaw",
       title: "Lever & Torque Balance",
-      pillText: "⚡ Explore Lever Simulation",
+      pillText: "Explore Lever & Balance",
       keywords: ["lever", "seesaw", "fulcrum", "torque", "mechanical advantage"]
     },
     {
       slug: "moon-phases-v2",
       title: "Moon Phases & Orbit",
-      pillText: "⚡ Explore Moon Phases Simulation",
+      pillText: "Explore Moon Phases",
       keywords: ["moon phase", "lunar cycle", "crescent", "waxing", "waning"]
     },
     {
       slug: "greenhouse-effect",
       title: "Greenhouse Effect",
-      pillText: "⚡ Explore Greenhouse Simulation",
+      pillText: "Explore Greenhouse Effect",
       keywords: ["greenhouse effect", "global warming", "carbon dioxide", "atmosphere"]
     },
     {
       slug: "water-cycle-v2",
       title: "Water Cycle Dynamics",
-      pillText: "⚡ Explore Water Cycle Simulation",
+      pillText: "Explore Water Cycle Dynamics",
       keywords: ["water cycle", "evaporation", "precipitation", "condensation"]
     },
     {
       slug: "food-chain",
       title: "Food Chain & Ecosystem",
-      pillText: "⚡ Explore Food Chain Simulation",
+      pillText: "Explore Food Chain & Ecosystem",
       keywords: ["food chain", "food web", "producer", "consumer", "trophic", "herbivore"]
     },
     {
       slug: "slope-derivative",
       title: "Calculus: Tangent & Derivative",
-      pillText: "⚡ Explore Derivative Simulation",
+      pillText: "Explore Derivative & Tangent",
       keywords: ["derivative", "tangent", "calculus", "rate of change", "differentiation"]
     }
   ];
@@ -4680,7 +4683,7 @@ User writes "Show air quality for Tokyo", names a place, and points to an empty 
           best = {
             slug: item.slug,
             title: item.title || item.slug,
-            pillText: `⚡ Explore ${item.title || "Interactive"} Simulation`
+            pillText: `Explore ${item.title || "Interactive"} Simulation`
           };
         }
       }
@@ -4780,12 +4783,12 @@ User writes "Show air quality for Tokyo", names a place, and points to an empty 
         pill.dataset.cardId = target.id;
         pill.dataset.slug = target.interactive.slug;
         pill.innerHTML = `
-          <span class="pill-sparkle" aria-hidden="true">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
-              <path d="M12 2l2.4 7.2L22 12l-7.6 2.8L12 22l-2.4-7.2L2 12l7.6-2.8z"/>
+          <span class="pill-play-icon" aria-hidden="true">
+            <svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor">
+              <polygon points="6 3 20 12 6 21 6 3"></polygon>
             </svg>
           </span>
-          <span class="pill-title">${target.interactive.pillText || `Explore ${target.interactive.title} Simulation`}</span>
+          <span class="pill-title">${target.interactive.pillText || `Explore ${target.interactive.title}`}</span>
           <span class="pill-arrow" aria-hidden="true">↗</span>
         `;
         pill.addEventListener("click", (e) => {
@@ -5926,8 +5929,10 @@ User writes "Show air quality for Tokyo", names a place, and points to an empty 
     textarea.style.height = "auto";
     const line = Math.ceil((editor.fontCss || TEXT_EDITOR_FONT_CSS) * 1.35);
     const scrollH = textarea.scrollHeight;
-    editor.heightCss = Math.max(TEXT_EDITOR_MIN_HEIGHT, scrollH + 34);
-    textarea.style.height = `${Math.max(line, scrollH)}px`;
+    const minCardH = Math.max(TEXT_EDITOR_MIN_HEIGHT, 100);
+    const requiredAreaH = Math.max(56, scrollH);
+    editor.heightCss = Math.max(minCardH, requiredAreaH + 44);
+    textarea.style.height = `${requiredAreaH}px`;
     positionTextEditors();
   }
 
@@ -6349,12 +6354,48 @@ User writes "Show air quality for Tokyo", names a place, and points to an empty 
     wheelNavigating();
   }
 
-  function frameBounds(box, { duration = 280, padding = 80 } = {}) {
+  function getAllContentBounds() {
+    let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+    let found = false;
+    for (const card of state.textBoxes || []) {
+      if (typeof card.x === "number" && typeof card.y === "number") {
+        minX = Math.min(minX, card.x);
+        minY = Math.min(minY, card.y);
+        maxX = Math.max(maxX, card.x + (card.w || 300));
+        maxY = Math.max(maxY, card.y + (card.h || 150));
+        found = true;
+      }
+    }
+    for (const img of state.images || []) {
+      if (typeof img.x === "number" && typeof img.y === "number") {
+        minX = Math.min(minX, img.x);
+        minY = Math.min(minY, img.y);
+        maxX = Math.max(maxX, img.x + (img.w || 200));
+        maxY = Math.max(maxY, img.y + (img.h || 200));
+        found = true;
+      }
+    }
+    if (state.inkBounds && state.inkBounds.size > 0) {
+      for (const b of state.inkBounds.values()) {
+        if (b && typeof b.minX === "number") {
+          minX = Math.min(minX, b.minX);
+          minY = Math.min(minY, b.minY);
+          maxX = Math.max(maxX, b.maxX);
+          maxY = Math.max(maxY, b.maxY);
+          found = true;
+        }
+      }
+    }
+    if (!found) return null;
+    return { x: minX, y: minY, w: Math.max(20, maxX - minX), h: Math.max(20, maxY - minY) };
+  }
+
+  function frameBounds(box, { duration = 280, padding = 80, maxScale = 1.25 } = {}) {
     if (!box || box.w <= 0 || box.h <= 0) return;
     const r = view.getBoundingClientRect();
     const availableW = Math.max(120, r.width - padding * 2);
     const availableH = Math.max(120, r.height - padding * 2);
-    const targetScale = Math.max(MIN_CANVAS_SCALE, Math.min(1.4, Math.min(availableW / box.w, availableH / box.h)));
+    const targetScale = Math.max(MIN_CANVAS_SCALE, Math.min(maxScale, Math.min(availableW / box.w, availableH / box.h)));
     const centerX = box.x + box.w / 2;
     const centerY = box.y + box.h / 2;
     const targetPanX = (r.width / 2) - centerX * targetScale;
@@ -6391,18 +6432,23 @@ User writes "Show air quality for Tokyo", names a place, and points to an empty 
 
   function focusSelection() {
     const selection = state.selection;
-    if (cachedPreviousView) {
-      const { scale, panX, panY } = cachedPreviousView;
-      cachedPreviousView = null;
+    if (window.isSelectionFocused) {
       window.isSelectionFocused = false;
-      animateToView(scale, panX, panY);
+      const allBounds = getAllContentBounds();
+      if (allBounds) {
+        frameBounds(allBounds, { padding: 90, maxScale: 1.0 });
+      } else if (cachedPreviousView) {
+        const { scale, panX, panY } = cachedPreviousView;
+        animateToView(scale, panX, panY);
+      }
+      cachedPreviousView = null;
       if (typeof updateSelectionToolbar === "function") updateSelectionToolbar();
       return;
     }
     if (selection?.box) {
       cachedPreviousView = { scale: state.scale, panX: state.panX, panY: state.panY };
       window.isSelectionFocused = true;
-      frameBounds(selection.box);
+      frameBounds(selection.box, { padding: 80, maxScale: 1.25 });
       if (typeof updateSelectionToolbar === "function") updateSelectionToolbar();
     }
   }
@@ -6431,20 +6477,52 @@ User writes "Show air quality for Tokyo", names a place, and points to an empty 
   }
 
   function frameContent() {
-    const box = state.selection?.box || state.lastUserBox || state.dirty;
-    if (box) {
-      frameBounds(box);
+    const allBounds = getAllContentBounds() || state.selection?.box || state.lastUserBox || state.dirty;
+    if (allBounds && allBounds.w > 0 && allBounds.h > 0) {
+      frameBounds(allBounds, { padding: 90, maxScale: 1.0 });
     } else {
       const r = view.getBoundingClientRect();
-      state.scale = 0.1;
-      state.panX = (r.width - SIZE * state.scale) / 2;
-      state.panY = (r.height - SIZE * state.scale) / 2;
-      clampPan();
-      updateCoordinates();
-      requestRender();
+      animateToView(1.0, 0, 0);
     }
   }
 
+  function selectCardById(id) {
+    const card = (state.textBoxes || []).find((c) => c.id === id);
+    if (!card) return;
+    state.selectedTextBoxId = card.id;
+    state.selection = {
+      phase: "active",
+      originalBox: { x: card.x, y: card.y, w: card.w, h: card.h },
+      box: { x: card.x, y: card.y, w: card.w, h: card.h },
+      liftedTextBoxes: [card],
+      fragments: [],
+      beforeTiles: new Map(),
+      color: null,
+    };
+    if (typeof updateSelectionToolbar === "function") updateSelectionToolbar();
+    requestRender();
+  }
+
+  function navigateCards(direction = 1) {
+    const cards = state.textBoxes || [];
+    if (!cards.length) return;
+    const currentId = state.selectedTextBoxId || (state.selection?.liftedTextBoxes?.[0]?.id);
+    let currentIndex = cards.findIndex((c) => c.id === currentId);
+    if (currentIndex < 0) {
+      currentIndex = direction > 0 ? -1 : cards.length;
+    }
+    let nextIndex = currentIndex + direction;
+    if (nextIndex >= cards.length) nextIndex = 0;
+    if (nextIndex < 0) nextIndex = cards.length - 1;
+    const targetCard = cards[nextIndex];
+    if (!targetCard) return;
+
+    selectCardById(targetCard.id);
+    window.isSelectionFocused = true;
+    frameBounds({ x: targetCard.x, y: targetCard.y, w: targetCard.w, h: targetCard.h }, { padding: 90, maxScale: 1.25 });
+  }
+
+  window.getAllContentBounds = getAllContentBounds;
   window.frameBounds = frameBounds;
   window.focusSelection = focusSelection;
   window.clearSelectionFocus = clearSelectionFocus;
@@ -6452,6 +6530,8 @@ User writes "Show air quality for Tokyo", names a place, and points to an empty 
   window.zoomCanvasAt = zoomCanvasAt;
   window.animateToView = animateToView;
   window.deleteTextEditor = deleteTextEditor;
+  window.selectCardById = selectCardById;
+  window.navigateCards = navigateCards;
   function valid(p) {
     return p.x >= 0 && p.x <= SIZE && p.y >= 0 && p.y <= SIZE;
   }
@@ -8252,11 +8332,30 @@ User writes "Show air quality for Tokyo", names a place, and points to an empty 
       toolbarStyle = runtimeElementStyle(selectionToolbar, "selection-toolbar");
     selectionToolbar.hidden = false;
     selectionToolbar.setAttribute("aria-busy", String(aiBusy));
+    const allCards = state.textBoxes || [];
+    const currentCardId = state.selectedTextBoxId || (selection?.liftedTextBoxes?.[0]?.id);
+    const cardIndex = allCards.findIndex((c) => c.id === currentCardId);
+    const isCard = cardIndex >= 0;
+    const showCardNav = isCard && allCards.length > 1 && !draftReady;
+
+    if (selectionPrevCardButton) {
+      selectionPrevCardButton.hidden = !showCardNav;
+      selectionPrevCardButton.disabled = aiBusy;
+    }
+    if (selectionCardCounter) {
+      selectionCardCounter.hidden = !showCardNav;
+      if (showCardNav) selectionCardCounter.textContent = `${cardIndex + 1}/${allCards.length}`;
+    }
+    if (selectionNextCardButton) {
+      selectionNextCardButton.hidden = !showCardNav;
+      selectionNextCardButton.disabled = aiBusy;
+    }
+
     if (selectionFocusButton) {
       selectionFocusButton.hidden = draftReady;
       selectionFocusButton.disabled = aiBusy;
       selectionFocusButton.textContent = window.isSelectionFocused ? "Reset View" : t("selectionFocus");
-      selectionFocusButton.title = window.isSelectionFocused ? "Return to previous canvas zoom" : "Zoom in to focus on selection";
+      selectionFocusButton.title = window.isSelectionFocused ? "Return to all content overview" : "Zoom in to focus on selection";
     }
     if (selectionExplainButton) {
       const explaining = aiBusy && selection?.aiRequest?.action === "explain";
@@ -9777,19 +9876,37 @@ User writes "Show air quality for Tokyo", names a place, and points to an empty 
       }
       preparedLines.push({ ...line, lineFontSize, segments });
     }
+    let currentSection = "default";
+    for (const line of preparedLines) {
+      const rawText = (line.raw || "").trim();
+      const rawLower = rawText.toLowerCase();
+      const isHeader = line.kind === "heading" || /^#{1,3}\s/.test(rawText) || /^\*\*(problem|question|goal|objective|solution|step|final answer|answer|result)/i.test(rawText);
+      if (isHeader) {
+        if (/problem|question|goal|objective/i.test(rawLower)) {
+          currentSection = "problem";
+        } else if (/solution|step|method|derivation|explanation/i.test(rawLower)) {
+          currentSection = "solution";
+        } else if (/final\s*answer|answer|result|conclusion/i.test(rawLower)) {
+          currentSection = "answer";
+        }
+      }
+      line.section = currentSection;
+      line.isHeader = isHeader;
+    }
+
     const paddingX = Math.max(28, Math.round(fontSize * 1.25)),
       paddingY = Math.max(26, Math.round(fontSize * 1.15)),
       contentWidthLimit = Math.max(fontSize * 2, widthLimit - paddingX * 2);
     const rows = [];
     for (const line of preparedLines) {
       const defaultHeight = line.lineFontSize * lineHeight;
-      let row = { items: [], width: 0, height: defaultHeight };
+      let row = { items: [], width: 0, height: defaultHeight, section: line.section, isHeader: line.isHeader };
       const finishRow = () => {
         if (row.items.length === 1 && row.items[0].type === "math" && row.items[0].isDisplay) {
           row.height = Math.max(row.height, row.items[0].height + 20);
         }
         rows.push(row);
-        row = { items: [], width: 0, height: defaultHeight };
+        row = { items: [], width: 0, height: defaultHeight, section: line.section, isHeader: line.isHeader };
       };
       const addItem = (item) => {
         if (row.items.length && row.width + item.width > contentWidthLimit) finishRow();
@@ -9864,6 +9981,43 @@ User writes "Show air quality for Tokyo", names a place, and points to an empty 
     context.fill();
     context.restore();
 
+    // Prominent Final Answer Highlight Plate (Box) if present
+    let answerStartY = null, answerEndY = null;
+    let trackY = paddingY;
+    for (const row of rows) {
+      if (row.section === "answer") {
+        if (answerStartY === null) answerStartY = trackY;
+        answerEndY = trackY + row.height;
+      }
+      trackY += row.height;
+    }
+
+    if (answerStartY !== null && answerEndY !== null) {
+      const platePadX = 14;
+      const platePadY = 8;
+      const plateX = paddingX - platePadX;
+      const plateY = answerStartY - platePadY;
+      const plateW = naturalWidth - (paddingX - platePadX) * 2;
+      const plateH = (answerEndY - answerStartY) + platePadY * 2;
+
+      context.save();
+      context.fillStyle = "rgba(240, 253, 244, 0.90)";
+      context.strokeStyle = "rgba(52, 211, 153, 0.55)";
+      context.lineWidth = 1.4;
+      context.shadowColor = "rgba(16, 185, 129, 0.16)";
+      context.shadowBlur = 12;
+      context.shadowOffsetY = 2;
+      context.beginPath();
+      if (typeof context.roundRect === "function") {
+        context.roundRect(plateX, plateY, plateW, plateH, 12);
+      } else {
+        context.rect(plateX, plateY, plateW, plateH);
+      }
+      context.fill();
+      context.stroke();
+      context.restore();
+    }
+
     context.textBaseline = "top";
     let y = paddingY;
     for (const row of rows) {
@@ -9873,6 +10027,7 @@ User writes "Show air quality for Tokyo", names a place, and points to an empty 
         const x = paddingX + offsetX + item.x;
         if (item.type === "math") {
           const formulaY = y + (row.height - item.height) / 2;
+          const isAnswerMath = row.section === "answer";
           if (isDisplayFormula) {
             // Elegant frosted pill plate with luminous accent glow behind key display equations
             const pillPadX = 20, pillPadY = 10;
@@ -9882,10 +10037,10 @@ User writes "Show air quality for Tokyo", names a place, and points to an empty 
             const pillY = Math.round(formulaY - pillPadY);
 
             context.save();
-            context.fillStyle = "rgba(248, 250, 252, 0.94)";
-            context.strokeStyle = "rgba(226, 232, 240, 0.95)";
-            context.lineWidth = 1.2;
-            context.shadowColor = "rgba(99, 102, 241, 0.16)";
+            context.fillStyle = isAnswerMath ? "rgba(255, 255, 255, 0.96)" : "rgba(248, 250, 252, 0.94)";
+            context.strokeStyle = isAnswerMath ? "rgba(52, 211, 153, 0.7)" : "rgba(226, 232, 240, 0.95)";
+            context.lineWidth = 1.3;
+            context.shadowColor = isAnswerMath ? "rgba(16, 185, 129, 0.22)" : "rgba(99, 102, 241, 0.16)";
             context.shadowBlur = 12;
             context.shadowOffsetY = 2;
             context.beginPath();
@@ -9900,21 +10055,31 @@ User writes "Show air quality for Tokyo", names a place, and points to an empty 
 
             // Formula with glowing presence
             context.save();
-            context.shadowColor = "rgba(37, 99, 235, 0.28)";
+            context.shadowColor = isAnswerMath ? "rgba(16, 185, 129, 0.35)" : "rgba(37, 99, 235, 0.28)";
             context.shadowBlur = 8;
             context.drawImage(item.image, x, formulaY, item.width, item.height);
             context.restore();
           } else {
             // Inline math with crisp subtle glow
             context.save();
-            context.shadowColor = "rgba(37, 99, 235, 0.18)";
+            context.shadowColor = isAnswerMath ? "rgba(16, 185, 129, 0.25)" : "rgba(37, 99, 235, 0.18)";
             context.shadowBlur = 4;
             context.drawImage(item.image, x, formulaY, item.width, item.height);
             context.restore();
           }
         } else {
           context.font = item.font;
-          context.fillStyle = item.bold ? "#0f172a" : "#334155";
+          if (row.section === "answer" && row.isHeader) {
+            context.fillStyle = "#047857";
+          } else if (row.section === "problem" && row.isHeader) {
+            context.fillStyle = "#1d4ed8";
+          } else if (row.section === "solution" && row.isHeader) {
+            context.fillStyle = "#4338ca";
+          } else if (/^\d+\.\s/.test(item.text)) {
+            context.fillStyle = "#4f46e5";
+          } else {
+            context.fillStyle = item.bold ? "#0f172a" : "#334155";
+          }
           context.fillText(item.text, x, y + (row.height - item.fontSize) / 2);
         }
       }
@@ -12181,7 +12346,7 @@ User writes "Show air quality for Tokyo", names a place, and points to an empty 
     penTrayEl.addEventListener("click", (e) => e.stopPropagation());
     penTrayEl.addEventListener("touchstart", (e) => e.stopPropagation(), { passive: true });
   }
-  [selectionFocusButton, selectionExplainButton, selectionTypesetButton, selectionVisualizeButton, selectionSendBackButton, selectionDeleteButton, selectionCancelButton].filter(Boolean).forEach((button) => {
+  [selectionPrevCardButton, selectionNextCardButton, selectionFocusButton, selectionExplainButton, selectionTypesetButton, selectionVisualizeButton, selectionSendBackButton, selectionDeleteButton, selectionCancelButton].filter(Boolean).forEach((button) => {
     button.addEventListener("pointerdown", (event) => event.stopPropagation());
     button.addEventListener("click", (event) => event.stopPropagation());
   });
@@ -12315,6 +12480,12 @@ User writes "Show air quality for Tokyo", names a place, and points to an empty 
     event.preventDefault();
     void importClipboardPayload(clipboardPayloadFromDataTransfer(event.clipboardData));
   });
+  if (selectionPrevCardButton) selectionPrevCardButton.onclick = () => {
+    if (typeof navigateCards === "function") navigateCards(-1);
+  };
+  if (selectionNextCardButton) selectionNextCardButton.onclick = () => {
+    if (typeof navigateCards === "function") navigateCards(1);
+  };
   if (selectionFocusButton) selectionFocusButton.onclick = () => {
     focusSelection();
   };

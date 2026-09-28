@@ -1742,11 +1742,30 @@
       toolbarStyle = runtimeElementStyle(selectionToolbar, "selection-toolbar");
     selectionToolbar.hidden = false;
     selectionToolbar.setAttribute("aria-busy", String(aiBusy));
+    const allCards = state.textBoxes || [];
+    const currentCardId = state.selectedTextBoxId || (selection?.liftedTextBoxes?.[0]?.id);
+    const cardIndex = allCards.findIndex((c) => c.id === currentCardId);
+    const isCard = cardIndex >= 0;
+    const showCardNav = isCard && allCards.length > 1 && !draftReady;
+
+    if (selectionPrevCardButton) {
+      selectionPrevCardButton.hidden = !showCardNav;
+      selectionPrevCardButton.disabled = aiBusy;
+    }
+    if (selectionCardCounter) {
+      selectionCardCounter.hidden = !showCardNav;
+      if (showCardNav) selectionCardCounter.textContent = `${cardIndex + 1}/${allCards.length}`;
+    }
+    if (selectionNextCardButton) {
+      selectionNextCardButton.hidden = !showCardNav;
+      selectionNextCardButton.disabled = aiBusy;
+    }
+
     if (selectionFocusButton) {
       selectionFocusButton.hidden = draftReady;
       selectionFocusButton.disabled = aiBusy;
       selectionFocusButton.textContent = window.isSelectionFocused ? "Reset View" : t("selectionFocus");
-      selectionFocusButton.title = window.isSelectionFocused ? "Return to previous canvas zoom" : "Zoom in to focus on selection";
+      selectionFocusButton.title = window.isSelectionFocused ? "Return to all content overview" : "Zoom in to focus on selection";
     }
     if (selectionExplainButton) {
       const explaining = aiBusy && selection?.aiRequest?.action === "explain";

@@ -1318,133 +1318,133 @@
     {
       slug: "forces-motion-v2",
       title: "Forces & Motion: Newton's 2nd Law",
-      pillText: "⚡ Explore Forces & Motion Simulation",
+      pillText: "Explore Forces & Motion",
       keywords: ["f=ma", "f = ma", "fnet", "f_net", "force", "acceleration", "newton", "net force", "mass", "motion", "speedometer", "crate"]
     },
     {
       slug: "force-friction-v2",
       title: "Friction & Normal Force",
-      pillText: "⚡ Explore Friction Simulation",
+      pillText: "Explore Friction & Normal Force",
       keywords: ["friction", "frictional", "coefficient of friction", "normal force", "rough surface", "inclined plane"]
     },
     {
       slug: "gravity-v2",
       title: "Gravity & Planetary Orbits",
-      pillText: "⚡ Explore Gravity & Orbits Simulation",
+      pillText: "Explore Gravity & Planetary Orbits",
       keywords: ["gravity", "gravitation", "gravitational", "orbit", "planetary", "celestial", "escape velocity"]
     },
     {
       slug: "simple-pendulum",
       title: "Simple Pendulum",
-      pillText: "⚡ Explore Pendulum Simulation",
+      pillText: "Explore Simple Pendulum",
       keywords: ["pendulum", "oscillation", "period of pendulum", "bob", "harmonic motion"]
     },
     {
       slug: "circuits-v2",
       title: "Electric Circuit Builder",
-      pillText: "⚡ Explore Circuit Simulation",
+      pillText: "Explore Electric Circuit Builder",
       keywords: ["circuit", "current", "voltage", "battery", "resistor", "switch", "parallel", "series"]
     },
     {
       slug: "ohms-law",
       title: "Ohm's Law: V = IR",
-      pillText: "⚡ Explore Ohm's Law Simulation",
+      pillText: "Explore Ohm's Law: V = IR",
       keywords: ["ohm", "v=ir", "v = ir", "resistance", "amperage", "resistors"]
     },
     {
       slug: "wave-v2",
       title: "Wave Properties & Frequency",
-      pillText: "⚡ Explore Wave Simulation",
+      pillText: "Explore Wave Properties",
       keywords: ["wave", "wavelength", "frequency", "amplitude", "crest", "trough", "transverse"]
     },
     {
       slug: "sound-pitch",
       title: "Sound & Pitch",
-      pillText: "⚡ Explore Sound Pitch Simulation",
+      pillText: "Explore Sound & Pitch",
       keywords: ["sound", "pitch", "acoustic", "vibration", "hertz"]
     },
     {
       slug: "photosynthesis",
       title: "Photosynthesis Mechanism",
-      pillText: "⚡ Explore Photosynthesis Simulation",
+      pillText: "Explore Photosynthesis",
       keywords: ["photosynthesis", "chloroplast", "chlorophyll", "calvin cycle", "light reaction", "glucose"]
     },
     {
       slug: "pythagoras-v2",
       title: "Pythagorean Theorem",
-      pillText: "⚡ Explore Pythagoras Simulation",
+      pillText: "Explore Pythagorean Theorem",
       keywords: ["pythagor", "hypotenuse", "right triangle", "a^2 + b^2 = c^2", "a²+b²=c²"]
     },
     {
       slug: "density-float",
       title: "Density & Buoyancy",
-      pillText: "⚡ Explore Density & Buoyancy Simulation",
+      pillText: "Explore Density & Buoyancy",
       keywords: ["density", "buoyancy", "archimedes", "float", "sink", "volume and mass"]
     },
     {
       slug: "states-of-matter-v2",
       title: "States of Matter",
-      pillText: "⚡ Explore States of Matter Simulation",
+      pillText: "Explore States of Matter",
       keywords: ["states of matter", "solid, liquid", "solid liquid gas", "phase change", "condensation"]
     },
     {
       slug: "atomic-structure",
       title: "Atomic Structure",
-      pillText: "⚡ Explore Atomic Structure Simulation",
+      pillText: "Explore Atomic Structure",
       keywords: ["atom", "atomic structure", "electron", "proton", "neutron", "nucleus", "orbital"]
     },
     {
       slug: "dna-pairing",
       title: "DNA Base Pairing",
-      pillText: "⚡ Explore DNA Pairing Simulation",
+      pillText: "Explore DNA Base Pairing",
       keywords: ["dna", "double helix", "nucleotide", "adenine", "thymine", "cytosine", "guanine"]
     },
     {
       slug: "light-reflection-refraction",
       title: "Reflection & Refraction",
-      pillText: "⚡ Explore Optics Simulation",
+      pillText: "Explore Reflection & Refraction",
       keywords: ["refraction", "reflection", "snell", "index of refraction", "prism", "lens"]
     },
     {
       slug: "prism-v2",
       title: "Prism & Light Dispersion",
-      pillText: "⚡ Explore Prism Simulation",
+      pillText: "Explore Prism & Dispersion",
       keywords: ["prism", "dispersion", "spectrum", "rainbow", "wavelength"]
     },
     {
       slug: "lever-seesaw",
       title: "Lever & Torque Balance",
-      pillText: "⚡ Explore Lever Simulation",
+      pillText: "Explore Lever & Balance",
       keywords: ["lever", "seesaw", "fulcrum", "torque", "mechanical advantage"]
     },
     {
       slug: "moon-phases-v2",
       title: "Moon Phases & Orbit",
-      pillText: "⚡ Explore Moon Phases Simulation",
+      pillText: "Explore Moon Phases",
       keywords: ["moon phase", "lunar cycle", "crescent", "waxing", "waning"]
     },
     {
       slug: "greenhouse-effect",
       title: "Greenhouse Effect",
-      pillText: "⚡ Explore Greenhouse Simulation",
+      pillText: "Explore Greenhouse Effect",
       keywords: ["greenhouse effect", "global warming", "carbon dioxide", "atmosphere"]
     },
     {
       slug: "water-cycle-v2",
       title: "Water Cycle Dynamics",
-      pillText: "⚡ Explore Water Cycle Simulation",
+      pillText: "Explore Water Cycle Dynamics",
       keywords: ["water cycle", "evaporation", "precipitation", "condensation"]
     },
     {
       slug: "food-chain",
       title: "Food Chain & Ecosystem",
-      pillText: "⚡ Explore Food Chain Simulation",
+      pillText: "Explore Food Chain & Ecosystem",
       keywords: ["food chain", "food web", "producer", "consumer", "trophic", "herbivore"]
     },
     {
       slug: "slope-derivative",
       title: "Calculus: Tangent & Derivative",
-      pillText: "⚡ Explore Derivative Simulation",
+      pillText: "Explore Derivative & Tangent",
       keywords: ["derivative", "tangent", "calculus", "rate of change", "differentiation"]
     }
   ];
@@ -1506,7 +1506,7 @@
           best = {
             slug: item.slug,
             title: item.title || item.slug,
-            pillText: `⚡ Explore ${item.title || "Interactive"} Simulation`
+            pillText: `Explore ${item.title || "Interactive"} Simulation`
           };
         }
       }
@@ -1606,12 +1606,12 @@
         pill.dataset.cardId = target.id;
         pill.dataset.slug = target.interactive.slug;
         pill.innerHTML = `
-          <span class="pill-sparkle" aria-hidden="true">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
-              <path d="M12 2l2.4 7.2L22 12l-7.6 2.8L12 22l-2.4-7.2L2 12l7.6-2.8z"/>
+          <span class="pill-play-icon" aria-hidden="true">
+            <svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor">
+              <polygon points="6 3 20 12 6 21 6 3"></polygon>
             </svg>
           </span>
-          <span class="pill-title">${target.interactive.pillText || `Explore ${target.interactive.title} Simulation`}</span>
+          <span class="pill-title">${target.interactive.pillText || `Explore ${target.interactive.title}`}</span>
           <span class="pill-arrow" aria-hidden="true">↗</span>
         `;
         pill.addEventListener("click", (e) => {
