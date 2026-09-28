@@ -626,12 +626,15 @@
   function responsiveCardMetrics() {
     const canvasScale = Math.max(0.04, state.scale || 1);
     const viewportWidth = view?.clientWidth || window.innerWidth || 1024;
-    // On-screen readable font: ~17px screen
-    const targetScreenFont = 17;
+    const isMobile = viewportWidth <= 768 || window.matchMedia("(max-width: 768px)").matches;
+    // On-screen readable font: ~17px screen on desktop, ~16px on mobile
+    const targetScreenFont = isMobile ? 16 : 17;
     const fontSize = Math.max(22, Math.min(180, Math.round(targetScreenFont / canvasScale)));
-    // On-screen readable card width: ~540px to 640px screen (or ~85% on mobile screen)
-    const targetScreenWidth = Math.min(640, Math.max(320, Math.round(viewportWidth * 0.48)));
-    const maxWidth = Math.max(380, Math.min(3600, Math.round(targetScreenWidth / canvasScale)));
+    // On-screen readable card width: ~90% on mobile screens, ~50% (capped at 640px) on desktop
+    const targetScreenWidth = isMobile
+      ? Math.max(280, Math.round(viewportWidth * 0.90))
+      : Math.min(640, Math.max(340, Math.round(viewportWidth * 0.50)));
+    const maxWidth = Math.max(360, Math.min(3600, Math.round(targetScreenWidth / canvasScale)));
     return { fontSize, maxWidth };
   }
   function responsiveCardMaxWidth() {
@@ -640,7 +643,7 @@
   function relocateIsolatedTypesetCommands(commands, selection, action = "") {
     if (!selection?.box || !Array.isArray(commands) || !commands.length) return commands;
     const source = selection.box,
-      gap = Math.max(28, 18 / Math.max(0.03, state.scale)),
+      gap = Math.max(48, Math.round(24 / Math.max(0.03, state.scale))),
       below = action === "explain" || portraitCanvasView() || window.matchMedia("(max-width: 900px)").matches;
     let y = source.y + source.h + gap,
       x = source.x + source.w + gap;
@@ -655,20 +658,23 @@
         const charsPerLine = Math.max(18, Math.floor((width - 60) / (fontSize * 0.52)));
         const explicitLines = text.split("\n");
         let totalLines = 0;
+        let mathBlocks = 0;
         for (const line of explicitLines) {
+          if (/\$\$|\\\[|\\frac/.test(line)) mathBlocks++;
           totalLines += Math.max(1, Math.ceil(line.length / charsPerLine));
         }
-        height = Math.max(140, Math.ceil(totalLines * fontSize * (next.lineHeight || 1.4) + fontSize * 2.8));
+        height = Math.max(160, Math.ceil(totalLines * fontSize * (next.lineHeight || 1.4) + mathBlocks * (fontSize * 2.2) + fontSize * 3.6));
       } else if (next.tool === "draw_formula") {
         width = Number(next.w) || next.fontSize || 240;
-        height = (next.fontSize || 48) * 1.8;
+        height = (next.fontSize || 48) * 2.2;
       } else if (next.tool === "draw") {
-        width = Number(next.w) || 280;
-        height = Number(next.h) || 220;
+        width = Number(next.w) || 300;
+        height = Number(next.h) || 240;
       } else {
         width = Number(next.w) || 240;
         height = Number(next.h) || 200;
       }
+      next._relocated = true;
       if (below) {
         next.x = Math.max(0, Math.min(SIZE - Math.min(width, SIZE), source.x));
         next.y = Math.max(0, Math.min(SIZE - Math.min(height, SIZE), y));
@@ -928,8 +934,8 @@
         else if (c.tool === "draw") {
           const made = DRAW.render(c, offscreen, c.color);
           image = made.image;
-          x = made.x;
-          y = made.y;
+          x = (c._relocated && Number.isFinite(c.x)) ? c.x : made.x;
+          y = (c._relocated && Number.isFinite(c.y)) ? c.y : made.y;
         }
         if (image) {
           checkAI(revision, run);
@@ -969,8 +975,8 @@
     else if (c.tool === "draw") {
       const made = DRAW.render(c, offscreen, c.color);
       image = made.image;
-      x = made.x;
-      y = made.y;
+      x = (c._relocated && Number.isFinite(c.x)) ? c.x : made.x;
+      y = (c._relocated && Number.isFinite(c.y)) ? c.y : made.y;
     }
     checkAI(revision, run);
     if (!image) throw Error(`Unable to prepare ${c.tool}`);
@@ -980,6 +986,7 @@
       command: { ...pendingCommand },
       image,
       textCommand: c.tool === "write_text" ? { ...c } : null,
+      interactive: c.tool === "write_text" && typeof matchBoardInteractive === "function" ? matchBoardInteractive(c.text) : null,
       copyText: copyTextForCommand(c),
       animationScene: c.tool === "animate_scene" ? pendingCommand : null,
       animationPlayback: c.tool === "animate_scene" ? createAnimationPlayback() : null,
@@ -990,26 +997,36 @@
     };
   }
   function resolvePendingItemOverlaps(items, meta) {
-    const gap = Math.max(40, 18 / Math.max(0.03, state.scale)),
-      flow = items
-        .filter((item) => ["write_text", "draw_formula", "draw", "plot_function"].includes(item.command.tool))
-        .sort((a, b) => a.y - b.y || a.x - b.x),
-      placed = [],
-      fixed = items
+    const minGap = Math.max(64, Math.round(28 / Math.max(0.03, state.scale)));
+    const flow = items
+      .filter((item) => ["write_text", "draw_formula", "draw", "plot_function"].includes(item.command.tool))
+      .sort((a, b) => a.y - b.y || a.x - b.x);
+    const existingCards = (state.textBoxes || []).map((card) => ({
+      x: card.x,
+      y: card.y,
+      w: card.w,
+      h: card.h,
+      isCard: true
+    }));
+    const placed = [];
+    const fixed = [
+      ...existingCards,
+      ...items
         .filter((item) => !["write_text", "draw_formula", "draw", "plot_function"].includes(item.command.tool))
-        .map((item) => item.erase ? item.bounds : { x: item.x, y: item.y, w: item.layoutWidth, h: item.layoutHeight });
+        .map((item) => item.erase ? item.bounds : { x: item.x, y: item.y, w: item.layoutWidth, h: item.layoutHeight })
+    ];
     for (const item of flow) {
       const width = item.image?.logicalWidth || item.image?.width || item.layoutWidth || 300,
         height = item.image?.logicalHeight || item.image?.height || item.layoutHeight || 200;
       let y = item.y;
-      for (let pass = 0; pass < items.length; pass++) {
+      for (let pass = 0; pass < items.length + existingCards.length; pass++) {
         const collisions = [...fixed, ...placed].filter((prior) => {
           const horizontalOverlap = Math.min(item.x + width, prior.x + prior.w) - Math.max(item.x, prior.x),
             verticalOverlap = Math.min(y + height, prior.y + prior.h) - Math.max(y, prior.y);
-          return horizontalOverlap > 0 && verticalOverlap > 0;
+          return horizontalOverlap > -16 && verticalOverlap > -16;
         });
         if (!collisions.length) break;
-        y = Math.max(...collisions.map((prior) => prior.y + prior.h)) + gap;
+        y = Math.max(...collisions.map((prior) => prior.y + prior.h)) + minGap;
       }
       const originalY = item.y;
       item.y = Math.max(0, Math.min(SIZE - height, y));

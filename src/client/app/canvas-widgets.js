@@ -1312,3 +1312,326 @@
         if (c) fn(c, tx, ty);
       }
   }
+
+  // ── BOARD INTERACTIVE SIMULATION PILLS ──────────────────────────────
+  const STEM_INTERACTIVE_MAP = [
+    {
+      slug: "forces-motion-v2",
+      title: "Forces & Motion: Newton's 2nd Law",
+      pillText: "⚡ Explore Forces & Motion Simulation",
+      keywords: ["f=ma", "f = ma", "fnet", "f_net", "force", "acceleration", "newton", "net force", "mass", "motion", "speedometer", "crate"]
+    },
+    {
+      slug: "force-friction-v2",
+      title: "Friction & Normal Force",
+      pillText: "⚡ Explore Friction Simulation",
+      keywords: ["friction", "frictional", "coefficient of friction", "normal force", "rough surface", "inclined plane"]
+    },
+    {
+      slug: "gravity-v2",
+      title: "Gravity & Planetary Orbits",
+      pillText: "⚡ Explore Gravity & Orbits Simulation",
+      keywords: ["gravity", "gravitation", "gravitational", "orbit", "planetary", "celestial", "escape velocity"]
+    },
+    {
+      slug: "simple-pendulum",
+      title: "Simple Pendulum",
+      pillText: "⚡ Explore Pendulum Simulation",
+      keywords: ["pendulum", "oscillation", "period of pendulum", "bob", "harmonic motion"]
+    },
+    {
+      slug: "circuits-v2",
+      title: "Electric Circuit Builder",
+      pillText: "⚡ Explore Circuit Simulation",
+      keywords: ["circuit", "current", "voltage", "battery", "resistor", "switch", "parallel", "series"]
+    },
+    {
+      slug: "ohms-law",
+      title: "Ohm's Law: V = IR",
+      pillText: "⚡ Explore Ohm's Law Simulation",
+      keywords: ["ohm", "v=ir", "v = ir", "resistance", "amperage", "resistors"]
+    },
+    {
+      slug: "wave-v2",
+      title: "Wave Properties & Frequency",
+      pillText: "⚡ Explore Wave Simulation",
+      keywords: ["wave", "wavelength", "frequency", "amplitude", "crest", "trough", "transverse"]
+    },
+    {
+      slug: "sound-pitch",
+      title: "Sound & Pitch",
+      pillText: "⚡ Explore Sound Pitch Simulation",
+      keywords: ["sound", "pitch", "acoustic", "vibration", "hertz"]
+    },
+    {
+      slug: "photosynthesis",
+      title: "Photosynthesis Mechanism",
+      pillText: "⚡ Explore Photosynthesis Simulation",
+      keywords: ["photosynthesis", "chloroplast", "chlorophyll", "calvin cycle", "light reaction", "glucose"]
+    },
+    {
+      slug: "pythagoras-v2",
+      title: "Pythagorean Theorem",
+      pillText: "⚡ Explore Pythagoras Simulation",
+      keywords: ["pythagor", "hypotenuse", "right triangle", "a^2 + b^2 = c^2", "a²+b²=c²"]
+    },
+    {
+      slug: "density-float",
+      title: "Density & Buoyancy",
+      pillText: "⚡ Explore Density & Buoyancy Simulation",
+      keywords: ["density", "buoyancy", "archimedes", "float", "sink", "volume and mass"]
+    },
+    {
+      slug: "states-of-matter-v2",
+      title: "States of Matter",
+      pillText: "⚡ Explore States of Matter Simulation",
+      keywords: ["states of matter", "solid, liquid", "solid liquid gas", "phase change", "condensation"]
+    },
+    {
+      slug: "atomic-structure",
+      title: "Atomic Structure",
+      pillText: "⚡ Explore Atomic Structure Simulation",
+      keywords: ["atom", "atomic structure", "electron", "proton", "neutron", "nucleus", "orbital"]
+    },
+    {
+      slug: "dna-pairing",
+      title: "DNA Base Pairing",
+      pillText: "⚡ Explore DNA Pairing Simulation",
+      keywords: ["dna", "double helix", "nucleotide", "adenine", "thymine", "cytosine", "guanine"]
+    },
+    {
+      slug: "light-reflection-refraction",
+      title: "Reflection & Refraction",
+      pillText: "⚡ Explore Optics Simulation",
+      keywords: ["refraction", "reflection", "snell", "index of refraction", "prism", "lens"]
+    },
+    {
+      slug: "prism-v2",
+      title: "Prism & Light Dispersion",
+      pillText: "⚡ Explore Prism Simulation",
+      keywords: ["prism", "dispersion", "spectrum", "rainbow", "wavelength"]
+    },
+    {
+      slug: "lever-seesaw",
+      title: "Lever & Torque Balance",
+      pillText: "⚡ Explore Lever Simulation",
+      keywords: ["lever", "seesaw", "fulcrum", "torque", "mechanical advantage"]
+    },
+    {
+      slug: "moon-phases-v2",
+      title: "Moon Phases & Orbit",
+      pillText: "⚡ Explore Moon Phases Simulation",
+      keywords: ["moon phase", "lunar cycle", "crescent", "waxing", "waning"]
+    },
+    {
+      slug: "greenhouse-effect",
+      title: "Greenhouse Effect",
+      pillText: "⚡ Explore Greenhouse Simulation",
+      keywords: ["greenhouse effect", "global warming", "carbon dioxide", "atmosphere"]
+    },
+    {
+      slug: "water-cycle-v2",
+      title: "Water Cycle Dynamics",
+      pillText: "⚡ Explore Water Cycle Simulation",
+      keywords: ["water cycle", "evaporation", "precipitation", "condensation"]
+    },
+    {
+      slug: "food-chain",
+      title: "Food Chain & Ecosystem",
+      pillText: "⚡ Explore Food Chain Simulation",
+      keywords: ["food chain", "food web", "producer", "consumer", "trophic", "herbivore"]
+    },
+    {
+      slug: "slope-derivative",
+      title: "Calculus: Tangent & Derivative",
+      pillText: "⚡ Explore Derivative Simulation",
+      keywords: ["derivative", "tangent", "calculus", "rate of change", "differentiation"]
+    }
+  ];
+
+  let cachedDynamicInteractives = null;
+  function preloadPrimerInteractives() {
+    if (cachedDynamicInteractives) return;
+    try {
+      fetch("/api/primer/interactives")
+        .then(res => res.ok ? res.json() : null)
+        .then(data => {
+          if (Array.isArray(data?.items)) {
+            cachedDynamicInteractives = data.items;
+            window.LUMI6_SIMULATIONS = data.items;
+            syncBoardInteractivePills();
+          }
+        })
+        .catch(() => {});
+    } catch {}
+  }
+  setTimeout(preloadPrimerInteractives, 1200);
+
+  function matchBoardInteractive(text) {
+    if (!text || typeof text !== "string") return null;
+    const lower = text.toLowerCase();
+    let best = null;
+    let bestScore = 0;
+    for (const item of STEM_INTERACTIVE_MAP) {
+      let score = 0;
+      for (const kw of item.keywords) {
+        if (lower.includes(kw)) {
+          score += kw.length > 5 ? 3 : 2;
+        }
+      }
+      if (score >= 2 && score > bestScore) {
+        bestScore = score;
+        best = item;
+      }
+    }
+    if (best) {
+      return {
+        slug: best.slug,
+        title: best.title,
+        pillText: best.pillText
+      };
+    }
+    if (Array.isArray(cachedDynamicInteractives)) {
+      for (const item of cachedDynamicInteractives) {
+        const titleLower = String(item.title || "").toLowerCase();
+        const conceptLower = String(item.concept || item.summary || "").toLowerCase();
+        const slugLower = String(item.slug || "").replace(/-/g, " ");
+        let score = 0;
+        const words = slugLower.split(" ").filter(w => w.length >= 4);
+        for (const w of words) {
+          if (lower.includes(w)) score += 2;
+        }
+        if (score >= 4 && score > bestScore) {
+          bestScore = score;
+          best = {
+            slug: item.slug,
+            title: item.title || item.slug,
+            pillText: `⚡ Explore ${item.title || "Interactive"} Simulation`
+          };
+        }
+      }
+    }
+    return best;
+  }
+
+  let boardInteractivesLayer = null;
+
+  function ensureBoardInteractivesLayer() {
+    if (boardInteractivesLayer && boardInteractivesLayer.isConnected) return boardInteractivesLayer;
+    boardInteractivesLayer = document.getElementById("boardInteractivesLayer");
+    if (!boardInteractivesLayer) {
+      const parent = document.getElementById("canvasViewport") || document.getElementById("boardView");
+      if (parent) {
+        boardInteractivesLayer = document.createElement("div");
+        boardInteractivesLayer.id = "boardInteractivesLayer";
+        boardInteractivesLayer.className = "board-interactives-layer";
+        parent.appendChild(boardInteractivesLayer);
+      }
+    }
+    return boardInteractivesLayer;
+  }
+
+  function syncBoardInteractivePills() {
+    const layer = ensureBoardInteractivesLayer();
+    if (!layer) return;
+
+    const interactiveTargets = [];
+    for (const card of (state.textBoxes || [])) {
+      if (!card.interactive && card.text) {
+        card.interactive = matchBoardInteractive(card.text);
+      }
+      if (card.interactive) {
+        interactiveTargets.push({
+          id: card.id,
+          x: card.x,
+          y: card.y,
+          w: card.w,
+          h: card.h,
+          interactive: card.interactive
+        });
+      }
+    }
+    if (state.pending?.items) {
+      for (let i = 0; i < state.pending.items.length; i++) {
+        const item = state.pending.items[i];
+        const text = item.textCommand?.text || item.command?.text;
+        if (text) {
+          if (!item.interactive) item.interactive = matchBoardInteractive(text);
+          if (item.interactive) {
+            const b = typeof pendingItemBounds === "function" ? pendingItemBounds(item) : { x: item.x, y: item.y, w: 300, h: 200 };
+            interactiveTargets.push({
+              id: `pending-${i}`,
+              x: b.x,
+              y: b.y,
+              w: b.w,
+              h: b.h,
+              interactive: item.interactive
+            });
+          }
+        }
+      }
+    }
+
+    if (!interactiveTargets.length) {
+      layer.replaceChildren();
+      return;
+    }
+
+    const viewportW = view?.clientWidth || window.innerWidth;
+    const viewportH = view?.clientHeight || window.innerHeight;
+
+    const existingPills = new Map();
+    layer.querySelectorAll(".board-interactive-pill").forEach(el => {
+      existingPills.set(el.dataset.cardId, el);
+    });
+
+    const activeIds = new Set();
+    for (const target of interactiveTargets) {
+      activeIds.add(target.id);
+      const screenX = state.panX + target.x * state.scale;
+      const screenY = state.panY + (target.y + target.h) * state.scale + 12;
+      const cardScreenW = target.w * state.scale;
+
+      if (screenX + cardScreenW < 0 || screenX > viewportW || screenY < -50 || screenY > viewportH + 200) {
+        const oldEl = existingPills.get(target.id);
+        if (oldEl) oldEl.style.display = "none";
+        continue;
+      }
+
+      let pill = existingPills.get(target.id);
+      if (!pill) {
+        pill = document.createElement("button");
+        pill.type = "button";
+        pill.className = "board-interactive-pill";
+        pill.dataset.cardId = target.id;
+        pill.dataset.slug = target.interactive.slug;
+        pill.innerHTML = `
+          <span class="pill-sparkle" aria-hidden="true">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
+              <path d="M12 2l2.4 7.2L22 12l-7.6 2.8L12 22l-2.4-7.2L2 12l7.6-2.8z"/>
+            </svg>
+          </span>
+          <span class="pill-title">${target.interactive.pillText || `Explore ${target.interactive.title} Simulation`}</span>
+          <span class="pill-arrow" aria-hidden="true">↗</span>
+        `;
+        pill.addEventListener("click", (e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          if (typeof window.openPlaygroundForSlug === "function") {
+            window.openPlaygroundForSlug(target.interactive.slug, target.interactive.title);
+          }
+        });
+        layer.appendChild(pill);
+      }
+      pill.style.display = "inline-flex";
+      pill.style.left = `${Math.round(screenX + 16)}px`;
+      pill.style.top = `${Math.round(screenY)}px`;
+    }
+
+    for (const [id, el] of existingPills) {
+      if (!activeIds.has(id)) el.remove();
+    }
+  }
+
+  window.syncBoardInteractivePills = syncBoardInteractivePills;
+  window.matchBoardInteractive = matchBoardInteractive;

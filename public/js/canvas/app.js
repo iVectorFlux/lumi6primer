@@ -4486,6 +4486,329 @@ User writes "Show air quality for Tokyo", names a place, and points to an empty 
         if (c) fn(c, tx, ty);
       }
   }
+
+  // ── BOARD INTERACTIVE SIMULATION PILLS ──────────────────────────────
+  const STEM_INTERACTIVE_MAP = [
+    {
+      slug: "forces-motion-v2",
+      title: "Forces & Motion: Newton's 2nd Law",
+      pillText: "⚡ Explore Forces & Motion Simulation",
+      keywords: ["f=ma", "f = ma", "fnet", "f_net", "force", "acceleration", "newton", "net force", "mass", "motion", "speedometer", "crate"]
+    },
+    {
+      slug: "force-friction-v2",
+      title: "Friction & Normal Force",
+      pillText: "⚡ Explore Friction Simulation",
+      keywords: ["friction", "frictional", "coefficient of friction", "normal force", "rough surface", "inclined plane"]
+    },
+    {
+      slug: "gravity-v2",
+      title: "Gravity & Planetary Orbits",
+      pillText: "⚡ Explore Gravity & Orbits Simulation",
+      keywords: ["gravity", "gravitation", "gravitational", "orbit", "planetary", "celestial", "escape velocity"]
+    },
+    {
+      slug: "simple-pendulum",
+      title: "Simple Pendulum",
+      pillText: "⚡ Explore Pendulum Simulation",
+      keywords: ["pendulum", "oscillation", "period of pendulum", "bob", "harmonic motion"]
+    },
+    {
+      slug: "circuits-v2",
+      title: "Electric Circuit Builder",
+      pillText: "⚡ Explore Circuit Simulation",
+      keywords: ["circuit", "current", "voltage", "battery", "resistor", "switch", "parallel", "series"]
+    },
+    {
+      slug: "ohms-law",
+      title: "Ohm's Law: V = IR",
+      pillText: "⚡ Explore Ohm's Law Simulation",
+      keywords: ["ohm", "v=ir", "v = ir", "resistance", "amperage", "resistors"]
+    },
+    {
+      slug: "wave-v2",
+      title: "Wave Properties & Frequency",
+      pillText: "⚡ Explore Wave Simulation",
+      keywords: ["wave", "wavelength", "frequency", "amplitude", "crest", "trough", "transverse"]
+    },
+    {
+      slug: "sound-pitch",
+      title: "Sound & Pitch",
+      pillText: "⚡ Explore Sound Pitch Simulation",
+      keywords: ["sound", "pitch", "acoustic", "vibration", "hertz"]
+    },
+    {
+      slug: "photosynthesis",
+      title: "Photosynthesis Mechanism",
+      pillText: "⚡ Explore Photosynthesis Simulation",
+      keywords: ["photosynthesis", "chloroplast", "chlorophyll", "calvin cycle", "light reaction", "glucose"]
+    },
+    {
+      slug: "pythagoras-v2",
+      title: "Pythagorean Theorem",
+      pillText: "⚡ Explore Pythagoras Simulation",
+      keywords: ["pythagor", "hypotenuse", "right triangle", "a^2 + b^2 = c^2", "a²+b²=c²"]
+    },
+    {
+      slug: "density-float",
+      title: "Density & Buoyancy",
+      pillText: "⚡ Explore Density & Buoyancy Simulation",
+      keywords: ["density", "buoyancy", "archimedes", "float", "sink", "volume and mass"]
+    },
+    {
+      slug: "states-of-matter-v2",
+      title: "States of Matter",
+      pillText: "⚡ Explore States of Matter Simulation",
+      keywords: ["states of matter", "solid, liquid", "solid liquid gas", "phase change", "condensation"]
+    },
+    {
+      slug: "atomic-structure",
+      title: "Atomic Structure",
+      pillText: "⚡ Explore Atomic Structure Simulation",
+      keywords: ["atom", "atomic structure", "electron", "proton", "neutron", "nucleus", "orbital"]
+    },
+    {
+      slug: "dna-pairing",
+      title: "DNA Base Pairing",
+      pillText: "⚡ Explore DNA Pairing Simulation",
+      keywords: ["dna", "double helix", "nucleotide", "adenine", "thymine", "cytosine", "guanine"]
+    },
+    {
+      slug: "light-reflection-refraction",
+      title: "Reflection & Refraction",
+      pillText: "⚡ Explore Optics Simulation",
+      keywords: ["refraction", "reflection", "snell", "index of refraction", "prism", "lens"]
+    },
+    {
+      slug: "prism-v2",
+      title: "Prism & Light Dispersion",
+      pillText: "⚡ Explore Prism Simulation",
+      keywords: ["prism", "dispersion", "spectrum", "rainbow", "wavelength"]
+    },
+    {
+      slug: "lever-seesaw",
+      title: "Lever & Torque Balance",
+      pillText: "⚡ Explore Lever Simulation",
+      keywords: ["lever", "seesaw", "fulcrum", "torque", "mechanical advantage"]
+    },
+    {
+      slug: "moon-phases-v2",
+      title: "Moon Phases & Orbit",
+      pillText: "⚡ Explore Moon Phases Simulation",
+      keywords: ["moon phase", "lunar cycle", "crescent", "waxing", "waning"]
+    },
+    {
+      slug: "greenhouse-effect",
+      title: "Greenhouse Effect",
+      pillText: "⚡ Explore Greenhouse Simulation",
+      keywords: ["greenhouse effect", "global warming", "carbon dioxide", "atmosphere"]
+    },
+    {
+      slug: "water-cycle-v2",
+      title: "Water Cycle Dynamics",
+      pillText: "⚡ Explore Water Cycle Simulation",
+      keywords: ["water cycle", "evaporation", "precipitation", "condensation"]
+    },
+    {
+      slug: "food-chain",
+      title: "Food Chain & Ecosystem",
+      pillText: "⚡ Explore Food Chain Simulation",
+      keywords: ["food chain", "food web", "producer", "consumer", "trophic", "herbivore"]
+    },
+    {
+      slug: "slope-derivative",
+      title: "Calculus: Tangent & Derivative",
+      pillText: "⚡ Explore Derivative Simulation",
+      keywords: ["derivative", "tangent", "calculus", "rate of change", "differentiation"]
+    }
+  ];
+
+  let cachedDynamicInteractives = null;
+  function preloadPrimerInteractives() {
+    if (cachedDynamicInteractives) return;
+    try {
+      fetch("/api/primer/interactives")
+        .then(res => res.ok ? res.json() : null)
+        .then(data => {
+          if (Array.isArray(data?.items)) {
+            cachedDynamicInteractives = data.items;
+            window.LUMI6_SIMULATIONS = data.items;
+            syncBoardInteractivePills();
+          }
+        })
+        .catch(() => {});
+    } catch {}
+  }
+  setTimeout(preloadPrimerInteractives, 1200);
+
+  function matchBoardInteractive(text) {
+    if (!text || typeof text !== "string") return null;
+    const lower = text.toLowerCase();
+    let best = null;
+    let bestScore = 0;
+    for (const item of STEM_INTERACTIVE_MAP) {
+      let score = 0;
+      for (const kw of item.keywords) {
+        if (lower.includes(kw)) {
+          score += kw.length > 5 ? 3 : 2;
+        }
+      }
+      if (score >= 2 && score > bestScore) {
+        bestScore = score;
+        best = item;
+      }
+    }
+    if (best) {
+      return {
+        slug: best.slug,
+        title: best.title,
+        pillText: best.pillText
+      };
+    }
+    if (Array.isArray(cachedDynamicInteractives)) {
+      for (const item of cachedDynamicInteractives) {
+        const titleLower = String(item.title || "").toLowerCase();
+        const conceptLower = String(item.concept || item.summary || "").toLowerCase();
+        const slugLower = String(item.slug || "").replace(/-/g, " ");
+        let score = 0;
+        const words = slugLower.split(" ").filter(w => w.length >= 4);
+        for (const w of words) {
+          if (lower.includes(w)) score += 2;
+        }
+        if (score >= 4 && score > bestScore) {
+          bestScore = score;
+          best = {
+            slug: item.slug,
+            title: item.title || item.slug,
+            pillText: `⚡ Explore ${item.title || "Interactive"} Simulation`
+          };
+        }
+      }
+    }
+    return best;
+  }
+
+  let boardInteractivesLayer = null;
+
+  function ensureBoardInteractivesLayer() {
+    if (boardInteractivesLayer && boardInteractivesLayer.isConnected) return boardInteractivesLayer;
+    boardInteractivesLayer = document.getElementById("boardInteractivesLayer");
+    if (!boardInteractivesLayer) {
+      const parent = document.getElementById("canvasViewport") || document.getElementById("boardView");
+      if (parent) {
+        boardInteractivesLayer = document.createElement("div");
+        boardInteractivesLayer.id = "boardInteractivesLayer";
+        boardInteractivesLayer.className = "board-interactives-layer";
+        parent.appendChild(boardInteractivesLayer);
+      }
+    }
+    return boardInteractivesLayer;
+  }
+
+  function syncBoardInteractivePills() {
+    const layer = ensureBoardInteractivesLayer();
+    if (!layer) return;
+
+    const interactiveTargets = [];
+    for (const card of (state.textBoxes || [])) {
+      if (!card.interactive && card.text) {
+        card.interactive = matchBoardInteractive(card.text);
+      }
+      if (card.interactive) {
+        interactiveTargets.push({
+          id: card.id,
+          x: card.x,
+          y: card.y,
+          w: card.w,
+          h: card.h,
+          interactive: card.interactive
+        });
+      }
+    }
+    if (state.pending?.items) {
+      for (let i = 0; i < state.pending.items.length; i++) {
+        const item = state.pending.items[i];
+        const text = item.textCommand?.text || item.command?.text;
+        if (text) {
+          if (!item.interactive) item.interactive = matchBoardInteractive(text);
+          if (item.interactive) {
+            const b = typeof pendingItemBounds === "function" ? pendingItemBounds(item) : { x: item.x, y: item.y, w: 300, h: 200 };
+            interactiveTargets.push({
+              id: `pending-${i}`,
+              x: b.x,
+              y: b.y,
+              w: b.w,
+              h: b.h,
+              interactive: item.interactive
+            });
+          }
+        }
+      }
+    }
+
+    if (!interactiveTargets.length) {
+      layer.replaceChildren();
+      return;
+    }
+
+    const viewportW = view?.clientWidth || window.innerWidth;
+    const viewportH = view?.clientHeight || window.innerHeight;
+
+    const existingPills = new Map();
+    layer.querySelectorAll(".board-interactive-pill").forEach(el => {
+      existingPills.set(el.dataset.cardId, el);
+    });
+
+    const activeIds = new Set();
+    for (const target of interactiveTargets) {
+      activeIds.add(target.id);
+      const screenX = state.panX + target.x * state.scale;
+      const screenY = state.panY + (target.y + target.h) * state.scale + 12;
+      const cardScreenW = target.w * state.scale;
+
+      if (screenX + cardScreenW < 0 || screenX > viewportW || screenY < -50 || screenY > viewportH + 200) {
+        const oldEl = existingPills.get(target.id);
+        if (oldEl) oldEl.style.display = "none";
+        continue;
+      }
+
+      let pill = existingPills.get(target.id);
+      if (!pill) {
+        pill = document.createElement("button");
+        pill.type = "button";
+        pill.className = "board-interactive-pill";
+        pill.dataset.cardId = target.id;
+        pill.dataset.slug = target.interactive.slug;
+        pill.innerHTML = `
+          <span class="pill-sparkle" aria-hidden="true">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
+              <path d="M12 2l2.4 7.2L22 12l-7.6 2.8L12 22l-2.4-7.2L2 12l7.6-2.8z"/>
+            </svg>
+          </span>
+          <span class="pill-title">${target.interactive.pillText || `Explore ${target.interactive.title} Simulation`}</span>
+          <span class="pill-arrow" aria-hidden="true">↗</span>
+        `;
+        pill.addEventListener("click", (e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          if (typeof window.openPlaygroundForSlug === "function") {
+            window.openPlaygroundForSlug(target.interactive.slug, target.interactive.title);
+          }
+        });
+        layer.appendChild(pill);
+      }
+      pill.style.display = "inline-flex";
+      pill.style.left = `${Math.round(screenX + 16)}px`;
+      pill.style.top = `${Math.round(screenY)}px`;
+    }
+
+    for (const [id, el] of existingPills) {
+      if (!activeIds.has(id)) el.remove();
+    }
+  }
+
+  window.syncBoardInteractivePills = syncBoardInteractivePills;
+  window.matchBoardInteractive = matchBoardInteractive;
   function fit() {
     const r = view.getBoundingClientRect(),
       d = devicePixelRatio || 1;
@@ -4578,6 +4901,7 @@ User writes "Show air quality for Tokyo", names a place, and points to an empty 
     positionWidgets();
     positionTextEditors();
     updateSelectionToolbar();
+    if (typeof syncBoardInteractivePills === "function") syncBoardInteractivePills();
   }
   function drawSelectedAnimation(context) {
     const selected = pluginEnabled("animation") && animationEditChromeVisible() ? selectedAnimation() : null;
@@ -8886,12 +9210,15 @@ User writes "Show air quality for Tokyo", names a place, and points to an empty 
   function responsiveCardMetrics() {
     const canvasScale = Math.max(0.04, state.scale || 1);
     const viewportWidth = view?.clientWidth || window.innerWidth || 1024;
-    // On-screen readable font: ~17px screen
-    const targetScreenFont = 17;
+    const isMobile = viewportWidth <= 768 || window.matchMedia("(max-width: 768px)").matches;
+    // On-screen readable font: ~17px screen on desktop, ~16px on mobile
+    const targetScreenFont = isMobile ? 16 : 17;
     const fontSize = Math.max(22, Math.min(180, Math.round(targetScreenFont / canvasScale)));
-    // On-screen readable card width: ~540px to 640px screen (or ~85% on mobile screen)
-    const targetScreenWidth = Math.min(640, Math.max(320, Math.round(viewportWidth * 0.48)));
-    const maxWidth = Math.max(380, Math.min(3600, Math.round(targetScreenWidth / canvasScale)));
+    // On-screen readable card width: ~90% on mobile screens, ~50% (capped at 640px) on desktop
+    const targetScreenWidth = isMobile
+      ? Math.max(280, Math.round(viewportWidth * 0.90))
+      : Math.min(640, Math.max(340, Math.round(viewportWidth * 0.50)));
+    const maxWidth = Math.max(360, Math.min(3600, Math.round(targetScreenWidth / canvasScale)));
     return { fontSize, maxWidth };
   }
   function responsiveCardMaxWidth() {
@@ -8900,7 +9227,7 @@ User writes "Show air quality for Tokyo", names a place, and points to an empty 
   function relocateIsolatedTypesetCommands(commands, selection, action = "") {
     if (!selection?.box || !Array.isArray(commands) || !commands.length) return commands;
     const source = selection.box,
-      gap = Math.max(28, 18 / Math.max(0.03, state.scale)),
+      gap = Math.max(48, Math.round(24 / Math.max(0.03, state.scale))),
       below = action === "explain" || portraitCanvasView() || window.matchMedia("(max-width: 900px)").matches;
     let y = source.y + source.h + gap,
       x = source.x + source.w + gap;
@@ -8915,20 +9242,23 @@ User writes "Show air quality for Tokyo", names a place, and points to an empty 
         const charsPerLine = Math.max(18, Math.floor((width - 60) / (fontSize * 0.52)));
         const explicitLines = text.split("\n");
         let totalLines = 0;
+        let mathBlocks = 0;
         for (const line of explicitLines) {
+          if (/\$\$|\\\[|\\frac/.test(line)) mathBlocks++;
           totalLines += Math.max(1, Math.ceil(line.length / charsPerLine));
         }
-        height = Math.max(140, Math.ceil(totalLines * fontSize * (next.lineHeight || 1.4) + fontSize * 2.8));
+        height = Math.max(160, Math.ceil(totalLines * fontSize * (next.lineHeight || 1.4) + mathBlocks * (fontSize * 2.2) + fontSize * 3.6));
       } else if (next.tool === "draw_formula") {
         width = Number(next.w) || next.fontSize || 240;
-        height = (next.fontSize || 48) * 1.8;
+        height = (next.fontSize || 48) * 2.2;
       } else if (next.tool === "draw") {
-        width = Number(next.w) || 280;
-        height = Number(next.h) || 220;
+        width = Number(next.w) || 300;
+        height = Number(next.h) || 240;
       } else {
         width = Number(next.w) || 240;
         height = Number(next.h) || 200;
       }
+      next._relocated = true;
       if (below) {
         next.x = Math.max(0, Math.min(SIZE - Math.min(width, SIZE), source.x));
         next.y = Math.max(0, Math.min(SIZE - Math.min(height, SIZE), y));
@@ -9188,8 +9518,8 @@ User writes "Show air quality for Tokyo", names a place, and points to an empty 
         else if (c.tool === "draw") {
           const made = DRAW.render(c, offscreen, c.color);
           image = made.image;
-          x = made.x;
-          y = made.y;
+          x = (c._relocated && Number.isFinite(c.x)) ? c.x : made.x;
+          y = (c._relocated && Number.isFinite(c.y)) ? c.y : made.y;
         }
         if (image) {
           checkAI(revision, run);
@@ -9229,8 +9559,8 @@ User writes "Show air quality for Tokyo", names a place, and points to an empty 
     else if (c.tool === "draw") {
       const made = DRAW.render(c, offscreen, c.color);
       image = made.image;
-      x = made.x;
-      y = made.y;
+      x = (c._relocated && Number.isFinite(c.x)) ? c.x : made.x;
+      y = (c._relocated && Number.isFinite(c.y)) ? c.y : made.y;
     }
     checkAI(revision, run);
     if (!image) throw Error(`Unable to prepare ${c.tool}`);
@@ -9240,6 +9570,7 @@ User writes "Show air quality for Tokyo", names a place, and points to an empty 
       command: { ...pendingCommand },
       image,
       textCommand: c.tool === "write_text" ? { ...c } : null,
+      interactive: c.tool === "write_text" && typeof matchBoardInteractive === "function" ? matchBoardInteractive(c.text) : null,
       copyText: copyTextForCommand(c),
       animationScene: c.tool === "animate_scene" ? pendingCommand : null,
       animationPlayback: c.tool === "animate_scene" ? createAnimationPlayback() : null,
@@ -9250,26 +9581,36 @@ User writes "Show air quality for Tokyo", names a place, and points to an empty 
     };
   }
   function resolvePendingItemOverlaps(items, meta) {
-    const gap = Math.max(40, 18 / Math.max(0.03, state.scale)),
-      flow = items
-        .filter((item) => ["write_text", "draw_formula", "draw", "plot_function"].includes(item.command.tool))
-        .sort((a, b) => a.y - b.y || a.x - b.x),
-      placed = [],
-      fixed = items
+    const minGap = Math.max(64, Math.round(28 / Math.max(0.03, state.scale)));
+    const flow = items
+      .filter((item) => ["write_text", "draw_formula", "draw", "plot_function"].includes(item.command.tool))
+      .sort((a, b) => a.y - b.y || a.x - b.x);
+    const existingCards = (state.textBoxes || []).map((card) => ({
+      x: card.x,
+      y: card.y,
+      w: card.w,
+      h: card.h,
+      isCard: true
+    }));
+    const placed = [];
+    const fixed = [
+      ...existingCards,
+      ...items
         .filter((item) => !["write_text", "draw_formula", "draw", "plot_function"].includes(item.command.tool))
-        .map((item) => item.erase ? item.bounds : { x: item.x, y: item.y, w: item.layoutWidth, h: item.layoutHeight });
+        .map((item) => item.erase ? item.bounds : { x: item.x, y: item.y, w: item.layoutWidth, h: item.layoutHeight })
+    ];
     for (const item of flow) {
       const width = item.image?.logicalWidth || item.image?.width || item.layoutWidth || 300,
         height = item.image?.logicalHeight || item.image?.height || item.layoutHeight || 200;
       let y = item.y;
-      for (let pass = 0; pass < items.length; pass++) {
+      for (let pass = 0; pass < items.length + existingCards.length; pass++) {
         const collisions = [...fixed, ...placed].filter((prior) => {
           const horizontalOverlap = Math.min(item.x + width, prior.x + prior.w) - Math.max(item.x, prior.x),
             verticalOverlap = Math.min(y + height, prior.y + prior.h) - Math.max(y, prior.y);
-          return horizontalOverlap > 0 && verticalOverlap > 0;
+          return horizontalOverlap > -16 && verticalOverlap > -16;
         });
         if (!collisions.length) break;
-        y = Math.max(...collisions.map((prior) => prior.y + prior.h)) + gap;
+        y = Math.max(...collisions.map((prior) => prior.y + prior.h)) + minGap;
       }
       const originalY = item.y;
       item.y = Math.max(0, Math.min(SIZE - height, y));
@@ -9403,12 +9744,14 @@ User writes "Show air quality for Tokyo", names a place, and points to an empty 
     let formulaCount = 0;
     for (const line of parsed.lines) {
       const lineFontSize = Math.max(1, fontSize * (line.fontScale || 1));
+      const isSoleMathLine = line.segments.length === 1 && line.segments[0].type === "math";
       for (const segment of line.segments) {
         if (segment.type === "math" && formulaCount < 64 && segment.tex.length <= MIXED_FORMULA_MAX_LENGTH) {
           formulaCount++;
-          const cacheKey = `${lineFontSize}\n${color}\n${segment.tex}`;
+          const isDisplay = Boolean(segment.display || isSoleMathLine);
+          const cacheKey = `${lineFontSize}\n${color}\n${isDisplay ? "1" : "0"}\n${segment.tex}`;
           if (!formulaCache.has(cacheKey)) {
-            formulaCache.set(cacheKey, mathJaxImage(segment.tex, lineFontSize, color, pixelRatio));
+            formulaCache.set(cacheKey, mathJaxImage(segment.tex, lineFontSize, color, pixelRatio, isDisplay));
           }
         }
       }
@@ -9418,6 +9761,7 @@ User writes "Show air quality for Tokyo", names a place, and points to an empty 
     formulaCount = 0;
     for (const line of parsed.lines) {
       const lineFontSize = Math.max(1, fontSize * (line.fontScale || 1)),
+        isSoleMathLine = line.segments.length === 1 && line.segments[0].type === "math",
         segments = [];
       for (const segment of line.segments) {
         if (segment.type !== "math" || formulaCount >= 64 || segment.tex.length > MIXED_FORMULA_MAX_LENGTH) {
@@ -9425,9 +9769,10 @@ User writes "Show air quality for Tokyo", names a place, and points to an empty 
           continue;
         }
         formulaCount++;
-        const cacheKey = `${lineFontSize}\n${color}\n${segment.tex}`;
+        const isDisplay = Boolean(segment.display || isSoleMathLine);
+        const cacheKey = `${lineFontSize}\n${color}\n${isDisplay ? "1" : "0"}\n${segment.tex}`;
         const formula = await formulaCache.get(cacheKey);
-        if (formula && formula.image) segments.push({ type: "math", image: formula.image, raw: segment.raw });
+        if (formula && formula.image) segments.push({ type: "math", image: formula.image, raw: segment.raw, isDisplay });
         else segments.push({ ...segment, type: "text", text: segment.raw });
       }
       preparedLines.push({ ...line, lineFontSize, segments });
@@ -9440,6 +9785,9 @@ User writes "Show air quality for Tokyo", names a place, and points to an empty 
       const defaultHeight = line.lineFontSize * lineHeight;
       let row = { items: [], width: 0, height: defaultHeight };
       const finishRow = () => {
+        if (row.items.length === 1 && row.items[0].type === "math" && row.items[0].isDisplay) {
+          row.height = Math.max(row.height, row.items[0].height + 20);
+        }
         rows.push(row);
         row = { items: [], width: 0, height: defaultHeight };
       };
@@ -9455,7 +9803,7 @@ User writes "Show air quality for Tokyo", names a place, and points to an empty 
           const sourceWidth = segment.image.logicalWidth || segment.image.width,
             sourceHeight = segment.image.logicalHeight || segment.image.height,
             scale = Math.min(1, contentWidthLimit / Math.max(1, sourceWidth));
-          addItem({ type: "math", image: segment.image, width: sourceWidth * scale, height: sourceHeight * scale });
+          addItem({ type: "math", image: segment.image, width: sourceWidth * scale, height: sourceHeight * scale, isDisplay: segment.isDisplay });
           continue;
         }
         const parts = segment.text.match(/\s+|\S+/g) || [];
@@ -9523,8 +9871,48 @@ User writes "Show air quality for Tokyo", names a place, and points to an empty 
       const offsetX = isDisplayFormula ? Math.max(0, Math.round((naturalWidth - paddingX * 2 - row.items[0].width) / 2)) : 0;
       for (const item of row.items) {
         const x = paddingX + offsetX + item.x;
-        if (item.type === "math") context.drawImage(item.image, x, y + (row.height - item.height) / 2, item.width, item.height);
-        else {
+        if (item.type === "math") {
+          const formulaY = y + (row.height - item.height) / 2;
+          if (isDisplayFormula) {
+            // Elegant frosted pill plate with luminous accent glow behind key display equations
+            const pillPadX = 20, pillPadY = 10;
+            const pillW = Math.round(item.width + pillPadX * 2);
+            const pillH = Math.round(item.height + pillPadY * 2);
+            const pillX = Math.round(x - pillPadX);
+            const pillY = Math.round(formulaY - pillPadY);
+
+            context.save();
+            context.fillStyle = "rgba(248, 250, 252, 0.94)";
+            context.strokeStyle = "rgba(226, 232, 240, 0.95)";
+            context.lineWidth = 1.2;
+            context.shadowColor = "rgba(99, 102, 241, 0.16)";
+            context.shadowBlur = 12;
+            context.shadowOffsetY = 2;
+            context.beginPath();
+            if (typeof context.roundRect === "function") {
+              context.roundRect(pillX, pillY, pillW, pillH, 10);
+            } else {
+              context.rect(pillX, pillY, pillW, pillH);
+            }
+            context.fill();
+            context.stroke();
+            context.restore();
+
+            // Formula with glowing presence
+            context.save();
+            context.shadowColor = "rgba(37, 99, 235, 0.28)";
+            context.shadowBlur = 8;
+            context.drawImage(item.image, x, formulaY, item.width, item.height);
+            context.restore();
+          } else {
+            // Inline math with crisp subtle glow
+            context.save();
+            context.shadowColor = "rgba(37, 99, 235, 0.18)";
+            context.shadowBlur = 4;
+            context.drawImage(item.image, x, formulaY, item.width, item.height);
+            context.restore();
+          }
+        } else {
           context.font = item.font;
           context.fillStyle = item.bold ? "#0f172a" : "#334155";
           context.fillText(item.text, x, y + (row.height - item.fontSize) / 2);
@@ -9538,27 +9926,40 @@ User writes "Show air quality for Tokyo", names a place, and points to an empty 
     image.revealRowHeight = naturalHeight / Math.max(1, rows.length);
     return image;
   }
-  async function mathJaxImage(latex, fontSize, color, pixelRatio = sharpRenderRatio()) {
+  async function mathJaxImage(latex, fontSize, color, pixelRatio = sharpRenderRatio(), isDisplay = false) {
     if (!window.MathJax?.tex2svgPromise) return { image: null, error: Error("MathJax unavailable") };
     try {
-      const node = await window.MathJax.tex2svgPromise(latex, {
+      const hasLargeStructures = isDisplay || /\\(frac|sum|int|iint|prod|bigcup|bigcap|sqrt)/.test(latex);
+      const tex = hasLargeStructures && !latex.trim().startsWith("\\displaystyle") ? `\\displaystyle ${latex}` : latex;
+      const node = await window.MathJax.tex2svgPromise(tex, {
         display: false,
         containerWidth: SIZE,
       });
       if (node.querySelector('[data-mml-node="merror"], mjx-merror')) throw Error("Invalid MathJax input");
       const svg = node.querySelector("svg");
       if (!svg) throw Error("No MathJax SVG");
-      const viewBox = (svg.getAttribute("viewBox") || "").trim().split(/\s+/).map(Number),
-        ratio = viewBox.length === 4 && viewBox[2] > 0 && viewBox[3] > 0 ? viewBox[2] / viewBox[3] : Math.max(0.7, latex.length * 0.65),
-        logicalHeight = Math.max(1, Math.ceil(fontSize * 1.35)),
-        logicalWidth = Math.max(1, Math.ceil(logicalHeight * ratio)),
-        rasterScale = rasterScaleFor(logicalWidth, logicalHeight, pixelRatio),
+      const viewBox = (svg.getAttribute("viewBox") || "").trim().split(/\s+/).map(Number);
+      const baseScale = isDisplay ? 1.38 : 1.20;
+      let logicalHeight, logicalWidth;
+      if (viewBox.length === 4 && viewBox[2] > 0 && viewBox[3] > 0) {
+        const svgW = viewBox[2];
+        const svgH = viewBox[3];
+        const pxPerUnit = (fontSize * baseScale) / 1000;
+        logicalHeight = Math.max(Math.ceil(fontSize * 1.1), Math.ceil(svgH * pxPerUnit));
+        logicalWidth = Math.max(1, Math.ceil(svgW * pxPerUnit));
+      } else {
+        const ratio = Math.max(0.7, latex.length * 0.65);
+        logicalHeight = Math.max(1, Math.ceil(fontSize * (isDisplay ? 1.55 : 1.25)));
+        logicalWidth = Math.max(1, Math.ceil(logicalHeight * ratio));
+      }
+      const rasterScale = rasterScaleFor(logicalWidth, logicalHeight, pixelRatio),
         rasterWidth = Math.max(1, Math.ceil(logicalWidth * rasterScale)),
         rasterHeight = Math.max(1, Math.ceil(logicalHeight * rasterScale));
       svg.setAttribute("xmlns", "http://www.w3.org/2000/svg");
       svg.setAttribute("width", String(rasterWidth));
       svg.setAttribute("height", String(rasterHeight));
-      svg.setAttribute("color", color || "#2563eb");
+      const formulaColor = (!color || color === "#0f172a" || color === "#334155") ? "#1d4ed8" : color;
+      svg.setAttribute("color", formulaColor);
       svg.setAttribute("fill", "currentColor");
       const xml = new XMLSerializer().serializeToString(svg),
         img = new Image(),
@@ -9581,7 +9982,7 @@ User writes "Show air quality for Tokyo", names a place, and points to an empty 
     }
   }
   async function formulaImage(latex, fontSize, color, family = state.aiFont, pixelRatio = sharpRenderRatio()) {
-    const rendered = await mathJaxImage(latex, fontSize, color, pixelRatio);
+    const rendered = await mathJaxImage(latex, fontSize, color, pixelRatio, true);
     if (rendered.image) return rendered.image;
     console.warn("MathJax formula fallback", rendered.error);
     return textImage(formulaText(latex), fontSize, color, 900, 1.35, family, AI_TEXT_MAX_LENGTH, pixelRatio);
@@ -10519,10 +10920,12 @@ User writes "Show air quality for Tokyo", names a place, and points to an empty 
         text: item.textCommand.text,
         image: item.image,
         lineHeight: item.textCommand.lineHeight || 1.35,
-        isCard: true
+        isCard: true,
+        interactive: item.interactive || (typeof matchBoardInteractive === "function" ? matchBoardInteractive(item.textCommand.text) : null)
       };
       recordTextBoxesBefore();
       state.textBoxes.push(record);
+      if (typeof syncBoardInteractivePills === "function") syncBoardInteractivePills();
       if (Math.abs(scale - 1) > 0.05 && typeof mixedTextImage === "function") {
         mixedTextImage(record.text, record.fontSize, record.color, record.maxWidth, record.lineHeight, state.aiFont, sharpRenderRatio())
           .then(newImg => {
@@ -13270,6 +13673,18 @@ User writes "Show air quality for Tokyo", names a place, and points to an empty 
         }
       }
 
+      function restackFlowItems(flowItems, gap = 80) {
+        if (!Array.isArray(flowItems) || flowItems.length <= 1) return;
+        flowItems.sort((a, b) => (a.y || 0) - (b.y || 0) || (a.x || 0) - (b.x || 0));
+        let curY = flowItems[0].y;
+        for (let i = 0; i < flowItems.length; i++) {
+          const it = flowItems[i];
+          const h = it.image?.logicalHeight || it.image?.height || it.layoutHeight || 180;
+          if (i > 0) it.y = Math.max(it.y, curY);
+          curY = it.y + h + gap;
+        }
+      }
+
       restackFlowItems(items, 80);
 
       if (!items.length) {
@@ -13277,7 +13692,7 @@ User writes "Show air quality for Tokyo", names a place, and points to an empty 
           const fitScale = Math.min((rect.width * 0.82) / Math.max(lastPlaced.w, 1), (rect.height * 0.72) / Math.max(lastPlaced.h, 1), 0.5);
           state.scale = Math.max(0.16, Math.min(0.5, fitScale));
           state.panX = rect.width / 2 - (lastPlaced.x + lastPlaced.w / 2) * state.scale;
-          state.panY = rect.height / 2 - (lastPlaced.y + lastPlaced.h / 2) * state.scale;
+          state.panY = rect.height / 2 - (lastPlaced.y + lastPlaced.h / 2) * state.scale - Math.round(rect.height * 0.06);
           render();
         }
         if (typeof syncTalkModeFeed === "function") syncTalkModeFeed();
@@ -14283,6 +14698,8 @@ User writes "Show air quality for Tokyo", names a place, and points to an empty 
       home.prepend(frame);
       delete home.dataset.playgroundHome;
       nudgeInteractive(frame);
+    } else if (frame) {
+      frame.remove();
     }
     [".talk-playground-scale", "#talkPlaygroundScroll", "#talkPlaygroundStage"].forEach((sel) => {
       const el = document.querySelector(sel);
@@ -14300,6 +14717,51 @@ User writes "Show air quality for Tokyo", names a place, and points to an empty 
     document.body.classList.remove("talk-playground-open", "talk-playground-scenario", "talk-playground-mobile", "talk-playground-fullscreen", "talk-playground-desktop-view");
     talkPlaygroundSlug = "";
   }
+
+  function openPlaygroundForSlug(slug, title = "") {
+    if (!slug) return;
+    const sheet = document.getElementById("talkPlayground");
+    const stage = document.getElementById("talkPlaygroundStage");
+    const titleEl = document.getElementById("talkPlaygroundTitle");
+    if (!sheet || !stage) return;
+    talkPlaygroundSlug = slug;
+    if (titleEl) titleEl.textContent = title || "Interactive Simulation";
+    let frame = stage.querySelector("iframe.talk-lesson-interactive");
+    if (!frame) {
+      frame = document.createElement("iframe");
+      frame.className = "talk-lesson-interactive";
+      frame.setAttribute("sandbox", "allow-scripts allow-same-origin");
+      stage.appendChild(frame);
+    }
+    frame.dataset.slug = slug;
+    frame.setAttribute("title", title || slug);
+    fillPlaygroundChrome(frame);
+    frame.classList.add("is-ready");
+    sheet.hidden = false;
+    sheet.classList.remove("is-loading");
+    const phone = isPhoneViewport();
+    document.body.classList.toggle("talk-playground-mobile", phone);
+    document.body.classList.toggle("talk-playground-desktop-view", !phone);
+    document.body.classList.remove("talk-playground-fullscreen");
+    document.body.classList.add("talk-playground-open");
+    setFrameMode(frame, phone ? "drawer" : "desktop");
+    syncPlaygroundExpandLabel();
+    const afterLoad = () => {
+      frame.classList.add("is-ready");
+      applyEmbedLayout(frame, false);
+      sizePlaygroundFrame(frame);
+      nudgeInteractive(frame);
+      setTimeout(() => nudgeInteractive(frame), 100);
+      setTimeout(() => nudgeInteractive(frame), 300);
+      setTimeout(() => nudgeInteractive(frame), 700);
+    };
+    frame.addEventListener("load", afterLoad, { once: true });
+    requestAnimationFrame(() => afterLoad());
+  }
+
+  window.openTalkPlayground = openTalkPlayground;
+  window.openPlaygroundForSlug = openPlaygroundForSlug;
+  window.closeTalkPlayground = closeTalkPlayground;
 
   function simCatalogHtml(items) {
     return `

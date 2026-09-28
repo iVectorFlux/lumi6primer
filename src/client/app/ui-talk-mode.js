@@ -890,6 +890,8 @@
       home.prepend(frame);
       delete home.dataset.playgroundHome;
       nudgeInteractive(frame);
+    } else if (frame) {
+      frame.remove();
     }
     [".talk-playground-scale", "#talkPlaygroundScroll", "#talkPlaygroundStage"].forEach((sel) => {
       const el = document.querySelector(sel);
@@ -907,6 +909,51 @@
     document.body.classList.remove("talk-playground-open", "talk-playground-scenario", "talk-playground-mobile", "talk-playground-fullscreen", "talk-playground-desktop-view");
     talkPlaygroundSlug = "";
   }
+
+  function openPlaygroundForSlug(slug, title = "") {
+    if (!slug) return;
+    const sheet = document.getElementById("talkPlayground");
+    const stage = document.getElementById("talkPlaygroundStage");
+    const titleEl = document.getElementById("talkPlaygroundTitle");
+    if (!sheet || !stage) return;
+    talkPlaygroundSlug = slug;
+    if (titleEl) titleEl.textContent = title || "Interactive Simulation";
+    let frame = stage.querySelector("iframe.talk-lesson-interactive");
+    if (!frame) {
+      frame = document.createElement("iframe");
+      frame.className = "talk-lesson-interactive";
+      frame.setAttribute("sandbox", "allow-scripts allow-same-origin");
+      stage.appendChild(frame);
+    }
+    frame.dataset.slug = slug;
+    frame.setAttribute("title", title || slug);
+    fillPlaygroundChrome(frame);
+    frame.classList.add("is-ready");
+    sheet.hidden = false;
+    sheet.classList.remove("is-loading");
+    const phone = isPhoneViewport();
+    document.body.classList.toggle("talk-playground-mobile", phone);
+    document.body.classList.toggle("talk-playground-desktop-view", !phone);
+    document.body.classList.remove("talk-playground-fullscreen");
+    document.body.classList.add("talk-playground-open");
+    setFrameMode(frame, phone ? "drawer" : "desktop");
+    syncPlaygroundExpandLabel();
+    const afterLoad = () => {
+      frame.classList.add("is-ready");
+      applyEmbedLayout(frame, false);
+      sizePlaygroundFrame(frame);
+      nudgeInteractive(frame);
+      setTimeout(() => nudgeInteractive(frame), 100);
+      setTimeout(() => nudgeInteractive(frame), 300);
+      setTimeout(() => nudgeInteractive(frame), 700);
+    };
+    frame.addEventListener("load", afterLoad, { once: true });
+    requestAnimationFrame(() => afterLoad());
+  }
+
+  window.openTalkPlayground = openTalkPlayground;
+  window.openPlaygroundForSlug = openPlaygroundForSlug;
+  window.closeTalkPlayground = closeTalkPlayground;
 
   function simCatalogHtml(items) {
     return `

@@ -851,10 +851,12 @@
         text: item.textCommand.text,
         image: item.image,
         lineHeight: item.textCommand.lineHeight || 1.35,
-        isCard: true
+        isCard: true,
+        interactive: item.interactive || (typeof matchBoardInteractive === "function" ? matchBoardInteractive(item.textCommand.text) : null)
       };
       recordTextBoxesBefore();
       state.textBoxes.push(record);
+      if (typeof syncBoardInteractivePills === "function") syncBoardInteractivePills();
       if (Math.abs(scale - 1) > 0.05 && typeof mixedTextImage === "function") {
         mixedTextImage(record.text, record.fontSize, record.color, record.maxWidth, record.lineHeight, state.aiFont, sharpRenderRatio())
           .then(newImg => {

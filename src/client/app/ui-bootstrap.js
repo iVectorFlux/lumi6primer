@@ -1997,6 +1997,18 @@
         }
       }
 
+      function restackFlowItems(flowItems, gap = 80) {
+        if (!Array.isArray(flowItems) || flowItems.length <= 1) return;
+        flowItems.sort((a, b) => (a.y || 0) - (b.y || 0) || (a.x || 0) - (b.x || 0));
+        let curY = flowItems[0].y;
+        for (let i = 0; i < flowItems.length; i++) {
+          const it = flowItems[i];
+          const h = it.image?.logicalHeight || it.image?.height || it.layoutHeight || 180;
+          if (i > 0) it.y = Math.max(it.y, curY);
+          curY = it.y + h + gap;
+        }
+      }
+
       restackFlowItems(items, 80);
 
       if (!items.length) {
@@ -2004,7 +2016,7 @@
           const fitScale = Math.min((rect.width * 0.82) / Math.max(lastPlaced.w, 1), (rect.height * 0.72) / Math.max(lastPlaced.h, 1), 0.5);
           state.scale = Math.max(0.16, Math.min(0.5, fitScale));
           state.panX = rect.width / 2 - (lastPlaced.x + lastPlaced.w / 2) * state.scale;
-          state.panY = rect.height / 2 - (lastPlaced.y + lastPlaced.h / 2) * state.scale;
+          state.panY = rect.height / 2 - (lastPlaced.y + lastPlaced.h / 2) * state.scale - Math.round(rect.height * 0.06);
           render();
         }
         if (typeof syncTalkModeFeed === "function") syncTalkModeFeed();

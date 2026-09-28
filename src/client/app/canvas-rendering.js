@@ -90,6 +90,7 @@
     positionWidgets();
     positionTextEditors();
     updateSelectionToolbar();
+    if (typeof syncBoardInteractivePills === "function") syncBoardInteractivePills();
   }
   function drawSelectedAnimation(context) {
     const selected = pluginEnabled("animation") && animationEditChromeVisible() ? selectedAnimation() : null;

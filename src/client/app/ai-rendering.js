@@ -124,12 +124,14 @@
     let formulaCount = 0;
     for (const line of parsed.lines) {
       const lineFontSize = Math.max(1, fontSize * (line.fontScale || 1));
+      const isSoleMathLine = line.segments.length === 1 && line.segments[0].type === "math";
       for (const segment of line.segments) {
         if (segment.type === "math" && formulaCount < 64 && segment.tex.length <= MIXED_FORMULA_MAX_LENGTH) {
           formulaCount++;
-          const cacheKey = `${lineFontSize}\n${color}\n${segment.tex}`;
+          const isDisplay = Boolean(segment.display || isSoleMathLine);
+          const cacheKey = `${lineFontSize}\n${color}\n${isDisplay ? "1" : "0"}\n${segment.tex}`;
           if (!formulaCache.has(cacheKey)) {
-            formulaCache.set(cacheKey, mathJaxImage(segment.tex, lineFontSize, color, pixelRatio));
+            formulaCache.set(cacheKey, mathJaxImage(segment.tex, lineFontSize, color, pixelRatio, isDisplay));
           }
         }
       }
@@ -139,6 +141,7 @@
     formulaCount = 0;
     for (const line of parsed.lines) {
       const lineFontSize = Math.max(1, fontSize * (line.fontScale || 1)),
+        isSoleMathLine = line.segments.length === 1 && line.segments[0].type === "math",
         segments = [];
       for (const segment of line.segments) {
         if (segment.type !== "math" || formulaCount >= 64 || segment.tex.length > MIXED_FORMULA_MAX_LENGTH) {
@@ -146,9 +149,10 @@
           continue;
         }
         formulaCount++;
-        const cacheKey = `${lineFontSize}\n${color}\n${segment.tex}`;
+        const isDisplay = Boolean(segment.display || isSoleMathLine);
+        const cacheKey = `${lineFontSize}\n${color}\n${isDisplay ? "1" : "0"}\n${segment.tex}`;
         const formula = await formulaCache.get(cacheKey);
-        if (formula && formula.image) segments.push({ type: "math", image: formula.image, raw: segment.raw });
+        if (formula && formula.image) segments.push({ type: "math", image: formula.image, raw: segment.raw, isDisplay });
         else segments.push({ ...segment, type: "text", text: segment.raw });
       }
       preparedLines.push({ ...line, lineFontSize, segments });
@@ -161,6 +165,9 @@
       const defaultHeight = line.lineFontSize * lineHeight;
       let row = { items: [], width: 0, height: defaultHeight };
       const finishRow = () => {
+        if (row.items.length === 1 && row.items[0].type === "math" && row.items[0].isDisplay) {
+          row.height = Math.max(row.height, row.items[0].height + 20);
+        }
         rows.push(row);
         row = { items: [], width: 0, height: defaultHeight };
       };
@@ -176,7 +183,7 @@
           const sourceWidth = segment.image.logicalWidth || segment.image.width,
             sourceHeight = segment.image.logicalHeight || segment.image.height,
             scale = Math.min(1, contentWidthLimit / Math.max(1, sourceWidth));
-          addItem({ type: "math", image: segment.image, width: sourceWidth * scale, height: sourceHeight * scale });
+          addItem({ type: "math", image: segment.image, width: sourceWidth * scale, height: sourceHeight * scale, isDisplay: segment.isDisplay });
           continue;
         }
         const parts = segment.text.match(/\s+|\S+/g) || [];
@@ -244,8 +251,48 @@
       const offsetX = isDisplayFormula ? Math.max(0, Math.round((naturalWidth - paddingX * 2 - row.items[0].width) / 2)) : 0;
       for (const item of row.items) {
         const x = paddingX + offsetX + item.x;
-        if (item.type === "math") context.drawImage(item.image, x, y + (row.height - item.height) / 2, item.width, item.height);
-        else {
+        if (item.type === "math") {
+          const formulaY = y + (row.height - item.height) / 2;
+          if (isDisplayFormula) {
+            // Elegant frosted pill plate with luminous accent glow behind key display equations
+            const pillPadX = 20, pillPadY = 10;
+            const pillW = Math.round(item.width + pillPadX * 2);
+            const pillH = Math.round(item.height + pillPadY * 2);
+            const pillX = Math.round(x - pillPadX);
+            const pillY = Math.round(formulaY - pillPadY);
+
+            context.save();
+            context.fillStyle = "rgba(248, 250, 252, 0.94)";
+            context.strokeStyle = "rgba(226, 232, 240, 0.95)";
+            context.lineWidth = 1.2;
+            context.shadowColor = "rgba(99, 102, 241, 0.16)";
+            context.shadowBlur = 12;
+            context.shadowOffsetY = 2;
+            context.beginPath();
+            if (typeof context.roundRect === "function") {
+              context.roundRect(pillX, pillY, pillW, pillH, 10);
+            } else {
+              context.rect(pillX, pillY, pillW, pillH);
+            }
+            context.fill();
+            context.stroke();
+            context.restore();
+
+            // Formula with glowing presence
+            context.save();
+            context.shadowColor = "rgba(37, 99, 235, 0.28)";
+            context.shadowBlur = 8;
+            context.drawImage(item.image, x, formulaY, item.width, item.height);
+            context.restore();
+          } else {
+            // Inline math with crisp subtle glow
+            context.save();
+            context.shadowColor = "rgba(37, 99, 235, 0.18)";
+            context.shadowBlur = 4;
+            context.drawImage(item.image, x, formulaY, item.width, item.height);
+            context.restore();
+          }
+        } else {
           context.font = item.font;
           context.fillStyle = item.bold ? "#0f172a" : "#334155";
           context.fillText(item.text, x, y + (row.height - item.fontSize) / 2);
@@ -259,27 +306,40 @@
     image.revealRowHeight = naturalHeight / Math.max(1, rows.length);
     return image;
   }
-  async function mathJaxImage(latex, fontSize, color, pixelRatio = sharpRenderRatio()) {
+  async function mathJaxImage(latex, fontSize, color, pixelRatio = sharpRenderRatio(), isDisplay = false) {
     if (!window.MathJax?.tex2svgPromise) return { image: null, error: Error("MathJax unavailable") };
     try {
-      const node = await window.MathJax.tex2svgPromise(latex, {
+      const hasLargeStructures = isDisplay || /\\(frac|sum|int|iint|prod|bigcup|bigcap|sqrt)/.test(latex);
+      const tex = hasLargeStructures && !latex.trim().startsWith("\\displaystyle") ? `\\displaystyle ${latex}` : latex;
+      const node = await window.MathJax.tex2svgPromise(tex, {
         display: false,
         containerWidth: SIZE,
       });
       if (node.querySelector('[data-mml-node="merror"], mjx-merror')) throw Error("Invalid MathJax input");
       const svg = node.querySelector("svg");
       if (!svg) throw Error("No MathJax SVG");
-      const viewBox = (svg.getAttribute("viewBox") || "").trim().split(/\s+/).map(Number),
-        ratio = viewBox.length === 4 && viewBox[2] > 0 && viewBox[3] > 0 ? viewBox[2] / viewBox[3] : Math.max(0.7, latex.length * 0.65),
-        logicalHeight = Math.max(1, Math.ceil(fontSize * 1.35)),
-        logicalWidth = Math.max(1, Math.ceil(logicalHeight * ratio)),
-        rasterScale = rasterScaleFor(logicalWidth, logicalHeight, pixelRatio),
+      const viewBox = (svg.getAttribute("viewBox") || "").trim().split(/\s+/).map(Number);
+      const baseScale = isDisplay ? 1.38 : 1.20;
+      let logicalHeight, logicalWidth;
+      if (viewBox.length === 4 && viewBox[2] > 0 && viewBox[3] > 0) {
+        const svgW = viewBox[2];
+        const svgH = viewBox[3];
+        const pxPerUnit = (fontSize * baseScale) / 1000;
+        logicalHeight = Math.max(Math.ceil(fontSize * 1.1), Math.ceil(svgH * pxPerUnit));
+        logicalWidth = Math.max(1, Math.ceil(svgW * pxPerUnit));
+      } else {
+        const ratio = Math.max(0.7, latex.length * 0.65);
+        logicalHeight = Math.max(1, Math.ceil(fontSize * (isDisplay ? 1.55 : 1.25)));
+        logicalWidth = Math.max(1, Math.ceil(logicalHeight * ratio));
+      }
+      const rasterScale = rasterScaleFor(logicalWidth, logicalHeight, pixelRatio),
         rasterWidth = Math.max(1, Math.ceil(logicalWidth * rasterScale)),
         rasterHeight = Math.max(1, Math.ceil(logicalHeight * rasterScale));
       svg.setAttribute("xmlns", "http://www.w3.org/2000/svg");
       svg.setAttribute("width", String(rasterWidth));
       svg.setAttribute("height", String(rasterHeight));
-      svg.setAttribute("color", color || "#2563eb");
+      const formulaColor = (!color || color === "#0f172a" || color === "#334155") ? "#1d4ed8" : color;
+      svg.setAttribute("color", formulaColor);
       svg.setAttribute("fill", "currentColor");
       const xml = new XMLSerializer().serializeToString(svg),
         img = new Image(),
@@ -302,7 +362,7 @@
     }
   }
   async function formulaImage(latex, fontSize, color, family = state.aiFont, pixelRatio = sharpRenderRatio()) {
-    const rendered = await mathJaxImage(latex, fontSize, color, pixelRatio);
+    const rendered = await mathJaxImage(latex, fontSize, color, pixelRatio, true);
     if (rendered.image) return rendered.image;
     console.warn("MathJax formula fallback", rendered.error);
     return textImage(formulaText(latex), fontSize, color, 900, 1.35, family, AI_TEXT_MAX_LENGTH, pixelRatio);
