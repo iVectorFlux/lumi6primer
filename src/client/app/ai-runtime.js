@@ -646,14 +646,29 @@
       x = source.x + source.w + gap;
     return commands.map((command) => {
       if (!["write_text", "draw_formula", "plot_function", "draw"].includes(command.tool)) return command;
-      const next = { ...command },
-        width = next.tool === "write_text" ? next.maxWidth : Number(next.w) || next.fontSize || 240,
-        lines = next.tool === "write_text" ? Math.max(1, String(next.text || "").split("\n").length) : 1,
-        height = next.tool === "draw_formula"
-          ? (next.fontSize || 48) * 1.8
-          : next.tool === "write_text"
-            ? (next.fontSize || 24) * (next.lineHeight || 1.35) * lines
-            : Number(next.h) || 200;
+      const next = { ...command };
+      let width = 240, height = 200;
+      if (next.tool === "write_text") {
+        width = next.maxWidth || 540;
+        const text = String(next.text || "");
+        const fontSize = next.fontSize || 24;
+        const charsPerLine = Math.max(18, Math.floor((width - 60) / (fontSize * 0.52)));
+        const explicitLines = text.split("\n");
+        let totalLines = 0;
+        for (const line of explicitLines) {
+          totalLines += Math.max(1, Math.ceil(line.length / charsPerLine));
+        }
+        height = Math.max(140, Math.ceil(totalLines * fontSize * (next.lineHeight || 1.4) + fontSize * 2.8));
+      } else if (next.tool === "draw_formula") {
+        width = Number(next.w) || next.fontSize || 240;
+        height = (next.fontSize || 48) * 1.8;
+      } else if (next.tool === "draw") {
+        width = Number(next.w) || 280;
+        height = Number(next.h) || 220;
+      } else {
+        width = Number(next.w) || 240;
+        height = Number(next.h) || 200;
+      }
       if (below) {
         next.x = Math.max(0, Math.min(SIZE - Math.min(width, SIZE), source.x));
         next.y = Math.max(0, Math.min(SIZE - Math.min(height, SIZE), y));
@@ -975,17 +990,17 @@
     };
   }
   function resolvePendingItemOverlaps(items, meta) {
-    const gap = Math.max(40, 14 / Math.max(0.03, state.scale)),
+    const gap = Math.max(40, 18 / Math.max(0.03, state.scale)),
       flow = items
-        .filter((item) => ["write_text", "draw_formula"].includes(item.command.tool))
+        .filter((item) => ["write_text", "draw_formula", "draw", "plot_function"].includes(item.command.tool))
         .sort((a, b) => a.y - b.y || a.x - b.x),
       placed = [],
       fixed = items
-        .filter((item) => !["write_text", "draw_formula", "draw"].includes(item.command.tool))
+        .filter((item) => !["write_text", "draw_formula", "draw", "plot_function"].includes(item.command.tool))
         .map((item) => item.erase ? item.bounds : { x: item.x, y: item.y, w: item.layoutWidth, h: item.layoutHeight });
     for (const item of flow) {
-      const width = item.image.logicalWidth || item.image.width,
-        height = item.image.logicalHeight || item.image.height;
+      const width = item.image?.logicalWidth || item.image?.width || item.layoutWidth || 300,
+        height = item.image?.logicalHeight || item.image?.height || item.layoutHeight || 200;
       let y = item.y;
       for (let pass = 0; pass < items.length; pass++) {
         const collisions = [...fixed, ...placed].filter((prior) => {
