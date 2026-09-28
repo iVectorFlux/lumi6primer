@@ -66,6 +66,12 @@
     selectionToolbar = document.querySelector("#selectionToolbar"),
     selectionFocusButton = document.querySelector("#selectionFocusBtn"),
     selectionExplainButton = document.querySelector("#selectionExplainBtn"),
+    selectionAskButton = document.querySelector("#selectionAskBtn"),
+    selectionAskPopover = document.querySelector("#selectionAskPopover"),
+    selectionAskCloseBtn = document.querySelector("#selectionAskCloseBtn"),
+    selectionAskForm = document.querySelector("#selectionAskForm"),
+    selectionAskInput = document.querySelector("#selectionAskInput"),
+    selectionAskMicBtn = document.querySelector("#selectionAskMicBtn"),
     selectionTypesetButton = document.querySelector("#selectionTypesetBtn"),
     selectionVisualizeButton = document.querySelector("#selectionVisualizeBtn"),
     selectionSendBackButton = document.querySelector("#selectionSendBackBtn"),
@@ -2445,14 +2451,14 @@ User writes "Show air quality for Tokyo", names a place, and points to an empty 
   function selectionAIStatusKey(selection = state.selection) {
     return selectionIsTypesetting(selection) ? "selectionTypesetting" : "observing";
   }
-  function requestSelectionAI(action, selection, packed) {
+  function requestSelectionAI(action, selection, packed, options = {}) {
     if (!selection || selection.phase !== "active" || !packed) return false;
     const token = {};
     selection.aiRequest = { token, action };
     supersedeActiveAI("selection-scoped-action");
     setStatusKey(selectionAIStatusKey(selection));
     updateSelectionToolbar();
-    requestAI(action, packed, { isolatedSelection: true, selection, selectionRequestToken: token }).finally(() => {
+    requestAI(action, packed, { isolatedSelection: true, selection, selectionRequestToken: token, ...options }).finally(() => {
       if (selection.aiRequest?.token === token) selection.aiRequest = null;
       if (state.selection === selection) updateSelectionToolbar();
     });
@@ -7599,16 +7605,25 @@ User writes "Show air quality for Tokyo", names a place, and points to an empty 
       && Math.abs(a.w - b.w) < 1
       && Math.abs(a.h - b.h) < 1;
   }
+  function padInkBoxDirectional(box, padX, padY) {
+    if (!box) return null;
+    return {
+      x: box.x - padX,
+      y: box.y - padY,
+      w: box.w + padX * 2,
+      h: box.h + padY * 2,
+    };
+  }
   function selectInkClusterAtPoint(point) {
     const scale = Math.max(state.scale, 0.05),
-      hitPad = Math.max(12, Math.min(32, 18 / scale));
+      hitPad = Math.max(16, Math.min(48, 24 / scale));
     let bounds = inkBoundsInRegion({
       x: point.x - hitPad,
       y: point.y - hitPad,
       w: hitPad * 2,
       h: hitPad * 2,
     });
-    // If not hit directly on the stroke, try a wider probe (useful for hollow shapes like circles or rectangles)
+    // If not hit directly on the stroke, try a wider probe (useful for hollow shapes or character gaps)
     if (!bounds) {
       bounds = inkBoundsInRegion({
         x: point.x - hitPad * 2.5,
@@ -7618,17 +7633,17 @@ User writes "Show air quality for Tokyo", names a place, and points to an empty 
       });
     }
     if (!bounds) return false;
-    const gap = 24,
-      maxGrow = 1600,
-      origin = { ...bounds };
+    const maxGrow = 3200;
     for (let i = 0; i < 35; i += 1) {
-      const next = inkBoundsInRegion(padInkBox(bounds, gap));
+      const charHeight = Math.max(28, Math.min(240, bounds.h));
+      // Horizontal spacing between characters/symbols in a formula is typically ~0.8-1.2x char height
+      const hGap = Math.max(54, Math.min(120, Math.round(charHeight * 0.95)));
+      // Vertical spacing for dots, equals bars, superscripts/subscripts
+      const vGap = Math.max(34, Math.min(80, Math.round(charHeight * 0.65)));
+      const next = inkBoundsInRegion(padInkBoxDirectional(bounds, hGap, vGap));
       if (!next || boxesAlmostEqual(next, bounds)) break;
       bounds = next;
-      if (
-        bounds.w >= maxGrow
-        || bounds.h >= maxGrow
-      ) break;
+      if (bounds.w >= maxGrow || bounds.h >= maxGrow) break;
     }
     bounds = padInkBox(bounds, 12);
     rememberInkBox(bounds);
@@ -7844,8 +7859,17 @@ User writes "Show air quality for Tokyo", names a place, and points to an empty 
         item.y = target.y;
         item.w = target.w;
         item.h = target.h;
-        item.fontSize = Math.max(1, item.fontSize * Math.min(scaleX, scaleY));
-        item.maxWidth = Math.max(item.fontSize * 3, item.maxWidth * scaleX);
+        item.fontSize = Math.max(16, Math.min(220, Math.round(item.fontSize * Math.min(scaleX, scaleY))));
+        item.maxWidth = Math.max(item.fontSize * 3, Math.round(item.maxWidth * scaleX));
+        if (typeof mixedTextImage === "function" && (Math.abs(scaleX - 1) > 0.05 || Math.abs(scaleY - 1) > 0.05)) {
+          mixedTextImage(item.text, item.fontSize, item.color, item.maxWidth, item.lineHeight || 1.35, state.aiFont, sharpRenderRatio())
+            .then(newImg => {
+              item.image = newImg;
+              item.w = newImg.logicalWidth || newImg.width;
+              item.h = newImg.logicalHeight || newImg.height;
+              render();
+            });
+        }
         if (!state.textBoxes.some((existing) => existing.id === item.id)) {
           if (sendBackwards) state.textBoxes.unshift(item);
           else state.textBoxes.push(item);
@@ -7930,6 +7954,13 @@ User writes "Show air quality for Tokyo", names a place, and points to an empty 
       selectionExplainButton.setAttribute("aria-busy", String(explaining));
       selectionExplainButton.textContent = explaining ? t("selectionExplaining") : t("selectionExplain");
     }
+    if (selectionAskButton) {
+      selectionAskButton.hidden = draftReady;
+      selectionAskButton.disabled = aiBusy || Boolean(state.visualizingSelection);
+    }
+    if (!active || draftReady) {
+      if (selectionAskPopover) selectionAskPopover.hidden = true;
+    }
     if (selectionTypesetButton) {
       const typesettingNow = selectionIsTypesetting(selection);
       selectionTypesetButton.hidden = false;
@@ -7969,6 +8000,13 @@ User writes "Show air quality for Tokyo", names a place, and points to an empty 
     } else {
       selectionToolbar.style.left = `${x}px`;
       selectionToolbar.style.top = `${Math.max(8, Math.min(maxY, y))}px`;
+    }
+    if (selectionAskPopover && !selectionAskPopover.hidden) {
+      const popoverWidth = selectionAskPopover.offsetWidth || 320;
+      const popoverX = Math.max(8, Math.min(viewport.width - popoverWidth - 8, x));
+      const popoverY = y + height + 8 < viewport.height - 180 ? y + height + 8 : Math.max(8, y - (selectionAskPopover.offsetHeight || 160) - 8);
+      selectionAskPopover.style.left = `${popoverX}px`;
+      selectionAskPopover.style.top = `${popoverY}px`;
     }
   }
   function releaseSelectionAITransformLock(run = state.activeAI) {
@@ -8414,6 +8452,7 @@ User writes "Show air quality for Tokyo", names a place, and points to an empty 
             ...packed,
             trigger: automatic ? "user_paused" : "manual",
             userAction: action,
+            ...(requestOptions?.userPrompt ? { userPrompt: String(requestOptions.userPrompt) } : {}),
             ...(state.reasoningEffort === "config" ? {} : { reasoningEffort: state.reasoningEffort }),
             ...pluginRequestPayload(),
             ...(widgetEditContext ? { widgetEdit:widgetEditContext } : {}),
@@ -8857,10 +8896,19 @@ User writes "Show air quality for Tokyo", names a place, and points to an empty 
   function portraitCanvasView() {
     return Boolean(view && view.clientHeight > view.clientWidth * 1.05);
   }
-  function responsiveCardMaxWidth() {
+  function responsiveCardMetrics() {
+    const canvasScale = Math.max(0.04, state.scale || 1);
     const viewportWidth = view?.clientWidth || window.innerWidth || 1024;
-    const canvasViewportW = viewportWidth / Math.max(0.05, state.scale);
-    return Math.min(640, Math.max(320, canvasViewportW * 0.78));
+    // On-screen readable font: ~17px screen
+    const targetScreenFont = 17;
+    const fontSize = Math.max(22, Math.min(180, Math.round(targetScreenFont / canvasScale)));
+    // On-screen readable card width: ~540px to 640px screen (or ~85% on mobile screen)
+    const targetScreenWidth = Math.min(640, Math.max(320, Math.round(viewportWidth * 0.48)));
+    const maxWidth = Math.max(380, Math.min(3600, Math.round(targetScreenWidth / canvasScale)));
+    return { fontSize, maxWidth };
+  }
+  function responsiveCardMaxWidth() {
+    return responsiveCardMetrics().maxWidth;
   }
   function relocateIsolatedTypesetCommands(commands, selection, action = "") {
     if (!selection?.box || !Array.isArray(commands) || !commands.length) return commands;
@@ -8971,10 +9019,10 @@ User writes "Show air quality for Tokyo", names a place, and points to an empty 
           if (!n(c.x)) c.x = 600;
           if (!n(c.y)) c.y = 600;
           c.text = c.text.slice(0, AI_TEXT_MAX_LENGTH);
-          c.fontSize = Math.max(20, Math.min(28, +c.fontSize || 24));
-          const maxAllowed = responsiveCardMaxWidth();
-          const targetWidth = Number.isFinite(c.maxWidth) && c.maxWidth > 100 ? c.maxWidth : 560;
-          c.maxWidth = Math.max(300, Math.min(targetWidth, maxAllowed, SIZE - c.x));
+          const metrics = responsiveCardMetrics();
+          c.fontSize = Number.isFinite(+c.fontSize) && +c.fontSize >= metrics.fontSize ? +c.fontSize : metrics.fontSize;
+          const targetWidth = Number.isFinite(c.maxWidth) && c.maxWidth > 100 ? c.maxWidth : metrics.maxWidth;
+          c.maxWidth = Math.max(metrics.maxWidth, Math.min(targetWidth, SIZE - c.x));
           c.lineHeight = Math.max(1, Math.min(2.2, +c.lineHeight || 1.35));
           c.color = c.color || aiColor;
           c.y = Math.min(c.y, Math.max(0, SIZE - c.fontSize * c.lineHeight * 2));
@@ -9382,6 +9430,9 @@ User writes "Show air quality for Tokyo", names a place, and points to an empty 
       }
       preparedLines.push({ ...line, lineFontSize, segments });
     }
+    const paddingX = Math.max(28, Math.round(fontSize * 1.25)),
+      paddingY = Math.max(26, Math.round(fontSize * 1.15)),
+      contentWidthLimit = Math.max(fontSize * 2, widthLimit - paddingX * 2);
     const rows = [];
     for (const line of preparedLines) {
       const defaultHeight = line.lineFontSize * lineHeight;
@@ -9391,7 +9442,7 @@ User writes "Show air quality for Tokyo", names a place, and points to an empty 
         row = { items: [], width: 0, height: defaultHeight };
       };
       const addItem = (item) => {
-        if (row.items.length && row.width + item.width > widthLimit) finishRow();
+        if (row.items.length && row.width + item.width > contentWidthLimit) finishRow();
         item.x = row.width;
         row.items.push(item);
         row.width += item.width;
@@ -9401,22 +9452,20 @@ User writes "Show air quality for Tokyo", names a place, and points to an empty 
         if (segment.type === "math") {
           const sourceWidth = segment.image.logicalWidth || segment.image.width,
             sourceHeight = segment.image.logicalHeight || segment.image.height,
-            scale = Math.min(1, widthLimit / Math.max(1, sourceWidth));
+            scale = Math.min(1, contentWidthLimit / Math.max(1, sourceWidth));
           addItem({ type: "math", image: segment.image, width: sourceWidth * scale, height: sourceHeight * scale });
           continue;
         }
         const parts = segment.text.match(/\s+|\S+/g) || [];
         for (const part of parts) {
-          const items = splitMixedTextPart(part, segment, line.lineFontSize, resolvedFamily, widthLimit, probe);
+          const items = splitMixedTextPart(part, segment, line.lineFontSize, resolvedFamily, contentWidthLimit, probe);
           items.forEach(addItem);
         }
       }
       finishRow();
     }
-    const paddingX = Math.max(28, Math.round(fontSize * 1.25)),
-      paddingY = Math.max(26, Math.round(fontSize * 1.15)),
-      contentWidth = Math.max(1, ...rows.map((row) => row.width)),
-      naturalWidth = Math.ceil(Math.min(widthLimit, Math.max(340, contentWidth + paddingX * 2))),
+    const contentWidth = Math.max(1, ...rows.map((row) => row.width)),
+      naturalWidth = Math.ceil(Math.min(SIZE, Math.max(340, Math.max(widthLimit, contentWidth + paddingX * 2)))),
       naturalHeight = Math.ceil(rows.reduce((sum, row) => sum + row.height, 0) + paddingY * 2),
       rasterScale = rasterScaleFor(naturalWidth, naturalHeight, pixelRatio),
       rasterWidth = Math.max(1, Math.ceil(naturalWidth * rasterScale)),
@@ -9468,8 +9517,10 @@ User writes "Show air quality for Tokyo", names a place, and points to an empty 
     context.textBaseline = "top";
     let y = paddingY;
     for (const row of rows) {
+      const isDisplayFormula = row.items.length === 1 && row.items[0].type === "math";
+      const offsetX = isDisplayFormula ? Math.max(0, Math.round((naturalWidth - paddingX * 2 - row.items[0].width) / 2)) : 0;
       for (const item of row.items) {
-        const x = paddingX + item.x;
+        const x = paddingX + offsetX + item.x;
         if (item.type === "math") context.drawImage(item.image, x, y + (row.height - item.height) / 2, item.width, item.height);
         else {
           context.font = item.font;
@@ -9637,8 +9688,8 @@ User writes "Show air quality for Tokyo", names a place, and points to an empty 
     };
   }
   function pendingItemBounds(item) {
-    const width = item.erase ? item.bounds.w : item.textCommand ? item.layoutWidth : item.image.logicalWidth || item.image.width,
-      height = item.erase ? item.bounds.h : item.textCommand ? item.layoutHeight : item.image.logicalHeight || item.image.height;
+    const width = item.erase ? item.bounds.w : item.image?.logicalWidth || item.image?.width || item.layoutWidth || 300,
+      height = item.erase ? item.bounds.h : item.image?.logicalHeight || item.image?.height || item.layoutHeight || 100;
     return { x: item.x, y: item.y, w: width * item.scaleX, h: height * item.scaleY };
   }
   function batchBounds(p) {
@@ -9675,21 +9726,23 @@ User writes "Show air quality for Tokyo", names a place, and points to an empty 
       current++;
     }
     if (current < rows.length) currentWidth = Math.max(0, distance - consumed);
-    if (p.textCommand) drawTextDraftSurface(ctx, b);
-    ctx.save();
-    ctx.beginPath();
-    ctx.rect(b.x, b.y, b.w, b.h);
-    ctx.clip();
-    ctx.beginPath();
-    for (let row = 0; row < current; row++) ctx.rect(b.x, b.y + row * rowHeight * p.scaleY, b.w, rowHeight * p.scaleY);
-    if (current < rows.length) ctx.rect(b.x, b.y + current * rowHeight * p.scaleY, currentWidth * p.scaleX, rowHeight * p.scaleY);
-    ctx.clip();
+    const isTextCard = Boolean(p.textCommand);
+    if (progress < 1 && !isTextCard) {
+      ctx.save();
+      ctx.beginPath();
+      ctx.rect(b.x, b.y, b.w, b.h);
+      ctx.clip();
+      ctx.beginPath();
+      for (let row = 0; row < current; row++) ctx.rect(b.x, b.y + row * rowHeight * p.scaleY, b.w, rowHeight * p.scaleY);
+      if (current < rows.length) ctx.rect(b.x, b.y + current * rowHeight * p.scaleY, currentWidth * p.scaleX, rowHeight * p.scaleY);
+      ctx.clip();
+    }
     const imageWidth = logicalWidth * p.scaleX,
       imageHeight = logicalHeight * p.scaleY;
     if (p.animationScene) drawPendingAnimation(ctx, p.animationScene, p.animationPlayback ||= createAnimationPlayback(), b);
     else ctx.drawImage(p.image, b.x, b.y, imageWidth, imageHeight);
-    ctx.restore();
-    if (progress < 1) {
+    if (progress < 1 && !isTextCard) ctx.restore();
+    if (progress < 1 && !isTextCard) {
       const tipX = b.x + currentWidth * p.scaleX,
         tipY = b.y + Math.min(current, rows.length - 1) * rowHeight * p.scaleY + rowHeight * p.scaleY * 0.72,
         unit = 1 / state.scale;
@@ -9741,21 +9794,28 @@ User writes "Show air quality for Tokyo", names a place, and points to an empty 
       selectedEntry = entries.find(({ index }) => index === p.selectedIndex),
       batchChromeVisible = !selectedEntry?.item.animationScene || selectedEntry.chromeVisible;
     for (const { item, index, box } of entries) {
-      if (item.textCommand) drawTextDraftSurface(ctx, box, index === p.selectedIndex);
-      ctx.save();
-      ctx.beginPath();
-      ctx.rect(box.x, box.y, box.w, box.h);
-      ctx.clip();
       if (item.erase) {
+        ctx.save();
+        ctx.beginPath();
+        ctx.rect(box.x, box.y, box.w, box.h);
+        ctx.clip();
         ctx.globalAlpha = 0.18;
         ctx.drawImage(item.image, box.x, box.y, box.w, box.h);
-      } else if (item.animationScene) drawPendingAnimation(ctx, item.animationScene, item.animationPlayback ||= createAnimationPlayback(), box);
-      else if (item.textCommand) {
+        ctx.restore();
+      } else if (item.animationScene) {
+        ctx.save();
+        ctx.beginPath();
+        ctx.rect(box.x, box.y, box.w, box.h);
+        ctx.clip();
+        drawPendingAnimation(ctx, item.animationScene, item.animationPlayback ||= createAnimationPlayback(), box);
+        ctx.restore();
+      } else if (item.textCommand) {
         const imageWidth = (item.image.logicalWidth || item.image.width) * item.scaleX,
           imageHeight = (item.image.logicalHeight || item.image.height) * item.scaleY;
         ctx.drawImage(item.image, box.x, box.y, imageWidth, imageHeight);
-      } else ctx.drawImage(item.image, box.x, box.y, box.w, box.h);
-      ctx.restore();
+      } else {
+        ctx.drawImage(item.image, box.x, box.y, box.w, box.h);
+      }
     }
     if (p.items.length > 1 && batchChromeVisible) {
       ctx.save();
@@ -10110,7 +10170,34 @@ User writes "Show air quality for Tokyo", names a place, and points to an empty 
     }
     else if (p.textCommand) {
       const box = draftBounds(p);
-      blitClipped(p.image, p.x, p.y, (p.image.logicalWidth || p.image.width) * p.scaleX, (p.image.logicalHeight || p.image.height) * p.scaleY, box.w, box.h);
+      const scale = p.scaleX || 1;
+      const finalFontSize = Math.max(16, Math.min(220, Math.round((p.textCommand.fontSize || 24) * scale)));
+      const finalMaxWidth = Math.max(finalFontSize * 3, Math.round((p.image?.logicalWidth || p.image?.width || box.w) * scale));
+      const record = {
+        id: `text-box-${state.nextTextBoxId++}`,
+        x: Math.round(box.x),
+        y: Math.round(box.y),
+        w: Math.round(box.w),
+        h: Math.round(box.h),
+        maxWidth: finalMaxWidth,
+        fontSize: finalFontSize,
+        color: p.textCommand.color || state.inkColor,
+        text: p.textCommand.text,
+        image: p.image,
+        lineHeight: p.textCommand.lineHeight || 1.35,
+        isCard: true
+      };
+      recordTextBoxesBefore();
+      state.textBoxes.push(record);
+      if (Math.abs(scale - 1) > 0.05 && typeof mixedTextImage === "function") {
+        mixedTextImage(record.text, record.fontSize, record.color, record.maxWidth, record.lineHeight, state.aiFont, sharpRenderRatio())
+          .then(newImg => {
+            record.image = newImg;
+            record.w = newImg.logicalWidth || newImg.width;
+            record.h = newImg.logicalHeight || newImg.height;
+            render();
+          });
+      }
     }
     else blitSized(p.image, p.x, p.y, (p.image.logicalWidth || p.image.width) * p.scaleX, (p.image.logicalHeight || p.image.height) * p.scaleY);
     state.pending = null;
@@ -10323,7 +10410,7 @@ User writes "Show air quality for Tokyo", names a place, and points to an empty 
       }
       const rows = image.revealRows || [image.logicalWidth || image.width],
         distance = rows.reduce((sum, width) => sum + width, 0),
-        duration = textCommand ? 350 : Math.max(600, Math.min(2200, distance * 0.4));
+        duration = textCommand ? 0 : Math.max(600, Math.min(2200, distance * 0.4));
       state.pending = {
         command: { ...command },
         image,
@@ -10338,7 +10425,7 @@ User writes "Show air quality for Tokyo", names a place, and points to an empty 
         layoutWidth,
         layoutHeight,
         heightLocked: false,
-        revealProgress: animationScene ? 1 : 0,
+        revealProgress: (animationScene || textCommand) ? 1 : 0,
         revision,
         meta,
         action: state.activeAI?.action || meta?.action || null,
@@ -10350,11 +10437,13 @@ User writes "Show air quality for Tokyo", names a place, and points to an empty 
       updateBatchActions();
       const p = state.pending,
         started = performance.now();
-      if (animationScene) {
+      if (animationScene || textCommand) {
         setStatusKey("draftReady");
         render();
-        showAnimationControls();
-        requestAnimationLayerRender();
+        if (animationScene) {
+          showAnimationControls();
+          requestAnimationLayerRender();
+        }
         return;
       }
       function step(now) {
@@ -10412,7 +10501,36 @@ User writes "Show air quality for Tokyo", names a place, and points to an empty 
       // Native state.textBoxes record; skip tile ink blitting to prevent text duplication
       return;
     }
-    else if (item.textCommand) blitClipped(item.image, item.x, item.y, (item.image.logicalWidth || item.image.width) * item.scaleX, (item.image.logicalHeight || item.image.height) * item.scaleY, box.w, box.h);
+    else if (item.textCommand) {
+      const scale = item.scaleX || 1;
+      const finalFontSize = Math.max(16, Math.min(220, Math.round((item.textCommand.fontSize || 24) * scale)));
+      const finalMaxWidth = Math.max(finalFontSize * 3, Math.round((item.image?.logicalWidth || item.image?.width || box.w) * scale));
+      const record = {
+        id: `text-box-${state.nextTextBoxId++}`,
+        x: Math.round(box.x),
+        y: Math.round(box.y),
+        w: Math.round(box.w),
+        h: Math.round(box.h),
+        maxWidth: finalMaxWidth,
+        fontSize: finalFontSize,
+        color: item.textCommand.color || state.inkColor,
+        text: item.textCommand.text,
+        image: item.image,
+        lineHeight: item.textCommand.lineHeight || 1.35,
+        isCard: true
+      };
+      recordTextBoxesBefore();
+      state.textBoxes.push(record);
+      if (Math.abs(scale - 1) > 0.05 && typeof mixedTextImage === "function") {
+        mixedTextImage(record.text, record.fontSize, record.color, record.maxWidth, record.lineHeight, state.aiFont, sharpRenderRatio())
+          .then(newImg => {
+            record.image = newImg;
+            record.w = newImg.logicalWidth || newImg.width;
+            record.h = newImg.logicalHeight || newImg.height;
+            render();
+          });
+      }
+    }
     else if (item.animationScene) addAnimation(item.animationScene, box, item.animationPlayback);
     else blitSized(item.image, box.x, box.y, (item.image.logicalWidth || item.image.width) * item.scaleX, (item.image.logicalHeight || item.image.height) * item.scaleY);
   }
@@ -10529,10 +10647,20 @@ User writes "Show air quality for Tokyo", names a place, and points to an empty 
         item.scaleX = item.scaleY = next;
       } else if (g.hit === "width" && g.armed) {
         if (item.textCommand) {
-          const layoutWidth=Math.max(item.textCommand.fontSize,Math.min((SIZE-item.x)/item.scaleX,(q.x-item.x)/item.scaleX));
-          item.layoutWidth=layoutWidth;
-          item.image=textImage(item.textCommand.text,item.textCommand.fontSize,item.textCommand.color,item.layoutWidth,item.textCommand.lineHeight);
-          if(!item.heightLocked)item.layoutHeight=item.image.logicalHeight||item.image.height;
+          const layoutWidth = Math.max(item.textCommand.fontSize * 3, Math.min((SIZE - item.x) / item.scaleX, (q.x - item.x) / item.scaleX));
+          item.layoutWidth = layoutWidth;
+          if (typeof mixedTextImage === "function" && !item._isReRendering) {
+            item._isReRendering = true;
+            mixedTextImage(item.textCommand.text, item.textCommand.fontSize, item.textCommand.color, layoutWidth, item.textCommand.lineHeight, state.aiFont, sharpRenderRatio())
+              .then(newImg => {
+                item.image = newImg;
+                item.layoutWidth = newImg.logicalWidth || newImg.width;
+                item.layoutHeight = newImg.logicalHeight || newImg.height;
+                item._isReRendering = false;
+                render();
+              })
+              .catch(() => { item._isReRendering = false; });
+          }
         } else {
           const baseWidth = box.w / item.scaleX;
           item.scaleX = Math.max(40 / baseWidth, Math.min((SIZE - item.x) / baseWidth, (q.x - item.x) / baseWidth));
@@ -10564,10 +10692,20 @@ User writes "Show air quality for Tokyo", names a place, and points to an empty 
       p.scaleX = p.scaleY = next;
     } else if (g.hit === "width" && g.armed) {
       if (p.textCommand) {
-        const layoutWidth=Math.max(p.textCommand.fontSize,Math.min((SIZE-p.x)/p.scaleX,(q.x-p.x)/p.scaleX));
-        p.layoutWidth=layoutWidth;
-        p.image=textImage(p.textCommand.text,p.textCommand.fontSize,p.textCommand.color,p.layoutWidth,p.textCommand.lineHeight);
-        if(!p.heightLocked)p.layoutHeight=p.image.logicalHeight||p.image.height;
+        const layoutWidth = Math.max(p.textCommand.fontSize * 3, Math.min((SIZE - p.x) / p.scaleX, (q.x - p.x) / p.scaleX));
+        p.layoutWidth = layoutWidth;
+        if (typeof mixedTextImage === "function" && !p._isReRendering) {
+          p._isReRendering = true;
+          mixedTextImage(p.textCommand.text, p.textCommand.fontSize, p.textCommand.color, layoutWidth, p.textCommand.lineHeight, state.aiFont, sharpRenderRatio())
+            .then(newImg => {
+              p.image = newImg;
+              p.layoutWidth = newImg.logicalWidth || newImg.width;
+              p.layoutHeight = newImg.logicalHeight || newImg.height;
+              p._isReRendering = false;
+              render();
+            })
+            .catch(() => { p._isReRendering = false; });
+        }
       } else {
         const baseWidth = draftBounds(p).w / p.scaleX;
         p.scaleX = Math.max(40 / baseWidth, Math.min((SIZE - p.x) / baseWidth, (q.x - p.x) / baseWidth));
@@ -10585,6 +10723,37 @@ User writes "Show air quality for Tokyo", names a place, and points to an empty 
     if (g.armed) render();
     return true;
   }
+  function finishPendingResize(gesture) {
+    const p = state.pending;
+    if (!p) return;
+    const finishItem = (target) => {
+      if (!target?.textCommand) return;
+      const scale = target.scaleX || 1;
+      if (Math.abs(scale - 1) < 0.01) return;
+      const newFontSize = Math.max(16, Math.min(220, Math.round(target.textCommand.fontSize * scale)));
+      const baseW = target.image?.logicalWidth || target.image?.width || target.layoutWidth || 500;
+      const newWidth = Math.max(newFontSize * 3, Math.min(SIZE, Math.round(baseW * scale)));
+      target.textCommand.fontSize = newFontSize;
+      target.textCommand.maxWidth = newWidth;
+      if (typeof mixedTextImage === "function") {
+        mixedTextImage(target.textCommand.text, newFontSize, target.textCommand.color, newWidth, target.textCommand.lineHeight, state.aiFont, sharpRenderRatio())
+          .then(newImg => {
+            target.image = newImg;
+            target.layoutWidth = newImg.logicalWidth || newImg.width;
+            target.layoutHeight = newImg.logicalHeight || newImg.height;
+            target.scaleX = 1;
+            target.scaleY = 1;
+            render();
+          });
+      } else {
+        target.scaleX = 1;
+        target.scaleY = 1;
+      }
+    };
+    if (p.items) p.items.forEach(finishItem);
+    else finishItem(p);
+  }
+  window.finishPendingResize = finishPendingResize;
   function eraseRect(x, y, w, h) {
     invalidateSharpOverlays({ x, y, w, h });
     forTiles(
@@ -11394,6 +11563,7 @@ User writes "Show air quality for Tokyo", names a place, and points to an empty 
     if (state.pendingGesture?.id === e.pointerId) {
       if (!finishPendingCopy(e)) {
         if (state.pendingGesture.armed) resetCanvasCursor();
+        if (typeof finishPendingResize === "function") finishPendingResize(state.pendingGesture);
         state.pendingGesture = null;
       }
       if (e.pointerType === "touch") {
@@ -11754,6 +11924,84 @@ User writes "Show air quality for Tokyo", names a place, and points to an empty 
   if (selectionToolbar) {
     selectionToolbar.addEventListener("pointerdown", (event) => event.stopPropagation());
     selectionToolbar.addEventListener("pointerup", (event) => event.stopPropagation());
+  }
+  if (selectionAskButton) {
+    selectionAskButton.onclick = (e) => {
+      e.stopPropagation();
+      if (!selectionAskPopover) return;
+      const willShow = selectionAskPopover.hidden;
+      selectionAskPopover.hidden = !willShow;
+      if (willShow) {
+        if (selectionToolbar) {
+          const rect = selectionToolbar.getBoundingClientRect();
+          const popoverWidth = selectionAskPopover.offsetWidth || 320;
+          const left = Math.max(8, Math.min(window.innerWidth - popoverWidth - 8, rect.left));
+          const top = rect.bottom + 8 < window.innerHeight - 180 ? rect.bottom + 8 : Math.max(8, rect.top - 170);
+          selectionAskPopover.style.left = `${left}px`;
+          selectionAskPopover.style.top = `${top}px`;
+        }
+        setTimeout(() => selectionAskInput?.focus(), 50);
+      }
+    };
+  }
+  if (selectionAskPopover) {
+    selectionAskPopover.addEventListener("pointerdown", (e) => e.stopPropagation());
+    selectionAskPopover.addEventListener("pointerup", (e) => e.stopPropagation());
+    selectionAskPopover.addEventListener("click", (e) => e.stopPropagation());
+  }
+  if (selectionAskCloseBtn) {
+    selectionAskCloseBtn.onclick = (e) => {
+      e.stopPropagation();
+      if (selectionAskPopover) selectionAskPopover.hidden = true;
+    };
+  }
+  function submitSelectionAsk(promptText) {
+    const text = String(promptText || "").trim();
+    if (!text || !state.selection) return;
+    if (selectionAskPopover) selectionAskPopover.hidden = true;
+    if (selectionAskInput) selectionAskInput.value = "";
+    const selection = state.selection,
+      packed = buildSelectionTypesetRequest(selection);
+    if (!packed) return;
+    requestSelectionAI("explain", selection, packed, { userPrompt: text });
+  }
+  document.querySelectorAll(".ask-chip").forEach((chip) => {
+    chip.addEventListener("click", (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      const prompt = chip.getAttribute("data-prompt") || chip.textContent.trim();
+      submitSelectionAsk(prompt);
+    });
+  });
+  if (selectionAskForm) {
+    selectionAskForm.addEventListener("submit", (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      submitSelectionAsk(selectionAskInput?.value);
+    });
+  }
+  if (selectionAskMicBtn) {
+    selectionAskMicBtn.onclick = (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      const SpeechRec = window.SpeechRecognition || window.webkitSpeechRecognition;
+      if (SpeechRec) {
+        const rec = new SpeechRec();
+        rec.lang = "en-US";
+        rec.interimResults = false;
+        selectionAskMicBtn.classList.add("listening");
+        rec.onresult = (evt) => {
+          const transcript = evt.results[0]?.[0]?.transcript;
+          if (transcript) {
+            if (selectionAskInput) selectionAskInput.value = transcript;
+            submitSelectionAsk(transcript);
+          }
+        };
+        rec.onend = () => selectionAskMicBtn.classList.remove("listening");
+        rec.onerror = () => selectionAskMicBtn.classList.remove("listening");
+        rec.start();
+      }
+    };
   }
   if (selectionSendBackButton) selectionSendBackButton.onclick = () => commitSelection({ sendBackwards: true });
   if (selectionDeleteButton) selectionDeleteButton.onclick = deleteSelection;

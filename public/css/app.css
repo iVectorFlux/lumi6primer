@@ -1215,12 +1215,148 @@ select { max-width: 112px; min-height: 27px; padding: 3px 21px 3px 5px; color: v
 .selection-toolbar-button.explain:hover { background: #fde68a; }
 .selection-toolbar-button.neat { background: #eff6ff; color: #1d4ed8; border-color: #bfdbfe; }
 .selection-toolbar-button.neat:hover { background: #dbeafe; }
+.selection-toolbar-button.ask { background: #f5f3ff; color: #6d28d9; border-color: #ddd6fe; }
+.selection-toolbar-button.ask:hover { background: #ede9fe; border-color: #c4b5fd; }
 .selection-toolbar-button.erase { background: #fef2f2; color: #b91c1c; border-color: #fecaca; }
 .selection-toolbar-button.erase:hover { background: #fee2e2; }
 .selection-toolbar-button.discard { background: #f3f4f6; color: #4b5563; border-color: #e5e7eb; }
 .selection-toolbar-button.primary { color: #FFFFFF; border-color: var(--confirm); background: var(--confirm); }
 .selection-toolbar-button.danger { color: var(--danger); }
 .selection-toolbar-button:disabled { cursor: wait; opacity: .55; transform: none; }
+
+.selection-ask-popover {
+  position: absolute;
+  left: var(--selection-toolbar-x, 8px);
+  top: calc(var(--selection-toolbar-y, 8px) + 42px);
+  z-index: 95;
+  width: 330px;
+  max-width: calc(100vw - 20px);
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 16px;
+  box-shadow: 0 16px 36px -4px rgba(15, 23, 42, 0.16), 0 6px 14px -2px rgba(15, 23, 42, 0.08);
+  padding: 12px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  pointer-events: auto;
+  font-family: 'Plus Jakarta Sans', 'Inter', -apple-system, sans-serif;
+  animation: askPopoverFadeIn 0.16s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.selection-ask-popover[hidden] {
+  display: none !important;
+}
+@keyframes askPopoverFadeIn {
+  from { opacity: 0; transform: translateY(-5px) scale(0.98); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+.ask-popover-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.ask-popover-title {
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: #1e1b4b;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+.ask-popover-close {
+  background: none;
+  border: none;
+  color: #94a3b8;
+  font-size: 1.25rem;
+  line-height: 1;
+  padding: 2px 6px;
+  cursor: pointer;
+  border-radius: 6px;
+  transition: all 0.12s ease;
+}
+.ask-popover-close:hover {
+  background: #f1f5f9;
+  color: #334155;
+}
+.ask-popover-suggestions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.ask-chip {
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 9999px;
+  padding: 4px 10px;
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: #475569;
+  cursor: pointer;
+  transition: all 0.12s ease;
+}
+.ask-chip:hover {
+  background: #ede9fe;
+  border-color: #c4b5fd;
+  color: #5b21b6;
+  transform: translateY(-1px);
+}
+.ask-popover-form {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: #f8fafc;
+  border: 1.5px solid #e2e8f0;
+  border-radius: 12px;
+  padding: 3px 6px 3px 10px;
+  transition: all 0.15s ease;
+}
+.ask-popover-form:focus-within {
+  border-color: #6366f1;
+  background: #ffffff;
+  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.12);
+}
+.ask-popover-input {
+  flex: 1;
+  border: none;
+  background: transparent;
+  font-size: 0.78rem;
+  color: #0f172a;
+  outline: none;
+  padding: 6px 0;
+  font-family: inherit;
+}
+.ask-popover-input::placeholder {
+  color: #94a3b8;
+}
+.ask-popover-mic,
+.ask-popover-submit {
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  padding: 6px;
+  border-radius: 8px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: #64748b;
+  transition: all 0.12s ease;
+}
+.ask-popover-mic:hover {
+  background: #ede9fe;
+  color: #7c3aed;
+}
+.ask-popover-mic.listening {
+  color: #ef4444;
+  animation: pulse 1.2s infinite;
+}
+.ask-popover-submit {
+  background: #6366f1;
+  color: #ffffff;
+}
+.ask-popover-submit:hover {
+  background: #4f46e5;
+  transform: scale(1.04);
+}
 
 body.mode-draw-active .selection-overlay-layer:not([hidden]) {
   display: block;

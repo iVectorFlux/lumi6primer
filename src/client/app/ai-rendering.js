@@ -153,6 +153,9 @@
       }
       preparedLines.push({ ...line, lineFontSize, segments });
     }
+    const paddingX = Math.max(28, Math.round(fontSize * 1.25)),
+      paddingY = Math.max(26, Math.round(fontSize * 1.15)),
+      contentWidthLimit = Math.max(fontSize * 2, widthLimit - paddingX * 2);
     const rows = [];
     for (const line of preparedLines) {
       const defaultHeight = line.lineFontSize * lineHeight;
@@ -162,7 +165,7 @@
         row = { items: [], width: 0, height: defaultHeight };
       };
       const addItem = (item) => {
-        if (row.items.length && row.width + item.width > widthLimit) finishRow();
+        if (row.items.length && row.width + item.width > contentWidthLimit) finishRow();
         item.x = row.width;
         row.items.push(item);
         row.width += item.width;
@@ -172,22 +175,20 @@
         if (segment.type === "math") {
           const sourceWidth = segment.image.logicalWidth || segment.image.width,
             sourceHeight = segment.image.logicalHeight || segment.image.height,
-            scale = Math.min(1, widthLimit / Math.max(1, sourceWidth));
+            scale = Math.min(1, contentWidthLimit / Math.max(1, sourceWidth));
           addItem({ type: "math", image: segment.image, width: sourceWidth * scale, height: sourceHeight * scale });
           continue;
         }
         const parts = segment.text.match(/\s+|\S+/g) || [];
         for (const part of parts) {
-          const items = splitMixedTextPart(part, segment, line.lineFontSize, resolvedFamily, widthLimit, probe);
+          const items = splitMixedTextPart(part, segment, line.lineFontSize, resolvedFamily, contentWidthLimit, probe);
           items.forEach(addItem);
         }
       }
       finishRow();
     }
-    const paddingX = Math.max(28, Math.round(fontSize * 1.25)),
-      paddingY = Math.max(26, Math.round(fontSize * 1.15)),
-      contentWidth = Math.max(1, ...rows.map((row) => row.width)),
-      naturalWidth = Math.ceil(Math.min(widthLimit, Math.max(340, contentWidth + paddingX * 2))),
+    const contentWidth = Math.max(1, ...rows.map((row) => row.width)),
+      naturalWidth = Math.ceil(Math.min(SIZE, Math.max(340, Math.max(widthLimit, contentWidth + paddingX * 2)))),
       naturalHeight = Math.ceil(rows.reduce((sum, row) => sum + row.height, 0) + paddingY * 2),
       rasterScale = rasterScaleFor(naturalWidth, naturalHeight, pixelRatio),
       rasterWidth = Math.max(1, Math.ceil(naturalWidth * rasterScale)),
@@ -239,8 +240,10 @@
     context.textBaseline = "top";
     let y = paddingY;
     for (const row of rows) {
+      const isDisplayFormula = row.items.length === 1 && row.items[0].type === "math";
+      const offsetX = isDisplayFormula ? Math.max(0, Math.round((naturalWidth - paddingX * 2 - row.items[0].width) / 2)) : 0;
       for (const item of row.items) {
-        const x = paddingX + item.x;
+        const x = paddingX + offsetX + item.x;
         if (item.type === "math") context.drawImage(item.image, x, y + (row.height - item.height) / 2, item.width, item.height);
         else {
           context.font = item.font;

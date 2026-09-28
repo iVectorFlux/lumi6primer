@@ -292,6 +292,7 @@
     if (state.pendingGesture?.id === e.pointerId) {
       if (!finishPendingCopy(e)) {
         if (state.pendingGesture.armed) resetCanvasCursor();
+        if (typeof finishPendingResize === "function") finishPendingResize(state.pendingGesture);
         state.pendingGesture = null;
       }
       if (e.pointerType === "touch") {
@@ -652,6 +653,84 @@
   if (selectionToolbar) {
     selectionToolbar.addEventListener("pointerdown", (event) => event.stopPropagation());
     selectionToolbar.addEventListener("pointerup", (event) => event.stopPropagation());
+  }
+  if (selectionAskButton) {
+    selectionAskButton.onclick = (e) => {
+      e.stopPropagation();
+      if (!selectionAskPopover) return;
+      const willShow = selectionAskPopover.hidden;
+      selectionAskPopover.hidden = !willShow;
+      if (willShow) {
+        if (selectionToolbar) {
+          const rect = selectionToolbar.getBoundingClientRect();
+          const popoverWidth = selectionAskPopover.offsetWidth || 320;
+          const left = Math.max(8, Math.min(window.innerWidth - popoverWidth - 8, rect.left));
+          const top = rect.bottom + 8 < window.innerHeight - 180 ? rect.bottom + 8 : Math.max(8, rect.top - 170);
+          selectionAskPopover.style.left = `${left}px`;
+          selectionAskPopover.style.top = `${top}px`;
+        }
+        setTimeout(() => selectionAskInput?.focus(), 50);
+      }
+    };
+  }
+  if (selectionAskPopover) {
+    selectionAskPopover.addEventListener("pointerdown", (e) => e.stopPropagation());
+    selectionAskPopover.addEventListener("pointerup", (e) => e.stopPropagation());
+    selectionAskPopover.addEventListener("click", (e) => e.stopPropagation());
+  }
+  if (selectionAskCloseBtn) {
+    selectionAskCloseBtn.onclick = (e) => {
+      e.stopPropagation();
+      if (selectionAskPopover) selectionAskPopover.hidden = true;
+    };
+  }
+  function submitSelectionAsk(promptText) {
+    const text = String(promptText || "").trim();
+    if (!text || !state.selection) return;
+    if (selectionAskPopover) selectionAskPopover.hidden = true;
+    if (selectionAskInput) selectionAskInput.value = "";
+    const selection = state.selection,
+      packed = buildSelectionTypesetRequest(selection);
+    if (!packed) return;
+    requestSelectionAI("explain", selection, packed, { userPrompt: text });
+  }
+  document.querySelectorAll(".ask-chip").forEach((chip) => {
+    chip.addEventListener("click", (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      const prompt = chip.getAttribute("data-prompt") || chip.textContent.trim();
+      submitSelectionAsk(prompt);
+    });
+  });
+  if (selectionAskForm) {
+    selectionAskForm.addEventListener("submit", (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      submitSelectionAsk(selectionAskInput?.value);
+    });
+  }
+  if (selectionAskMicBtn) {
+    selectionAskMicBtn.onclick = (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      const SpeechRec = window.SpeechRecognition || window.webkitSpeechRecognition;
+      if (SpeechRec) {
+        const rec = new SpeechRec();
+        rec.lang = "en-US";
+        rec.interimResults = false;
+        selectionAskMicBtn.classList.add("listening");
+        rec.onresult = (evt) => {
+          const transcript = evt.results[0]?.[0]?.transcript;
+          if (transcript) {
+            if (selectionAskInput) selectionAskInput.value = transcript;
+            submitSelectionAsk(transcript);
+          }
+        };
+        rec.onend = () => selectionAskMicBtn.classList.remove("listening");
+        rec.onerror = () => selectionAskMicBtn.classList.remove("listening");
+        rec.start();
+      }
+    };
   }
   if (selectionSendBackButton) selectionSendBackButton.onclick = () => commitSelection({ sendBackwards: true });
   if (selectionDeleteButton) selectionDeleteButton.onclick = deleteSelection;

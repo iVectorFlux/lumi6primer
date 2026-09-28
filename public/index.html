@@ -293,10 +293,32 @@
                 <span class="selection-toolbar-actions">
                   <button id="selectionFocusBtn" class="selection-toolbar-button focus" type="button" aria-label="Focus selection" title="Center and zoom to this selection">Focus</button>
                   <button id="selectionExplainBtn" class="selection-toolbar-button explain" type="button" aria-label="Explain selection" title="Ask Lumi to explain this selection">Explain</button>
+                  <button id="selectionAskBtn" class="selection-toolbar-button ask" type="button" aria-label="Ask Lumi about this" title="Ask Lumi a specific question about this selection">Ask</button>
                   <button id="selectionTypesetBtn" class="selection-toolbar-button primary neat" type="button" aria-label="Make neat" title="Turn handwriting into clean, neat text or math">Make Neat</button>
                   <button id="selectionDeleteBtn" class="selection-toolbar-button danger erase" type="button" aria-label="Erase selection" title="Erase selection">Erase</button>
                   <button id="selectionCancelBtn" class="selection-toolbar-button discard" type="button" aria-label="Discard draft" title="Discard draft" hidden>Discard</button>
                 </span>
+              </div>
+              <div id="selectionAskPopover" class="selection-ask-popover" hidden>
+                <div class="ask-popover-header">
+                  <span class="ask-popover-title">Ask Lumi</span>
+                  <button id="selectionAskCloseBtn" class="ask-popover-close" type="button" aria-label="Close">&times;</button>
+                </div>
+                <div class="ask-popover-suggestions">
+                  <button type="button" class="ask-chip" data-prompt="Why does this formula or principle work?">Why does this work?</button>
+                  <button type="button" class="ask-chip" data-prompt="Can you give me a real-life example with a diagram?">Real-life example</button>
+                  <button type="button" class="ask-chip" data-prompt="Explain this more simply like I am 10 years old.">Simpler explanation</button>
+                  <button type="button" class="ask-chip" data-prompt="Give me a quick practice question to test my understanding.">Test me on this</button>
+                </div>
+                <form id="selectionAskForm" class="ask-popover-form">
+                  <input type="text" id="selectionAskInput" class="ask-popover-input" placeholder="Ask anything about this selection..." autocomplete="off" />
+                  <button type="button" id="selectionAskMicBtn" class="ask-popover-mic" title="Speak question" aria-label="Speak question">
+                    <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor"><path d="M12 14c1.66 0 3-1.34 3-3V5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3z"/><path d="M17 11c0 2.76-2.24 5-5 5s-5-2.24-5-5H5c0 3.53 2.61 6.43 6 6.92V21h2v-3.08c3.39-.49 6-3.39 6-6.92h-2z"/></svg>
+                  </button>
+                  <button type="submit" id="selectionAskSubmitBtn" class="ask-popover-submit" aria-label="Send">
+                    <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/></svg>
+                  </button>
+                </form>
               </div>
             </div>
             <div id="textEditorLayer" class="text-editor-layer" aria-live="polite"></div>

@@ -693,8 +693,9 @@ function validPayload(p) {
   const grid=p?.hotspotGrid,size=p?.atlasSize,source=p?.sourceRect,capture=p?.captureRect,contains=(outer,inner)=>inner.x>=outer.x&&inner.y>=outer.y&&inner.x+inner.w<=outer.x+outer.w+.001&&inner.y+inner.h<=outer.y+outer.h+.001,validGrid=grid&&grid.columns===8&&grid.rows===8&&grid.order==="oldest-to-newest"&&Array.isArray(grid.hotspots)&&grid.hotspots.length<=64&&grid.hotspots.every(h=>Array.isArray(h?.cell)&&h.cell.length===2&&Number.isInteger(h.cell[0])&&Number.isInteger(h.cell[1])&&h.cell[0]>=0&&h.cell[0]<8&&h.cell[1]>=0&&h.cell[1]<8&&h.imageRect&&[h.imageRect.x,h.imageRect.y,h.imageRect.w,h.imageRect.h].every(Number.isFinite)&&h.imageRect.x>=0&&h.imageRect.y>=0&&h.imageRect.w>0&&h.imageRect.h>0&&h.imageRect.x+h.imageRect.w<=size?.w+1&&h.imageRect.y+h.imageRect.h<=size?.h+1),validGeometry=validBox(p?.changedBox)&&validBox(p?.visibleRect)&&validBox(capture)&&validBox(source)&&contains(p.visibleRect,capture)&&contains(capture,source)&&contains(source,p.changedBox),validSize=validGeometry&&Number.isFinite(p.imageScale)&&p.imageScale>0&&p.imageScale<=1&&Number.isInteger(size?.w)&&Number.isInteger(size?.h)&&size.w>0&&size.w<=2048&&size.h>0&&size.h<=1536&&size.w===Math.ceil(source.w*p.imageScale)&&size.h===Math.ceil(source.h*p.imageScale),inset=p?.focusInset,validInset=inset===null||inset===undefined||(validBox(inset.sourceRect)&&contains(source,inset.sourceRect)&&inset.imageRect&&[inset.imageRect.x,inset.imageRect.y,inset.imageRect.w,inset.imageRect.h].every(Number.isFinite)&&inset.imageRect.x>=0&&inset.imageRect.y>=0&&inset.imageRect.w>0&&inset.imageRect.h>0&&inset.imageRect.x+inset.imageRect.w<=size?.w&&inset.imageRect.y+inset.imageRect.h<=size?.h&&Number.isFinite(inset.imageScale)&&inset.imageScale>p.imageScale&&inset.imageScale<=3),validTheme=Object.hasOwn(THEME_PERSONAS,p?.uiTheme),validPersona=validTheme&&p?.persona===THEME_PERSONAS[p.uiTheme],validAction=DEBUG_ACTIONS.has(p?.userAction),validEffort=p?.reasoningEffort===undefined||UI_EFFORTS.has(p.reasoningEffort),validAnimation=p?.animationEnabled===undefined||typeof p.animationEnabled==="boolean",validPlugins=p?.plugins===undefined||Array.isArray(p.plugins)&&p.plugins.length<=MAX_ENABLED_PLUGINS&&p.plugins.every(validPluginDescriptor)&&new Set(p.plugins.map(plugin=>plugin.id)).size===p.plugins.length,validTrigger=p?.trigger==="user_paused"&&p.userAction==="auto"||p?.trigger==="manual"&&validAction&&p.userAction!=="auto";
   const typedValid = validTypedInput(p?.typedInput, p?.changedBox, p?.sourceRect), selectionValid = validSelectionContext(p?.selectionContext), selectionRequired = p?.userAction !== "normalize" || Boolean(p?.selectionContext), contextBox = selectionBox(p?.selectionContext?.box), selectionGeometry = !p?.selectionContext || Boolean(contextBox && selectionBoxesMatch(contextBox, p?.sourceRect) && selectionBoxesMatch(contextBox, p?.changedBox)),
     widgetEdit = validPlugins ? canonicalWidgetEdit(p?.widgetEdit, p.plugins || []) : false,
-    widgetEditValid = widgetEdit !== false && (!widgetEdit || p.trigger === "manual" && p.userAction !== "normalize" && !p.selectionContext);
-  return p && typeof p === "object" && p.canvasSize?.w === CANVAS_SIZE && p.canvasSize?.h === CANVAS_SIZE && validGeometry && validSize && validGrid && validInset && validTheme && validPersona && validAction && validEffort && validAnimation && validPlugins && validTrigger && typedValid && selectionValid && selectionRequired && selectionGeometry && widgetEditValid && image;
+    widgetEditValid = widgetEdit !== false && (!widgetEdit || p.trigger === "manual" && p.userAction !== "normalize" && !p.selectionContext),
+    promptValid = p?.userPrompt === undefined || p?.userPrompt === null || (typeof p?.userPrompt === "string" && p?.userPrompt.length <= 1000);
+  return p && typeof p === "object" && p.canvasSize?.w === CANVAS_SIZE && p.canvasSize?.h === CANVAS_SIZE && validGeometry && validSize && validGrid && validInset && validTheme && validPersona && validAction && validEffort && validAnimation && validPlugins && validTrigger && typedValid && selectionValid && selectionRequired && selectionGeometry && widgetEditValid && promptValid && image;
 }
 function canonicalPayload(p) {
   const box = value => ({ x:value.x, y:value.y, w:value.w, h:value.h });
@@ -713,6 +714,7 @@ function canonicalPayload(p) {
     hotspotGrid:{ columns:8, rows:8, order:"oldest-to-newest", attention:"newest unconsumed pen path; use ordered cells to read and apply every edit inside latestInput.imageRect", hotspots:p.hotspotGrid.hotspots.map(h=>({ cell:[h.cell[0],h.cell[1]], imageRect:box(h.imageRect) })) },
     trigger:p.trigger,
     userAction:p.userAction,
+    userPrompt:typeof p.userPrompt === "string" ? p.userPrompt.slice(0, 1000).trim() : null,
     reasoningEffort:p.reasoningEffort===undefined?"config":normalizeUiEffort(p.reasoningEffort)||"config",
     animationEnabled:p.animationEnabled===true,
     plugins,
@@ -1925,6 +1927,7 @@ const server = http.createServer(async (req, res) => {
         imageScale:payload.imageScale,
         latestInput,
         typedInput:payload.typedInput||null,
+        userPrompt:payload.userPrompt||null,
         selectionContext:payload.selectionContext||null,
         normalizePolicy:payload.userAction==="normalize"?NORMALIZE_TYPESET_POLICY:null,
         explainPolicy:payload.userAction==="explain"?EXPLAIN_SOCRATIC_POLICY:null,

@@ -912,14 +912,14 @@
   function selectionAIStatusKey(selection = state.selection) {
     return selectionIsTypesetting(selection) ? "selectionTypesetting" : "observing";
   }
-  function requestSelectionAI(action, selection, packed) {
+  function requestSelectionAI(action, selection, packed, options = {}) {
     if (!selection || selection.phase !== "active" || !packed) return false;
     const token = {};
     selection.aiRequest = { token, action };
     supersedeActiveAI("selection-scoped-action");
     setStatusKey(selectionAIStatusKey(selection));
     updateSelectionToolbar();
-    requestAI(action, packed, { isolatedSelection: true, selection, selectionRequestToken: token }).finally(() => {
+    requestAI(action, packed, { isolatedSelection: true, selection, selectionRequestToken: token, ...options }).finally(() => {
       if (selection.aiRequest?.token === token) selection.aiRequest = null;
       if (state.selection === selection) updateSelectionToolbar();
     });

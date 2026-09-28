@@ -22,8 +22,8 @@
     };
   }
   function pendingItemBounds(item) {
-    const width = item.erase ? item.bounds.w : item.textCommand ? item.layoutWidth : item.image.logicalWidth || item.image.width,
-      height = item.erase ? item.bounds.h : item.textCommand ? item.layoutHeight : item.image.logicalHeight || item.image.height;
+    const width = item.erase ? item.bounds.w : item.image?.logicalWidth || item.image?.width || item.layoutWidth || 300,
+      height = item.erase ? item.bounds.h : item.image?.logicalHeight || item.image?.height || item.layoutHeight || 100;
     return { x: item.x, y: item.y, w: width * item.scaleX, h: height * item.scaleY };
   }
   function batchBounds(p) {
@@ -60,21 +60,23 @@
       current++;
     }
     if (current < rows.length) currentWidth = Math.max(0, distance - consumed);
-    if (p.textCommand) drawTextDraftSurface(ctx, b);
-    ctx.save();
-    ctx.beginPath();
-    ctx.rect(b.x, b.y, b.w, b.h);
-    ctx.clip();
-    ctx.beginPath();
-    for (let row = 0; row < current; row++) ctx.rect(b.x, b.y + row * rowHeight * p.scaleY, b.w, rowHeight * p.scaleY);
-    if (current < rows.length) ctx.rect(b.x, b.y + current * rowHeight * p.scaleY, currentWidth * p.scaleX, rowHeight * p.scaleY);
-    ctx.clip();
+    const isTextCard = Boolean(p.textCommand);
+    if (progress < 1 && !isTextCard) {
+      ctx.save();
+      ctx.beginPath();
+      ctx.rect(b.x, b.y, b.w, b.h);
+      ctx.clip();
+      ctx.beginPath();
+      for (let row = 0; row < current; row++) ctx.rect(b.x, b.y + row * rowHeight * p.scaleY, b.w, rowHeight * p.scaleY);
+      if (current < rows.length) ctx.rect(b.x, b.y + current * rowHeight * p.scaleY, currentWidth * p.scaleX, rowHeight * p.scaleY);
+      ctx.clip();
+    }
     const imageWidth = logicalWidth * p.scaleX,
       imageHeight = logicalHeight * p.scaleY;
     if (p.animationScene) drawPendingAnimation(ctx, p.animationScene, p.animationPlayback ||= createAnimationPlayback(), b);
     else ctx.drawImage(p.image, b.x, b.y, imageWidth, imageHeight);
-    ctx.restore();
-    if (progress < 1) {
+    if (progress < 1 && !isTextCard) ctx.restore();
+    if (progress < 1 && !isTextCard) {
       const tipX = b.x + currentWidth * p.scaleX,
         tipY = b.y + Math.min(current, rows.length - 1) * rowHeight * p.scaleY + rowHeight * p.scaleY * 0.72,
         unit = 1 / state.scale;
@@ -126,21 +128,28 @@
       selectedEntry = entries.find(({ index }) => index === p.selectedIndex),
       batchChromeVisible = !selectedEntry?.item.animationScene || selectedEntry.chromeVisible;
     for (const { item, index, box } of entries) {
-      if (item.textCommand) drawTextDraftSurface(ctx, box, index === p.selectedIndex);
-      ctx.save();
-      ctx.beginPath();
-      ctx.rect(box.x, box.y, box.w, box.h);
-      ctx.clip();
       if (item.erase) {
+        ctx.save();
+        ctx.beginPath();
+        ctx.rect(box.x, box.y, box.w, box.h);
+        ctx.clip();
         ctx.globalAlpha = 0.18;
         ctx.drawImage(item.image, box.x, box.y, box.w, box.h);
-      } else if (item.animationScene) drawPendingAnimation(ctx, item.animationScene, item.animationPlayback ||= createAnimationPlayback(), box);
-      else if (item.textCommand) {
+        ctx.restore();
+      } else if (item.animationScene) {
+        ctx.save();
+        ctx.beginPath();
+        ctx.rect(box.x, box.y, box.w, box.h);
+        ctx.clip();
+        drawPendingAnimation(ctx, item.animationScene, item.animationPlayback ||= createAnimationPlayback(), box);
+        ctx.restore();
+      } else if (item.textCommand) {
         const imageWidth = (item.image.logicalWidth || item.image.width) * item.scaleX,
           imageHeight = (item.image.logicalHeight || item.image.height) * item.scaleY;
         ctx.drawImage(item.image, box.x, box.y, imageWidth, imageHeight);
-      } else ctx.drawImage(item.image, box.x, box.y, box.w, box.h);
-      ctx.restore();
+      } else {
+        ctx.drawImage(item.image, box.x, box.y, box.w, box.h);
+      }
     }
     if (p.items.length > 1 && batchChromeVisible) {
       ctx.save();
@@ -495,7 +504,34 @@
     }
     else if (p.textCommand) {
       const box = draftBounds(p);
-      blitClipped(p.image, p.x, p.y, (p.image.logicalWidth || p.image.width) * p.scaleX, (p.image.logicalHeight || p.image.height) * p.scaleY, box.w, box.h);
+      const scale = p.scaleX || 1;
+      const finalFontSize = Math.max(16, Math.min(220, Math.round((p.textCommand.fontSize || 24) * scale)));
+      const finalMaxWidth = Math.max(finalFontSize * 3, Math.round((p.image?.logicalWidth || p.image?.width || box.w) * scale));
+      const record = {
+        id: `text-box-${state.nextTextBoxId++}`,
+        x: Math.round(box.x),
+        y: Math.round(box.y),
+        w: Math.round(box.w),
+        h: Math.round(box.h),
+        maxWidth: finalMaxWidth,
+        fontSize: finalFontSize,
+        color: p.textCommand.color || state.inkColor,
+        text: p.textCommand.text,
+        image: p.image,
+        lineHeight: p.textCommand.lineHeight || 1.35,
+        isCard: true
+      };
+      recordTextBoxesBefore();
+      state.textBoxes.push(record);
+      if (Math.abs(scale - 1) > 0.05 && typeof mixedTextImage === "function") {
+        mixedTextImage(record.text, record.fontSize, record.color, record.maxWidth, record.lineHeight, state.aiFont, sharpRenderRatio())
+          .then(newImg => {
+            record.image = newImg;
+            record.w = newImg.logicalWidth || newImg.width;
+            record.h = newImg.logicalHeight || newImg.height;
+            render();
+          });
+      }
     }
     else blitSized(p.image, p.x, p.y, (p.image.logicalWidth || p.image.width) * p.scaleX, (p.image.logicalHeight || p.image.height) * p.scaleY);
     state.pending = null;
@@ -708,7 +744,7 @@
       }
       const rows = image.revealRows || [image.logicalWidth || image.width],
         distance = rows.reduce((sum, width) => sum + width, 0),
-        duration = textCommand ? 350 : Math.max(600, Math.min(2200, distance * 0.4));
+        duration = textCommand ? 0 : Math.max(600, Math.min(2200, distance * 0.4));
       state.pending = {
         command: { ...command },
         image,
@@ -723,7 +759,7 @@
         layoutWidth,
         layoutHeight,
         heightLocked: false,
-        revealProgress: animationScene ? 1 : 0,
+        revealProgress: (animationScene || textCommand) ? 1 : 0,
         revision,
         meta,
         action: state.activeAI?.action || meta?.action || null,
@@ -735,11 +771,13 @@
       updateBatchActions();
       const p = state.pending,
         started = performance.now();
-      if (animationScene) {
+      if (animationScene || textCommand) {
         setStatusKey("draftReady");
         render();
-        showAnimationControls();
-        requestAnimationLayerRender();
+        if (animationScene) {
+          showAnimationControls();
+          requestAnimationLayerRender();
+        }
         return;
       }
       function step(now) {
@@ -797,7 +835,36 @@
       // Native state.textBoxes record; skip tile ink blitting to prevent text duplication
       return;
     }
-    else if (item.textCommand) blitClipped(item.image, item.x, item.y, (item.image.logicalWidth || item.image.width) * item.scaleX, (item.image.logicalHeight || item.image.height) * item.scaleY, box.w, box.h);
+    else if (item.textCommand) {
+      const scale = item.scaleX || 1;
+      const finalFontSize = Math.max(16, Math.min(220, Math.round((item.textCommand.fontSize || 24) * scale)));
+      const finalMaxWidth = Math.max(finalFontSize * 3, Math.round((item.image?.logicalWidth || item.image?.width || box.w) * scale));
+      const record = {
+        id: `text-box-${state.nextTextBoxId++}`,
+        x: Math.round(box.x),
+        y: Math.round(box.y),
+        w: Math.round(box.w),
+        h: Math.round(box.h),
+        maxWidth: finalMaxWidth,
+        fontSize: finalFontSize,
+        color: item.textCommand.color || state.inkColor,
+        text: item.textCommand.text,
+        image: item.image,
+        lineHeight: item.textCommand.lineHeight || 1.35,
+        isCard: true
+      };
+      recordTextBoxesBefore();
+      state.textBoxes.push(record);
+      if (Math.abs(scale - 1) > 0.05 && typeof mixedTextImage === "function") {
+        mixedTextImage(record.text, record.fontSize, record.color, record.maxWidth, record.lineHeight, state.aiFont, sharpRenderRatio())
+          .then(newImg => {
+            record.image = newImg;
+            record.w = newImg.logicalWidth || newImg.width;
+            record.h = newImg.logicalHeight || newImg.height;
+            render();
+          });
+      }
+    }
     else if (item.animationScene) addAnimation(item.animationScene, box, item.animationPlayback);
     else blitSized(item.image, box.x, box.y, (item.image.logicalWidth || item.image.width) * item.scaleX, (item.image.logicalHeight || item.image.height) * item.scaleY);
   }
@@ -914,10 +981,20 @@
         item.scaleX = item.scaleY = next;
       } else if (g.hit === "width" && g.armed) {
         if (item.textCommand) {
-          const layoutWidth=Math.max(item.textCommand.fontSize,Math.min((SIZE-item.x)/item.scaleX,(q.x-item.x)/item.scaleX));
-          item.layoutWidth=layoutWidth;
-          item.image=textImage(item.textCommand.text,item.textCommand.fontSize,item.textCommand.color,item.layoutWidth,item.textCommand.lineHeight);
-          if(!item.heightLocked)item.layoutHeight=item.image.logicalHeight||item.image.height;
+          const layoutWidth = Math.max(item.textCommand.fontSize * 3, Math.min((SIZE - item.x) / item.scaleX, (q.x - item.x) / item.scaleX));
+          item.layoutWidth = layoutWidth;
+          if (typeof mixedTextImage === "function" && !item._isReRendering) {
+            item._isReRendering = true;
+            mixedTextImage(item.textCommand.text, item.textCommand.fontSize, item.textCommand.color, layoutWidth, item.textCommand.lineHeight, state.aiFont, sharpRenderRatio())
+              .then(newImg => {
+                item.image = newImg;
+                item.layoutWidth = newImg.logicalWidth || newImg.width;
+                item.layoutHeight = newImg.logicalHeight || newImg.height;
+                item._isReRendering = false;
+                render();
+              })
+              .catch(() => { item._isReRendering = false; });
+          }
         } else {
           const baseWidth = box.w / item.scaleX;
           item.scaleX = Math.max(40 / baseWidth, Math.min((SIZE - item.x) / baseWidth, (q.x - item.x) / baseWidth));
@@ -949,10 +1026,20 @@
       p.scaleX = p.scaleY = next;
     } else if (g.hit === "width" && g.armed) {
       if (p.textCommand) {
-        const layoutWidth=Math.max(p.textCommand.fontSize,Math.min((SIZE-p.x)/p.scaleX,(q.x-p.x)/p.scaleX));
-        p.layoutWidth=layoutWidth;
-        p.image=textImage(p.textCommand.text,p.textCommand.fontSize,p.textCommand.color,p.layoutWidth,p.textCommand.lineHeight);
-        if(!p.heightLocked)p.layoutHeight=p.image.logicalHeight||p.image.height;
+        const layoutWidth = Math.max(p.textCommand.fontSize * 3, Math.min((SIZE - p.x) / p.scaleX, (q.x - p.x) / p.scaleX));
+        p.layoutWidth = layoutWidth;
+        if (typeof mixedTextImage === "function" && !p._isReRendering) {
+          p._isReRendering = true;
+          mixedTextImage(p.textCommand.text, p.textCommand.fontSize, p.textCommand.color, layoutWidth, p.textCommand.lineHeight, state.aiFont, sharpRenderRatio())
+            .then(newImg => {
+              p.image = newImg;
+              p.layoutWidth = newImg.logicalWidth || newImg.width;
+              p.layoutHeight = newImg.logicalHeight || newImg.height;
+              p._isReRendering = false;
+              render();
+            })
+            .catch(() => { p._isReRendering = false; });
+        }
       } else {
         const baseWidth = draftBounds(p).w / p.scaleX;
         p.scaleX = Math.max(40 / baseWidth, Math.min((SIZE - p.x) / baseWidth, (q.x - p.x) / baseWidth));
@@ -970,6 +1057,37 @@
     if (g.armed) render();
     return true;
   }
+  function finishPendingResize(gesture) {
+    const p = state.pending;
+    if (!p) return;
+    const finishItem = (target) => {
+      if (!target?.textCommand) return;
+      const scale = target.scaleX || 1;
+      if (Math.abs(scale - 1) < 0.01) return;
+      const newFontSize = Math.max(16, Math.min(220, Math.round(target.textCommand.fontSize * scale)));
+      const baseW = target.image?.logicalWidth || target.image?.width || target.layoutWidth || 500;
+      const newWidth = Math.max(newFontSize * 3, Math.min(SIZE, Math.round(baseW * scale)));
+      target.textCommand.fontSize = newFontSize;
+      target.textCommand.maxWidth = newWidth;
+      if (typeof mixedTextImage === "function") {
+        mixedTextImage(target.textCommand.text, newFontSize, target.textCommand.color, newWidth, target.textCommand.lineHeight, state.aiFont, sharpRenderRatio())
+          .then(newImg => {
+            target.image = newImg;
+            target.layoutWidth = newImg.logicalWidth || newImg.width;
+            target.layoutHeight = newImg.logicalHeight || newImg.height;
+            target.scaleX = 1;
+            target.scaleY = 1;
+            render();
+          });
+      } else {
+        target.scaleX = 1;
+        target.scaleY = 1;
+      }
+    };
+    if (p.items) p.items.forEach(finishItem);
+    else finishItem(p);
+  }
+  window.finishPendingResize = finishPendingResize;
   function eraseRect(x, y, w, h) {
     invalidateSharpOverlays({ x, y, w, h });
     forTiles(

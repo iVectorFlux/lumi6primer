@@ -179,6 +179,7 @@
             ...packed,
             trigger: automatic ? "user_paused" : "manual",
             userAction: action,
+            ...(requestOptions?.userPrompt ? { userPrompt: String(requestOptions.userPrompt) } : {}),
             ...(state.reasoningEffort === "config" ? {} : { reasoningEffort: state.reasoningEffort }),
             ...pluginRequestPayload(),
             ...(widgetEditContext ? { widgetEdit:widgetEditContext } : {}),
@@ -622,10 +623,19 @@
   function portraitCanvasView() {
     return Boolean(view && view.clientHeight > view.clientWidth * 1.05);
   }
-  function responsiveCardMaxWidth() {
+  function responsiveCardMetrics() {
+    const canvasScale = Math.max(0.04, state.scale || 1);
     const viewportWidth = view?.clientWidth || window.innerWidth || 1024;
-    const canvasViewportW = viewportWidth / Math.max(0.05, state.scale);
-    return Math.min(640, Math.max(320, canvasViewportW * 0.78));
+    // On-screen readable font: ~17px screen
+    const targetScreenFont = 17;
+    const fontSize = Math.max(22, Math.min(180, Math.round(targetScreenFont / canvasScale)));
+    // On-screen readable card width: ~540px to 640px screen (or ~85% on mobile screen)
+    const targetScreenWidth = Math.min(640, Math.max(320, Math.round(viewportWidth * 0.48)));
+    const maxWidth = Math.max(380, Math.min(3600, Math.round(targetScreenWidth / canvasScale)));
+    return { fontSize, maxWidth };
+  }
+  function responsiveCardMaxWidth() {
+    return responsiveCardMetrics().maxWidth;
   }
   function relocateIsolatedTypesetCommands(commands, selection, action = "") {
     if (!selection?.box || !Array.isArray(commands) || !commands.length) return commands;
@@ -736,10 +746,10 @@
           if (!n(c.x)) c.x = 600;
           if (!n(c.y)) c.y = 600;
           c.text = c.text.slice(0, AI_TEXT_MAX_LENGTH);
-          c.fontSize = Math.max(20, Math.min(28, +c.fontSize || 24));
-          const maxAllowed = responsiveCardMaxWidth();
-          const targetWidth = Number.isFinite(c.maxWidth) && c.maxWidth > 100 ? c.maxWidth : 560;
-          c.maxWidth = Math.max(300, Math.min(targetWidth, maxAllowed, SIZE - c.x));
+          const metrics = responsiveCardMetrics();
+          c.fontSize = Number.isFinite(+c.fontSize) && +c.fontSize >= metrics.fontSize ? +c.fontSize : metrics.fontSize;
+          const targetWidth = Number.isFinite(c.maxWidth) && c.maxWidth > 100 ? c.maxWidth : metrics.maxWidth;
+          c.maxWidth = Math.max(metrics.maxWidth, Math.min(targetWidth, SIZE - c.x));
           c.lineHeight = Math.max(1, Math.min(2.2, +c.lineHeight || 1.35));
           c.color = c.color || aiColor;
           c.y = Math.min(c.y, Math.max(0, SIZE - c.fontSize * c.lineHeight * 2));

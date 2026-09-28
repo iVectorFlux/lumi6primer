@@ -1406,16 +1406,25 @@
       && Math.abs(a.w - b.w) < 1
       && Math.abs(a.h - b.h) < 1;
   }
+  function padInkBoxDirectional(box, padX, padY) {
+    if (!box) return null;
+    return {
+      x: box.x - padX,
+      y: box.y - padY,
+      w: box.w + padX * 2,
+      h: box.h + padY * 2,
+    };
+  }
   function selectInkClusterAtPoint(point) {
     const scale = Math.max(state.scale, 0.05),
-      hitPad = Math.max(12, Math.min(32, 18 / scale));
+      hitPad = Math.max(16, Math.min(48, 24 / scale));
     let bounds = inkBoundsInRegion({
       x: point.x - hitPad,
       y: point.y - hitPad,
       w: hitPad * 2,
       h: hitPad * 2,
     });
-    // If not hit directly on the stroke, try a wider probe (useful for hollow shapes like circles or rectangles)
+    // If not hit directly on the stroke, try a wider probe (useful for hollow shapes or character gaps)
     if (!bounds) {
       bounds = inkBoundsInRegion({
         x: point.x - hitPad * 2.5,
@@ -1425,17 +1434,17 @@
       });
     }
     if (!bounds) return false;
-    const gap = 24,
-      maxGrow = 1600,
-      origin = { ...bounds };
+    const maxGrow = 3200;
     for (let i = 0; i < 35; i += 1) {
-      const next = inkBoundsInRegion(padInkBox(bounds, gap));
+      const charHeight = Math.max(28, Math.min(240, bounds.h));
+      // Horizontal spacing between characters/symbols in a formula is typically ~0.8-1.2x char height
+      const hGap = Math.max(54, Math.min(120, Math.round(charHeight * 0.95)));
+      // Vertical spacing for dots, equals bars, superscripts/subscripts
+      const vGap = Math.max(34, Math.min(80, Math.round(charHeight * 0.65)));
+      const next = inkBoundsInRegion(padInkBoxDirectional(bounds, hGap, vGap));
       if (!next || boxesAlmostEqual(next, bounds)) break;
       bounds = next;
-      if (
-        bounds.w >= maxGrow
-        || bounds.h >= maxGrow
-      ) break;
+      if (bounds.w >= maxGrow || bounds.h >= maxGrow) break;
     }
     bounds = padInkBox(bounds, 12);
     rememberInkBox(bounds);
@@ -1651,8 +1660,17 @@
         item.y = target.y;
         item.w = target.w;
         item.h = target.h;
-        item.fontSize = Math.max(1, item.fontSize * Math.min(scaleX, scaleY));
-        item.maxWidth = Math.max(item.fontSize * 3, item.maxWidth * scaleX);
+        item.fontSize = Math.max(16, Math.min(220, Math.round(item.fontSize * Math.min(scaleX, scaleY))));
+        item.maxWidth = Math.max(item.fontSize * 3, Math.round(item.maxWidth * scaleX));
+        if (typeof mixedTextImage === "function" && (Math.abs(scaleX - 1) > 0.05 || Math.abs(scaleY - 1) > 0.05)) {
+          mixedTextImage(item.text, item.fontSize, item.color, item.maxWidth, item.lineHeight || 1.35, state.aiFont, sharpRenderRatio())
+            .then(newImg => {
+              item.image = newImg;
+              item.w = newImg.logicalWidth || newImg.width;
+              item.h = newImg.logicalHeight || newImg.height;
+              render();
+            });
+        }
         if (!state.textBoxes.some((existing) => existing.id === item.id)) {
           if (sendBackwards) state.textBoxes.unshift(item);
           else state.textBoxes.push(item);
@@ -1737,6 +1755,13 @@
       selectionExplainButton.setAttribute("aria-busy", String(explaining));
       selectionExplainButton.textContent = explaining ? t("selectionExplaining") : t("selectionExplain");
     }
+    if (selectionAskButton) {
+      selectionAskButton.hidden = draftReady;
+      selectionAskButton.disabled = aiBusy || Boolean(state.visualizingSelection);
+    }
+    if (!active || draftReady) {
+      if (selectionAskPopover) selectionAskPopover.hidden = true;
+    }
     if (selectionTypesetButton) {
       const typesettingNow = selectionIsTypesetting(selection);
       selectionTypesetButton.hidden = false;
@@ -1776,6 +1801,13 @@
     } else {
       selectionToolbar.style.left = `${x}px`;
       selectionToolbar.style.top = `${Math.max(8, Math.min(maxY, y))}px`;
+    }
+    if (selectionAskPopover && !selectionAskPopover.hidden) {
+      const popoverWidth = selectionAskPopover.offsetWidth || 320;
+      const popoverX = Math.max(8, Math.min(viewport.width - popoverWidth - 8, x));
+      const popoverY = y + height + 8 < viewport.height - 180 ? y + height + 8 : Math.max(8, y - (selectionAskPopover.offsetHeight || 160) - 8);
+      selectionAskPopover.style.left = `${popoverX}px`;
+      selectionAskPopover.style.top = `${popoverY}px`;
     }
   }
   function releaseSelectionAITransformLock(run = state.activeAI) {
