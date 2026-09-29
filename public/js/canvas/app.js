@@ -142,7 +142,7 @@
     TEXT_EDITOR_MIN_HEIGHT = 100,
     TEXT_EDITOR_FONT_CSS = 24,
     TEXT_EDITOR_PREVIEW_INTERVAL_MS = 80,
-    TEXT_EDITOR_FONT_FAMILY = '"Patrick Hand", "Segoe Print", "Comic Sans MS", cursive',
+    TEXT_EDITOR_FONT_FAMILY = '"Plus Jakarta Sans", "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
     TEXT_INPUT_GUARD_MS = 500,
     TEXT_INPUT_MAX_LENGTH = 3000,
     MAX_VISIBLE_TEXT_BOXES = 50,
@@ -668,7 +668,7 @@ User writes "Show air quality for Tokyo", names a place, and points to an empty 
     storedTheme = localStorage.getItem("lumi6-theme") || localStorage.getItem("ghostboard-theme"),
     storedGrid = localStorage.getItem("lumi6-grid") ?? localStorage.getItem("ghostboard-grid"),
     storedResearchGrid = localStorage.getItem("lumi6-research-grid"),
-    storedAutoEnabled = localStorage.getItem("lumi6-auto-ai"),
+    storedAutoEnabled = localStorage.getItem("lumi6-auto") ?? localStorage.getItem("lumi6-auto-ai"),
     storedAutoDelayText = localStorage.getItem("lumi6-auto-delay-ms"),
     storedSummonEnabled = localStorage.getItem("lumi6-summon-enabled"),
     storedSnapshotLocation = localStorage.getItem("lumi6-snapshot-location"),
@@ -685,11 +685,17 @@ User writes "Show air quality for Tokyo", names a place, and points to an empty 
     configuredAccessSession = String(window.LUMI6_CONFIG?.accessSessionToken || sessionStorage.getItem("lumi6-access-session") || ""),
     serverAutoDelay = Number.isFinite(configuredAutoDelay) && configuredAutoDelay >= 0 ? configuredAutoDelay : DEFAULT_AUTO_DELAY,
     initialAutoDelay = Number.isFinite(storedAutoDelay) && storedAutoDelay >= 0 && storedAutoDelay <= 10000 ? storedAutoDelay : Math.min(10000, serverAutoDelay),
-    initialAutoEnabled = false,
+    initialAutoEnabled = storedAutoEnabled === null ? true : storedAutoEnabled === "true",
     initialSummonEnabled = storedSummonEnabled === null ? true : storedSummonEnabled === "true",
     initialSnapshotLocation = storedSnapshotLocation === "server" ? "server" : "device",
     initialAiEffort = EFFORT_OPTIONS.includes(storedAiEffort) ? storedAiEffort : EFFORT_OPTIONS.includes(configuredAiEffort) ? configuredAiEffort : "config",
     initialAiTimeout = Number.isFinite(configuredAiTimeout) && configuredAiTimeout >= 10000 ? configuredAiTimeout : DEFAULT_AI_TIMEOUT;
+  try {
+    const savedAiFont = localStorage.getItem("lumi6-ai-font");
+    if (savedAiFont && savedAiFont.includes("Patrick")) {
+      localStorage.removeItem("lumi6-ai-font");
+    }
+  } catch {}
   function authenticatedApiHeaders(headers = {}) {
     return configuredAccessSession ? { ...headers, "X-Lumi6-Session":configuredAccessSession } : { ...headers };
   }
@@ -703,7 +709,7 @@ User writes "Show air quality for Tokyo", names a place, and points to an empty 
       panY: 0,
       pen: 6,
       eraser: 35,
-      aiFont: '"Patrick Hand", "Segoe Print", "Comic Sans MS", cursive',
+      aiFont: '"Plus Jakarta Sans", "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
       inkColor: "#1d4ed8",
       aiColor: "#2563eb",
       drawing: null,
@@ -1447,20 +1453,23 @@ User writes "Show air quality for Tokyo", names a place, and points to an empty 
   }
   window.Lumi6AppSettings = {
     setAuto: (enabled) => {
-      state.auto = Boolean(enabled);
-      localStorage.setItem("lumi6-auto", String(state.auto));
-      updateAutoControl();
+      setAutoEnabled(Boolean(enabled));
       updateSettingsPanel();
     },
     getAuto: () => Boolean(state.auto),
     setAiFont: (font) => {
-      state.aiFont = font;
-      localStorage.setItem("lumi6-ai-font", font);
+      const cleanFont = (!font || font.includes("Patrick"))
+        ? '"Plus Jakarta Sans", "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'
+        : font;
+      state.aiFont = cleanFont;
+      try { localStorage.setItem("lumi6-ai-font", cleanFont); } catch {}
       const sel = document.querySelector("#aiFont");
-      if (sel) sel.value = font;
+      if (sel) sel.value = cleanFont;
       if (typeof positionTextEditors === "function") positionTextEditors();
     },
-    getAiFont: () => state.aiFont || '"Patrick Hand", "Segoe Print", "Comic Sans MS", cursive',
+    getAiFont: () => (state.aiFont && !state.aiFont.includes("Patrick"))
+      ? state.aiFont
+      : '"Plus Jakarta Sans", "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
     setSummonEnabled: (enabled) => {
       setSummonEnabled(enabled);
     },
@@ -1479,14 +1488,24 @@ User writes "Show air quality for Tokyo", names a place, and points to an empty 
     const button = document.querySelector("#auto"),
       range = document.querySelector("#autoDelayRange"),
       value = document.querySelector("#autoDelayValue");
-    button.classList.toggle("active", state.auto);
-    button.setAttribute("aria-pressed", String(state.auto));
-    document.querySelector("#autoLabel").textContent = state.auto ? t("autoEnabled").replace("{delay}", autoDelayText()) : t("autoDisabled");
-    range.value = String(state.autoDelayMs / 1000);
-    value.textContent = `${autoDelayText()} s`;
+    if (button) {
+      button.classList.toggle("active", state.auto);
+      button.setAttribute("aria-pressed", String(state.auto));
+    }
+    const autoLabel = document.querySelector("#autoLabel");
+    if (autoLabel) {
+      autoLabel.textContent = state.auto ? t("autoEnabled").replace("{delay}", autoDelayText()) : t("autoDisabled");
+    }
+    if (range) range.value = String(state.autoDelayMs / 1000);
+    if (value) value.textContent = `${autoDelayText()} s`;
     if (settingsAutoToggle) {
       settingsAutoToggle.classList.toggle("on", state.auto);
       settingsAutoToggle.setAttribute("aria-checked", String(state.auto));
+    }
+    const profileAuto = document.querySelector("#profileAutoToggle");
+    if (profileAuto) {
+      profileAuto.classList.toggle("on", state.auto);
+      profileAuto.setAttribute("aria-checked", String(state.auto));
     }
   }
   function updateEffortControl() {
@@ -2327,15 +2346,21 @@ User writes "Show air quality for Tokyo", names a place, and points to an empty 
     hideEffortControl();
   }
   function setAutoEnabled(enabled, showDelay = false) {
-    state.auto = enabled;
+    state.auto = Boolean(enabled);
     clearTimeout(state.timer);
     state.timer = 0;
-    localStorage.setItem("lumi6-auto-ai", String(enabled));
+    try {
+      localStorage.setItem("lumi6-auto-ai", String(state.auto));
+      localStorage.setItem("lumi6-auto", String(state.auto));
+    } catch {}
     updateAutoControl();
-    if (enabled) {
+    if (state.auto) {
       schedule();
       if (showDelay) showAutoDelayControl();
     } else hideAutoDelayControl();
+    if (typeof window.Lumi6Profile?.syncAutoAiState === "function") {
+      window.Lumi6Profile.syncAutoAiState(state.auto);
+    }
   }
   function updatePaint() {
     const css = getComputedStyle(document.body);
@@ -15144,7 +15169,7 @@ User writes "Show air quality for Tokyo", names a place, and points to an empty 
   });
 
   if (document.fonts?.load) {
-    document.fonts.load('72px "Patrick Hand"').then(() => requestRender()).catch(() => {});
+    document.fonts.load('72px "Plus Jakarta Sans"').then(() => requestRender()).catch(() => {});
   }
   try {
     const urlParams = new URLSearchParams(window.location.search);

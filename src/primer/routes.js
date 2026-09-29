@@ -48,13 +48,20 @@ function profileFromBody(body, userId) {
   const interests = Array.isArray(child.interests)
     ? child.interests.map((item) => String(item).slice(0, 32)).filter(Boolean).slice(0, 12)
     : [];
+  let reasoningProfile = child.reasoning_profile && typeof child.reasoning_profile === "object"
+    ? { ...child.reasoning_profile }
+    : undefined;
+  if (typeof child.auto_ai === "boolean") {
+    reasoningProfile = { ...(reasoningProfile || {}), auto_ai: child.auto_ai };
+  }
   return {
     name: String(child.name || "").trim().slice(0, 40) || undefined,
     grade: String(child.grade || "").trim().slice(0, 24) || undefined,
     age_years: Number.isFinite(Number(child.age_years)) ? Number(child.age_years) : undefined,
     interests: interests.length ? interests : undefined,
     user_id: userId || undefined,
-    onboarded_at: child.onboarded_at || undefined
+    onboarded_at: child.onboarded_at || undefined,
+    reasoning_profile: reasoningProfile
   };
 }
 

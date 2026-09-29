@@ -141,7 +141,7 @@
     TEXT_EDITOR_MIN_HEIGHT = 100,
     TEXT_EDITOR_FONT_CSS = 24,
     TEXT_EDITOR_PREVIEW_INTERVAL_MS = 80,
-    TEXT_EDITOR_FONT_FAMILY = '"Patrick Hand", "Segoe Print", "Comic Sans MS", cursive',
+    TEXT_EDITOR_FONT_FAMILY = '"Plus Jakarta Sans", "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
     TEXT_INPUT_GUARD_MS = 500,
     TEXT_INPUT_MAX_LENGTH = 3000,
     MAX_VISIBLE_TEXT_BOXES = 50,
@@ -667,7 +667,7 @@ User writes "Show air quality for Tokyo", names a place, and points to an empty 
     storedTheme = localStorage.getItem("lumi6-theme") || localStorage.getItem("ghostboard-theme"),
     storedGrid = localStorage.getItem("lumi6-grid") ?? localStorage.getItem("ghostboard-grid"),
     storedResearchGrid = localStorage.getItem("lumi6-research-grid"),
-    storedAutoEnabled = localStorage.getItem("lumi6-auto-ai"),
+    storedAutoEnabled = localStorage.getItem("lumi6-auto") ?? localStorage.getItem("lumi6-auto-ai"),
     storedAutoDelayText = localStorage.getItem("lumi6-auto-delay-ms"),
     storedSummonEnabled = localStorage.getItem("lumi6-summon-enabled"),
     storedSnapshotLocation = localStorage.getItem("lumi6-snapshot-location"),
@@ -684,11 +684,17 @@ User writes "Show air quality for Tokyo", names a place, and points to an empty 
     configuredAccessSession = String(window.LUMI6_CONFIG?.accessSessionToken || sessionStorage.getItem("lumi6-access-session") || ""),
     serverAutoDelay = Number.isFinite(configuredAutoDelay) && configuredAutoDelay >= 0 ? configuredAutoDelay : DEFAULT_AUTO_DELAY,
     initialAutoDelay = Number.isFinite(storedAutoDelay) && storedAutoDelay >= 0 && storedAutoDelay <= 10000 ? storedAutoDelay : Math.min(10000, serverAutoDelay),
-    initialAutoEnabled = false,
+    initialAutoEnabled = storedAutoEnabled === null ? true : storedAutoEnabled === "true",
     initialSummonEnabled = storedSummonEnabled === null ? true : storedSummonEnabled === "true",
     initialSnapshotLocation = storedSnapshotLocation === "server" ? "server" : "device",
     initialAiEffort = EFFORT_OPTIONS.includes(storedAiEffort) ? storedAiEffort : EFFORT_OPTIONS.includes(configuredAiEffort) ? configuredAiEffort : "config",
     initialAiTimeout = Number.isFinite(configuredAiTimeout) && configuredAiTimeout >= 10000 ? configuredAiTimeout : DEFAULT_AI_TIMEOUT;
+  try {
+    const savedAiFont = localStorage.getItem("lumi6-ai-font");
+    if (savedAiFont && savedAiFont.includes("Patrick")) {
+      localStorage.removeItem("lumi6-ai-font");
+    }
+  } catch {}
   function authenticatedApiHeaders(headers = {}) {
     return configuredAccessSession ? { ...headers, "X-Lumi6-Session":configuredAccessSession } : { ...headers };
   }
@@ -702,7 +708,7 @@ User writes "Show air quality for Tokyo", names a place, and points to an empty 
       panY: 0,
       pen: 6,
       eraser: 35,
-      aiFont: '"Patrick Hand", "Segoe Print", "Comic Sans MS", cursive',
+      aiFont: '"Plus Jakarta Sans", "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
       inkColor: "#1d4ed8",
       aiColor: "#2563eb",
       drawing: null,

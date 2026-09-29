@@ -560,20 +560,23 @@
   }
   window.Lumi6AppSettings = {
     setAuto: (enabled) => {
-      state.auto = Boolean(enabled);
-      localStorage.setItem("lumi6-auto", String(state.auto));
-      updateAutoControl();
+      setAutoEnabled(Boolean(enabled));
       updateSettingsPanel();
     },
     getAuto: () => Boolean(state.auto),
     setAiFont: (font) => {
-      state.aiFont = font;
-      localStorage.setItem("lumi6-ai-font", font);
+      const cleanFont = (!font || font.includes("Patrick"))
+        ? '"Plus Jakarta Sans", "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'
+        : font;
+      state.aiFont = cleanFont;
+      try { localStorage.setItem("lumi6-ai-font", cleanFont); } catch {}
       const sel = document.querySelector("#aiFont");
-      if (sel) sel.value = font;
+      if (sel) sel.value = cleanFont;
       if (typeof positionTextEditors === "function") positionTextEditors();
     },
-    getAiFont: () => state.aiFont || '"Patrick Hand", "Segoe Print", "Comic Sans MS", cursive',
+    getAiFont: () => (state.aiFont && !state.aiFont.includes("Patrick"))
+      ? state.aiFont
+      : '"Plus Jakarta Sans", "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
     setSummonEnabled: (enabled) => {
       setSummonEnabled(enabled);
     },
@@ -592,14 +595,24 @@
     const button = document.querySelector("#auto"),
       range = document.querySelector("#autoDelayRange"),
       value = document.querySelector("#autoDelayValue");
-    button.classList.toggle("active", state.auto);
-    button.setAttribute("aria-pressed", String(state.auto));
-    document.querySelector("#autoLabel").textContent = state.auto ? t("autoEnabled").replace("{delay}", autoDelayText()) : t("autoDisabled");
-    range.value = String(state.autoDelayMs / 1000);
-    value.textContent = `${autoDelayText()} s`;
+    if (button) {
+      button.classList.toggle("active", state.auto);
+      button.setAttribute("aria-pressed", String(state.auto));
+    }
+    const autoLabel = document.querySelector("#autoLabel");
+    if (autoLabel) {
+      autoLabel.textContent = state.auto ? t("autoEnabled").replace("{delay}", autoDelayText()) : t("autoDisabled");
+    }
+    if (range) range.value = String(state.autoDelayMs / 1000);
+    if (value) value.textContent = `${autoDelayText()} s`;
     if (settingsAutoToggle) {
       settingsAutoToggle.classList.toggle("on", state.auto);
       settingsAutoToggle.setAttribute("aria-checked", String(state.auto));
+    }
+    const profileAuto = document.querySelector("#profileAutoToggle");
+    if (profileAuto) {
+      profileAuto.classList.toggle("on", state.auto);
+      profileAuto.setAttribute("aria-checked", String(state.auto));
     }
   }
   function updateEffortControl() {

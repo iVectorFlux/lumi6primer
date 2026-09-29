@@ -1165,7 +1165,7 @@
   });
 
   if (document.fonts?.load) {
-    document.fonts.load('72px "Patrick Hand"').then(() => requestRender()).catch(() => {});
+    document.fonts.load('72px "Plus Jakarta Sans"').then(() => requestRender()).catch(() => {});
   }
   try {
     const urlParams = new URLSearchParams(window.location.search);

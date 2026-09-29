@@ -25,7 +25,9 @@ class ChildModelService {
       }
       if (Array.isArray(fields.interests) && fields.interests.length) patch.interests = fields.interests.slice(0, 12);
       if (fields.onboarded_at && !existing.onboarded_at) patch.onboarded_at = fields.onboarded_at;
-      if (fields.user_id && !existing.user_id) patch.user_id = fields.user_id;
+      if (fields.reasoning_profile && typeof fields.reasoning_profile === "object") {
+        patch.reasoning_profile = { ...(existing.reasoning_profile || {}), ...fields.reasoning_profile };
+      }
       if (Object.keys(patch).length) return this.store.updateChild(existing.id, patch);
       return existing;
     }
@@ -35,7 +37,8 @@ class ChildModelService {
       grade: fields.grade || null,
       interests: Array.isArray(fields.interests) ? fields.interests : [],
       user_id: fields.user_id || null,
-      onboarded_at: fields.onboarded_at || null
+      onboarded_at: fields.onboarded_at || null,
+      reasoning_profile: fields.reasoning_profile && typeof fields.reasoning_profile === "object" ? fields.reasoning_profile : {}
     });
   }
 

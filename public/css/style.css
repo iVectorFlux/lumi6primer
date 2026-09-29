@@ -247,11 +247,11 @@ body.sidebar-collapsed .sidebar-collapse-btn svg {
 
 .brand-name {
   display: block;
-  font-family: "Patrick Hand", "Segoe Print", "Comic Sans MS", cursive;
-  font-size: 26px;
+  font-family: 'Plus Jakarta Sans', 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  font-size: 24px;
   font-weight: 700;
   color: #2e1065;
-  letter-spacing: 0.01em;
+  letter-spacing: -0.02em;
   line-height: 1.1;
   white-space: nowrap;
   overflow: visible;
@@ -673,8 +673,8 @@ body.mode-draw-active .topbar-status-area {
   background: var(--kid-bar-bg);
   box-shadow: var(--kid-bar-shadow);
   color: var(--kid-ink);
-  font-family: "Patrick Hand", "Segoe Print", "Comic Sans MS", cursive;
-  font-size: 15px;
+  font-family: 'Plus Jakarta Sans', 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  font-size: 14px;
   font-weight: 600;
   white-space: nowrap;
 }
@@ -885,7 +885,7 @@ body.mode-draw-active .topbar-status-area {
 }
 
 .primer-graphic-caption {
-  font-family: "Patrick Hand", "Segoe Print", cursive, sans-serif;
+  font-family: 'Plus Jakarta Sans', 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
   font-size: 16px;
   color: #4c1d95;
   font-weight: 600;
@@ -905,7 +905,7 @@ body.mode-draw-active .topbar-status-area {
   background: var(--kid-bar-bg);
   box-shadow: var(--kid-bar-shadow);
   color: var(--kid-ink);
-  font-family: "Patrick Hand", "Segoe Print", "Comic Sans MS", cursive;
+  font-family: 'Plus Jakarta Sans', 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
   font-size: 20px;
 }
 
@@ -1644,7 +1644,7 @@ body.mode-draw-active .sketch-tool-group {
 .zoom-level {
   padding: 0 3px;
   color: var(--kid-ink);
-  font-family: "Patrick Hand", "Segoe Print", "Comic Sans MS", cursive;
+  font-family: 'Plus Jakarta Sans', 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
   font-size: 11px;
   font-weight: 600;
   font-variant-numeric: tabular-nums;
@@ -2018,7 +2018,7 @@ body.mode-draw-active .selection-toolbar-button[hidden] {
 .text-editor {
   --text-editor-font-size: 32px;
   --text-editor-ink: #1f2937;
-  --text-editor-font-family: "Patrick Hand", "Segoe Print", "Comic Sans MS", cursive;
+  --text-editor-font-family: 'Plus Jakarta Sans', 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
   position: absolute;
   display: block;
   min-width: 72px;

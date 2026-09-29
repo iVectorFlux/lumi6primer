@@ -180,7 +180,7 @@ a:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 }
 
 .primer-graphic-caption {
-  font-family: "Patrick Hand", "Segoe Print", cursive, sans-serif;
+  font-family: 'Plus Jakarta Sans', 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
   font-size: 16px;
   color: #4c1d95;
   font-weight: 600;
@@ -200,7 +200,7 @@ a:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
   background: var(--kid-bar-bg);
   box-shadow: var(--kid-bar-shadow);
   color: var(--kid-ink);
-  font-family: "Patrick Hand", "Segoe Print", "Comic Sans MS", cursive;
+  font-family: 'Plus Jakarta Sans', 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
   font-size: 20px;
 }
 
@@ -910,7 +910,7 @@ body.mode-draw-active .sketch-tool-group {
 .zoom-level {
   padding: 0 3px;
   color: var(--kid-ink);
-  font-family: "Patrick Hand", "Segoe Print", "Comic Sans MS", cursive;
+  font-family: 'Plus Jakarta Sans', 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
   font-size: 11px;
   font-weight: 600;
   font-variant-numeric: tabular-nums;
@@ -1419,7 +1419,7 @@ body.mode-draw-active .selection-toolbar-button[hidden] {
 .text-editor {
   --text-editor-font-size: 24px;
   --text-editor-ink: #1f2937;
-  --text-editor-font-family: "Patrick Hand", "Segoe Print", "Comic Sans MS", cursive;
+  --text-editor-font-family: 'Plus Jakarta Sans', 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
   box-sizing: border-box;
   position: absolute;
   display: flex;
@@ -6829,4 +6829,3 @@ iframe.talk-lesson-pill {
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
   display: block;
 }
-

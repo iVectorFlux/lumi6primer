@@ -93,8 +93,8 @@
 
 .onboard-card h2 {
   margin: 0 0 8px;
-  font-family: "Patrick Hand", "Segoe Print", "Comic Sans MS", cursive;
-  font-size: 32px;
+  font-family: 'Plus Jakarta Sans', 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  font-size: 28px;
   line-height: 1.15;
   font-weight: 700;
 }

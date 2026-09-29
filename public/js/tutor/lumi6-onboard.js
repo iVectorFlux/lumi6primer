@@ -142,15 +142,21 @@
     const user = await currentUser(8);
     if (!sb || !user) throw new Error("Sign in first.");
     const grade = String(fields.grade || "").replace(/^class\s+/i, "");
+    const existing = await loadRemoteProfile();
+    const currentReasoning = { ...(existing?.reasoning_profile || {}) };
+    const storedAuto = localStorage.getItem("lumi6-auto") ?? localStorage.getItem("lumi6-auto-ai");
+    if (storedAuto !== null) {
+      currentReasoning.auto_ai = storedAuto === "true";
+    }
     const row = {
       user_id: user.id,
       name: String(fields.name || "Learner").trim().slice(0, 40) || "Learner",
       grade,
       age_years: CLASS_AGE[grade] || null,
       interests: normalizeInterests(fields.interests),
+      reasoning_profile: currentReasoning,
       onboarded_at: new Date().toISOString()
     };
-    const existing = await loadRemoteProfile();
     let saved;
     if (existing?.id) {
       const { data, error } = await sb.from("users").update(row).eq("id", existing.id).select("*").single();
@@ -163,6 +169,43 @@
     }
     saveLocal(saved);
     return saved;
+  }
+
+  async function syncAutoAiState(enabled) {
+    const val = Boolean(enabled);
+    try {
+      localStorage.setItem("lumi6-auto", String(val));
+      localStorage.setItem("lumi6-auto-ai", String(val));
+    } catch {}
+
+    const sb = client();
+    const user = await currentUser(3);
+    if (sb && user?.id) {
+      try {
+        const { data: existing } = await sb.from("users").select("id, reasoning_profile").eq("user_id", user.id).maybeSingle();
+        if (existing?.id) {
+          const reasoning = { ...(existing.reasoning_profile || {}), auto_ai: val };
+          await sb.from("users").update({ reasoning_profile: reasoning }).eq("id", existing.id);
+        }
+      } catch (e) {
+        console.warn("[Lumi6] Supabase auto_ai sync:", e.message);
+      }
+    }
+
+    try {
+      const childId = localStorage.getItem("primerChildId");
+      const headers = { "Content-Type": "application/json", ...(await authHeaders()) };
+      await fetch("/api/primer/child", {
+        method: "POST",
+        headers,
+        body: JSON.stringify({
+          childId: childId || undefined,
+          child: {
+            reasoning_profile: { auto_ai: val }
+          }
+        })
+      });
+    } catch (e) {}
   }
 
   function overlay() {
@@ -304,16 +347,20 @@
         const next = !current;
         autoBtn.classList.toggle("on", next);
         autoBtn.setAttribute("aria-checked", String(next));
+        try {
+          localStorage.setItem("lumi6-auto", String(next));
+          localStorage.setItem("lumi6-auto-ai", String(next));
+        } catch {}
         if (window.Lumi6AppSettings?.setAuto) {
           window.Lumi6AppSettings.setAuto(next);
         } else {
-          try { localStorage.setItem("lumi6-auto", String(next)); } catch {}
           const mainToggle = document.querySelector("#settingsAutoToggle");
           if (mainToggle) {
             mainToggle.classList.toggle("on", next);
             mainToggle.setAttribute("aria-checked", String(next));
           }
         }
+        syncAutoAiState(next);
       }
       const summonBtn = event.target.closest("#profileSummonToggle");
       if (summonBtn) {
@@ -333,19 +380,6 @@
         }
       }
     });
-
-    el.addEventListener("change", (event) => {
-      if (event.target?.id === "profileAiFont") {
-        const val = event.target.value;
-        if (window.Lumi6AppSettings?.setAiFont) {
-          window.Lumi6AppSettings.setAiFont(val);
-        } else {
-          try { localStorage.setItem("lumi6-ai-font", val); } catch {}
-          const mainSelect = document.querySelector("#aiFont");
-          if (mainSelect) mainSelect.value = val;
-        }
-      }
-    });
   }
 
   function renderProfileBody(user, profile) {
@@ -357,7 +391,6 @@
     const interests = normalizeInterests(profile?.interests);
     const autoOn = window.Lumi6AppSettings?.getAuto ? window.Lumi6AppSettings.getAuto() : (localStorage.getItem("lumi6-auto") !== "false");
     const summonOn = window.Lumi6AppSettings?.getSummonEnabled ? window.Lumi6AppSettings.getSummonEnabled() : (localStorage.getItem("lumi6-summon-enabled") !== "false");
-    const currentFont = window.Lumi6AppSettings?.getAiFont ? window.Lumi6AppSettings.getAiFont() : (localStorage.getItem("lumi6-ai-font") || '"Patrick Hand", "Segoe Print", "Comic Sans MS", cursive');
 
     body.innerHTML = `
       <div class="onboard-scroll">
@@ -378,13 +411,6 @@
           <div class="profile-settings-row">
             <span class="profile-settings-label">Auto AI</span>
             <button id="profileAutoToggle" class="settings-switch${autoOn ? " on" : ""}" type="button" role="switch" aria-checked="${autoOn}"><span class="settings-switch-thumb" aria-hidden="true"></span></button>
-          </div>
-          <div class="profile-settings-row">
-            <label class="profile-settings-label" for="profileAiFont">AI font</label>
-            <select id="profileAiFont" class="profile-settings-select" aria-label="AI font">
-              <option value='"Patrick Hand", "Segoe Print", "Comic Sans MS", cursive' ${currentFont.includes("Patrick") ? "selected" : ""}>Handwritten</option>
-              <option value='"Lora", Georgia, "Times New Roman", serif' ${currentFont.includes("Lora") ? "selected" : ""}>Storybook (Lora)</option>
-            </select>
           </div>
           <div class="profile-settings-row">
             <span class="profile-settings-label">Show while AI thinks</span>
@@ -545,12 +571,24 @@
 
     if (user) {
       const profile = await loadRemoteProfile();
-      if (profile?.onboarded_at || (profile?.name && profile.name !== "Learner")) {
-        saveLocal(profile);
-        hideOverlay();
-        state.ready = true;
-        if (isEditingFromProfile()) await openProfilePanel();
-        return;
+      if (profile) {
+        if (profile.reasoning_profile && typeof profile.reasoning_profile.auto_ai === "boolean") {
+          const remoteAuto = profile.reasoning_profile.auto_ai;
+          try {
+            localStorage.setItem("lumi6-auto", String(remoteAuto));
+            localStorage.setItem("lumi6-auto-ai", String(remoteAuto));
+          } catch {}
+          if (window.Lumi6AppSettings?.setAuto) {
+            window.Lumi6AppSettings.setAuto(remoteAuto);
+          }
+        }
+        if (profile.onboarded_at || (profile.name && profile.name !== "Learner")) {
+          saveLocal(profile);
+          hideOverlay();
+          state.ready = true;
+          if (isEditingFromProfile()) await openProfilePanel();
+          return;
+        }
       }
     }
 
@@ -572,7 +610,8 @@
     childPayload,
     authHeaders,
     configured,
-    openPanel: openProfilePanel
+    openPanel: openProfilePanel,
+    syncAutoAiState
   };
 
   if (document.readyState === "loading") {
