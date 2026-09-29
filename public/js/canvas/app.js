@@ -14230,7 +14230,13 @@ User writes "Show air quality for Tokyo", names a place, and points to an empty 
   }
 
   function explanationParagraphs(text) {
-    const sentences = String(text || "").split(/(?<=[.!?])\s+/).map((s) => s.trim()).filter(Boolean);
+    const raw = String(text || "").trim();
+    if (!raw) return "";
+    const rawParagraphs = raw.split(/\n\s*\n/).map((p) => p.trim()).filter(Boolean);
+    if (rawParagraphs.length > 1) {
+      return rawParagraphs.map((para) => `<p>${renderTextbookMarks(para)}</p>`).join("");
+    }
+    const sentences = raw.split(/(?<=[.!?])\s+/).map((s) => s.trim()).filter(Boolean);
     if (!sentences.length) return "";
     const paras = [];
     for (let i = 0; i < sentences.length; i += 2) {
@@ -14466,11 +14472,6 @@ User writes "Show air quality for Tokyo", names a place, and points to an empty 
       <article class="talk-turn-card">
         ${step.asked ? childPromptHtml(step.asked) : ""}
         <div class="talk-lumi6-box${step.interactive ? " has-visual" : ""}">
-          ${titleText ? `
-          <div class="talk-lumi6-header">
-            <span class="talk-topic-pill">${escapeHtml(titleText)}</span>
-          </div>` : ""}
-
           ${deeperExpl ? `
             <div class="talk-explanation-body">
               ${explanationParagraphs(deeperExpl)}

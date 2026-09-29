@@ -14,7 +14,7 @@ function isConfigured() {
   return openaiKey().startsWith("sk-");
 }
 
-async function fetchChat(model, systemPrompt, userText, timeoutMs, temperature) {
+async function fetchChat(model, messages, timeoutMs, temperature) {
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), timeoutMs);
   const body = {
@@ -22,10 +22,7 @@ async function fetchChat(model, systemPrompt, userText, timeoutMs, temperature) 
     temperature,
     max_completion_tokens: 900,
     response_format: { type: "json_object" },
-    messages: [
-      { role: "system", content: String(systemPrompt || "") },
-      { role: "user", content: String(userText || "") }
-    ]
+    messages
   };
   try {
     let response = await fetch("https://api.openai.com/v1/chat/completions", {
@@ -77,16 +74,23 @@ async function fetchChat(model, systemPrompt, userText, timeoutMs, temperature) 
   }
 }
 
-async function complete({ systemPrompt, userText, timeoutMs = 18000, temperature = 0.4 } = {}) {
+async function complete({ systemPrompt, userText, messages, timeoutMs = 18000, temperature = 0.4 } = {}) {
   if (!isConfigured()) throw new Error("OpenAI talk is not configured.");
   const primary = talkModel();
   const models = [primary, "gpt-4o-mini", "gpt-4o", "gpt-3.5-turbo"];
   const uniqueModels = [...new Set(models.filter(Boolean))];
 
+  const chatMessages = Array.isArray(messages) && messages.length
+    ? messages
+    : [
+        { role: "system", content: String(systemPrompt || "") },
+        { role: "user", content: String(userText || "") }
+      ];
+
   let lastError = null;
   for (const model of uniqueModels) {
     try {
-      return await fetchChat(model, systemPrompt, userText, timeoutMs, temperature);
+      return await fetchChat(model, chatMessages, timeoutMs, temperature);
     } catch (err) {
       lastError = err;
       console.warn(`[PRIMER] talk attempt with ${model} failed:`, err.message);

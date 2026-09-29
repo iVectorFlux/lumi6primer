@@ -1,176 +1,55 @@
 "use strict";
 
-const { TutorState } = require("./tutor-state.js");
-const LearningStateMachine = require("./state-machine.js");
-const PedagogicalPolicy = require("./pedagogical-policy.js");
-const RoleSelector = require("./role-selector.js");
-const ContextBuilder = require("./context-builder.js");
-const ResponsePolicy = require("./response-policy.js");
-const { understandLearner, historyFromTurns } = require("./understand.js");
-const { isWeakTopic, spokenCoversTopic, deniesTopic, topicsRelated, topicFromText } = require("../topic.js");
-const { shouldGrade, isNewAsk, explicitTopicSwitch } = require("./kid-intent.js");
-const { parseProposal, modelText, looksLikeJsonBlob } = require("./proposal.js");
-const { speechOnly, dedupeSpokenKeepChoices, isRealChoice } = require("./spoken-parts.js");
-const { lastQuestion, questionsMatch, preventRepeatQuestion } = require("./teaching-move.js");
-const { LearnerModel } = require("../learner/learner-model.js");
-const MemoryService = require("../learner/memory-service.js");
-const EvidenceExtractor = require("../learner/evidence-extractor.js");
-const MisconceptionService = require("../learner/misconception-service.js");
-const Autopilot = require("../planner/autopilot.js");
 const ChildPolicy = require("../safety/child-policy.js");
 const ConversationGuard = require("../safety/conversation-guard.js");
 const Escalation = require("../safety/escalation.js");
-const Lumi6CanvasTool = require("../tools/lumi6-canvas.js");
-const RetrievalTool = require("../tools/retrieval.js");
-const groqTalk = require("../tools/groq-talk.js");
 const openaiTalk = require("../tools/openai-talk.js");
-const lessonGraphic = require("../tools/lesson-graphic.js");
 const lessonInteractive = require("../tools/lesson-interactive.js");
-const topicIcon = require("../tools/topic-icon.js");
-const graphicScene = require("../tools/graphic-scene.js");
-const boardMath = require("../tools/board-math.js");
+const { parseProposal, modelText } = require("./proposal.js");
+const { speechOnly } = require("./spoken-parts.js");
 const { synthesizeCartesiaSpeech, audioToPayload } = require("../tools/tts.js");
 
-function firstSpokenSentence(text) {
-  const raw = String(text || "").replace(/\s+/g, " ").trim();
-  if (!raw) return "";
-  const parts = raw.match(/[^.!?]+[.!?]+(?:["”'])?|[^.!?]+$/g) || [raw];
-  return String(parts[0] || raw).trim().slice(0, 220);
-}
+function buildSystemPrompt(child = {}) {
+  const gradeNum = Number(String(child?.grade || "").replace(/[^\d]/g, "")) || (child?.age_years ? Number(child.age_years) - 5 : 4);
+  const childName = child?.name ? `, talking with ${child.name}` : "";
+  const likes = Array.isArray(child?.interests) && child.interests.length ? child.interests.slice(0, 4).join(", ") : "";
 
-function formatEducationalTitle(rawConcept, spoken, childText) {
-  let text = String(rawConcept || "").trim();
-  
-  // If concept is conversational child speech, greeting, or learner name, discard it
-  const isChildFragment = /^(it |they |as i |when |if |because |i think |maybe |what |how |why |almost |yes |okay |so |and |eyes |will |can |turn |slow )\b/i.test(text)
-    || text.length > 35
-    || /\b(evaporate|freeze|melt|warm|cold|slow down|turn into|become|floor|puppy)\b/i.test(text)
-    || /^(kamal|alex|student|learner|buddy|kid|friend|hello|hey|hi|welcome|none|null|undefined)$/i.test(text);
+  return `You are Lumi — a warm, inspiring, and empathetic AI teacher and learning companion for curious young minds (Class ${gradeNum} student, age ~${gradeNum + 5}${childName}).
 
-  if (isChildFragment) {
-    text = "";
-  }
+YOUR CORE GOALS:
+1. CONVERSATIONAL CONTEXT & ACTIVE LISTENING:
+   - Pay close attention to the entire conversation history. If the student clarifies, asks "why?", follows up, or says "No, I'm trying to understand...", immediately acknowledge their point ("Ah, I see what you mean!") and address their exact thought directly. Never repeat the same stale explanation.
+   - If their question has multiple possible meanings (e.g. "is watercolor less"), address what they might mean (e.g. less opaque/pigment density, less coverage, or less durable) clearly and concisely.
+2. FIRST-PRINCIPLES & INTUITIVE ANALOGIES:
+   - Explain how things work simply from cause to effect, starting with everyday things they can picture (${likes ? `you can borrow ideas from ${likes} if natural` : "like water, shadows, spinning balls, or ice cubes"}).
+   - Keep your explanation to 2-3 readable, friendly paragraphs. Avoid overwhelming walls of text.
+3. NATURAL & CLEAN LANGUAGE:
+   - Talk naturally like a real, supportive human sitting beside them.
+   - Do NOT force emojis into the text or decorate random words (never put ➕, 🖌️, 💡 after words). Speak cleanly and naturally.
+4. ONE THOUGHTFUL FOLLOW-UP:
+   - Conclude with ONE gentle, curious wonder question or check-in that encourages them to think deeper or confirm if that answered their question.
 
-  // Clean STT artifacts and phonetic typos
-  text = text
-    .replace(/^(can you|could you|please|i want to|i am in \d+(?:th|st|nd|rd)? grade|teach me about|teach me|tell me about|tell me|explain to me|explain|learn about|what is|what are|how does|how do|why is|why does|like what exactly|what exactly)\s+/gi, "")
-    .replace(/\b(suns of|sons of|is why|why is|how does|state matter)\b/gi, "States of Matter")
-    .replace(/\bmom\b/gi, "warm")
-    .replace(/\bsuns\b/gi, "sun")
-    .replace(/\b(tit|plz|pls|wanna|gonna|like|exactly|know|show)\b/gi, "")
-    .replace(/\s+/g, " ")
-    .trim();
-
-  // Deduplicate repeated words
-  const words = text.split(/\s+/).filter(Boolean);
-  const seen = new Set();
-  const deduped = [];
-  for (const w of words) {
-    const lower = w.toLowerCase();
-    if (!seen.has(lower)) {
-      seen.add(lower);
-      deduped.push(w);
-    }
-  }
-  text = deduped.join(" ");
-
-  if (!text || text.length < 3 || /^(turn|slow|science discovery|lesson)$/i.test(text)) {
-    const fromChild = String(childText || "")
-      .replace(/^(can you|could you|please|teach me about|teach me|tell me about|tell me|explain|what is|what are|how does|how do|why is|why does)\s+/gi, "")
-      .replace(/[?.!]+$/g, "")
-      .trim();
-    if (fromChild.length >= 3 && fromChild.length <= 40 && !/^(hi|hey|hello|ok|okay|yes|no|thanks)$/i.test(fromChild)) {
-      text = fromChild;
-    } else {
-      text = "";
-    }
-  }
-
-  if (!text || text.length < 3) return "";
-  
-  return text.split(/\s+/).map(w => {
-    if (/^(and|of|the|in|on|at|to|for|with)$/i.test(w)) return w.toLowerCase();
-    return w.charAt(0).toUpperCase() + w.slice(1).toLowerCase();
-  }).join(" ");
-}
-
-function extractHandwrittenNotes({ concept, spoken, childText, chapterIndex = 0 } = {}) {
-  const cleanTitle = formatEducationalTitle(concept, spoken, childText);
-
-  const rawSentences = String(spoken || "")
-    .replace(/^([Hh]ey|[Hh]ello|[Hh]i|[Gg]reat question|[Aa]lright|[Ss]ure|You'?re (?:almost |exactly )?right),?[^.!?]*[.!?]\s*/g, "")
-    .split(/(?<=[.!?])\s+/)
-    .map((s) => s.trim())
-    .filter((s) => s.length > 12);
-
-  // Separate the thinking question from key explanation facts
-  const questionSentence = rawSentences.find((s) => s.endsWith("?") || /^(what|how|why|can you|where|do you think|have you ever)\b/i.test(s)) || "";
-  const keyPoints = rawSentences
-    .filter((s) => s !== questionSentence && !/^(try|now you|what do you think|can you|let'?s|how does that sound|ready|tell me|ask me|want to|shall we)\b/i.test(s))
-    .slice(0, 2);
-
-  if (!cleanTitle) return null;
-
-  const lines = [];
-  if (cleanTitle) lines.push(cleanTitle);
-  for (const pt of keyPoints) {
-    lines.push(`• ${pt}`);
-  }
-  if (questionSentence) {
-    lines.push(`? ${questionSentence}`);
-  }
-
-  return {
-    id: `note-${Date.now()}`,
-    tool: "write_text",
-    title: cleanTitle,
-    text: lines.join("\n"),
-    fontSize: 130,
-    color: "#4c1d95", // Velvet purple
-    maxWidth: 2200,
-    lineHeight: 1.38,
-    isLessonNote: true
-  };
+Return JSON only:
+{
+  "spoken": "Your clear, engaging, conversational explanation...",
+  "question": "One curious wonder question to ask next...",
+  "concept": "Short 2-3 word topic name (e.g. 'Watercolor Painting' or 'Water Cycle')"
+}`;
 }
 
 /**
- * Learning Orchestrator
- *
- * INPUT → understand learner → temp state → memory → phase → pedagogical need
- * → role → action → tool? → generate → observe → evidence → memory
- * → learner model → next state
- *
- * LLM proposes. Pedagogical Policy validates. Orchestrator executes.
+ * Modern, Lightweight Learning Orchestrator for Primer Chat/Talk Mode.
+ * Driven by genuine multi-turn context, first-principles pedagogy, and interactive simulation embeds.
  */
 class LearningOrchestrator {
   constructor(options = {}) {
     this.childModel = options.childModel;
     this.sessions = options.sessions;
     this.aiProvider = options.aiProvider;
-    this.whiteboardController = options.whiteboardController;
-    this.boardSummary = options.boardSummary;
 
-    this.stateMachine = options.stateMachine || new LearningStateMachine();
-    this.roleSelector = options.roleSelector || new RoleSelector();
-    this.policy = options.policy || new PedagogicalPolicy({
-      roleSelector: this.roleSelector,
-      stateMachine: this.stateMachine
-    });
-    this.contextBuilder = options.contextBuilder || new ContextBuilder();
-    this.responsePolicy = options.responsePolicy || new ResponsePolicy();
-    this.learnerModel = options.learnerModel || new LearnerModel();
-    this.memory = options.memory || new MemoryService({ childModel: this.childModel });
-    this.evidenceExtractor = options.evidenceExtractor || new EvidenceExtractor();
-    this.misconceptions = options.misconceptions || new MisconceptionService();
-    this.autopilot = options.autopilot || new Autopilot();
-    this.childPolicy = options.childPolicy || new ChildPolicy();
-    this.guard = options.guard || new ConversationGuard(this.childPolicy);
-    this.escalation = options.escalation || new Escalation();
-    this.canvas = options.canvas || new Lumi6CanvasTool({
-      whiteboardController: this.whiteboardController,
-      boardSummary: this.boardSummary
-    });
-    this.retrieval = options.retrieval || new RetrievalTool();
+    this.childPolicy = new ChildPolicy();
+    this.guard = new ConversationGuard(this.childPolicy);
+    this.escalation = new Escalation();
     this._states = new Map();
   }
 
@@ -179,416 +58,183 @@ class LearningOrchestrator {
     if (!spokenText) throw new Error("spokenText is required.");
     const requestId = input.requestId || `primer_${Date.now()}`;
 
-    const child = this.learnerModel.normalize(
-      await this.childModel.getOrCreate(input.childId, input.child || {})
-    );
+    // 1. Resolve Child & Session
+    const child = await this.childModel.getOrCreate(input.childId, input.child || {});
     const { session, created } = await this.sessions.getOrStart(child.id, input.sessionId);
     if (created) await this.childModel.incrementSessionCount(child.id);
-    const recentTurns = await this.sessions.getRecentTurns(session.id, 16);
-    const history = historyFromTurns(recentTurns);
+    const recentTurns = await this.sessions.getRecentTurns(session.id, 12);
 
+    // 2. Safety Inspection
     const safetyIn = this.guard.inspectInput(spokenText, child);
     if (safetyIn.block) {
       const spoken = this.escalation.message(safetyIn.flags);
-      return this._finish({
+      return this._finishSimple({
         child,
         session,
         spokenText,
         spoken,
         requestId,
         commands: [],
-        state: this._loadState(session, child),
-        decision: { phase: "think", role: "advisor", action: "observe", tools: [], reasons: ["safety halt"] },
-        understanding: { raw: spokenText, intent: "safety" },
-        evidence: { kind: "note", note: "escalation" },
         safety: { ok: false, flags: safetyIn.flags, escalation: "halt" }
       });
     }
 
-    const state = this._loadState(session, child);
-    state.mode = this.autopilot.detectMode(spokenText, input.mode, state.mode);
-    state.safetyState = {
-      ok: true,
-      flags: safetyIn.flags,
-      escalation: null,
-      dependencyRisk: this.childPolicy.dependencyRisk(history)
-    };
+    // 3. Build Multi-Turn Conversation History for the LLM
+    const systemPrompt = buildSystemPrompt(child);
+    const messages = [{ role: "system", content: systemPrompt }];
 
-    const previousConcept = state.currentConcept || "";
-    const understanding = understandLearner(spokenText, {
-      boardImage: input.boardImage,
-      concept: state.currentConcept,
-      askedBackLast: Boolean(state.conversationState?.askedBackLast),
-      lastAskedToLook: Boolean(state.conversationState?.lastAskedToLook)
-    });
-    if (understanding.askingNewTopic) {
-      state.conversationState = state.conversationState || {};
-      state.conversationState.lastGraphicScene = "";
-      state.conversationState.lastInteractiveSlug = "";
-      state.conversationState.lastCheckQuestion = "";
-      state.conversationState.askedBackLast = false;
-      state.conversationState.sameQuestionStreak = 0;
-      state.conversationState.turnsSinceDoubtCheck = 0;
+    for (const turn of recentTurns.slice(-10)) {
+      const role = (turn.role === "child" || turn.role === "student" || turn.role === "user") ? "user" : "assistant";
+      const content = String(turn.spoken_text || turn.text || "").trim();
+      if (content) {
+        messages.push({ role, content });
+      }
     }
-    const plan = this.autopilot.plan(child, state, understanding);
-    state.currentGoal = plan.goal;
-    if (understanding.concept && !isWeakTopic(understanding.concept)) {
-      state.currentConcept = understanding.concept;
-    } else if (understanding.intent === "greeting" || understanding.concept === "") {
-      state.currentConcept = "";
-    } else if (!state.currentConcept && plan.concept) {
-      state.currentConcept = plan.concept;
+    messages.push({ role: "user", content: spokenText });
+
+    // 4. Call Model (OpenAI first, fallback to configured aiProvider)
+    let proposal = null;
+    if (openaiTalk.isConfigured()) {
+      try {
+        const res = await openaiTalk.complete({ messages, timeoutMs: 16000 });
+        proposal = parseProposal(res.content);
+      } catch (err) {
+        console.warn("[PRIMER] OpenAI talk failed:", err.message);
+      }
     }
 
-    const memorySnippets = await Promise.race([
-      this.memory.retrieve(child.id, {
-        concept: state.currentConcept,
-        intent: understanding.intent
-      }).catch(() => []),
-      new Promise((resolve) => setTimeout(() => resolve([]), 220))
-    ]);
-    state.memorySnippets = memorySnippets;
-    state.misconceptions = child.active_misconceptions || [];
-    state.learnerState = child;
-
-    const phase = this.stateMachine.determinePhase(state, understanding);
-    this.stateMachine.advanceTurns(state, phase);
-    const need = this.roleSelector.needFrom(state, understanding);
-    const role = this.roleSelector.select(state, understanding, need);
-    const action = this.roleSelector.selectAction(role, phase, understanding, state.conversationState);
-    state.tutorRole = role;
-    state.action = action;
-
-    if (/\b(simulate|what happens if we (run|repeat)|over time|each step of the cycle)\b/i.test(spokenText)) {
-      understanding.wantsSimulation = true;
+    if (!proposal && this.aiProvider && typeof this.aiProvider.callModelFn === "function") {
+      try {
+        const response = await this.aiProvider.callModelFn({
+          persona: "teacher",
+          userAction: "explain",
+          fastTalk: true,
+          systemPrompt,
+          studentQuery: spokenText,
+          typedInput: `${systemPrompt}\n\nStudent: "${spokenText}"`,
+          conversationHistory: recentTurns.slice(-6),
+          boardImage: input.boardImage || null
+        });
+        proposal = parseProposal(modelText(response));
+      } catch (err) {
+        console.warn("[PRIMER] aiProvider talk fallback failed:", err.message);
+      }
     }
 
-    let retrievalContext = "";
-    const preDecision = { phase, role, action, tools: [] };
-    if (this.retrieval.needed(preDecision, understanding) && understanding.intent === "fact") {
-      retrievalContext = await this.retrieval.retrieve(spokenText);
-    }
-    if (understanding.refersToBoard) {
-      understanding.boardCaption = "Child is asking about their own marks. Transcribe handwritten math carefully: + is plus; × * or a small x between digits is multiply; ÷ / is divide. Compute the exact answer before you speak. Ignore printed tutor notes.";
-    }
+    // 5. Extract Spoken Text & Question
+    let spoken = "";
+    let question = "";
+    let concept = "";
 
-    const heuristicDecision = this.policy.validate({
-      phase,
-      role,
-      action,
-      tools: [
-        (understanding.wantsDraw || understanding.wantsExplain) && "canvas",
-        understanding.refersToBoard && "vision",
-        understanding.intent === "homework" && "homework",
-        (understanding.intent === "fact" || Boolean(retrievalContext)) && "retrieval"
-      ].filter(Boolean)
-    }, state, understanding);
-
-    const askedToLook = Boolean(understanding.askedToLook) && !understanding.wantsDraw;
-    const speechMath = boardMath.extractFacts(spokenText);
-    const shouldReadBoard = Boolean(input.boardImage) && (
-      askedToLook || speechMath.length > 0 || understanding.intent === "homework"
-    );
-    const mathFromTurn = await this._readBoardMath(spokenText, shouldReadBoard ? input.boardImage : null);
-    const grade = shouldGrade({
-      text: spokenText,
-      askedBackLast: Boolean(state.conversationState?.askedBackLast),
-      understanding
-    });
-    console.log("[PRIMER] kid-intent", {
-      said: String(spokenText || "").slice(0, 100),
-      intent: understanding.intent,
-      concept: understanding.concept,
-      held: state.currentConcept,
-      look: Boolean(understanding.askedToLook),
-      grade,
-      math: (mathFromTurn.facts || []).map((fact) => fact.text)
-    });
-
-    const prompt = this.contextBuilder.build({
-      state,
-      child,
-      memorySnippets,
-      understanding,
-      decision: heuristicDecision,
-      history,
-      retrievalContext,
-      boardMath: mathFromTurn,
-      previousConcept
-    });
-
-    const useVision = Boolean(askedToLook && input.boardImage && !mathFromTurn.hasExact);
-    const proposal = await this._proposeTalk(prompt, useVision, input.boardImage, {
-      mathMode: mathFromTurn.hasExact
-    });
-    const decision = this.policy.validate(proposal, state, understanding);
-    state.tutorRole = decision.role;
-    state.action = decision.action;
-    state.learningPhase = decision.phase;
-    state.selectedTools = decision.tools;
-    const named = String(proposal?.interpretation?.concept || "").trim();
-    // Only adopt the model's topic label when it is grounded in what the child
-    // said. Otherwise the model can invent a lesson nobody asked for.
-    const fromChild = Boolean(named) && (
-      spokenCoversTopic(spokenText, named)
-      || topicsRelated(named, understanding.concept)
-      || topicsRelated(named, topicFromText(spokenText))
-    );
-    const wrongTopic = /\b(different question|different topic|not what i asked|i asked something else|wrong (topic|question|thing|subject)|i didn't ask that|i did not ask that)\b/i.test(spokenText);
-    const hasNewAsk = isNewAsk(spokenText, understanding);
-    const topicLocked = Boolean(state.currentConcept)
-      && (understanding.confusion || understanding.voiceIssue)
-      && !understanding.wantsExplain
-      && !hasNewAsk
-      && !wrongTopic;
-
-    if (wrongTopic && !understanding.concept) {
-      state.currentConcept = "";
-      understanding.concept = "";
-    } else if (understanding.concept && understanding.concept !== state.currentConcept) {
-      state.currentConcept = understanding.concept;
-    } else if (
-      named
-      && !topicLocked
-      && fromChild
-      && named.length >= 3
-      && named.length <= 48
-      && !isWeakTopic(named)
-      && !/^(this|that|it|idea)$/i.test(named)
-    ) {
-      understanding.concept = named;
-      state.currentConcept = named;
-    } else if (understanding.concept) {
-      state.currentConcept = understanding.concept;
+    if (proposal) {
+      spoken = String(proposal.spoken || "").trim();
+      question = String(proposal.question || "").trim();
+      concept = String(proposal.concept || "").trim();
+      if (question && !spoken.includes(question)) {
+        spoken = `${spoken}\n\n${question}`.trim();
+      }
     }
 
-    const proposalSpoken = String(decision.proposedSpoken || proposal.spoken || "").trim();
-    const topicNow = understanding.concept || state.currentConcept;
-    const topicUsable = Boolean(topicNow) && !isWeakTopic(topicNow);
-    const offTopic = !askedToLook && topicUsable
-      && (!spokenCoversTopic(proposalSpoken, topicNow) || deniesTopic(proposalSpoken, topicNow));
-    // A good lesson does not have to repeat the topic word, so never naming it
-    // only earns a second attempt. Disowning the topic makes the answer unusable.
-    const unusable = (text) => !text || looksLikeJsonBlob(text) || ResponsePolicy.isCannedSpeech(text)
-      || (topicUsable && deniesTopic(text, topicNow));
-    const skipsTopic = (text) => topicUsable && !spokenCoversTopic(text, topicNow);
-    if (!askedToLook && (unusable(proposalSpoken) || skipsTopic(proposalSpoken))) {
-      const retry = await this._proposeSimple(understanding, null, {}, child);
-      const retrySpoken = String(retry?.spoken || "").trim();
-      let chosen = "";
-      if (!unusable(retrySpoken) && !skipsTopic(retrySpoken)) chosen = retrySpoken;
-      else if (!unusable(proposalSpoken)) chosen = proposalSpoken;
-      else if (!unusable(retrySpoken)) chosen = retrySpoken;
-      proposal.spoken = chosen;
-      decision.proposedSpoken = chosen;
+    if (!spoken) {
+      spoken = "I'm right here with you! Could you tell me a little more about what you'd like to explore?";
     }
 
-    const turnsSinceDoubtCheck = Number(state.conversationState?.turnsSinceDoubtCheck || 0);
-    const taughtAlready = Boolean(String(state.conversationState?.lastTeacherSpoken || "").trim());
-    const openingAsk = understanding.askingNewTopic
-      || isNewAsk(spokenText, understanding)
-      || ["explain", "question", "goal", "what_if"].includes(understanding.intent);
-    const allowDoubtCheck = taughtAlready
-      && !openingAsk
-      && turnsSinceDoubtCheck >= 5
-      && !understanding?.confusion
-      && !understanding?.voiceIssue;
-    decision.spokenHints = { ...(decision.spokenHints || {}), allowDoubtCheck };
+    // Clean any stray markdown code-fences
+    spoken = spoken
+      .replace(/^```(?:json)?\s*/i, "")
+      .replace(/```$/i, "")
+      .trim();
 
-    let spoken = this.responsePolicy.apply(
-      decision.proposedSpoken || proposal.spoken || "",
-      decision,
-      understanding,
-      child
-    );
-    const extraChoices = (Array.isArray(proposal?.choices) ? proposal.choices : decision?.choices || [])
-      .map((choice) => String(choice || "").trim())
-      .filter((choice) => isRealChoice(choice));
-    if (extraChoices.length >= 2 && !/\(\s*a\s*\)/i.test(spoken)) {
-      spoken = `${spoken} ${extraChoices.map((choice, i) => `(${String.fromCharCode(97 + i)}) ${choice}`).join(" ")}`.trim();
-    }
-    spoken = dedupeSpokenKeepChoices(spoken);
-    spoken = boardMath.ensureResult(spoken, mathFromTurn);
-    spoken = preventRepeatQuestion(
-      spoken,
-      state.conversationState?.lastCheckQuestion,
-      Number(state.conversationState?.sameQuestionStreak || 0),
-      state.currentConcept || understanding.concept
-    );
-    if (state.safetyState.dependencyRisk === "high") {
-      spoken = `${spoken} Try the next bit without me first — then tell me what you did.`.replace(/\s+/g, " ");
-    }
+    // 6. Stream Spoken Text & Audio TTS
     const openerTts = this._emitSpoken(input, spoken);
 
-    const junkBoardSpeech = /can'?t see|cannot see|appears blank|resend a clear photo|no handwritten|photo of the whiteboard/i.test(spoken);
-    const lastScene = String(state.conversationState?.lastGraphicScene || "");
-    const graphicPlan = graphicScene.shouldGenerateGraphic({
-      lookingAtBoard: askedToLook,
-      junkSpeech: junkBoardSpeech,
-      wantsWrite: understanding.wantsWrite,
-      wantsDraw: understanding.wantsDraw,
-      wantsExplain: understanding.wantsExplain,
-      wantsReason: understanding.wantsReason,
-      intent: understanding.intent,
-      askedBackLast: Boolean(state.conversationState?.askedBackLast),
-      lastTeacherSpoken: state.conversationState?.lastTeacherSpoken,
-      childText: spokenText,
-      concept: state.currentConcept || understanding.concept,
-      lastScene,
-      decisionAction: decision.action
-    });
-    const graphicTitle = graphicPlan.title || state.currentConcept || understanding.concept || "";
-    const chapterIndex = Math.max(0, Math.ceil((Number(recentTurns?.length || 0)) / 2));
-    const noteCmd = graphicPlan.generate
-      ? extractHandwrittenNotes({ concept: graphicTitle, spoken, childText: spokenText, chapterIndex })
-      : null;
-
+    // 7. Match Interactive STEM Simulations
     let commands = [];
-    if (noteCmd) {
-      commands.push(noteCmd);
-      this._emitStream(input, {
-        event: "graphic",
-        canvasActions: [noteCmd],
-        visualPlan: { shouldDraw: true, commands: [noteCmd] }
-      });
-    }
-
-    // A named topic should still get a pill even when we skip the Wikipedia picture
-    // (same-scene, no "draw" intent, answering a check question, etc.).
-    const skipInteractive = Boolean(
-      askedToLook
-      || junkBoardSpeech
-      || understanding.wantsWrite
-      || understanding.intent === "homework"
-    );
-    const interactiveHit = skipInteractive
-      ? null
-      : await lessonInteractive.match({
-        store: this.childModel.store,
-        query: spokenText,
-        concept: understanding.concept || spokenText,
-        childText: spokenText,
-        grade: child?.grade
-      }).catch(() => null);
-    const lastInteractive = String(state.conversationState?.lastInteractiveSlug || "");
-    const askedToLearn = Boolean(understanding.askingNewTopic)
-      || explicitTopicSwitch(spokenText)
-      || /\b(teach me|i want to learn|tell me about)\b/i.test(spokenText);
-    let sentInteractive = false;
-
-    if (interactiveHit?.slug && interactiveHit.slug === lastInteractive && !askedToLearn) {
-      console.log("[PRIMER] Interactive already showing:", interactiveHit.slug);
-    } else if (interactiveHit?.slug) {
-        const widget = lessonInteractive.commandFor(interactiveHit);
-        const pair = [];
-        widget.keepOthers = true;
-        widget.archivePrevious = true;
-        widget.pairWith = "";
-        widget.openInPlayground = true;
-        pair.push(widget);
-        commands.push(...pair);
-        state.conversationState = state.conversationState || {};
-        state.conversationState.lastGraphicScene = graphicPlan.scene;
-        state.conversationState.lastGraphicKind = "interactive";
-        state.conversationState.lastInteractiveSlug = interactiveHit.slug;
-        this._emitStream(input, {
-          event: "graphic",
-          canvasActions: pair,
-          visualPlan: { shouldDraw: true, commands: pair }
-        });
-        sentInteractive = true;
-        console.log("[PRIMER] Interactive matched:", interactiveHit.slug, "(pictures paused)");
-    }
-
-    if (!sentInteractive) {
-      console.log("[PRIMER] Talk pictures paused — no image API calls");
-    }
-
-    const writeCmd = this.canvas.buildWriteCommand(spokenText, state.conversationState?.lastTeacherSpoken);
-    if (writeCmd) {
-      commands = [...commands, writeCmd];
-      this._emitStream(input, {
-        event: "graphic",
-        canvasActions: [writeCmd],
-        visualPlan: { shouldDraw: true, commands: [writeCmd] }
-      });
-    }
-
-    const evidence = this.evidenceExtractor.extract({
+    const interactiveHit = await lessonInteractive.match({
+      store: this.childModel.store,
+      query: spokenText,
+      concept: concept || spokenText,
       childText: spokenText,
-      understanding,
-      proposal,
-      decision
-    });
-    const addedMis = this.misconceptions.detect(understanding, spokenText);
-    const removedMis = this.misconceptions.resolved(understanding, evidence);
-    state.misconceptions = this.misconceptions.merge(state.misconceptions, addedMis, removedMis);
-    state.evidence = {
-      lastKind: evidence.kind,
-      lastNote: evidence.note,
-      recent: [...(state.evidence.recent || []), evidence].slice(-8)
-    };
+      grade: child?.grade
+    }).catch(() => null);
 
-    const nextPhase = this.stateMachine.nextAfterTurn(state, understanding);
-    this._updateConversationCounters(state, decision, understanding, spoken);
-    state.learningPhase = nextPhase;
+    if (interactiveHit?.slug) {
+      const widget = lessonInteractive.commandFor(interactiveHit);
+      widget.keepOthers = true;
+      widget.archivePrevious = true;
+      widget.openInPlayground = true;
+      commands.push(widget);
+      this._emitStream(input, {
+        event: "graphic",
+        canvasActions: [widget],
+        visualPlan: { shouldDraw: true, commands: [widget] }
+      });
+      console.log(`[PRIMER] Attached interactive: ${interactiveHit.slug}`);
+    }
 
-    const modelUpdates = this.learnerModel.applyEvidence(child, evidence, state.currentConcept);
-    modelUpdates.misconceptions_add = addedMis;
-    modelUpdates.misconceptions_remove = removedMis;
-    const persist = Promise.all([
-      this.memory.remember(child.id, session.id, evidence, {
-        concept: state.currentConcept,
-        phase: decision.phase,
-        role: decision.role
-      }).catch((err) => console.warn("[PRIMER] memory.remember failed:", err.message)),
-      this.childModel.updateAfterTurn(child.id, modelUpdates)
-        .catch((err) => console.warn("[PRIMER] updateAfterTurn failed:", err.message))
-    ]);
+    // 8. Persist Turns in Session History
+    await this.sessions.addTurn(session.id, {
+      child_id: child.id,
+      role: "child",
+      spoken_text: spokenText
+    }).catch((err) => console.warn("[PRIMER] persist child turn failed:", err.message));
 
-    const finished = await this._finish({
-      child,
-      session,
-      spokenText,
-      spoken,
-      requestId,
-      commands,
-      state,
-      decision,
-      understanding,
-      evidence,
-      safety: state.safetyState,
-      created,
-      priorTurnCount: recentTurns.length
-    });
-    persist.catch(() => {});
+    await this.sessions.addTurn(session.id, {
+      child_id: child.id,
+      role: "primer",
+      spoken_text: spoken,
+      canvas_action: commands.length ? commands : null
+    }).catch((err) => console.warn("[PRIMER] persist primer turn failed:", err.message));
+
     await Promise.race([
       openerTts || Promise.resolve(null),
-      new Promise((resolve) => setTimeout(resolve, 4000))
+      new Promise((resolve) => setTimeout(resolve, 3000))
     ]);
-    return finished;
+
+    return {
+      requestId,
+      intent: "chat",
+      concept: concept || null,
+      teacherResponse: spoken,
+      spokenResponse: spoken,
+      spokenText: spoken,
+      spoken,
+      visualPlan: { shouldDraw: commands.length > 0, commands },
+      canvasActions: commands,
+      drawingResult: { success: true, commands },
+      sessionState: {
+        childId: child.id,
+        sessionId: session.id,
+        childName: child.name || null,
+        turnNumber: Math.ceil((Number(recentTurns?.length || 0) + 2) / 2),
+        persistence: this.childModel.store?.remoteEnabled ? "supabase" : "memory",
+        mode: "talk"
+      },
+      safety: { ok: true },
+      metadata: { timestamp: new Date().toISOString() }
+    };
   }
 
-  _loadState(session, child) {
-    const cached = this._states.get(session.id);
-    if (cached) {
-      cached.learnerState = child;
-      return cached;
-    }
-    const snapshot = session.child_model_delta?.tutorState || {};
-    const state = TutorState.fromSnapshot({
-      mode: snapshot.mode || (session.experience_pattern === "autopilot" ? "autopilot" : "manual"),
-      currentGoal: snapshot.currentGoal || null,
-      currentConcept: snapshot.currentConcept || null,
-      learningPhase: snapshot.learningPhase || "story",
-      conversationState: snapshot.conversationState,
-      evidence: snapshot.evidence,
-      misconceptions: child.active_misconceptions || snapshot.misconceptions,
-      tutorRole: snapshot.tutorRole,
-      action: snapshot.action
-    }, child);
-    this._states.set(session.id, state);
-    return state;
+  _finishSimple({ child, session, spokenText, spoken, requestId, commands = [], safety = { ok: true } }) {
+    return {
+      requestId,
+      intent: "safety",
+      teacherResponse: spoken,
+      spokenResponse: spoken,
+      spokenText: spoken,
+      spoken,
+      visualPlan: { shouldDraw: false, commands: [] },
+      canvasActions: [],
+      drawingResult: { success: true, commands: [] },
+      sessionState: {
+        childId: child?.id,
+        sessionId: session?.id,
+        childName: child?.name || null,
+        mode: "talk"
+      },
+      safety,
+      metadata: { timestamp: new Date().toISOString() }
+    };
   }
 
   _emitStream(input, payload) {
@@ -613,8 +259,8 @@ class LearningOrchestrator {
 
   _kickOpenerTts(input, spoken) {
     const sentences = String(spoken || "").replace(/\s+/g, " ").trim()
-      .match(/[^.!?]+[.!?]+(?:[\"\u201D\u2019])?|[^.!?]+$/g) || [];
-    const chunks = sentences.map(s => s.trim()).filter(s => s.length > 3).slice(0, 3);
+      .match(/[^.!?]+[.!?]+(?:["”'])?|[^.!?]+$/g) || [];
+    const chunks = sentences.map((s) => s.trim()).filter((s) => s.length > 3).slice(0, 3);
     if (!chunks.length) return Promise.resolve(null);
     const promises = chunks.map((text, i) =>
       synthesizeCartesiaSpeech(text.slice(0, 280))
@@ -635,290 +281,7 @@ class LearningOrchestrator {
           return null;
         })
     );
-    return Promise.all(promises).then(results => results[0]);
-  }
-
-  async _readBoardMath(spokenText, boardImage) {
-    const fromSpeech = { transcription: "", facts: boardMath.extractFacts(spokenText) };
-    if (!boardImage) return boardMath.mergeFacts(fromSpeech);
-    const provider = this.aiProvider;
-    if (!provider || typeof provider.callModelFn !== "function") {
-      return boardMath.mergeFacts(fromSpeech);
-    }
-    try {
-      const call = provider.callModelFn({
-        persona: "teacher",
-        userAction: "explain",
-        fastTalk: true,
-        boardRead: true,
-        systemPrompt: "Transcribe the child's whiteboard math. Return JSON only.",
-        studentQuery: String(spokenText || ""),
-        typedInput: "Transcribe the attached whiteboard.",
-        conversationHistory: [],
-        boardImage
-      });
-      const response = await Promise.race([
-        call,
-        new Promise((_, reject) => setTimeout(() => reject(new Error("timeout")), 10000))
-      ]);
-      const parsed = parseProposal(modelText(response)) || {};
-      return boardMath.collectFromTurn(spokenText, parsed);
-    } catch (err) {
-      console.warn("[PRIMER] board math read failed:", err.message);
-      return boardMath.mergeFacts(fromSpeech);
-    }
-  }
-
-  async _proposeTalk(prompt, useVision, boardImage, options = {}) {
-    const timeoutMs = useVision ? 22000 : 14000;
-    const userText = prompt.talkInput || prompt.userBlock || prompt.studentQuery || "";
-    if (process.env.LUMI6_DEBUG_PROMPT === "1") {
-      console.log("[PRIMER] --- talk prompt ---\n", prompt.talkPrompt || prompt.systemPrompt);
-      console.log("[PRIMER] --- user block ---\n", userText);
-    }
-    if (!useVision && groqTalk.isConfigured()) {
-      try {
-        const groq = await groqTalk.complete({
-          systemPrompt: prompt.talkPrompt || prompt.systemPrompt,
-          userText,
-          timeoutMs,
-          temperature: options.mathMode ? 0.1 : 0.4
-        });
-        return parseProposal(groq.content) || { spoken: "" };
-      } catch (err) {
-        console.warn("[PRIMER] Groq talk failed, falling back:", err.message);
-      }
-    }
-    if (!useVision && openaiTalk.isConfigured()) {
-      try {
-        const openai = await openaiTalk.complete({
-          systemPrompt: prompt.talkPrompt || prompt.systemPrompt,
-          userText,
-          timeoutMs,
-          temperature: options.mathMode ? 0.1 : 0.4
-        });
-        return parseProposal(openai.content) || { spoken: "" };
-      } catch (err) {
-        console.warn("[PRIMER] OpenAI talk failed, falling back:", err.message);
-      }
-    }
-    const provider = this.aiProvider;
-    if (!provider || typeof provider.callModelFn !== "function") {
-      return { spoken: "" };
-    }
-    try {
-      const call = provider.callModelFn({
-        persona: "teacher",
-        userAction: "explain",
-        fastTalk: true,
-        systemPrompt: prompt.talkPrompt || prompt.systemPrompt,
-        studentQuery: prompt.studentQuery,
-        typedInput: userText,
-        conversationHistory: (prompt.conversationHistory || []).slice(-6),
-        boardImage: useVision ? boardImage : null
-      });
-      const response = await Promise.race([
-        call,
-        new Promise((_, reject) => setTimeout(() => reject(new Error("timeout")), timeoutMs))
-      ]);
-      return parseProposal(modelText(response)) || { spoken: "" };
-    } catch (err) {
-      console.warn("[PRIMER] talk propose failed:", err.message);
-      return { spoken: "" };
-    }
-  }
-
-  async _proposePicture(understanding, state) {
-    const provider = this.aiProvider;
-    if (!provider || typeof provider.callModelFn !== "function") return null;
-    const topic = String(state?.currentConcept || understanding?.concept || "the idea").replace(/"/g, "").slice(0, 40);
-    const systemPrompt = `Invent a simple kid diagram for "${topic}".
-Return JSON only. No spoken text.
-{"picture":{"title":"${topic}","bg":"#eef2ff","parts":[{"type":"circle","x":200,"y":280,"r":50,"fill":"#93c5fd","text":"label"}]}}
-Use 6 to 10 parts. Types: circle, box, ellipse, arrow, line, beam, person, text. 900 by 620.`;
-    try {
-      const response = await Promise.race([
-        provider.callModelFn({
-          persona: "teacher",
-          userAction: "explain",
-          pictureOnly: true,
-          fastTalk: true,
-          systemPrompt,
-          studentQuery: String(understanding?.raw || topic),
-          typedInput: `${systemPrompt}\n\nDraw: ${topic}`,
-          conversationHistory: [],
-          boardImage: null
-        }),
-        new Promise((_, reject) => setTimeout(() => reject(new Error("timeout")), 7000))
-      ]);
-      return parseProposal(modelText(response));
-    } catch (err) {
-      console.warn("[PRIMER] picture propose failed:", err.message);
-      return null;
-    }
-  }
-
-  async _proposeSimple(understanding, boardImage, options = {}, child = {}) {
-    const topic = String(understanding?.concept || "").trim() || "what they just asked";
-    const raw = String(understanding?.raw || "").trim();
-    const gradeNum = Number(String(child?.grade || "").replace(/[^\d]/g, "")) || (child?.age_years ? Number(child.age_years) - 5 : 4);
-    const isElem = gradeNum <= 5;
-    const systemPrompt = `You are Lumi6 — a warm, inspiring human teacher teaching a Class ${gradeNum} student (age ~${gradeNum + 5}).
-Teach "${topic}" from first principles. The child asked: "${raw}".
-Every sentence must be about "${topic}".
-Explain the full physical intuition in 6-8 simple, vivid spoken sentences using concrete everyday analogies (${isElem ? "spinning a ball on a string, swings, or water buckets" : "momentum and balanced forces"}).
-A follow-up question is optional. Do not quiz every time.
-Do not put (a)(b)(c) in spoken text.
-NEVER ask "what is this called", "what is your hypothesis", or dry vocabulary quizzes.
-Return JSON only: {"spoken":"plain teaching"}`;
-    const userText = `${systemPrompt}\n\nChild said: "${raw}"\nTeach: ${topic}`;
-    if (groqTalk.isConfigured()) {
-      try {
-        const groq = await groqTalk.complete({ systemPrompt, userText, timeoutMs: 16000 });
-        const parsed = parseProposal(groq.content);
-        const spoken = String(parsed?.spoken || "").trim();
-        if (spoken && !ResponsePolicy.isCannedSpeech(spoken)) return parsed;
-      } catch (err) {
-        console.warn("[PRIMER] Groq simple talk failed:", err.message);
-      }
-    }
-    if (openaiTalk.isConfigured()) {
-      try {
-        const openai = await openaiTalk.complete({ systemPrompt, userText, timeoutMs: 16000 });
-        const parsed = parseProposal(openai.content);
-        const spoken = String(parsed?.spoken || "").trim();
-        if (spoken && !ResponsePolicy.isCannedSpeech(spoken)) return parsed;
-      } catch (err) {
-        console.warn("[PRIMER] OpenAI simple talk failed:", err.message);
-      }
-    }
-    const provider = this.aiProvider;
-    if (!provider || typeof provider.callModelFn !== "function") return null;
-    try {
-      const response = await Promise.race([
-        provider.callModelFn({
-          persona: "teacher",
-          userAction: "explain",
-          fastTalk: true,
-          systemPrompt,
-          studentQuery: raw,
-          typedInput: `${systemPrompt}\n\nChild said: "${raw}"\nTeach: ${topic}`,
-          conversationHistory: [],
-          boardImage: null
-        }),
-        new Promise((_, reject) => setTimeout(() => reject(new Error("timeout")), 7000))
-      ]);
-      const parsed = parseProposal(modelText(response));
-      const spoken = String(parsed?.spoken || "").trim();
-      if (!spoken || ResponsePolicy.isCannedSpeech(spoken)) return null;
-      return parsed;
-    } catch (err) {
-      console.warn("[PRIMER] simple propose failed:", err.message);
-      return null;
-    }
-  }
-
-  _updateConversationCounters(state, decision, understanding, spoken = "") {
-    const conv = state.conversationState || {};
-    conv.lastChildIntent = understanding.intent;
-    conv.lastAction = decision.action;
-    conv.lastRole = decision.role;
-    conv.askedBackLast = /\?/.test(String(spoken || ""))
-      || ["ask_back", "challenge", "diagnose"].includes(decision.action);
-    conv.lastTeacherSpoken = String(spoken || "").trim();
-    const asked = lastQuestion(spoken);
-    if (asked && questionsMatch(asked, conv.lastCheckQuestion)) {
-      conv.sameQuestionStreak = Number(conv.sameQuestionStreak || 0) + 1;
-    } else {
-      conv.sameQuestionStreak = asked ? 1 : 0;
-    }
-    if (asked) conv.lastCheckQuestion = asked;
-    const quizLike = ["quiz", "exercise"].includes(decision.action);
-    conv.consecutiveQuizzes = quizLike ? Number(conv.consecutiveQuizzes || 0) + 1 : 0;
-    conv.consecutiveExplanations = decision.action === "explain"
-      ? Number(conv.consecutiveExplanations || 0) + 1
-      : 0;
-    conv.lastAskedToLook = Boolean(understanding.askedToLook) && !understanding.wantsDraw;
-    // Track turns since last doubt check-in for proactive clarification
-    const didDoubtCheck = /everything making sense|any part you want|any doubts|anything unclear|want me to explain.+again/i.test(String(spoken || ""));
-    const childSignaledConfusion = understanding.confusion || understanding.intent === "dont_understand";
-    if (didDoubtCheck || childSignaledConfusion) {
-      conv.turnsSinceDoubtCheck = 0;
-    } else {
-      conv.turnsSinceDoubtCheck = Number(conv.turnsSinceDoubtCheck || 0) + 1;
-    }
-    state.conversationState = conv;
-  }
-
-  async _finish({ child, session, spokenText, spoken, requestId, commands, state, decision, understanding, evidence, safety, created, priorTurnCount }) {
-    this._states.set(session.id, state);
-    const persistTurns = (async () => {
-      await this.sessions.addTurn(session.id, {
-        child_id: child.id,
-        role: "child",
-        spoken_text: spokenText
-      });
-      await this.sessions.addTurn(session.id, {
-        child_id: child.id,
-        role: "primer",
-        spoken_text: spoken,
-        canvas_action: commands.length ? commands.map((cmd) => (
-          cmd?.tool === "place_photo" ? { tool: cmd.tool, title: cmd.title, href: "[inline-image]" } : cmd
-        )) : null,
-        ai_reasoning: {
-          mode: state.mode,
-          phase: decision.phase,
-          nextPhase: state.learningPhase,
-          role: decision.role,
-          action: decision.action,
-          need: decision.need,
-          tools: decision.tools,
-          reasons: decision.reasons,
-          intent: understanding.intent,
-          evidence: evidence.kind,
-          policyValidated: true
-        }
-      });
-      state.inquiryState = {
-        phase: decision.inquiryPhase || "hook",
-        targetSkill: decision.targetSkill || "hypothesis_generation",
-        turnCount: ((state.inquiryState?.turnCount || 0) + 1)
-      };
-      const topics = Array.isArray(session.topics_touched) ? session.topics_touched : [];
-      if (state.currentConcept && !topics.includes(state.currentConcept)) topics.push(state.currentConcept);
-      await this.sessions.store.updateSession(session.id, {
-        experience_pattern: state.mode,
-        topics_touched: topics.slice(-12),
-        child_model_delta: { tutorState: state.snapshot() }
-      });
-    })().catch((err) => console.warn("[PRIMER] persist turn failed:", err.message));
-
-    return {
-      requestId,
-      intent: understanding.intent,
-      teacherResponse: spoken,
-      spokenResponse: spoken,
-      spokenText: spoken,
-      spoken,
-      visualPlan: { shouldDraw: commands.length > 0, commands },
-      canvasActions: commands,
-      drawingResult: { success: true, commands },
-      tutorState: state.snapshot(),
-      sessionState: {
-        childId: child.id,
-        sessionId: session.id,
-        childName: child.name || null,
-        turnNumber: Math.ceil((Number(priorTurnCount || 0) + 2) / 2),
-        persistence: this.childModel.store.remoteEnabled ? "supabase" : "memory",
-        mode: state.mode,
-        learningPhase: state.learningPhase,
-        phaseThisTurn: decision.phase,
-        tutorRole: state.tutorRole,
-        created: Boolean(created)
-      },
-      safety,
-      metadata: { timestamp: new Date().toISOString() }
-    };
+    return Promise.all(promises).then((results) => results[0]);
   }
 }
 
