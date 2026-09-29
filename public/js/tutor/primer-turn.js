@@ -308,7 +308,7 @@
     /**
      * Append a message bubble to the chat log.
      */
-    appendMessage(role, text) {
+    appendMessage(role, text, image) {
       this.removeWelcomeIfNeeded();
       if (this.elements.messagesList) {
         const msgDiv = document.createElement("div");
@@ -320,7 +320,26 @@
 
         const bubble = document.createElement("div");
         bubble.className = "primer-msg-bubble";
-        bubble.textContent = text;
+
+        if (image) {
+          const imgWrap = document.createElement("div");
+          imgWrap.className = "primer-msg-image";
+          const img = document.createElement("img");
+          img.src = image;
+          img.alt = "Drawing";
+          img.style.maxWidth = "280px";
+          img.style.borderRadius = "12px";
+          img.style.display = "block";
+          img.style.marginBottom = "8px";
+          imgWrap.appendChild(img);
+          bubble.appendChild(imgWrap);
+        }
+
+        if (text) {
+          const textSpan = document.createElement("span");
+          textSpan.textContent = text;
+          bubble.appendChild(textSpan);
+        }
 
         const timeSpan = document.createElement("div");
         timeSpan.className = "primer-msg-time";
@@ -333,7 +352,7 @@
         this.elements.messagesList.appendChild(msgDiv);
         this.scrollToBottom();
       }
-      if (typeof window.Lumi6Lesson?.record === "function") window.Lumi6Lesson.record(role, text);
+      if (typeof window.Lumi6Lesson?.record === "function") window.Lumi6Lesson.record(role, text, image);
       if (typeof window.syncTalkModeFeed === "function") window.syncTalkModeFeed();
     }
 
@@ -403,8 +422,10 @@
      * Handle user sending a prompt.
      */
     async handleSendMessage(explicitText) {
-      const text = (explicitText || this.elements.inputField?.value || "").trim();
-      if (!text || this.isSending) {
+      const isObj = typeof explicitText === "object" && explicitText !== null;
+      const text = (isObj ? (explicitText.text || explicitText.message || "") : (explicitText || this.elements.inputField?.value || "")).trim();
+      const studentDrawing = isObj ? (explicitText.boardImage || explicitText.image || null) : null;
+      if ((!text && !studentDrawing) || this.isSending) {
         return;
       }
 
@@ -412,7 +433,7 @@
       const requestId = `req_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
 
       // Append student message to UI DOM
-      this.appendMessage("student", text);
+      this.appendMessage("student", text, studentDrawing);
 
       // Clear input field
       if (this.elements.inputField) {
@@ -442,7 +463,7 @@
           requestId,
           ...readPrimerIds()
         };
-        const boardImage = await captureBoardIfNeeded(text);
+        const boardImage = studentDrawing || await captureBoardIfNeeded(text);
         if (boardImage) primerBody.boardImage = boardImage;
         const voice = window.primerVoice;
         if (voice && voice.tts && typeof voice.tts.unlockPlayback === "function") {

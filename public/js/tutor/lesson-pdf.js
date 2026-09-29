@@ -36,32 +36,34 @@
     return row;
   }
 
-  function record(role, text) {
+  function record(role, text, image) {
     const spoken = String(text || "").replace(/\s+/g, " ").trim();
-    if (!spoken) return;
+    if (!spoken && !image) return;
     const cleanRole = role === "student" ? "student" : "teacher";
     const norm = normalizeText(spoken);
-    if (!norm) return;
 
     if (cleanRole === "teacher") {
       const teacher = currentTeacherTurn();
       if (!teacher.text || spoken.length >= teacher.text.length) teacher.text = spoken;
+      if (image) teacher.image = image;
       persistTurns();
       return;
     }
 
-    for (let i = turns.length - 1; i >= Math.max(0, turns.length - 3); i--) {
-      if (turns[i].role === "student") {
-        const existingNorm = normalizeText(turns[i].text);
-        if (existingNorm === norm || (existingNorm.length > 20 && (existingNorm.includes(norm) || norm.includes(existingNorm)))) {
-          if (spoken.length > (turns[i].text || "").length) turns[i].text = spoken;
-          persistTurns();
-          return;
+    if (!image) {
+      for (let i = turns.length - 1; i >= Math.max(0, turns.length - 3); i--) {
+        if (turns[i].role === "student" && !turns[i].image) {
+          const existingNorm = normalizeText(turns[i].text);
+          if (existingNorm === norm || (existingNorm.length > 20 && (existingNorm.includes(norm) || norm.includes(existingNorm)))) {
+            if (spoken.length > (turns[i].text || "").length) turns[i].text = spoken;
+            persistTurns();
+            return;
+          }
         }
       }
     }
 
-    turns.push({ role: "student", text: spoken, image: "", interactive: null });
+    turns.push({ role: "student", text: spoken, image: image || "", interactive: null });
     persistTurns();
   }
 

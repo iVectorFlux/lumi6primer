@@ -250,14 +250,27 @@ const TITLE_STOPWORDS = new Set([
   "intro", "introduction", "basic", "simple", "complete", "guide", "lesson", "class",
   "grade", "math", "maths", "science", "using", "with", "from", "their", "what", "why",
   "how", "and", "the", "for", "part", "visual", "interactive", "explorer", "explore",
-  "builder", "lab", "demo", "activity", "practice", "understanding", "definition"
+  "builder", "lab", "demo", "activity", "practice", "understanding", "definition",
+  "interest", "interesting", "interested", "rate", "point", "thing", "things"
+]);
+
+/** Everyday words that should never trigger STEM simulation stem bonuses on their own. */
+const CONVERSATIONAL_STOPWORDS = new Set([
+  "interest", "interesting", "interested", "important", "question", "questions",
+  "answer", "answers", "thinking", "thought", "understand", "understanding",
+  "explain", "explanation", "learn", "learning", "teach", "teaching", "wonder",
+  "wondering", "curious", "curiosity", "example", "different", "difference",
+  "problem", "problems", "happen", "happens", "happening", "because",
+  "really", "always", "sometimes", "things", "something", "everything", "anything",
+  "nothing", "point", "points", "start", "starting", "today", "tomorrow", "yesterday",
+  "little", "great", "world", "place", "places", "going", "about", "change", "changes"
 ]);
 
 /** Distinct words from a title, usable as weak search aliases. */
 function keywordsFromTitle(title) {
   const seen = new Set();
   for (const word of stemPhrase(title).split(" ")) {
-    if (word.length < 5 || TITLE_STOPWORDS.has(word) || /^\d+$/.test(word)) continue;
+    if (word.length < 5 || TITLE_STOPWORDS.has(word) || CONVERSATIONAL_STOPWORDS.has(word) || /^\d+$/.test(word)) continue;
     seen.add(word);
   }
   return [...seen];
@@ -325,7 +338,7 @@ function scoreItem(item, hay, concept) {
   for (const alias of item.topics || []) {
     const raw = normalize(alias);
     const phrase = stemPhrase(alias);
-    if (!phrase || phrase.length < 4) continue;
+    if (!phrase || phrase.length < 4 || CONVERSATIONAL_STOPWORDS.has(phrase)) continue;
     const hit = phrase.includes(" ")
       ? hay.includes(phrase)
       : padded.includes(` ${phrase} `);
@@ -344,7 +357,7 @@ function scoreItem(item, hay, concept) {
 
   // Terms we injected from "why is the sky blue" → rayleigh scattering, etc.
   for (const word of hayWords) {
-    if (word.length < 7) continue;
+    if (word.length < 7 || CONVERSATIONAL_STOPWORDS.has(word)) continue;
     if (!doc.includes(` ${word} `)) continue;
     score += word.length >= 9 ? 10 : 6;
     if (word.length >= 9) distinctive = true;
@@ -353,6 +366,7 @@ function scoreItem(item, hay, concept) {
   if (score >= MIN_SCORE) return { score, distinctive };
 
   for (const word of item.keywords || []) {
+    if (CONVERSATIONAL_STOPWORDS.has(word)) continue;
     if (!padded.includes(` ${word} `)) continue;
     score += terse ? 14 : 2;
   }
@@ -362,6 +376,7 @@ function scoreItem(item, hay, concept) {
 function similarStem(a, b) {
   if (!a || !b) return false;
   if (a === b) return true;
+  if (CONVERSATIONAL_STOPWORDS.has(a) || CONVERSATIONAL_STOPWORDS.has(b)) return false;
   if (a.length < 7 || b.length < 7) return false;
   return a.slice(0, 7) === b.slice(0, 7);
 }
@@ -374,12 +389,12 @@ function namedTopicBonus(item, hay) {
   const names = [...(item.keywords || []), ...(item.topics || [])];
   for (const name of names) {
     const phrase = stemPhrase(name);
-    if (phrase.length < 8) continue;
+    if (phrase.length < 8 || CONVERSATIONAL_STOPWORDS.has(phrase)) continue;
     if (padded.includes(` ${phrase} `)) {
       bonus += 24;
       continue;
     }
-    const nameWords = phrase.split(" ").filter((word) => word.length >= 7);
+    const nameWords = phrase.split(" ").filter((word) => word.length >= 7 && !CONVERSATIONAL_STOPWORDS.has(word));
     if (nameWords.some((word) => hayWords.some((part) => similarStem(word, part)))) bonus += 24;
   }
   return bonus;
@@ -437,4 +452,13 @@ function matchInteractive(query, options = {}) {
   return { ...best, score: bestScore };
 }
 
-module.exports = { ITEMS, matchInteractive, normalize, gradeNumber, keywordsFromTitle, stemPhrase };
+function isConceptCoherent(candidate, conceptText) {
+  if (!conceptText || !candidate) return true;
+  const cWords = stemPhrase(conceptText).split(" ").filter((w) => w.length >= 4 && !CONVERSATIONAL_STOPWORDS.has(w));
+  if (!cWords.length) return true;
+  const doc = stemPhrase([candidate.title, candidate.concept, candidate.summary, ...(candidate.topics || [])].join(" "));
+  return cWords.some((w) => doc.includes(w));
+}
+
+module.exports = { ITEMS, matchInteractive, normalize, gradeNumber, keywordsFromTitle, stemPhrase, isConceptCoherent, CONVERSATIONAL_STOPWORDS };
+

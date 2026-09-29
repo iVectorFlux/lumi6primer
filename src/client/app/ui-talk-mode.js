@@ -11,13 +11,15 @@
       .replace(/'/g, "&#039;");
   }
 
-  function childPromptHtml(text) {
+  function childPromptHtml(text, image) {
     const raw = String(text || "").trim();
-    if (!raw || /^stay on\b/i.test(raw)) return "";
+    if (!raw && !image) return "";
+    if (/^stay on\b/i.test(raw)) return "";
     const choice = parseChildChoice(raw);
     return `
             <div class="talk-child-prompt">
-              <p class="talk-child-text">${escapeHtml(choice || raw)}</p>
+              ${image ? `<div class="talk-student-drawing-preview"><img src="${escapeHtml(image)}" alt="Student Drawing" class="talk-student-drawing-img" /></div>` : ""}
+              ${raw ? `<p class="talk-child-text">${escapeHtml(choice || raw)}</p>` : ""}
             </div>`;
   }
 
@@ -450,9 +452,9 @@
     for (const turn of turns) {
       if (turn.role === "student") {
         if (current) pairs.push(current);
-        current = { asked: turn.text, explanation: [], image: turn.image || "", interactive: turn.interactive || null, question: "", choices: [] };
+        current = { asked: turn.text, studentImage: turn.image || "", explanation: [], image: "", interactive: null, question: "", choices: [] };
       } else {
-        if (!current) current = { asked: "", explanation: [], image: turn.image || "", interactive: turn.interactive || null, question: "", choices: [] };
+        if (!current) current = { asked: "", studentImage: "", explanation: [], image: turn.image || "", interactive: turn.interactive || null, question: "", choices: [] };
         const cleanSpoken = String(turn.text || "")
           .replace(/^(Hey|Hello|Hi|Welcome back|Welcome|Good morning|Good afternoon)\s+[A-Za-z0-9_]+[.,!?:-]*\s*/i, "")
           .replace(/^([A-Za-z0-9_]+)[,!:]\s+(?=[A-Z])/i, "")
@@ -483,7 +485,7 @@
       if (!deeperExpl && !question && !(step.interactive || step.image)) {
         return `
         <article class="talk-turn-card">
-          ${step.asked ? childPromptHtml(step.asked) : ""}
+          ${(step.asked || step.studentImage) ? childPromptHtml(step.asked, step.studentImage) : ""}
           ${idx === pairs.length - 1 && window.__primerWaiting ? talkThinkingHtml() : ""}
         </article>
         `;
@@ -491,7 +493,7 @@
 
       return `
       <article class="talk-turn-card">
-        ${step.asked ? childPromptHtml(step.asked) : ""}
+        ${(step.asked || step.studentImage) ? childPromptHtml(step.asked, step.studentImage) : ""}
         <div class="talk-lumi6-box${step.interactive ? " has-visual" : ""}">
           ${deeperExpl ? `
             <div class="talk-explanation-body">

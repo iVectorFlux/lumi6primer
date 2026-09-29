@@ -135,10 +135,16 @@ function clearCache() {
 
 async function match(options = {}) {
   const items = await loadAll(options.store);
-  return matchInteractive(options.query || options.concept, {
+  const hit = matchInteractive(options.query || options.concept, {
     ...options,
     items
   });
+  if (!hit) return null;
+  const { isConceptCoherent } = require("../interactives/catalog.js");
+  if (options.concept && !isConceptCoherent(hit, options.concept)) {
+    return null;
+  }
+  return hit;
 }
 
 async function getBySlug(slug, store) {

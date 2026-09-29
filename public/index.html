@@ -403,6 +403,32 @@
           </div>
         </div>
 
+        <!-- Inline Light Scratchpad Drawer (Phase 3) -->
+        <div id="talkScratchpadDrawer" class="talk-scratchpad-drawer" hidden>
+          <div class="talk-scratchpad-header">
+            <span class="talk-scratchpad-title">✏️ Quick Scratchpad</span>
+            <div class="talk-scratchpad-tools">
+              <button type="button" class="sp-tool-btn active" data-sp-tool="pen" title="Pen">✏️</button>
+              <button type="button" class="sp-tool-btn" data-sp-tool="eraser" title="Eraser">🧹</button>
+              <span class="sp-colors">
+                <button type="button" class="sp-color-dot active" data-sp-color="#1e293b" style="background:#1e293b;" title="Ink"></button>
+                <button type="button" class="sp-color-dot" data-sp-color="#2563eb" style="background:#2563eb;" title="Blue"></button>
+                <button type="button" class="sp-color-dot" data-sp-color="#7c3aed" style="background:#7c3aed;" title="Purple"></button>
+                <button type="button" class="sp-color-dot" data-sp-color="#e11d48" style="background:#e11d48;" title="Red"></button>
+              </span>
+              <button type="button" class="sp-action-btn" id="spClearBtn" title="Clear">Clear</button>
+              <button type="button" class="sp-close-btn" id="spCloseBtn" title="Close" aria-label="Close">✕</button>
+            </div>
+          </div>
+          <div class="talk-scratchpad-canvas-wrapper">
+            <canvas id="talkScratchpadCanvas" class="talk-scratchpad-canvas"></canvas>
+          </div>
+          <div class="talk-scratchpad-footer">
+            <span class="talk-scratchpad-hint">Scribble an answer, math formula, or diagram</span>
+            <button type="button" class="sp-submit-btn" id="spSubmitBtn">Send to Lumi 🚀</button>
+          </div>
+        </div>
+
         <!-- Sticky Bottom Talk Bar in Talk Mode -->
         <footer class="talk-bottom-bar" id="talkBottomBar">
           <div class="talk-bar-container">
@@ -421,6 +447,9 @@
             <form id="talkModeForm" class="talk-input-form">
               <textarea id="talkModeTextInput" class="talk-input-field" rows="1" placeholder="Ask a question or share a thought…" autocomplete="off" enterkeyhint="send"></textarea>
               <div class="talk-composer-actions">
+                <button id="talkModeDrawBtn" class="talk-draw-toggle-btn" type="button" aria-label="Draw on scratchpad" title="Open Scratchpad">
+                  <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 19l7-7 3 3-7 7-3-3z"/><path d="M18 13l-1.5-7.5L2 2l3.5 14.5L13 18l5-5z"/><path d="M2 2l7.586 7.586"/></svg>
+                </button>
                 <button id="talkModeStopBtn" class="talk-stop-recording-btn" type="button" aria-label="Stop listening" title="Stop listening" hidden>
                   <span class="stop-btn-circle">
                     <span class="stop-btn-square"></span>
